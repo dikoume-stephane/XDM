@@ -7,7 +7,10 @@
     "rea": "rea",
     "doctor": "rea doctor",
     "capabilities": "rea capabilities",
-    "analyze:demo": "rea analyze-javascript-application samples/demo-electron-app --format json"
+    "analyze:demo": "rea analyze-javascript-application samples/demo-electron-app --format json",
+    "evidence:idm": "bash tools/collect-idman-evidence.sh",
+    "triage:idm": "python3 tools/idman_triage.py",
+    "extract:idm": "python3 tools/idman_extract.py"
   },
   "devDependencies": {
     "rea-agents": "6.8.0"

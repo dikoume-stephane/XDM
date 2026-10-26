@@ -1,42 +1,60 @@
 # XDM
 
-Espace de travail pour l'analyse et la reconstruction de fonctionnalités applicatives,
-outillé avec **[REA](https://github.com/morluto/rea)** (*Reverse Engineer Anything*) :
-un serveur MCP + CLI qui inspecte une application — binaire natif, app JavaScript/Electron,
-assembly .NET, APK, site web — sans disposer de son code source, et qui rend chaque
-conclusion sous forme de *bundle Evidence* (constats, preuves, limites).
+Projet de **réimplémentation du « Site Grabber » d'Internet Download Manager** (aspirateur
+de site, « çonage ») dans XDM, mené en **analyse statique outillée** : la cible
+`cible/IDMan.exe` (IDM 6.42.22.3) est inspectée sans jamais être exécutée, chaque
+constat étant rattaché à une preuve reproductible.
 
-## Démarrage rapide
+Outil principal : **[REA](https://github.com/morluto/rea)** (*Reverse Engineer Anything*),
+CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limites).
+
+## Démarrage
 
 ```bash
-npm install                 # rea-agents épinglé (6.8.0) + commande locale ./node_modules/.bin/rea
-npm run doctor              # état de l'environnement et des providers
-npm run analyze:demo        # première analyse : samples/demo-electron-app
+npm install                        # rea-agents épinglé (6.8.0)
+npm run doctor                     # état de l'environnement et des providers
+bash tools/collect-idman-evidence.sh   # preuves REA sur la cible  -> analysis/raw/idman/
+python3 tools/idman_triage.py          # agrégats déterministes    -> analysis/idman/triage.json
+python3 tools/idman_extract.py         # chaînes/RTTI/dialogues    -> analysis/raw/idman/
 ```
 
-Commande globalement disponible si besoin : `npm install -g rea-agents`, puis `rea --help`.
+Dépendances Python : `pefile`, `capstone` (`python3 -m pip install --break-system-packages pefile capstone`).
 
-## Contenu du dépôt
+## Où lire quoi
 
-| Chemin | Rôle |
+| Objectif | Fichier |
 |---|---|
-| `docs/REA.md` | Installation, état des providers, mode d'emploi CLI et MCP, règles d'usage |
-| `samples/demo-electron-app/` | Application Electron minimale servant de cible de validation |
-| `analysis/demo-electron-app-summary.md` | Résumé de la première analyse REA (preuves + limites) |
-| `analysis/raw/` | Sorties Evidence brutes, régénérables, **non versionnées** |
-| `package.json` / `package-lock.json` | Outillage épinglé (`rea-agents@6.8.0`) |
+| **Décisions prises et pourquoi** | [`docs/JOURNAL.md`](docs/JOURNAL.md) |
+| **Plan de travail (phases, lots, portes)** | [`docs/ROADMAP-IDM.md`](docs/ROADMAP-IDM.md) |
+| **Index de la mémoire du projet** | [`docs/MEMOIRE.md`](docs/MEMOIRE.md) |
+| Anatomie du binaire | [`analysis/idman/01-anatomie-binaire.md`](analysis/idman/01-anatomie-binaire.md) |
+| Fonctionnalités cartographiées | [`analysis/idman/02-cartographie-fonctionnelle.md`](analysis/idman/02-cartographie-fonctionnelle.md) |
+| Protocoles et formats attestés | [`analysis/idman/03-protocoles-et-formats.md`](analysis/idman/03-protocoles-et-formats.md) |
+| Modules de la suite IDM | [`analysis/idman/04-modules-et-composants.md`](analysis/idman/04-modules-et-composants.md) |
+| Registre, navigateurs, état du grabber | [`analysis/idman/05-integrations-et-registre.md`](analysis/idman/05-integrations-et-registre.md) |
+| Hypothèses à vérifier | [`analysis/idman/06-hypotheses.md`](analysis/idman/06-hypotheses.md) |
+| Gabarit de fiche de spécification | [`docs/specs/TEMPLATE.md`](docs/specs/TEMPLATE.md) |
+| Installation et usage de REA | [`docs/REA.md`](docs/REA.md) |
+
+## Structure
+
+```text
+cible/IDMan.exe            cible d'analyse (fournie sur main)
+docs/                      journal, roadmap, index mémoire, specs, doc REA
+analysis/idman/            annexes de mémoire (00 → 09) + triage.json
+analysis/raw/              bundles Evidence + extractions brutes (non versionnés)
+samples/demo-electron-app  app témoin pour valider REA
+tools/                     collecte de preuves, triage, extractions
+```
 
 ## État actuel
 
-- ✅ REA 6.8.0 installé (global + dépendance projet) et vérifié sur une app Electron :
-  point d'entrée, `BrowserWindow`, preload, `contextBridge`, canal IPC `vault:read`.
-- ✅ Analyse statique JavaScript/Electron, inventaires d'artefacts, formats PE/ELF,
-  Go, GGUF, APK (signatures), .NET statique : opérationnels sans dépendance externe.
-- ❌ Non installé dans cet environnement : moteur natif (Hopper/Ghidra/IDA), JADX,
-  navigateur Playwright, SQLite natif — voir `docs/REA.md` §2 pour l'activation.
-
-## Mise à jour
-
-```bash
-npx rea-agents@latest update && npx rea-agents@latest setup
-```
+- ✅ Outillage REA installé, épinglé et validé (app Electron témoin + 11 bundles Evidence
+  sur `IDMan.exe`).
+- ✅ Triage statique complet : PE, sections, mitigations, imports (509 + 111), ressources
+  (436), 439 noms RTTI, 105 dialogues, marqueurs de protocoles, 124 clés de registre.
+- ✅ Journal, roadmap, index mémoire et 10 annexes rédigés.
+- ⏳ Prochaine étape bloquante : installation de **Ghidra 12.1.x** (lot WP-03) et
+  confirmation du périmètre par le porteur de projet (action A-01).
+- ⛔ Hors périmètre par décision : licence/activation, contournement anti-débogage,
+  extraction des cookies de navigateurs (voir `docs/JOURNAL.md` D-004).

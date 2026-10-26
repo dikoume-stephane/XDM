@@ -1,0 +1,4851 @@
+{
+ "anti_analysis_markers": {
+  "GetProcAddress": 1,
+  "GetTickCount": 1,
+  "IsDebuggerPresent": 1,
+  "LoadLibraryA": 1,
+  "QueryPerformanceCounter": 1,
+  "SetUnhandledExceptionFilter": 1,
+  "SetWindowsHookEx": 1,
+  "UnhandledExceptionFilter": 2,
+  "VirtualAlloc": 2,
+  "VirtualProtect": 1
+ },
+ "artifact": {
+  "bytes": 6017024,
+  "path": "cible/IDMan.exe",
+  "sha256": "5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9"
+ },
+ "browser_markers": {
+  "brave": 7,
+  "chrome": 34,
+  "coccoc": 2,
+  "edge": 31,
+  "firefox": 31,
+  "mozilla": 47,
+  "netscape": 11,
+  "opera": 46,
+  "palemoon": 1,
+  "seamonkey": 6,
+  "vivaldi": 4,
+  "waterfox": 1
+ },
+ "debug": [
+  {
+   "age": 1,
+   "guid": "3290891186",
+   "pdb": "s:\\IDM_projects\\IDM_vs2008_2\\Release\\IDMan.pdb",
+   "size": 71,
+   "type": 2
+  }
+ ],
+ "headers": {
+  "characteristics": "0x102",
+  "characteristics_flags": [
+   "EXECUTABLE_IMAGE",
+   "32BIT_MACHINE"
+  ],
+  "checksum": "0x5c7c0c",
+  "dll_characteristics": "0x8140",
+  "entry_point_rva": "0x229d6e",
+  "image_base": "0x400000",
+  "machine": "0x14c",
+  "mitigations": [
+   "DYNAMIC_BASE (ASLR)",
+   "NX_COMPAT (DEP)",
+   "TERMINAL_SERVER_AWARE"
+  ],
+  "optional_header_magic": "0x10b",
+  "subsystem": 2,
+  "time_date_stamp": 1726514385,
+  "timestamp_utc": "2024-09-16T19:19:45Z"
+ },
+ "imports": {
+  "delay_imports": [
+   {
+    "count": 32,
+    "dll": "ole32.dll",
+    "functions": [
+     "CLSIDFromProgID",
+     "CLSIDFromString",
+     "CoCreateInstance",
+     "CoDisconnectObject",
+     "CoFreeUnusedLibraries",
+     "CoGetClassObject",
+     "CoGetObject",
+     "CoInitialize",
+     "CoInitializeSecurity",
+     "CoLockObjectExternal",
+     "CoRegisterClassObject",
+     "CoRegisterMessageFilter",
+     "CoRevokeClassObject",
+     "CoSetProxyBlanket",
+     "CoTaskMemAlloc",
+     "CoTaskMemFree",
+     "CoUninitialize",
+     "CreateILockBytesOnHGlobal",
+     "CreateStreamOnHGlobal",
+     "DoDragDrop",
+     "OleDuplicateData",
+     "OleFlushClipboard",
+     "OleGetClipboard",
+     "OleInitialize",
+     "OleIsCurrentClipboard",
+     "OleUninitialize",
+     "RegisterDragDrop",
+     "ReleaseStgMedium",
+     "RevokeDragDrop",
+     "StgCreateDocfileOnILockBytes",
+     "StgOpenStorageOnILockBytes",
+     "StringFromGUID2"
+    ]
+   },
+   {
+    "count": 26,
+    "dll": "OLEAUT32.dll",
+    "functions": [
+     "DispCallFunc",
+     "LoadRegTypeLib",
+     "LoadTypeLib",
+     "LoadTypeLibEx",
+     "OleCreateFontIndirect",
+     "OleLoadPicture",
+     "SafeArrayAccessData",
+     "SafeArrayCreate",
+     "SafeArrayDestroy",
+     "SafeArrayGetElement",
+     "SafeArrayGetElemsize",
+     "SafeArrayGetLBound",
+     "SafeArrayGetUBound",
+     "SafeArrayUnaccessData",
+     "SysAllocString",
+     "SysAllocStringByteLen",
+     "SysAllocStringLen",
+     "SysFreeString",
+     "SysStringByteLen",
+     "SysStringLen",
+     "SystemTimeToVariantTime",
+     "VariantChangeType",
+     "VariantClear",
+     "VariantCopy",
+     "VariantInit",
+     "VariantTimeToSystemTime"
+    ]
+   },
+   {
+    "count": 23,
+    "dll": "WS2_32.dll",
+    "functions": [
+     "WSACleanup",
+     "WSAGetLastError",
+     "WSASetLastError",
+     "WSAStartup",
+     "__WSAFDIsSet",
+     "accept",
+     "bind",
+     "closesocket",
+     "connect",
+     "gethostbyname",
+     "getsockname",
+     "getsockopt",
+     "htonl",
+     "htons",
+     "inet_addr",
+     "ioctlsocket",
+     "listen",
+     "ntohl",
+     "ntohs",
+     "recv",
+     "select",
+     "send",
+     "socket"
+    ]
+   },
+   {
+    "count": 20,
+    "dll": "SHELL32.dll",
+    "functions": [
+     "FindExecutableW",
+     "SHBrowseForFolderA",
+     "SHBrowseForFolderW",
+     "SHCreateItemFromParsingName",
+     "SHFileOperationA",
+     "SHFileOperationW",
+     "SHGetDesktopFolder",
+     "SHGetFileInfoA",
+     "SHGetFileInfoW",
+     "SHGetMalloc",
+     "SHGetPathFromIDListA",
+     "SHGetPathFromIDListW",
+     "SHOpenFolderAndSelectItems",
+     "SHParseDisplayName",
+     "ShellExecuteA",
+     "ShellExecuteExA",
+     "ShellExecuteExW",
+     "ShellExecuteW",
+     "Shell_NotifyIconA",
+     "Shell_NotifyIconW"
+    ]
+   },
+   {
+    "count": 7,
+    "dll": "WININET.dll",
+    "functions": [
+     "GetUrlCacheEntryInfoW",
+     "InternetCanonicalizeUrlA",
+     "InternetCanonicalizeUrlW",
+     "InternetCombineUrlA",
+     "InternetCrackUrlA",
+     "InternetGetCookieA",
+     "InternetSetCookieA"
+    ]
+   },
+   {
+    "count": 2,
+    "dll": "OLEACC.dll",
+    "functions": [
+     "CreateStdAccessibleObject",
+     "LresultFromObject"
+    ]
+   },
+   {
+    "count": 1,
+    "dll": "oledlg.dll",
+    "functions": [
+     "ordinal:8"
+    ]
+   }
+  ],
+  "imports": [
+   {
+    "count": 208,
+    "dll": "KERNEL32.dll",
+    "functions": [
+     "CancelWaitableTimer",
+     "CloseHandle",
+     "CompareFileTime",
+     "CompareStringA",
+     "CompareStringW",
+     "ConvertDefaultLocale",
+     "CopyFileA",
+     "CopyFileW",
+     "CreateDirectoryA",
+     "CreateDirectoryW",
+     "CreateEventA",
+     "CreateFileA",
+     "CreateFileMappingA",
+     "CreateFileW",
+     "CreateMutexA",
+     "CreateProcessA",
+     "CreateProcessW",
+     "CreateThread",
+     "CreateWaitableTimerA",
+     "DeleteCriticalSection",
+     "DeleteFileA",
+     "DeleteFileW",
+     "DeviceIoControl",
+     "DuplicateHandle",
+     "EnterCriticalSection",
+     "EnumResourceLanguagesA",
+     "ExitProcess",
+     "ExitThread",
+     "FileTimeToLocalFileTime",
+     "FileTimeToSystemTime",
+     "FindClose",
+     "FindFirstFileA",
+     "FindFirstFileW",
+     "FindNextFileW",
+     "FindResourceA",
+     "FindResourceExA",
+     "FlushFileBuffers",
+     "FormatMessageA",
+     "FormatMessageW",
+     "FreeEnvironmentStringsA",
+     "FreeEnvironmentStringsW",
+     "FreeLibrary",
+     "FreeResource",
+     "GetACP",
+     "GetCPInfo",
+     "GetCommandLineA",
+     "GetCommandLineW",
+     "GetComputerNameA",
+     "GetConsoleCP",
+     "GetConsoleMode",
+     "GetConsoleOutputCP",
+     "GetCurrentDirectoryA",
+     "GetCurrentDirectoryW",
+     "GetCurrentProcess",
+     "GetCurrentProcessId",
+     "GetCurrentThread",
+     "GetCurrentThreadId",
+     "GetDateFormatA",
+     "GetDiskFreeSpaceW",
+     "GetDriveTypeW",
+     "GetEnvironmentStrings",
+     "GetEnvironmentStringsW",
+     "GetExitCodeProcess",
+     "GetFileAttributesA",
+     "GetFileAttributesExW",
+     "GetFileAttributesW",
+     "GetFileInformationByHandle",
+     "GetFileSize",
+     "GetFileSizeEx",
+     "GetFileTime",
+     "GetFileType",
+     "GetFullPathNameA",
+     "GetLastError",
+     "GetLocalTime",
+     "GetLocaleInfoA",
+     "GetModuleFileNameA",
+     "GetModuleFileNameW",
+     "GetModuleHandleA",
+     "GetModuleHandleW",
+     "GetOEMCP",
+     "GetProcAddress",
+     "GetProcessHeap",
+     "GetProcessId",
+     "GetProfileIntA",
+     "GetStartupInfoA",
+     "GetStdHandle",
+     "GetStringTypeA",
+     "GetStringTypeW",
+     "GetSystemDefaultLangID",
+     "GetSystemDirectoryA",
+     "GetSystemDirectoryW",
+     "GetSystemInfo",
+     "GetSystemTime",
+     "GetSystemTimeAsFileTime",
+     "GetThreadLocale",
+     "GetTickCount",
+     "GetTimeFormatA",
+     "GetTimeZoneInformation",
+     "GetUserDefaultLangID",
+     "GetVersion",
+     "GetVersionExA",
+     "GetVolumeInformationA",
+     "GetVolumeInformationW",
+     "GetWindowsDirectoryA",
+     "GetWindowsDirectoryW",
+     "GlobalAddAtomA",
+     "GlobalAlloc",
+     "GlobalDeleteAtom",
+     "GlobalFindAtomA",
+     "GlobalFlags",
+     "GlobalFree",
+     "GlobalGetAtomNameA",
+     "GlobalHandle",
+     "GlobalLock",
+     "GlobalReAlloc",
+     "GlobalSize",
+     "GlobalUnlock",
+     "HeapAlloc",
+     "HeapCreate",
+     "HeapFree",
+     "HeapReAlloc",
+     "HeapSize",
+     "InitializeCriticalSection",
+     "InitializeCriticalSectionAndSpinCount",
+     "InterlockedDecrement",
+     "InterlockedExchange",
+     "InterlockedIncrement",
+     "IsDebuggerPresent",
+     "IsValidCodePage",
+     "LCMapStringA",
+     "LCMapStringW",
+     "LeaveCriticalSection",
+     "LoadLibraryA",
+     "LoadLibraryExA",
+     "LoadLibraryW",
+     "LoadResource",
+     "LocalAlloc",
+     "LocalFree",
+     "LocalReAlloc",
+     "LockFile",
+     "LockResource",
+     "MapViewOfFile",
+     "MoveFileA",
+     "MoveFileExW",
+     "MoveFileW",
+     "MulDiv",
+     "MultiByteToWideChar",
+     "OpenMutexA",
+     "OpenProcess",
+     "PeekNamedPipe",
+     "QueryPerformanceCounter",
+     "RaiseException",
+     "ReadFile",
+     "ReleaseMutex",
+     "RemoveDirectoryA",
+     "RemoveDirectoryW",
+     "ResetEvent",
+     "ResumeThread",
+     "RtlUnwind",
+     "SetCurrentDirectoryA",
+     "SetCurrentDirectoryW",
+     "SetEndOfFile",
+     "SetEnvironmentVariableA",
+     "SetEnvironmentVariableW",
+     "SetErrorMode",
+     "SetEvent",
+     "SetFileAttributesA",
+     "SetFileAttributesW",
+     "SetFilePointer",
+     "SetFileTime",
+     "SetHandleCount",
+     "SetLastError",
+     "SetStdHandle",
+     "SetThreadExecutionState",
+     "SetThreadPriority",
+     "SetUnhandledExceptionFilter",
+     "SetWaitableTimer",
+     "SizeofResource",
+     "Sleep",
+     "SleepEx",
+     "SuspendThread",
+     "SystemTimeToFileTime",
+     "TerminateProcess",
+     "TlsAlloc",
+     "TlsFree",
+     "TlsGetValue",
+     "TlsSetValue",
+     "UnhandledExceptionFilter",
+     "UnlockFile",
+     "UnmapViewOfFile",
+     "VirtualAlloc",
+     "VirtualFree",
+     "VirtualProtect",
+     "VirtualQuery",
+     "WaitForMultipleObjects",
+     "WaitForSingleObject",
+     "WideCharToMultiByte",
+     "WriteConsoleA",
+     "WriteConsoleW",
+     "WriteFile",
+     "WritePrivateProfileStringA",
+     "lstrcatA",
+     "lstrcmpA",
+     "lstrcmpW",
+     "lstrcmpiA",
+     "lstrcpynA",
+     "lstrlenA",
+     "lstrlenW"
+    ]
+   },
+   {
+    "count": 188,
+    "dll": "USER32.dll",
+    "functions": [
+     "AdjustWindowRectEx",
+     "AppendMenuA",
+     "AppendMenuW",
+     "BeginDeferWindowPos",
+     "BeginPaint",
+     "CallNextHookEx",
+     "CallWindowProcA",
+     "ChangeClipboardChain",
+     "CharNextA",
+     "CharUpperA",
+     "CharUpperBuffW",
+     "CheckMenuItem",
+     "CheckMenuRadioItem",
+     "ClientToScreen",
+     "CloseWindow",
+     "CopyAcceleratorTableA",
+     "CopyIcon",
+     "CopyRect",
+     "CreateDialogIndirectParamA",
+     "CreatePopupMenu",
+     "CreateWindowExA",
+     "CreateWindowExW",
+     "DefDlgProcA",
+     "DefWindowProcA",
+     "DefWindowProcW",
+     "DeferWindowPos",
+     "DeleteMenu",
+     "DestroyIcon",
+     "DestroyMenu",
+     "DestroyWindow",
+     "DispatchMessageA",
+     "DrawFocusRect",
+     "DrawFrameControl",
+     "DrawIcon",
+     "DrawIconEx",
+     "DrawMenuBar",
+     "DrawStateA",
+     "DrawTextA",
+     "DrawTextExA",
+     "DrawTextW",
+     "EnableMenuItem",
+     "EnableWindow",
+     "EndDeferWindowPos",
+     "EndDialog",
+     "EndPaint",
+     "EnumWindows",
+     "EqualRect",
+     "ExitWindowsEx",
+     "FillRect",
+     "FindWindowA",
+     "FrameRect",
+     "GetActiveWindow",
+     "GetAsyncKeyState",
+     "GetCapture",
+     "GetClassInfoA",
+     "GetClassInfoExA",
+     "GetClassLongA",
+     "GetClassNameA",
+     "GetClientRect",
+     "GetComboBoxInfo",
+     "GetCursorPos",
+     "GetDC",
+     "GetDesktopWindow",
+     "GetDlgCtrlID",
+     "GetDlgItem",
+     "GetDlgItemTextA",
+     "GetDlgItemTextW",
+     "GetFocus",
+     "GetForegroundWindow",
+     "GetKeyState",
+     "GetKeyboardLayoutList",
+     "GetLastActivePopup",
+     "GetMenu",
+     "GetMenuCheckMarkDimensions",
+     "GetMenuItemCount",
+     "GetMenuItemID",
+     "GetMenuItemInfoW",
+     "GetMenuState",
+     "GetMessageA",
+     "GetMessagePos",
+     "GetMessageTime",
+     "GetNextDlgGroupItem",
+     "GetNextDlgTabItem",
+     "GetParent",
+     "GetPropA",
+     "GetScrollPos",
+     "GetSubMenu",
+     "GetSysColor",
+     "GetSysColorBrush",
+     "GetSystemMetrics",
+     "GetTopWindow",
+     "GetWindow",
+     "GetWindowDC",
+     "GetWindowLongA",
+     "GetWindowPlacement",
+     "GetWindowRect",
+     "GetWindowTextA",
+     "GetWindowTextLengthA",
+     "GetWindowTextLengthW",
+     "GetWindowTextW",
+     "GetWindowThreadProcessId",
+     "GrayStringA",
+     "InflateRect",
+     "IntersectRect",
+     "InvalidateRect",
+     "InvalidateRgn",
+     "IsChild",
+     "IsClipboardFormatAvailable",
+     "IsDialogMessageA",
+     "IsIconic",
+     "IsRectEmpty",
+     "IsWindow",
+     "IsWindowEnabled",
+     "IsWindowVisible",
+     "IsZoomed",
+     "KillTimer",
+     "LoadBitmapA",
+     "LoadCursorA",
+     "LoadIconA",
+     "LoadImageA",
+     "LoadImageW",
+     "LoadStringA",
+     "MapDialogRect",
+     "MapWindowPoints",
+     "MessageBeep",
+     "MessageBoxA",
+     "MessageBoxW",
+     "ModifyMenuA",
+     "ModifyMenuW",
+     "MoveWindow",
+     "MsgWaitForMultipleObjects",
+     "OffsetRect",
+     "PeekMessageA",
+     "PostMessageA",
+     "PostQuitMessage",
+     "PostThreadMessageA",
+     "PtInRect",
+     "RegisterClassA",
+     "RegisterClipboardFormatA",
+     "RegisterWindowMessageA",
+     "ReleaseCapture",
+     "ReleaseDC",
+     "RemoveMenu",
+     "RemovePropA",
+     "ScreenToClient",
+     "SendDlgItemMessageA",
+     "SendMessageA",
+     "SendMessageW",
+     "SetActiveWindow",
+     "SetCapture",
+     "SetClassLongA",
+     "SetClipboardViewer",
+     "SetCursor",
+     "SetCursorPos",
+     "SetDlgItemTextA",
+     "SetDlgItemTextW",
+     "SetFocus",
+     "SetForegroundWindow",
+     "SetLayeredWindowAttributes",
+     "SetMenu",
+     "SetMenuItemBitmaps",
+     "SetParent",
+     "SetPropA",
+     "SetPropW",
+     "SetRect",
+     "SetRectEmpty",
+     "SetTimer",
+     "SetWindowContextHelpId",
+     "SetWindowLongA",
+     "SetWindowPos",
+     "SetWindowTextA",
+     "SetWindowTextW",
+     "SetWindowsHookExA",
+     "ShowWindow",
+     "SystemParametersInfoA",
+     "SystemParametersInfoW",
+     "TabbedTextOutA",
+     "TrackPopupMenu",
+     "TranslateMessage",
+     "UnhookWindowsHookEx",
+     "UnionRect",
+     "UnregisterClassA",
+     "UpdateWindow",
+     "ValidateRect",
+     "WinHelpA",
+     "WindowFromPoint",
+     "wsprintfA",
+     "wsprintfW"
+    ]
+   },
+   {
+    "count": 62,
+    "dll": "GDI32.dll",
+    "functions": [
+     "BitBlt",
+     "CopyMetaFileA",
+     "CreateBitmap",
+     "CreateCompatibleBitmap",
+     "CreateCompatibleDC",
+     "CreateDIBSection",
+     "CreateFontA",
+     "CreateFontIndirectA",
+     "CreateFontIndirectW",
+     "CreatePen",
+     "CreateRectRgnIndirect",
+     "CreateSolidBrush",
+     "DPtoLP",
+     "DeleteDC",
+     "DeleteObject",
+     "EnumFontFamiliesExA",
+     "Escape",
+     "ExcludeClipRect",
+     "ExtSelectClipRgn",
+     "ExtTextOutA",
+     "ExtTextOutW",
+     "GetBkColor",
+     "GetCharWidthA",
+     "GetClipBox",
+     "GetDIBits",
+     "GetDeviceCaps",
+     "GetMapMode",
+     "GetObjectA",
+     "GetObjectW",
+     "GetRgnBox",
+     "GetStockObject",
+     "GetTextColor",
+     "GetTextExtentPoint32A",
+     "GetTextExtentPoint32W",
+     "GetTextMetricsA",
+     "GetViewportExtEx",
+     "GetWindowExtEx",
+     "IntersectClipRect",
+     "LPtoDP",
+     "LineTo",
+     "MoveToEx",
+     "OffsetViewportOrgEx",
+     "PtVisible",
+     "RectVisible",
+     "RestoreDC",
+     "SaveDC",
+     "ScaleViewportExtEx",
+     "ScaleWindowExtEx",
+     "SelectClipRgn",
+     "SelectObject",
+     "SetBkColor",
+     "SetBkMode",
+     "SetMapMode",
+     "SetStretchBltMode",
+     "SetTextColor",
+     "SetViewportExtEx",
+     "SetViewportOrgEx",
+     "SetWindowExtEx",
+     "StretchBlt",
+     "StretchDIBits",
+     "TextOutA",
+     "TranslateCharsetInfo"
+    ]
+   },
+   {
+    "count": 39,
+    "dll": "ADVAPI32.dll",
+    "functions": [
+     "AdjustTokenPrivileges",
+     "CloseServiceHandle",
+     "CreateProcessAsUserW",
+     "DuplicateTokenEx",
+     "GetLengthSid",
+     "GetSidSubAuthority",
+     "GetSidSubAuthorityCount",
+     "GetTokenInformation",
+     "GetUserNameA",
+     "GetUserNameW",
+     "LookupPrivilegeValueA",
+     "OpenProcessToken",
+     "OpenSCManagerA",
+     "OpenServiceA",
+     "RegCloseKey",
+     "RegCreateKeyExA",
+     "RegCreateKeyExW",
+     "RegDeleteKeyA",
+     "RegDeleteKeyW",
+     "RegDeleteValueA",
+     "RegDeleteValueW",
+     "RegEnumKeyA",
+     "RegEnumKeyExA",
+     "RegEnumKeyW",
+     "RegEnumValueA",
+     "RegFlushKey",
+     "RegLoadKeyA",
+     "RegNotifyChangeKeyValue",
+     "RegOpenKeyA",
+     "RegOpenKeyExA",
+     "RegQueryInfoKeyA",
+     "RegQueryValueA",
+     "RegQueryValueExA",
+     "RegQueryValueExW",
+     "RegRestoreKeyA",
+     "RegSaveKeyA",
+     "RegSetValueExA",
+     "RegSetValueExW",
+     "SetTokenInformation"
+    ]
+   },
+   {
+    "count": 5,
+    "dll": "COMDLG32.dll",
+    "functions": [
+     "ChooseFontW",
+     "GetFileTitleA",
+     "GetOpenFileNameW",
+     "GetSaveFileNameA",
+     "GetSaveFileNameW"
+    ]
+   },
+   {
+    "count": 5,
+    "dll": "SHLWAPI.dll",
+    "functions": [
+     "PathFindExtensionA",
+     "PathFindFileNameA",
+     "PathIsUNCA",
+     "PathStripToRootA",
+     "StrCmpLogicalW"
+    ]
+   },
+   {
+    "count": 2,
+    "dll": "COMCTL32.dll",
+    "functions": [
+     "ImageList_GetIcon",
+     "ordinal:17"
+    ]
+   }
+  ]
+ },
+ "menus": [
+  {
+   "id": 129,
+   "labels": [
+    "Tasks",
+    "&Add new download"
+   ],
+   "offset": 3680104
+  },
+  {
+   "id": 256,
+   "labels": [
+    "Project",
+    "[&New]",
+    "֞&Load...",
+    "&Save"
+   ],
+   "offset": 3682704
+  }
+ ],
+ "notable_imports": [
+  "ADVAPI32.dll!CreateProcessAsUserW",
+  "ADVAPI32.dll!RegCloseKey",
+  "ADVAPI32.dll!RegCreateKeyExA",
+  "ADVAPI32.dll!RegCreateKeyExW",
+  "ADVAPI32.dll!RegDeleteKeyA",
+  "ADVAPI32.dll!RegDeleteKeyW",
+  "ADVAPI32.dll!RegDeleteValueA",
+  "ADVAPI32.dll!RegDeleteValueW",
+  "ADVAPI32.dll!RegEnumKeyA",
+  "ADVAPI32.dll!RegEnumKeyExA",
+  "ADVAPI32.dll!RegEnumKeyW",
+  "ADVAPI32.dll!RegEnumValueA",
+  "ADVAPI32.dll!RegFlushKey",
+  "ADVAPI32.dll!RegLoadKeyA",
+  "ADVAPI32.dll!RegNotifyChangeKeyValue",
+  "ADVAPI32.dll!RegOpenKeyA",
+  "ADVAPI32.dll!RegOpenKeyExA",
+  "ADVAPI32.dll!RegQueryInfoKeyA",
+  "ADVAPI32.dll!RegQueryValueA",
+  "ADVAPI32.dll!RegQueryValueExA",
+  "ADVAPI32.dll!RegQueryValueExW",
+  "ADVAPI32.dll!RegRestoreKeyA",
+  "ADVAPI32.dll!RegSaveKeyA",
+  "ADVAPI32.dll!RegSetValueExA",
+  "ADVAPI32.dll!RegSetValueExW",
+  "KERNEL32.dll!CreateProcessA",
+  "KERNEL32.dll!CreateProcessW",
+  "KERNEL32.dll!CreateThread",
+  "KERNEL32.dll!GetProcAddress",
+  "KERNEL32.dll!IsDebuggerPresent",
+  "KERNEL32.dll!LoadLibraryA",
+  "KERNEL32.dll!LoadLibraryExA",
+  "KERNEL32.dll!LoadLibraryW",
+  "KERNEL32.dll!VirtualAlloc",
+  "KERNEL32.dll!VirtualProtect",
+  "OLEAUT32.dll!LoadRegTypeLib",
+  "SHELL32.dll!ShellExecuteA",
+  "SHELL32.dll!ShellExecuteExA",
+  "SHELL32.dll!ShellExecuteExW",
+  "SHELL32.dll!ShellExecuteW",
+  "USER32.dll!SetTimer",
+  "USER32.dll!SetWindowsHookExA",
+  "WININET.dll!InternetCanonicalizeUrlA",
+  "WININET.dll!InternetCanonicalizeUrlW",
+  "WININET.dll!InternetCombineUrlA",
+  "WININET.dll!InternetCrackUrlA",
+  "WININET.dll!InternetGetCookieA",
+  "WININET.dll!InternetSetCookieA",
+  "WS2_32.dll!WSACleanup",
+  "WS2_32.dll!WSAGetLastError",
+  "WS2_32.dll!WSASetLastError",
+  "WS2_32.dll!WSAStartup",
+  "WS2_32.dll!__WSAFDIsSet"
+ ],
+ "protocol_markers": {
+  "AMF": {
+   "first_offset": 3493692,
+   "occurrences": 4
+  },
+  "Content-Length": {
+   "first_offset": 2822506,
+   "occurrences": 5
+  },
+  "Content-Range": {
+   "first_offset": 2820132,
+   "occurrences": 1
+  },
+  "Cookie:": {
+   "first_offset": 2822224,
+   "occurrences": 3
+  },
+  "EXT-X-": {
+   "first_offset": 2828125,
+   "occurrences": 12
+  },
+  "Proxy-Authorization": {
+   "first_offset": 2821724,
+   "occurrences": 4
+  },
+  "Range:": {
+   "first_offset": 2820140,
+   "occurrences": 7
+  },
+  "Referer": {
+   "first_offset": 2669716,
+   "occurrences": 3
+  },
+  "Set-Cookie": {
+   "first_offset": 2663304,
+   "occurrences": 2
+  },
+  "User-Agent": {
+   "first_offset": 2795386,
+   "occurrences": 9
+  },
+  "ftp://": {
+   "first_offset": 2592296,
+   "occurrences": 5
+  },
+  "http://": {
+   "first_offset": 2591240,
+   "occurrences": 82
+  },
+  "https://": {
+   "first_offset": 2591208,
+   "occurrences": 54
+  },
+  "mms://": {
+   "first_offset": 2591200,
+   "occurrences": 3
+  },
+  "moof": {
+   "first_offset": 1729088,
+   "occurrences": 1
+  },
+  "moov": {
+   "first_offset": 1729686,
+   "occurrences": 2
+  },
+  "multipart/byteranges": {
+   "first_offset": 2820308,
+   "occurrences": 1
+  },
+  "rtmp://": {
+   "first_offset": 2591232,
+   "occurrences": 2
+  },
+  "rtmpe://": {
+   "first_offset": 2613840,
+   "occurrences": 1
+  },
+  "sidx": {
+   "first_offset": 1729193,
+   "occurrences": 2
+  },
+  "text/xml": {
+   "first_offset": 2618608,
+   "occurrences": 1
+  }
+ },
+ "registry_hits": [
+  "%s%sBraveSoftware\\Brave-Browser\\User Data\\Default\\Network\\cookies",
+  "%s%sBraveSoftware\\Brave-Browser\\User Data\\Default\\cookies",
+  "%s%sBraveSoftware\\Brave-Browser\\User Data\\Local State",
+  "%sOpera Software\\Opera Stable\\Local State",
+  "%sOpera Software\\Opera Stable\\cookies",
+  "SOFTWARE\\Classes",
+  "SOFTWARE\\Classes\\AppID\\%s",
+  "SOFTWARE\\CocCoc\\Browser\\NativeMessagingHosts\\com.tonec.idm",
+  "SOFTWARE\\FullCircle\\TalkBack",
+  "SOFTWARE\\FullCircle\\TalkBack\\%s",
+  "SOFTWARE\\Google\\Chrome\\Extensions",
+  "SOFTWARE\\Google\\Chrome\\Extensions\\%s",
+  "SOFTWARE\\Google\\Chrome\\NativeMessagingHosts",
+  "SOFTWARE\\Google\\Chrome\\NativeMessagingHosts\\com.tonec.idm",
+  "SOFTWARE\\Internet Download Manager",
+  "SOFTWARE\\Microsoft\\Accessibility",
+  "SOFTWARE\\Microsoft\\Edge\\Extensions",
+  "SOFTWARE\\Microsoft\\Edge\\Extensions\\%s",
+  "SOFTWARE\\Microsoft\\Edge\\NativeMessagingHosts\\com.tonec.idm",
+  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
+  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects",
+  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Blocked",
+  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Google Chrome",
+  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{EE5B8E34-973C-4FBE-AC83-99F064009FC7}",
+  "SOFTWARE\\Mozilla",
+  "SOFTWARE\\Mozilla\\NativeMessagingHosts",
+  "SOFTWARE\\Mozilla\\NativeMessagingHosts\\com.tonec.idm",
+  "SOFTWARE\\Mozilla\\Netscape Navigator",
+  "SOFTWARE\\Mozilla\\SeaMonkey",
+  "SOFTWARE\\Netscape\\Netscape",
+  "SOFTWARE\\Netscape\\Netscape 6",
+  "SOFTWARE\\Netscape\\Netscape Browser",
+  "SOFTWARE\\mozilla.org\\Mozilla",
+  "Software\\",
+  "Software\\Backup_IDM",
+  "Software\\Classes\\",
+  "Software\\Classes\\CLSID\\{07999AC3-058B-40BF-984F-69EB1E554CA7}",
+  "Software\\Classes\\CLSID\\{6DDF00DB-1234-46EC-8356-27E7B2051192}",
+  "Software\\Classes\\CLSID\\{79873CC5-3951-43ED-BDF9-D8759474B6FD}",
+  "Software\\Classes\\CLSID\\{84797876-C678-1780-A556-0CD06786780F}",
+  "Software\\Classes\\CLSID\\{E6871B76-C3C8-44DD-B947-ABFFE144860D}",
+  "Software\\Classes\\PROTOCOLS\\Name-Space Handler\\",
+  "Software\\CocCoc\\Browser\\Extensions",
+  "Software\\DownloadManager\\",
+  "Software\\DownloadManager\\%ld",
+  "Software\\DownloadManager\\%ld\\ChList",
+  "Software\\DownloadManager\\ConfigTime",
+  "Software\\DownloadManager\\DwnlPanel",
+  "Software\\DownloadManager\\DwnlSelPanel",
+  "Software\\DownloadManager\\DwnlSelPanel\\%s",
+  "Software\\DownloadManager\\FoldersTree",
+  "Software\\DownloadManager\\GetAllDlgLS",
+  "Software\\DownloadManager\\GrabberDlgLS",
+  "Software\\DownloadManager\\GrabberSts",
+  "Software\\DownloadManager\\GrabberSts\\ExcludeFilters",
+  "Software\\DownloadManager\\GrabberSts\\IncludeFilters",
+  "Software\\DownloadManager\\GrabberSts\\Projects",
+  "Software\\DownloadManager\\GrabberSts\\Projects\\",
+  "Software\\DownloadManager\\GrabberSts\\Projects\\%ld\\",
+  "Software\\DownloadManager\\GrabberSts\\Projects\\%ld\\%ld",
+  "Software\\DownloadManager\\GrabberSts\\Projects\\%ld\\%ld\\",
+  "Software\\DownloadManager\\GrabberSts\\Projects\\%ld\\%ld\\ChList",
+  "Software\\DownloadManager\\GrabberSts\\RecentProjects",
+  "Software\\DownloadManager\\IDMBI",
+  "Software\\DownloadManager\\IDMBI\\Firefox\\DwnlPanel",
+  "Software\\DownloadManager\\IDMBI\\IEXPLORE\\DwnlPanel",
+  "Software\\DownloadManager\\ListSettings",
+  "Software\\DownloadManager\\MCN",
+  "Software\\DownloadManager\\MCN\\%s",
+  "Software\\DownloadManager\\MCN\\%s%s",
+  "Software\\DownloadManager\\Passwords",
+  "Software\\DownloadManager\\Passwords\\",
+  "Software\\DownloadManager\\ProxyPac",
+  "Software\\DownloadManager\\ProxyPac\\%s",
+  "Software\\DownloadManager\\ProxyServers",
+  "Software\\DownloadManager\\ProxyServers\\%s",
+  "Software\\DownloadManager\\ProxyServers\\%s:%s",
+  "Software\\DownloadManager\\Queue",
+  "Software\\DownloadManager\\Scheduler",
+  "Software\\DownloadManager\\WBProxy",
+  "Software\\DownloadManager\\maxID",
+  "Software\\DownloadManager\\menuExt",
+  "Software\\DownloadManager\\netApps",
+  "Software\\DownloadManager\\sites_sf",
+  "Software\\Flock\\Flock",
+  "Software\\Google",
+  "Software\\Google\\Chrome",
+  "Software\\Google\\Chrome\\Extensions",
+  "Software\\Microsoft\\Internet Explorer",
+  "Software\\Microsoft\\Internet Explorer\\International",
+  "Software\\Microsoft\\Internet Explorer\\Low Rights",
+  "Software\\Microsoft\\Internet Explorer\\Low Rights\\DragDrop",
+  "Software\\Microsoft\\Internet Explorer\\Low Rights\\DragDrop\\{19129CDA-AFC0-4330-99BC-C5A834F89006}",
+  "Software\\Microsoft\\Internet Explorer\\Low Rights\\ElevationPolicy",
+  "Software\\Microsoft\\Internet Explorer\\Low Rights\\ElevationPolicy\\{1902485B-CE75-42C1-BA2D-57E660793D9A}",
+  "Software\\Microsoft\\Internet Explorer\\Low Rights\\ElevationPolicy\\{E0DACC63-037F-46EE-AC02-E4C7B0FBFEB4}",
+  "Software\\Microsoft\\Internet Explorer\\Main",
+  "Software\\Microsoft\\Internet Explorer\\MenuExt",
+  "Software\\Microsoft\\Internet Explorer\\MenuExt\\",
+  "Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers",
+  "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
+  "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\\",
+  "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ShellIconOverlayIdentifiers",
+  "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
+  "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Comdlg32",
+  "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
+  "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Network",
+  "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+  "Software\\Microsoft\\Windows\\DWM",
+  "Software\\Mozilla",
+  "Software\\Mozilla\\Aurora",
+  "Software\\Mozilla\\Firefox",
+  "Software\\Mozilla\\Firefox Developer Edition",
+  "Software\\Mozilla\\Firefox\\Extensions",
+  "Software\\Mozilla\\Mozilla Firefox",
+  "Software\\Mozilla\\Mozilla Firefox ESR",
+  "Software\\Mozilla\\Nightly",
+  "Software\\Mozilla\\SeaMonkey",
+  "Software\\Mozilla\\SeaMonkey\\Extensions",
+  "Software\\Mozilla\\Waterfox",
+  "Software\\Opera Software",
+  "Software\\mozilla.org\\Mozilla Firefox"
+ ],
+ "resources": {
+  "counts": {
+   "BITMAP": 174,
+   "CURSOR": 16,
+   "DIALOG": 105,
+   "DLGINIT": 3,
+   "GROUP_CURSOR": 15,
+   "GROUP_ICON": 24,
+   "HTML": 1,
+   "ICON": 48,
+   "MANIFEST": 1,
+   "MENU": 2,
+   "NAMED:IMAGE": 5,
+   "NAMED:PNG": 1,
+   "STRING": 37,
+   "TOOLBAR": 3,
+   "VERSION": 1
+  },
+  "entries": [
+   {
+    "id": 104,
+    "lang": 1033,
+    "offset": 3683120,
+    "size": 1164,
+    "type": "BITMAP"
+   },
+   {
+    "id": 166,
+    "lang": 1033,
+    "offset": 3684288,
+    "size": 14216,
+    "type": "BITMAP"
+   },
+   {
+    "id": 178,
+    "lang": 1033,
+    "offset": 3699024,
+    "size": 232,
+    "type": "BITMAP"
+   },
+   {
+    "id": 179,
+    "lang": 1033,
+    "offset": 3698504,
+    "size": 232,
+    "type": "BITMAP"
+   },
+   {
+    "id": 180,
+    "lang": 1033,
+    "offset": 3698736,
+    "size": 284,
+    "type": "BITMAP"
+   },
+   {
+    "id": 198,
+    "lang": 1033,
+    "offset": 3699256,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 199,
+    "lang": 1033,
+    "offset": 3700136,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 200,
+    "lang": 1033,
+    "offset": 3701016,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 201,
+    "lang": 1033,
+    "offset": 3701896,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 202,
+    "lang": 1033,
+    "offset": 3702776,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 203,
+    "lang": 1033,
+    "offset": 3703656,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 206,
+    "lang": 1033,
+    "offset": 3704536,
+    "size": 3626,
+    "type": "BITMAP"
+   },
+   {
+    "id": 210,
+    "lang": 1033,
+    "offset": 3708168,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 211,
+    "lang": 1033,
+    "offset": 3709048,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 212,
+    "lang": 1033,
+    "offset": 3709928,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 213,
+    "lang": 1033,
+    "offset": 3710808,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 214,
+    "lang": 1033,
+    "offset": 3711688,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 215,
+    "lang": 1033,
+    "offset": 3712568,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 216,
+    "lang": 1033,
+    "offset": 3713448,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 217,
+    "lang": 1033,
+    "offset": 3714328,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 218,
+    "lang": 1033,
+    "offset": 3715208,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 219,
+    "lang": 1033,
+    "offset": 3716088,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 220,
+    "lang": 1033,
+    "offset": 3716968,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 221,
+    "lang": 1033,
+    "offset": 3717848,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 222,
+    "lang": 1033,
+    "offset": 3718728,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 223,
+    "lang": 1033,
+    "offset": 3719608,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 224,
+    "lang": 1033,
+    "offset": 3720488,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 225,
+    "lang": 1033,
+    "offset": 3721368,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 247,
+    "lang": 1033,
+    "offset": 3722248,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 248,
+    "lang": 1033,
+    "offset": 3723128,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 249,
+    "lang": 1033,
+    "offset": 3724008,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 250,
+    "lang": 1033,
+    "offset": 3724888,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 251,
+    "lang": 1033,
+    "offset": 3725768,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 252,
+    "lang": 1033,
+    "offset": 3726648,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 260,
+    "lang": 1033,
+    "offset": 3727528,
+    "size": 2984,
+    "type": "BITMAP"
+   },
+   {
+    "id": 265,
+    "lang": 1033,
+    "offset": 3735736,
+    "size": 23082,
+    "type": "BITMAP"
+   },
+   {
+    "id": 266,
+    "lang": 1033,
+    "offset": 3758824,
+    "size": 23082,
+    "type": "BITMAP"
+   },
+   {
+    "id": 282,
+    "lang": 1033,
+    "offset": 3781912,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 283,
+    "lang": 1033,
+    "offset": 3782792,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 299,
+    "lang": 1033,
+    "offset": 3783672,
+    "size": 1192,
+    "type": "BITMAP"
+   },
+   {
+    "id": 30994,
+    "lang": 1033,
+    "offset": 5835648,
+    "size": 184,
+    "type": "BITMAP"
+   },
+   {
+    "id": 30996,
+    "lang": 1033,
+    "offset": 5835832,
+    "size": 324,
+    "type": "BITMAP"
+   },
+   {
+    "id": 311,
+    "lang": 1033,
+    "offset": 3784864,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 312,
+    "lang": 1033,
+    "offset": 3785744,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 313,
+    "lang": 1033,
+    "offset": 3786624,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 314,
+    "lang": 1033,
+    "offset": 3787504,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 315,
+    "lang": 1033,
+    "offset": 3788384,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 316,
+    "lang": 1033,
+    "offset": 3789264,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 317,
+    "lang": 1033,
+    "offset": 3790144,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 318,
+    "lang": 1033,
+    "offset": 3791024,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 319,
+    "lang": 1033,
+    "offset": 3791904,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 320,
+    "lang": 1033,
+    "offset": 3792784,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 321,
+    "lang": 1033,
+    "offset": 3793664,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 322,
+    "lang": 1033,
+    "offset": 3794544,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 323,
+    "lang": 1033,
+    "offset": 3795424,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 324,
+    "lang": 1033,
+    "offset": 3796304,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 325,
+    "lang": 1033,
+    "offset": 3797184,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 326,
+    "lang": 1033,
+    "offset": 3798064,
+    "size": 874,
+    "type": "BITMAP"
+   },
+   {
+    "id": 329,
+    "lang": 1033,
+    "offset": 3798944,
+    "size": 458,
+    "type": "BITMAP"
+   },
+   {
+    "id": 330,
+    "lang": 1033,
+    "offset": 3799408,
+    "size": 458,
+    "type": "BITMAP"
+   },
+   {
+    "id": 358,
+    "lang": 1033,
+    "offset": 3799872,
+    "size": 100,
+    "type": "BITMAP"
+   },
+   {
+    "id": 359,
+    "lang": 1033,
+    "offset": 3799976,
+    "size": 100,
+    "type": "BITMAP"
+   },
+   {
+    "id": 360,
+    "lang": 1033,
+    "offset": 3800080,
+    "size": 100,
+    "type": "BITMAP"
+   },
+   {
+    "id": 361,
+    "lang": 1033,
+    "offset": 3800184,
+    "size": 100,
+    "type": "BITMAP"
+   },
+   {
+    "id": 362,
+    "lang": 1033,
+    "offset": 3800288,
+    "size": 100,
+    "type": "BITMAP"
+   },
+   {
+    "id": 386,
+    "lang": 1033,
+    "offset": 3800392,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 387,
+    "lang": 1033,
+    "offset": 3837528,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 388,
+    "lang": 1033,
+    "offset": 3803768,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 389,
+    "lang": 1033,
+    "offset": 3834152,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 390,
+    "lang": 1033,
+    "offset": 3807144,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 391,
+    "lang": 1033,
+    "offset": 3847656,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 392,
+    "lang": 1033,
+    "offset": 3810520,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 393,
+    "lang": 1033,
+    "offset": 3851032,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 394,
+    "lang": 1033,
+    "offset": 3813896,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 395,
+    "lang": 1033,
+    "offset": 3840904,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 396,
+    "lang": 1033,
+    "offset": 3817272,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 397,
+    "lang": 1033,
+    "offset": 3844280,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 398,
+    "lang": 1033,
+    "offset": 3820648,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 399,
+    "lang": 1033,
+    "offset": 3864536,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 400,
+    "lang": 1033,
+    "offset": 3824024,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 401,
+    "lang": 1033,
+    "offset": 3854408,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 402,
+    "lang": 1033,
+    "offset": 3827400,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 403,
+    "lang": 1033,
+    "offset": 3857784,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 404,
+    "lang": 1033,
+    "offset": 3830776,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 405,
+    "lang": 1033,
+    "offset": 3861160,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 406,
+    "lang": 1033,
+    "offset": 3867912,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 407,
+    "lang": 1033,
+    "offset": 3871288,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 408,
+    "lang": 1033,
+    "offset": 3881416,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 409,
+    "lang": 1033,
+    "offset": 3884792,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 410,
+    "lang": 1033,
+    "offset": 3888168,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 411,
+    "lang": 1033,
+    "offset": 3891544,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 412,
+    "lang": 1033,
+    "offset": 3901672,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 413,
+    "lang": 1033,
+    "offset": 3908424,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 414,
+    "lang": 1033,
+    "offset": 3905048,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 415,
+    "lang": 1033,
+    "offset": 3911800,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 416,
+    "lang": 1033,
+    "offset": 3915176,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 417,
+    "lang": 1033,
+    "offset": 3921928,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 418,
+    "lang": 1033,
+    "offset": 3918552,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 419,
+    "lang": 1033,
+    "offset": 3925304,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 420,
+    "lang": 1033,
+    "offset": 3928680,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 421,
+    "lang": 1033,
+    "offset": 3935432,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 422,
+    "lang": 1033,
+    "offset": 3932056,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 423,
+    "lang": 1033,
+    "offset": 3938808,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 424,
+    "lang": 1033,
+    "offset": 3942184,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 425,
+    "lang": 1033,
+    "offset": 3948936,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 426,
+    "lang": 1033,
+    "offset": 3945560,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 427,
+    "lang": 1033,
+    "offset": 3952312,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 428,
+    "lang": 1033,
+    "offset": 3959112,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 429,
+    "lang": 1033,
+    "offset": 3979704,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 430,
+    "lang": 1033,
+    "offset": 3960984,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 431,
+    "lang": 1033,
+    "offset": 3977832,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 432,
+    "lang": 1033,
+    "offset": 3962856,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 433,
+    "lang": 1033,
+    "offset": 3985320,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 434,
+    "lang": 1033,
+    "offset": 3964728,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 435,
+    "lang": 1033,
+    "offset": 3987192,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 436,
+    "lang": 1033,
+    "offset": 3966600,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 437,
+    "lang": 1033,
+    "offset": 3981576,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 438,
+    "lang": 1033,
+    "offset": 3968472,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 439,
+    "lang": 1033,
+    "offset": 3983448,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 440,
+    "lang": 1033,
+    "offset": 3970344,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 441,
+    "lang": 1033,
+    "offset": 3994680,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 442,
+    "lang": 1033,
+    "offset": 3972216,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 443,
+    "lang": 1033,
+    "offset": 3989064,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 444,
+    "lang": 1033,
+    "offset": 3974088,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 445,
+    "lang": 1033,
+    "offset": 3990936,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 446,
+    "lang": 1033,
+    "offset": 3975960,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 447,
+    "lang": 1033,
+    "offset": 3992808,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 448,
+    "lang": 1033,
+    "offset": 3996552,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 449,
+    "lang": 1033,
+    "offset": 3998424,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 450,
+    "lang": 1033,
+    "offset": 4004040,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 451,
+    "lang": 1033,
+    "offset": 4005912,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 452,
+    "lang": 1033,
+    "offset": 4007784,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 453,
+    "lang": 1033,
+    "offset": 4009656,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 454,
+    "lang": 1033,
+    "offset": 4015272,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 455,
+    "lang": 1033,
+    "offset": 4019016,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 456,
+    "lang": 1033,
+    "offset": 4017144,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 457,
+    "lang": 1033,
+    "offset": 4020888,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 458,
+    "lang": 1033,
+    "offset": 4022760,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 459,
+    "lang": 1033,
+    "offset": 4026504,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 460,
+    "lang": 1033,
+    "offset": 4024632,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 461,
+    "lang": 1033,
+    "offset": 4028376,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 462,
+    "lang": 1033,
+    "offset": 4030248,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 463,
+    "lang": 1033,
+    "offset": 4033992,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 464,
+    "lang": 1033,
+    "offset": 4032120,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 465,
+    "lang": 1033,
+    "offset": 4035864,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 466,
+    "lang": 1033,
+    "offset": 4037736,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 467,
+    "lang": 1033,
+    "offset": 4041480,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 468,
+    "lang": 1033,
+    "offset": 4039608,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 469,
+    "lang": 1033,
+    "offset": 4043352,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 470,
+    "lang": 1033,
+    "offset": 3955688,
+    "size": 1706,
+    "type": "BITMAP"
+   },
+   {
+    "id": 471,
+    "lang": 1033,
+    "offset": 3957400,
+    "size": 1706,
+    "type": "BITMAP"
+   },
+   {
+    "id": 472,
+    "lang": 1033,
+    "offset": 4045224,
+    "size": 954,
+    "type": "BITMAP"
+   },
+   {
+    "id": 473,
+    "lang": 1033,
+    "offset": 4046184,
+    "size": 954,
+    "type": "BITMAP"
+   },
+   {
+    "id": 475,
+    "lang": 1033,
+    "offset": 3874664,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 476,
+    "lang": 1033,
+    "offset": 3878040,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 477,
+    "lang": 1033,
+    "offset": 3894920,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 478,
+    "lang": 1033,
+    "offset": 3898296,
+    "size": 3370,
+    "type": "BITMAP"
+   },
+   {
+    "id": 479,
+    "lang": 1033,
+    "offset": 4000296,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 480,
+    "lang": 1033,
+    "offset": 4002168,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 481,
+    "lang": 1033,
+    "offset": 4011528,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 482,
+    "lang": 1033,
+    "offset": 4013400,
+    "size": 1866,
+    "type": "BITMAP"
+   },
+   {
+    "id": 483,
+    "lang": 1033,
+    "offset": 4047144,
+    "size": 41002,
+    "type": "BITMAP"
+   },
+   {
+    "id": 484,
+    "lang": 1033,
+    "offset": 4088152,
+    "size": 41002,
+    "type": "BITMAP"
+   },
+   {
+    "id": 485,
+    "lang": 1033,
+    "offset": 3730512,
+    "size": 5224,
+    "type": "BITMAP"
+   },
+   {
+    "id": 486,
+    "lang": 1033,
+    "offset": 4129160,
+    "size": 1514,
+    "type": "BITMAP"
+   },
+   {
+    "id": 495,
+    "lang": 1033,
+    "offset": 4130680,
+    "size": 112938,
+    "type": "BITMAP"
+   },
+   {
+    "id": 496,
+    "lang": 1033,
+    "offset": 4243624,
+    "size": 112938,
+    "type": "BITMAP"
+   },
+   {
+    "id": 497,
+    "lang": 1033,
+    "offset": 4356568,
+    "size": 112938,
+    "type": "BITMAP"
+   },
+   {
+    "id": 498,
+    "lang": 1033,
+    "offset": 4469512,
+    "size": 254058,
+    "type": "BITMAP"
+   },
+   {
+    "id": 499,
+    "lang": 1033,
+    "offset": 4723576,
+    "size": 254058,
+    "type": "BITMAP"
+   },
+   {
+    "id": 500,
+    "lang": 1033,
+    "offset": 4977640,
+    "size": 254058,
+    "type": "BITMAP"
+   },
+   {
+    "id": 501,
+    "lang": 1033,
+    "offset": 5231704,
+    "size": 49194,
+    "type": "BITMAP"
+   },
+   {
+    "id": 502,
+    "lang": 1033,
+    "offset": 5280904,
+    "size": 49194,
+    "type": "BITMAP"
+   },
+   {
+    "id": 503,
+    "lang": 1033,
+    "offset": 5330104,
+    "size": 49194,
+    "type": "BITMAP"
+   },
+   {
+    "id": 49,
+    "lang": 1033,
+    "offset": 5830120,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 50,
+    "lang": 1033,
+    "offset": 5830432,
+    "size": 180,
+    "type": "CURSOR"
+   },
+   {
+    "id": 51,
+    "lang": 1033,
+    "offset": 5830656,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 52,
+    "lang": 1033,
+    "offset": 5830992,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 53,
+    "lang": 1033,
+    "offset": 5831328,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 54,
+    "lang": 1033,
+    "offset": 5831664,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 55,
+    "lang": 1033,
+    "offset": 5832000,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 56,
+    "lang": 1033,
+    "offset": 5832336,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 57,
+    "lang": 1033,
+    "offset": 5832672,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 58,
+    "lang": 1033,
+    "offset": 5833008,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 59,
+    "lang": 1033,
+    "offset": 5833344,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 60,
+    "lang": 1033,
+    "offset": 5833680,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 61,
+    "lang": 1033,
+    "offset": 5834016,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 62,
+    "lang": 1033,
+    "offset": 5834352,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 63,
+    "lang": 1033,
+    "offset": 5834688,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 64,
+    "lang": 1033,
+    "offset": 5835024,
+    "size": 308,
+    "type": "CURSOR"
+   },
+   {
+    "id": 100,
+    "lang": 1033,
+    "offset": 3607944,
+    "size": 1228,
+    "type": "DIALOG"
+   },
+   {
+    "id": 102,
+    "lang": 1033,
+    "offset": 3611712,
+    "size": 404,
+    "type": "DIALOG"
+   },
+   {
+    "id": 103,
+    "lang": 1033,
+    "offset": 3604552,
+    "size": 624,
+    "type": "DIALOG"
+   },
+   {
+    "id": 105,
+    "lang": 1033,
+    "offset": 3611272,
+    "size": 434,
+    "type": "DIALOG"
+   },
+   {
+    "id": 130,
+    "lang": 1033,
+    "offset": 3605176,
+    "size": 952,
+    "type": "DIALOG"
+   },
+   {
+    "id": 135,
+    "lang": 1033,
+    "offset": 3606664,
+    "size": 1278,
+    "type": "DIALOG"
+   },
+   {
+    "id": 138,
+    "lang": 1033,
+    "offset": 3603712,
+    "size": 840,
+    "type": "DIALOG"
+   },
+   {
+    "id": 139,
+    "lang": 1033,
+    "offset": 3614592,
+    "size": 1576,
+    "type": "DIALOG"
+   },
+   {
+    "id": 140,
+    "lang": 1033,
+    "offset": 3616168,
+    "size": 2066,
+    "type": "DIALOG"
+   },
+   {
+    "id": 141,
+    "lang": 1033,
+    "offset": 3618240,
+    "size": 1282,
+    "type": "DIALOG"
+   },
+   {
+    "id": 143,
+    "lang": 1033,
+    "offset": 3619528,
+    "size": 1322,
+    "type": "DIALOG"
+   },
+   {
+    "id": 144,
+    "lang": 1033,
+    "offset": 3620856,
+    "size": 262,
+    "type": "DIALOG"
+   },
+   {
+    "id": 145,
+    "lang": 1033,
+    "offset": 3612120,
+    "size": 398,
+    "type": "DIALOG"
+   },
+   {
+    "id": 146,
+    "lang": 1033,
+    "offset": 3612520,
+    "size": 640,
+    "type": "DIALOG"
+   },
+   {
+    "id": 147,
+    "lang": 1033,
+    "offset": 3603464,
+    "size": 246,
+    "type": "DIALOG"
+   },
+   {
+    "id": 148,
+    "lang": 1033,
+    "offset": 3606128,
+    "size": 534,
+    "type": "DIALOG"
+   },
+   {
+    "id": 150,
+    "lang": 1033,
+    "offset": 3609176,
+    "size": 496,
+    "type": "DIALOG"
+   },
+   {
+    "id": 182,
+    "lang": 1033,
+    "offset": 3613160,
+    "size": 214,
+    "type": "DIALOG"
+   },
+   {
+    "id": 184,
+    "lang": 1033,
+    "offset": 3609672,
+    "size": 190,
+    "type": "DIALOG"
+   },
+   {
+    "id": 185,
+    "lang": 1033,
+    "offset": 3613376,
+    "size": 1042,
+    "type": "DIALOG"
+   },
+   {
+    "id": 186,
+    "lang": 1033,
+    "offset": 3609864,
+    "size": 346,
+    "type": "DIALOG"
+   },
+   {
+    "id": 187,
+    "lang": 1033,
+    "offset": 3610216,
+    "size": 188,
+    "type": "DIALOG"
+   },
+   {
+    "id": 190,
+    "lang": 1033,
+    "offset": 3610408,
+    "size": 224,
+    "type": "DIALOG"
+   },
+   {
+    "id": 191,
+    "lang": 1033,
+    "offset": 3610632,
+    "size": 346,
+    "type": "DIALOG"
+   },
+   {
+    "id": 193,
+    "lang": 1033,
+    "offset": 3610984,
+    "size": 286,
+    "type": "DIALOG"
+   },
+   {
+    "id": 194,
+    "lang": 1033,
+    "offset": 3614424,
+    "size": 162,
+    "type": "DIALOG"
+   },
+   {
+    "id": 195,
+    "lang": 1033,
+    "offset": 3621120,
+    "size": 430,
+    "type": "DIALOG"
+   },
+   {
+    "id": 196,
+    "lang": 1033,
+    "offset": 3621552,
+    "size": 190,
+    "type": "DIALOG"
+   },
+   {
+    "id": 204,
+    "lang": 1033,
+    "offset": 3621744,
+    "size": 1270,
+    "type": "DIALOG"
+   },
+   {
+    "id": 208,
+    "lang": 1033,
+    "offset": 3623016,
+    "size": 394,
+    "type": "DIALOG"
+   },
+   {
+    "id": 209,
+    "lang": 1033,
+    "offset": 3623416,
+    "size": 870,
+    "type": "DIALOG"
+   },
+   {
+    "id": 226,
+    "lang": 1033,
+    "offset": 3624288,
+    "size": 540,
+    "type": "DIALOG"
+   },
+   {
+    "id": 228,
+    "lang": 1033,
+    "offset": 3624832,
+    "size": 2168,
+    "type": "DIALOG"
+   },
+   {
+    "id": 229,
+    "lang": 1033,
+    "offset": 3627000,
+    "size": 1824,
+    "type": "DIALOG"
+   },
+   {
+    "id": 230,
+    "lang": 1033,
+    "offset": 3628824,
+    "size": 210,
+    "type": "DIALOG"
+   },
+   {
+    "id": 231,
+    "lang": 1033,
+    "offset": 3629040,
+    "size": 1688,
+    "type": "DIALOG"
+   },
+   {
+    "id": 232,
+    "lang": 1033,
+    "offset": 3630728,
+    "size": 978,
+    "type": "DIALOG"
+   },
+   {
+    "id": 236,
+    "lang": 1033,
+    "offset": 3631712,
+    "size": 634,
+    "type": "DIALOG"
+   },
+   {
+    "id": 239,
+    "lang": 1033,
+    "offset": 3632352,
+    "size": 220,
+    "type": "DIALOG"
+   },
+   {
+    "id": 240,
+    "lang": 1033,
+    "offset": 3632576,
+    "size": 2064,
+    "type": "DIALOG"
+   },
+   {
+    "id": 241,
+    "lang": 1033,
+    "offset": 3634640,
+    "size": 548,
+    "type": "DIALOG"
+   },
+   {
+    "id": 242,
+    "lang": 1033,
+    "offset": 3635192,
+    "size": 40,
+    "type": "DIALOG"
+   },
+   {
+    "id": 244,
+    "lang": 1033,
+    "offset": 3635232,
+    "size": 254,
+    "type": "DIALOG"
+   },
+   {
+    "id": 245,
+    "lang": 1033,
+    "offset": 3635488,
+    "size": 442,
+    "type": "DIALOG"
+   },
+   {
+    "id": 257,
+    "lang": 1033,
+    "offset": 3635936,
+    "size": 1822,
+    "type": "DIALOG"
+   },
+   {
+    "id": 259,
+    "lang": 1033,
+    "offset": 3637760,
+    "size": 1178,
+    "type": "DIALOG"
+   },
+   {
+    "id": 262,
+    "lang": 1033,
+    "offset": 3638944,
+    "size": 1130,
+    "type": "DIALOG"
+   },
+   {
+    "id": 264,
+    "lang": 1033,
+    "offset": 3640080,
+    "size": 1894,
+    "type": "DIALOG"
+   },
+   {
+    "id": 268,
+    "lang": 1033,
+    "offset": 3641976,
+    "size": 282,
+    "type": "DIALOG"
+   },
+   {
+    "id": 269,
+    "lang": 1033,
+    "offset": 3642264,
+    "size": 430,
+    "type": "DIALOG"
+   },
+   {
+    "id": 270,
+    "lang": 1033,
+    "offset": 3642696,
+    "size": 196,
+    "type": "DIALOG"
+   },
+   {
+    "id": 271,
+    "lang": 1033,
+    "offset": 3642896,
+    "size": 868,
+    "type": "DIALOG"
+   },
+   {
+    "id": 279,
+    "lang": 1033,
+    "offset": 3643768,
+    "size": 634,
+    "type": "DIALOG"
+   },
+   {
+    "id": 280,
+    "lang": 1033,
+    "offset": 3644408,
+    "size": 1818,
+    "type": "DIALOG"
+   },
+   {
+    "id": 281,
+    "lang": 1033,
+    "offset": 3646232,
+    "size": 390,
+    "type": "DIALOG"
+   },
+   {
+    "id": 284,
+    "lang": 1033,
+    "offset": 3646624,
+    "size": 2646,
+    "type": "DIALOG"
+   },
+   {
+    "id": 286,
+    "lang": 1033,
+    "offset": 3649272,
+    "size": 644,
+    "type": "DIALOG"
+   },
+   {
+    "id": 290,
+    "lang": 1033,
+    "offset": 3649920,
+    "size": 444,
+    "type": "DIALOG"
+   },
+   {
+    "id": 291,
+    "lang": 1033,
+    "offset": 3650368,
+    "size": 2014,
+    "type": "DIALOG"
+   },
+   {
+    "id": 292,
+    "lang": 1033,
+    "offset": 3652384,
+    "size": 292,
+    "type": "DIALOG"
+   },
+   {
+    "id": 294,
+    "lang": 1033,
+    "offset": 3652680,
+    "size": 994,
+    "type": "DIALOG"
+   },
+   {
+    "id": 296,
+    "lang": 1033,
+    "offset": 3653680,
+    "size": 494,
+    "type": "DIALOG"
+   },
+   {
+    "id": 297,
+    "lang": 1033,
+    "offset": 3654176,
+    "size": 224,
+    "type": "DIALOG"
+   },
+   {
+    "id": 298,
+    "lang": 1033,
+    "offset": 3654400,
+    "size": 1204,
+    "type": "DIALOG"
+   },
+   {
+    "id": 300,
+    "lang": 1033,
+    "offset": 3655608,
+    "size": 238,
+    "type": "DIALOG"
+   },
+   {
+    "id": 302,
+    "lang": 1033,
+    "offset": 3655848,
+    "size": 1166,
+    "type": "DIALOG"
+   },
+   {
+    "id": 303,
+    "lang": 1033,
+    "offset": 3657016,
+    "size": 774,
+    "type": "DIALOG"
+   },
+   {
+    "id": 304,
+    "lang": 1033,
+    "offset": 3657792,
+    "size": 248,
+    "type": "DIALOG"
+   },
+   {
+    "id": 305,
+    "lang": 1033,
+    "offset": 3658040,
+    "size": 290,
+    "type": "DIALOG"
+   },
+   {
+    "id": 306,
+    "lang": 1033,
+    "offset": 3658336,
+    "size": 2058,
+    "type": "DIALOG"
+   },
+   {
+    "id": 307,
+    "lang": 1033,
+    "offset": 3660400,
+    "size": 426,
+    "type": "DIALOG"
+   },
+   {
+    "id": 30721,
+    "lang": 1033,
+    "offset": 5835360,
+    "size": 232,
+    "type": "DIALOG"
+   },
+   {
+    "id": 30734,
+    "lang": 1033,
+    "offset": 5835592,
+    "size": 52,
+    "type": "DIALOG"
+   },
+   {
+    "id": 308,
+    "lang": 1033,
+    "offset": 3660832,
+    "size": 578,
+    "type": "DIALOG"
+   },
+   {
+    "id": 309,
+    "lang": 1033,
+    "offset": 3661416,
+    "size": 434,
+    "type": "DIALOG"
+   },
+   {
+    "id": 310,
+    "lang": 1033,
+    "offset": 3661856,
+    "size": 346,
+    "type": "DIALOG"
+   },
+   {
+    "id": 332,
+    "lang": 1033,
+    "offset": 3662208,
+    "size": 634,
+    "type": "DIALOG"
+   },
+   {
+    "id": 334,
+    "lang": 1033,
+    "offset": 3662848,
+    "size": 640,
+    "type": "DIALOG"
+   },
+   {
+    "id": 335,
+    "lang": 1033,
+    "offset": 3663488,
+    "size": 668,
+    "type": "DIALOG"
+   },
+   {
+    "id": 336,
+    "lang": 1033,
+    "offset": 3664160,
+    "size": 812,
+    "type": "DIALOG"
+   },
+   {
+    "id": 337,
+    "lang": 1033,
+    "offset": 3664976,
+    "size": 832,
+    "type": "DIALOG"
+   },
+   {
+    "id": 338,
+    "lang": 1033,
+    "offset": 3665808,
+    "size": 610,
+    "type": "DIALOG"
+   },
+   {
+    "id": 339,
+    "lang": 1033,
+    "offset": 3666424,
+    "size": 484,
+    "type": "DIALOG"
+   },
+   {
+    "id": 340,
+    "lang": 1033,
+    "offset": 3666912,
+    "size": 1460,
+    "type": "DIALOG"
+   },
+   {
+    "id": 341,
+    "lang": 1033,
+    "offset": 3668376,
+    "size": 166,
+    "type": "DIALOG"
+   },
+   {
+    "id": 342,
+    "lang": 1033,
+    "offset": 3668544,
+    "size": 450,
+    "type": "DIALOG"
+   },
+   {
+    "id": 344,
+    "lang": 1033,
+    "offset": 3669000,
+    "size": 156,
+    "type": "DIALOG"
+   },
+   {
+    "id": 345,
+    "lang": 1033,
+    "offset": 3669160,
+    "size": 336,
+    "type": "DIALOG"
+   },
+   {
+    "id": 348,
+    "lang": 1033,
+    "offset": 3669496,
+    "size": 1038,
+    "type": "DIALOG"
+   },
+   {
+    "id": 349,
+    "lang": 1033,
+    "offset": 3670536,
+    "size": 170,
+    "type": "DIALOG"
+   },
+   {
+    "id": 352,
+    "lang": 1033,
+    "offset": 3670712,
+    "size": 118,
+    "type": "DIALOG"
+   },
+   {
+    "id": 363,
+    "lang": 1033,
+    "offset": 3670832,
+    "size": 754,
+    "type": "DIALOG"
+   },
+   {
+    "id": 364,
+    "lang": 1033,
+    "offset": 3671592,
+    "size": 904,
+    "type": "DIALOG"
+   },
+   {
+    "id": 365,
+    "lang": 1033,
+    "offset": 3672496,
+    "size": 624,
+    "type": "DIALOG"
+   },
+   {
+    "id": 367,
+    "lang": 1033,
+    "offset": 3673120,
+    "size": 868,
+    "type": "DIALOG"
+   },
+   {
+    "id": 369,
+    "lang": 1033,
+    "offset": 3673992,
+    "size": 2222,
+    "type": "DIALOG"
+   },
+   {
+    "id": 370,
+    "lang": 1033,
+    "offset": 3676216,
+    "size": 490,
+    "type": "DIALOG"
+   },
+   {
+    "id": 381,
+    "lang": 1033,
+    "offset": 3676712,
+    "size": 266,
+    "type": "DIALOG"
+   },
+   {
+    "id": 487,
+    "lang": 1033,
+    "offset": 3676984,
+    "size": 542,
+    "type": "DIALOG"
+   },
+   {
+    "id": 488,
+    "lang": 1033,
+    "offset": 3677528,
+    "size": 368,
+    "type": "DIALOG"
+   },
+   {
+    "id": 489,
+    "lang": 1033,
+    "offset": 3677896,
+    "size": 698,
+    "type": "DIALOG"
+   },
+   {
+    "id": 494,
+    "lang": 1033,
+    "offset": 3678600,
+    "size": 430,
+    "type": "DIALOG"
+   },
+   {
+    "id": 504,
+    "lang": 1033,
+    "offset": 3679032,
+    "size": 64,
+    "type": "DIALOG"
+   },
+   {
+    "id": 505,
+    "lang": 1033,
+    "offset": 3679096,
+    "size": 270,
+    "type": "DIALOG"
+   },
+   {
+    "id": 506,
+    "lang": 1033,
+    "offset": 3679368,
+    "size": 736,
+    "type": "DIALOG"
+   },
+   {
+    "id": 141,
+    "lang": 1033,
+    "offset": 5588000,
+    "size": 75,
+    "type": "DLGINIT"
+   },
+   {
+    "id": 146,
+    "lang": 1033,
+    "offset": 5587928,
+    "size": 65,
+    "type": "DLGINIT"
+   },
+   {
+    "id": 226,
+    "lang": 1033,
+    "offset": 5588080,
+    "size": 154,
+    "type": "DLGINIT"
+   },
+   {
+    "id": 30977,
+    "lang": 1033,
+    "offset": 5830616,
+    "size": 34,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 30998,
+    "lang": 1033,
+    "offset": 5832648,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 30999,
+    "lang": 1033,
+    "offset": 5830968,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 31000,
+    "lang": 1033,
+    "offset": 5832312,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 31001,
+    "lang": 1033,
+    "offset": 5831976,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 31002,
+    "lang": 1033,
+    "offset": 5834328,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 31003,
+    "lang": 1033,
+    "offset": 5831640,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 31004,
+    "lang": 1033,
+    "offset": 5833320,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 31005,
+    "lang": 1033,
+    "offset": 5831304,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 31006,
+    "lang": 1033,
+    "offset": 5832984,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 31007,
+    "lang": 1033,
+    "offset": 5833656,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 31008,
+    "lang": 1033,
+    "offset": 5833992,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 31009,
+    "lang": 1033,
+    "offset": 5834664,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 31010,
+    "lang": 1033,
+    "offset": 5835000,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 31011,
+    "lang": 1033,
+    "offset": 5835336,
+    "size": 20,
+    "type": "GROUP_CURSOR"
+   },
+   {
+    "id": 128,
+    "lang": 1033,
+    "offset": 5476328,
+    "size": 146,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 272,
+    "lang": 1033,
+    "offset": 5482960,
+    "size": 34,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 273,
+    "lang": 1033,
+    "offset": 5489480,
+    "size": 34,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 274,
+    "lang": 1033,
+    "offset": 5496000,
+    "size": 34,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 275,
+    "lang": 1033,
+    "offset": 5502520,
+    "size": 34,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 276,
+    "lang": 1033,
+    "offset": 5509040,
+    "size": 34,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 277,
+    "lang": 1033,
+    "offset": 5515560,
+    "size": 34,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 278,
+    "lang": 1033,
+    "offset": 5522080,
+    "size": 34,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 285,
+    "lang": 1033,
+    "offset": 5528600,
+    "size": 34,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 287,
+    "lang": 1033,
+    "offset": 5530128,
+    "size": 34,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 288,
+    "lang": 1033,
+    "offset": 5533552,
+    "size": 48,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 293,
+    "lang": 1033,
+    "offset": 5540080,
+    "size": 34,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 295,
+    "lang": 1033,
+    "offset": 5546600,
+    "size": 34,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 331,
+    "lang": 1033,
+    "offset": 5549880,
+    "size": 20,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 346,
+    "lang": 1033,
+    "offset": 5564936,
+    "size": 48,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 353,
+    "lang": 1033,
+    "offset": 5567584,
+    "size": 20,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 354,
+    "lang": 1033,
+    "offset": 5570208,
+    "size": 20,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 355,
+    "lang": 1033,
+    "offset": 5575960,
+    "size": 20,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 356,
+    "lang": 1033,
+    "offset": 5581712,
+    "size": 20,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 357,
+    "lang": 1033,
+    "offset": 5582040,
+    "size": 20,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 375,
+    "lang": 1033,
+    "offset": 5582176,
+    "size": 20,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 376,
+    "lang": 1033,
+    "offset": 5582312,
+    "size": 20,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 377,
+    "lang": 1033,
+    "offset": 5584536,
+    "size": 20,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 378,
+    "lang": 1033,
+    "offset": 5586760,
+    "size": 20,
+    "type": "GROUP_ICON"
+   },
+   {
+    "id": 113,
+    "lang": 1033,
+    "offset": 3586488,
+    "size": 16969,
+    "type": "HTML"
+   },
+   {
+    "id": 1,
+    "lang": 1033,
+    "offset": 5379304,
+    "size": 71960,
+    "type": "ICON"
+   },
+   {
+    "id": 10,
+    "lang": 1033,
+    "offset": 5476032,
+    "size": 296,
+    "type": "ICON"
+   },
+   {
+    "id": 11,
+    "lang": 1033,
+    "offset": 5476480,
+    "size": 2216,
+    "type": "ICON"
+   },
+   {
+    "id": 12,
+    "lang": 1033,
+    "offset": 5478696,
+    "size": 4264,
+    "type": "ICON"
+   },
+   {
+    "id": 13,
+    "lang": 1033,
+    "offset": 5483000,
+    "size": 2216,
+    "type": "ICON"
+   },
+   {
+    "id": 14,
+    "lang": 1033,
+    "offset": 5485216,
+    "size": 4264,
+    "type": "ICON"
+   },
+   {
+    "id": 15,
+    "lang": 1033,
+    "offset": 5489520,
+    "size": 2216,
+    "type": "ICON"
+   },
+   {
+    "id": 16,
+    "lang": 1033,
+    "offset": 5491736,
+    "size": 4264,
+    "type": "ICON"
+   },
+   {
+    "id": 17,
+    "lang": 1033,
+    "offset": 5496040,
+    "size": 2216,
+    "type": "ICON"
+   },
+   {
+    "id": 18,
+    "lang": 1033,
+    "offset": 5498256,
+    "size": 4264,
+    "type": "ICON"
+   },
+   {
+    "id": 19,
+    "lang": 1033,
+    "offset": 5502560,
+    "size": 2216,
+    "type": "ICON"
+   },
+   {
+    "id": 2,
+    "lang": 1033,
+    "offset": 5451264,
+    "size": 9640,
+    "type": "ICON"
+   },
+   {
+    "id": 20,
+    "lang": 1033,
+    "offset": 5504776,
+    "size": 4264,
+    "type": "ICON"
+   },
+   {
+    "id": 21,
+    "lang": 1033,
+    "offset": 5509080,
+    "size": 2216,
+    "type": "ICON"
+   },
+   {
+    "id": 22,
+    "lang": 1033,
+    "offset": 5511296,
+    "size": 4264,
+    "type": "ICON"
+   },
+   {
+    "id": 23,
+    "lang": 1033,
+    "offset": 5515600,
+    "size": 2216,
+    "type": "ICON"
+   },
+   {
+    "id": 24,
+    "lang": 1033,
+    "offset": 5517816,
+    "size": 4264,
+    "type": "ICON"
+   },
+   {
+    "id": 25,
+    "lang": 1033,
+    "offset": 5522120,
+    "size": 2216,
+    "type": "ICON"
+   },
+   {
+    "id": 26,
+    "lang": 1033,
+    "offset": 5524336,
+    "size": 4264,
+    "type": "ICON"
+   },
+   {
+    "id": 27,
+    "lang": 1033,
+    "offset": 5528640,
+    "size": 1160,
+    "type": "ICON"
+   },
+   {
+    "id": 28,
+    "lang": 1033,
+    "offset": 5529800,
+    "size": 328,
+    "type": "ICON"
+   },
+   {
+    "id": 29,
+    "lang": 1033,
+    "offset": 5530168,
+    "size": 1384,
+    "type": "ICON"
+   },
+   {
+    "id": 3,
+    "lang": 1033,
+    "offset": 5460904,
+    "size": 4264,
+    "type": "ICON"
+   },
+   {
+    "id": 30,
+    "lang": 1033,
+    "offset": 5531552,
+    "size": 872,
+    "type": "ICON"
+   },
+   {
+    "id": 31,
+    "lang": 1033,
+    "offset": 5532424,
+    "size": 1128,
+    "type": "ICON"
+   },
+   {
+    "id": 32,
+    "lang": 1033,
+    "offset": 5533600,
+    "size": 2216,
+    "type": "ICON"
+   },
+   {
+    "id": 33,
+    "lang": 1033,
+    "offset": 5535816,
+    "size": 4264,
+    "type": "ICON"
+   },
+   {
+    "id": 34,
+    "lang": 1033,
+    "offset": 5540120,
+    "size": 2216,
+    "type": "ICON"
+   },
+   {
+    "id": 35,
+    "lang": 1033,
+    "offset": 5542336,
+    "size": 4264,
+    "type": "ICON"
+   },
+   {
+    "id": 36,
+    "lang": 1033,
+    "offset": 5546640,
+    "size": 3240,
+    "type": "ICON"
+   },
+   {
+    "id": 37,
+    "lang": 1033,
+    "offset": 5549904,
+    "size": 9640,
+    "type": "ICON"
+   },
+   {
+    "id": 38,
+    "lang": 1033,
+    "offset": 5559544,
+    "size": 4264,
+    "type": "ICON"
+   },
+   {
+    "id": 39,
+    "lang": 1033,
+    "offset": 5563808,
+    "size": 1128,
+    "type": "ICON"
+   },
+   {
+    "id": 4,
+    "lang": 1033,
+    "offset": 5465168,
+    "size": 1128,
+    "type": "ICON"
+   },
+   {
+    "id": 40,
+    "lang": 1033,
+    "offset": 5564984,
+    "size": 2600,
+    "type": "ICON"
+   },
+   {
+    "id": 41,
+    "lang": 1033,
+    "offset": 5567608,
+    "size": 2600,
+    "type": "ICON"
+   },
+   {
+    "id": 42,
+    "lang": 1033,
+    "offset": 5570232,
+    "size": 5724,
+    "type": "ICON"
+   },
+   {
+    "id": 43,
+    "lang": 1033,
+    "offset": 5575984,
+    "size": 5724,
+    "type": "ICON"
+   },
+   {
+    "id": 44,
+    "lang": 1033,
+    "offset": 5581736,
+    "size": 300,
+    "type": "ICON"
+   },
+   {
+    "id": 45,
+    "lang": 1033,
+    "offset": 5582064,
+    "size": 112,
+    "type": "ICON"
+   },
+   {
+    "id": 46,
+    "lang": 1033,
+    "offset": 5582200,
+    "size": 112,
+    "type": "ICON"
+   },
+   {
+    "id": 47,
+    "lang": 1033,
+    "offset": 5582336,
+    "size": 2200,
+    "type": "ICON"
+   },
+   {
+    "id": 48,
+    "lang": 1033,
+    "offset": 5584560,
+    "size": 2200,
+    "type": "ICON"
+   },
+   {
+    "id": 5,
+    "lang": 1033,
+    "offset": 5466296,
+    "size": 3752,
+    "type": "ICON"
+   },
+   {
+    "id": 6,
+    "lang": 1033,
+    "offset": 5470048,
+    "size": 2216,
+    "type": "ICON"
+   },
+   {
+    "id": 7,
+    "lang": 1033,
+    "offset": 5472264,
+    "size": 1384,
+    "type": "ICON"
+   },
+   {
+    "id": 8,
+    "lang": 1033,
+    "offset": 5473648,
+    "size": 1640,
+    "type": "ICON"
+   },
+   {
+    "id": 9,
+    "lang": 1033,
+    "offset": 5475288,
+    "size": 744,
+    "type": "ICON"
+   },
+   {
+    "id": 1,
+    "lang": 0,
+    "offset": 3584848,
+    "size": 1633,
+    "type": "MANIFEST"
+   },
+   {
+    "id": 129,
+    "lang": 1033,
+    "offset": 3680104,
+    "size": 2594,
+    "type": "MENU"
+   },
+   {
+    "id": 256,
+    "lang": 1033,
+    "offset": 3682704,
+    "size": 414,
+    "type": "MENU"
+   },
+   {
+    "id": 380,
+    "lang": 1033,
+    "offset": 5588240,
+    "size": 117103,
+    "type": "NAMED:IMAGE"
+   },
+   {
+    "id": 383,
+    "lang": 1033,
+    "offset": 5705344,
+    "size": 72984,
+    "type": "NAMED:IMAGE"
+   },
+   {
+    "id": 384,
+    "lang": 1033,
+    "offset": 5778328,
+    "size": 22164,
+    "type": "NAMED:IMAGE"
+   },
+   {
+    "id": 385,
+    "lang": 1033,
+    "offset": 5800496,
+    "size": 2227,
+    "type": "NAMED:IMAGE"
+   },
+   {
+    "id": 474,
+    "lang": 1033,
+    "offset": 5802728,
+    "size": 21925,
+    "type": "NAMED:IMAGE"
+   },
+   {
+    "id": 505,
+    "lang": 1033,
+    "offset": 5824656,
+    "size": 5464,
+    "type": "NAMED:PNG"
+   },
+   {
+    "id": 101,
+    "lang": 1033,
+    "offset": 5840944,
+    "size": 44,
+    "type": "STRING"
+   },
+   {
+    "id": 116,
+    "lang": 1033,
+    "offset": 5841192,
+    "size": 62,
+    "type": "STRING"
+   },
+   {
+    "id": 2050,
+    "lang": 1033,
+    "offset": 5837832,
+    "size": 732,
+    "type": "STRING"
+   },
+   {
+    "id": 2051,
+    "lang": 1033,
+    "offset": 5838952,
+    "size": 424,
+    "type": "STRING"
+   },
+   {
+    "id": 2052,
+    "lang": 1033,
+    "offset": 5839808,
+    "size": 356,
+    "type": "STRING"
+   },
+   {
+    "id": 2053,
+    "lang": 1033,
+    "offset": 5840168,
+    "size": 150,
+    "type": "STRING"
+   },
+   {
+    "id": 2064,
+    "lang": 1033,
+    "offset": 5840880,
+    "size": 64,
+    "type": "STRING"
+   },
+   {
+    "id": 2127,
+    "lang": 1033,
+    "offset": 5839376,
+    "size": 426,
+    "type": "STRING"
+   },
+   {
+    "id": 2128,
+    "lang": 1033,
+    "offset": 5841040,
+    "size": 148,
+    "type": "STRING"
+   },
+   {
+    "id": 3841,
+    "lang": 1033,
+    "offset": 5841256,
+    "size": 130,
+    "type": "STRING"
+   },
+   {
+    "id": 3842,
+    "lang": 1033,
+    "offset": 5841392,
+    "size": 42,
+    "type": "STRING"
+   },
+   {
+    "id": 3843,
+    "lang": 1033,
+    "offset": 5841440,
+    "size": 388,
+    "type": "STRING"
+   },
+   {
+    "id": 3857,
+    "lang": 1033,
+    "offset": 5841832,
+    "size": 1254,
+    "type": "STRING"
+   },
+   {
+    "id": 3858,
+    "lang": 1033,
+    "offset": 5844000,
+    "size": 612,
+    "type": "STRING"
+   },
+   {
+    "id": 3859,
+    "lang": 1033,
+    "offset": 5843264,
+    "size": 730,
+    "type": "STRING"
+   },
+   {
+    "id": 3860,
+    "lang": 1033,
+    "offset": 5846632,
+    "size": 138,
+    "type": "STRING"
+   },
+   {
+    "id": 3865,
+    "lang": 1033,
+    "offset": 5843088,
+    "size": 172,
+    "type": "STRING"
+   },
+   {
+    "id": 3866,
+    "lang": 1033,
+    "offset": 5846360,
+    "size": 222,
+    "type": "STRING"
+   },
+   {
+    "id": 3867,
+    "lang": 1033,
+    "offset": 5844616,
+    "size": 1192,
+    "type": "STRING"
+   },
+   {
+    "id": 3868,
+    "lang": 1033,
+    "offset": 5845808,
+    "size": 552,
+    "type": "STRING"
+   },
+   {
+    "id": 3869,
+    "lang": 1033,
+    "offset": 5846584,
+    "size": 44,
+    "type": "STRING"
+   },
+   {
+    "id": 3887,
+    "lang": 1033,
+    "offset": 5846776,
+    "size": 66,
+    "type": "STRING"
+   },
+   {
+    "id": 63,
+    "lang": 1033,
+    "offset": 5837016,
+    "size": 164,
+    "type": "STRING"
+   },
+   {
+    "id": 67,
+    "lang": 1033,
+    "offset": 5837184,
+    "size": 242,
+    "type": "STRING"
+   },
+   {
+    "id": 68,
+    "lang": 1033,
+    "offset": 5836880,
+    "size": 132,
+    "type": "STRING"
+   },
+   {
+    "id": 7,
+    "lang": 1033,
+    "offset": 5836160,
+    "size": 338,
+    "type": "STRING"
+   },
+   {
+    "id": 70,
+    "lang": 1033,
+    "offset": 5837432,
+    "size": 286,
+    "type": "STRING"
+   },
+   {
+    "id": 73,
+    "lang": 1033,
+    "offset": 5836504,
+    "size": 156,
+    "type": "STRING"
+   },
+   {
+    "id": 75,
+    "lang": 1033,
+    "offset": 5836664,
+    "size": 214,
+    "type": "STRING"
+   },
+   {
+    "id": 76,
+    "lang": 1033,
+    "offset": 5837720,
+    "size": 112,
+    "type": "STRING"
+   },
+   {
+    "id": 77,
+    "lang": 1033,
+    "offset": 5838568,
+    "size": 146,
+    "type": "STRING"
+   },
+   {
+    "id": 78,
+    "lang": 1033,
+    "offset": 5838720,
+    "size": 230,
+    "type": "STRING"
+   },
+   {
+    "id": 8,
+    "lang": 1033,
+    "offset": 5840992,
+    "size": 44,
+    "type": "STRING"
+   },
+   {
+    "id": 80,
+    "lang": 1033,
+    "offset": 5840320,
+    "size": 62,
+    "type": "STRING"
+   },
+   {
+    "id": 85,
+    "lang": 1033,
+    "offset": 5840480,
+    "size": 96,
+    "type": "STRING"
+   },
+   {
+    "id": 88,
+    "lang": 1033,
+    "offset": 5840384,
+    "size": 90,
+    "type": "STRING"
+   },
+   {
+    "id": 90,
+    "lang": 1033,
+    "offset": 5840576,
+    "size": 298,
+    "type": "STRING"
+   },
+   {
+    "id": 166,
+    "lang": 1033,
+    "offset": 5586784,
+    "size": 32,
+    "type": "TOOLBAR"
+   },
+   {
+    "id": 260,
+    "lang": 1033,
+    "offset": 5586816,
+    "size": 30,
+    "type": "TOOLBAR"
+   },
+   {
+    "id": 485,
+    "lang": 1033,
+    "offset": 5586848,
+    "size": 30,
+    "type": "TOOLBAR"
+   },
+   {
+    "id": 1,
+    "lang": 1033,
+    "offset": 5586880,
+    "size": 1048,
+    "type": "VERSION"
+   }
+  ]
+ },
+ "rt_string": [
+  "&About IDM...",
+  "Displays a Tip of the Day.",
+  "Ti&p of the Day...",
+  "Did you know...",
+  "Tips file does not exist in the prescribed directory",
+  "Trouble reading the tips file",
+  "Status",
+  "Add a file to IDM list for downloading later",
+  "Start file downloading",
+  "Launch Internet Download Manager on system startup",
+  "Monitor system Clipboard for links to download with IDM",
+  "IDM Search settings",
+  "Purchase registered copy of IDM",
+  "Make an attempt to find HTTP proxy in Internet Explorer configuration",
+  "Use FTP protocol in passive mode (needed behind firewalls)",
+  "Check for available updates on www.internetdownloadmanager.com",
+  "Register IDM with your registration key",
+  "Click to visit IDM home site",
+  "Contact IDM support team",
+  "Click to know how to get license for IDM",
+  "Move item down",
+  "Move item up",
+  "Remove item from download queue",
+  "Start queue",
+  "Stop queue",
+  "Use this option in an emergency. This can cause the applications to lose data.",
+  "Hide categories",
+  "Check All Files",
+  "Uncheck All Files",
+  "Start Exploring",
+  "Stop Exploring",
+  "Start Downloading the checked files",
+  "Stop downloading the checked files",
+  "Add checked files to the main IDM list and to the download queue",
+  "Browse",
+  "Close SearchBar",
+  "Write a letter to your friend about IDM",
+  "Add new download address manually",
+  "Start/Resume downloading selected file(s)",
+  "Stop downloading selected file(s)",
+  "Stop all downloads",
+  "Remove selected file(s) from the list",
+  "Remove all completed files from the list",
+  "Browsers/System integration, File types, Proxy, Passwords and others",
+  "Scheduler and download queues",
+  "Opening Port",
+  "Port Opened",
+  "Connecting Device",
+  "Device Connected",
+  "All Devices Connected",
+  "Starting Authentication",
+  "Authentication Notify",
+  "Authentication Retry",
+  "Callback Requested",
+  "Change Password Requested",
+  "Projection Phase Started",
+  "Link Speed Calculation",
+  "Authentication Acknowledged",
+  "Reauthenticatation Started",
+  "Authenticated",
+  "Waiting For Modem Reset",
+  "Waiting For Callback",
+  "Interactive",
+  "Retry Authentication",
+  "Callback Set By Caller",
+  "Password Expired",
+  "Connected",
+  "Disconnected",
+  "Run site grabber",
+  "Schedule the project",
+  "Show grabber statistics",
+  "Update all",
+  "Start main download queue, or choose a queue to start from drop-down list",
+  "Stop main download queue, or choose a queue to stop from drop-down list",
+  "Enable/Disable using Windows Dark App Mode settings in IDM",
+  "Open",
+  "Save As",
+  "All Files (*.*)",
+  "Untitled",
+  "an unnamed file",
+  "&Hide",
+  "No error message is available.",
+  "Attempted an unsupported operation.",
+  "A required resource was unavailable.",
+  "Out of memory.",
+  "An unknown error has occurred.",
+  "Encountered an improper argument.",
+  "Incorrect filename.",
+  "Failed to open document.",
+  "Failed to save document.",
+  "Save changes to %1?",
+  "Failed to create empty document.",
+  "The file is too large to open.",
+  "Could not start print job.",
+  "Failed to launch help.",
+  "Internal application error.",
+  "Command failed.",
+  "Insufficient memory to perform operation.",
+  "System registry entries have been removed and the INI file (if any) was deleted.",
+  "Not all of the system registry entries (or INI file) were removed.",
+  "This program requires the file %s, which was not found on this system.",
+  "This program is linked to the missing export %s in the file %s. This machine may have an incompatible version of %s.",
+  "Enter an integer.",
+  "Enter a number.",
+  "Enter an integer between %1 and %2.",
+  "Enter a number between %1 and %2.",
+  "Enter no more than %1 characters.",
+  "Select a button.",
+  "Enter an integer between 0 and 255.",
+  "Enter a positive integer.",
+  "Enter a date and/or time.",
+  "Enter a currency.",
+  "Enter a GUID.",
+  "Enter a time.",
+  "Enter a date.",
+  "Unexpected file format.",
+  "%1\nCannot find this file.\nVerify that the correct path and file name are given.",
+  "Destination disk drive is full.",
+  "Unable to read from %1, it is opened by someone else.",
+  "Unable to write to %1, it is read-only or opened by someone else.",
+  "Encountered an unexpected error while reading %1.",
+  "Encountered an unexpected error while writing %1.",
+  "%1: %2\nContinue running script?",
+  "Dispatch exception: %1",
+  "Unable to read write-only property.",
+  "Unable to write read-only property.",
+  "Unable to load mail system support.",
+  "Mail system DLL is invalid.",
+  "Send Mail failed to send message.",
+  "No error occurred.",
+  "An unknown error occurred while accessing %1.",
+  "%1 was not found.",
+  "%1 contains an incorrect path.",
+  "Could not open %1 because there are too many open files.",
+  "Access to %1 was denied.",
+  "An incorrect file handle was associated with %1.",
+  "Could not remove %1 because it is the current directory.",
+  "Could not create %1 because the directory is full.",
+  "Seek failed on %1",
+  "Encountered a hardware I/O error while accessing %1.",
+  "Encountered a sharing violation while accessing %1.",
+  "Encountered a locking violation while accessing %1.",
+  "Disk full while accessing %1.",
+  "Attempted to access %1 past its end.",
+  "No error occurred.",
+  "An unknown error occurred while accessing %1.",
+  "Attempted to write to the reading %1.",
+  "Attempted to access %1 past its end.",
+  "Attempted to read from the writing %1.",
+  "%1 has a bad format.",
+  "%1 contained an unexpected object.",
+  "%1 contains an incorrect schema.",
+  "pixels",
+  "Uncheck",
+  "Check",
+  "Mixed"
+ ],
+ "rtti": {
+  "count": 439,
+  "plain": [
+   "AFX_MODULE_STATE",
+   "AFX_MODULE_THREAD_STATE",
+   "AMF3ClassDefinition",
+   "AMFObject",
+   "AMFObjectProperty",
+   "AMFPropertiesArray",
+   "CAboutDlg",
+   "CAccessibleProxy@ATL",
+   "CAddMaxConnDlg",
+   "CAddMinSizeForDownlPanelDlg",
+   "CAddSiteDlg",
+   "CAddTreeItem",
+   "CAddUrlDlg",
+   "CAddUrlToExceptionsListDlg",
+   "CAdvancedProxyConfigDlg",
+   "CAfxStringMgr",
+   "CAllControlsSheet",
+   "CArchiveException",
+   "CArchiveStream",
+   "CAviFormat",
+   "CBatchDownloadDlg",
+   "CBitmap",
+   "CBrowserControlSite",
+   "CBrowserDetailsDlg",
+   "CBrowsersIntegration",
+   "CBrowsersIntegrator",
+   "CBrush",
+   "CButton",
+   "CByteArray",
+   "CCacheManager",
+   "CCanceledDownloadsList",
+   "CCatchedUrlExcepionsList",
+   "CCheckIEDlg",
+   "CCheckNewVersionProgress",
+   "CCheckboxOnGroupBoxCtrl",
+   "CChooseQueueDlg",
+   "CClientDC",
+   "CCloseTreeButton",
+   "CCmdTarget",
+   "CCmdUI",
+   "CComCtlWrapper",
+   "CComObjectRootBase@ATL",
+   "CComboBox",
+   "CCommDlgWrapper",
+   "CCommandLineInfo",
+   "CCommonDialog",
+   "CConfirm",
+   "CConfirmGrabberProjectName",
+   "CConfirmRemoveFromListDlg",
+   "CConfirmRemoveUncompletedDlg",
+   "CContentTypeChecker",
+   "CContentTypesDatabase",
+   "CContinueElevatedFSADlg",
+   "CControlBar",
+   "CControlSiteFactoryMgr",
+   "CCookieArray",
+   "CCookieMonster",
+   "CCookiesChangesTable",
+   "CCouldNotTakeOverOnHtml4Dlg",
+   "CCustomGrabberTemplates",
+   "CCustomToolbars",
+   "CCustomizeDwnlProgressTabs",
+   "CDBFileTypeIndexArray",
+   "CDBIndexArray",
+   "CDBMainArray",
+   "CDBSizeIndexArray",
+   "CDBStatusIndexArray",
+   "CDC",
+   "CDHtmlControlSink",
+   "CDHtmlDialog",
+   "CDHtmlElementEventSink",
+   "CDHtmlEventSink",
+   "CDHtmlSinkHandler",
+   "CDHtmlSinkHandlerBase1",
+   "CDHtmlSinkHandlerBase2",
+   "CDataSourceControl",
+   "CDateParser",
+   "CDateTimeCtrl",
+   "CDeleteSmsManager",
+   "CDeletedDefaultUrlExcepionsList",
+   "CDetectedBrowsersDlg",
+   "CDialUpLogin",
+   "CDialUpProcessor",
+   "CDialUpProgress",
+   "CDialog",
+   "CDialogBar",
+   "CDllIsolationWrapperBase",
+   "CDomainPathFilters",
+   "CDownlComplDragSource",
+   "CDownlProgressComponent",
+   "CDownlProgressDlg3",
+   "CDownload",
+   "CDownloadCompleteDlg",
+   "CDownloadComponents",
+   "CDownloadLimits",
+   "CDownloadProgressOptionsTab",
+   "CDownloadQueue",
+   "CDownloaderApp",
+   "CDownloaderDlg",
+   "CDownloadingTab",
+   "CDropTargetPicture",
+   "CDropTargetWnd",
+   "CDuplicateDownloadsDlg",
+   "CEdit",
+   "CEditBrowsersDwnlPanelDlg",
+   "CEditBrowsersMenuDlg",
+   "CEditColumnsDlg",
+   "CEditFilterDlg",
+   "CEditIEDwnlPanelTab",
+   "CEditIEMenutab",
+   "CEditMozillaMenutab",
+   "CEnableChromeExtTipDlg",
+   "CEnterNameForNewQueueDlg",
+   "CEnterNewExtensionDlg",
+   "CEnumArray",
+   "CEnumConnPoints",
+   "CEnumFormatEtc",
+   "CEnumUnknown",
+   "CException",
+   "CExceptionServersList",
+   "CExceptionsDownlPanelDlg",
+   "CExceptionsUrlListDlg",
+   "CExitOnShutdownWindowsDlg",
+   "CFTPProxyConnection",
+   "CFile",
+   "CFileException",
+   "CFilePart",
+   "CFindDwnlTaskDlg2",
+   "CFirstCaptureTip",
+   "CFirstParser",
+   "CFixedStringMgr@ATL",
+   "CFont",
+   "CFormatParsing",
+   "CFragmentsList",
+   "CGdiObject",
+   "CGetAllLinksFromIEDlg",
+   "CGrabberFiltersDlg",
+   "CGrabberStatsDlg",
+   "CGrabbersSchedulers",
+   "CGzipDecoder",
+   "CHandleMap",
+   "CHardwareHDSN",
+   "CHardwareSNs",
+   "CHeaderCtrl",
+   "CHttpDateHeader",
+   "CIDMButton",
+   "CIDMCacheDatabase",
+   "CIDMCompositeCheckbox",
+   "CIDMDatabase",
+   "CIDMFoldersTree",
+   "CIDMGrFoldersArray",
+   "CIDMGrLinksTreeArray",
+   "CIDMHelpShower",
+   "CIDMLVHeaderCtrl",
+   "CIDMLinkTransmitter",
+   "CIDMLinkTransmitterClassFactory",
+   "CIDMListCtrl",
+   "CIDMMainDlgTree",
+   "CIDMProxyScript",
+   "CIDMProxySettings2",
+   "CIDMSpider",
+   "CIDMSpiderDlg",
+   "CIDMStaticControl",
+   "CIDMStaticControlWithDarkModeSupport",
+   "CIDMStringDBField",
+   "CIDMStringTable",
+   "CIDMStringsList",
+   "CIDMTreeCtrlDropTarget",
+   "CIDMWCombobox",
+   "CIDMWStringsArray",
+   "CIEContextMenuProcessor",
+   "CImageList",
+   "CIndexInImgListTranslator",
+   "CInetConnector",
+   "CInvalidArgException",
+   "CLastCatchedUrl",
+   "CLatestPersonalProxyScript",
+   "CLimitMonitor",
+   "CLimitsDlg",
+   "CLimitsExeededDlg",
+   "CLinkStaticLabel",
+   "CLinksArray",
+   "CLinksInJavaParser",
+   "CListCtrl",
+   "CListCtrlWithDarkGrid",
+   "CLoadGrabberProjectDlg",
+   "CLoginToSiteDlg",
+   "CM3UParser",
+   "CMainDlgSearchBar",
+   "CMainDlgSearchSettings",
+   "CMainWndStatusBar",
+   "CMapPtrToPtr",
+   "CMapStringToPtr",
+   "CMaxConnNumbers",
+   "CMemFile",
+   "CMemoryException",
+   "CMenu",
+   "CMp3Format",
+   "CMp4Converter",
+   "CMp4DashReader",
+   "CMpgFormat",
+   "CMsgWaitingNewLinkDlg",
+   "CMyMenu",
+   "CNewSchedulerDlg",
+   "CNewSiteLogin",
+   "CNoTrackObject",
+   "CNotSupportedException",
+   "CObArray",
+   "CObject",
+   "COccManager",
+   "COleBusyDialog",
+   "COleConnPtContainer",
+   "COleControlContainer",
+   "COleControlSite",
+   "COleControlSiteFactory",
+   "COleDataSource",
+   "COleDialog",
+   "COleDispatchException",
+   "COleDispatchImpl",
+   "COleDropSource",
+   "COleDropTarget",
+   "COleException",
+   "COleListCtrlDropTarget",
+   "COleMessageFilter",
+   "COleStreamFile",
+   "COnCancelDownloadDlg",
+   "COnFirstStartIDMSettingsConfigurator",
+   "COptConn",
+   "COptDialUp",
+   "COptFileTypes",
+   "COptGeneral",
+   "COptGeneralOld",
+   "COptProxy",
+   "COptSave",
+   "COptSave2",
+   "COptSitesPasswords",
+   "COptSounds",
+   "CPMTNetworksPIDs",
+   "CPMTStream",
+   "CPaintDC",
+   "CParsersReleaseController",
+   "CPasswordsMap",
+   "CPen",
+   "CPersonalProxyScript",
+   "CPlsWaitDlg",
+   "CProgressCtrl",
+   "CProgressItem",
+   "CPropertiesDlg",
+   "CPropertyPage",
+   "CPropertySheet",
+   "CPropertySheetWithCtlClr",
+   "CProtection",
+   "CPtrArray",
+   "CPtrList",
+   "CQueueTab",
+   "CQueuesArray",
+   "CReBar",
+   "CRebootProgress",
+   "CRecentGrabberProjects",
+   "CRedirectsHistory",
+   "CRegAccessMaker",
+   "CRegistration",
+   "CRegistrationDlg",
+   "CResourceException",
+   "CRgn",
+   "CSaveToFolders",
+   "CSavedGrabberProjects",
+   "CScheduleGrabberDlg",
+   "CScheduleTab",
+   "CSchedulerInfo",
+   "CSchedulerOfGrabberProject",
+   "CSelectExportItems",
+   "CSelectGrabberTemplNameDlg",
+   "CSelectLngDlg",
+   "CSelfIDMDwnlInfoDlg",
+   "CSendExceptionReportDlg",
+   "CSendReportDlg",
+   "CSessionsArray",
+   "CSetCookieHeadersArray",
+   "CSharedFile",
+   "CShellWrapper",
+   "CShowEndTrialDlg",
+   "CShutDown",
+   "CSidxParser",
+   "CSignVerifier",
+   "CSignVerifier_2",
+   "CSimpleException",
+   "CSocks",
+   "CSoundsSettings",
+   "CSpecialKeys",
+   "CSpecialKeysDlg",
+   "CSpeedLimiter",
+   "CSpeedLimiterDlg",
+   "CSpiderOptionsDlg",
+   "CSpiderSelectNameDlg",
+   "CSpiderSelectSaveToDlg",
+   "CSpiderSettings",
+   "CSpiderSettingsDlg",
+   "CSpiderSiteMapDlg",
+   "CSpiderWhereToSearchDlg",
+   "CSpinButtonCtrl",
+   "CStartImmediately",
+   "CStatic",
+   "CStatusBar",
+   "CStatusCmdUI",
+   "CStringArray",
+   "CStringList",
+   "CStupidSitesList",
+   "CSystemProxySettings2",
+   "CTSAVMixer",
+   "CTSOutBeffer",
+   "CTSReader",
+   "CTabPanelForSelected",
+   "CTestCmdUI",
+   "CThumbnailsMaker",
+   "CTipAboutRunInTray",
+   "CTipDlg",
+   "CToolBar",
+   "CToolCmdUI",
+   "CToolTipCtrl",
+   "CTrayIconController",
+   "CTreeCtrl",
+   "CUrlExporter",
+   "CUrlHistory",
+   "CUrlHistory2",
+   "CUserCaptionButton",
+   "CUserException",
+   "CVirusCheckingSettingsDlg",
+   "CVistaAsAdminWarningDlg",
+   "CWavFormat",
+   "CWebAuthorization",
+   "CWhenComleteTab",
+   "CWinApp",
+   "CWinThread",
+   "CWindowDC",
+   "CWnd",
+   "CYesNoToAll",
+   "CZipFormat",
+   "CZipPreviewDlg",
+   "Connection",
+   "DownloaderCmdLine",
+   "FTPConnection",
+   "FTPSession",
+   "GlobalLog",
+   "HTTPConnection",
+   "HTTPSession",
+   "IControlSiteFactory",
+   "IDMSPIDER_STRUCT_LINK_INFO",
+   "MMSConnection",
+   "MMSSession",
+   "MPLVariant@CM3UParser",
+   "MasterPlaylist@CM3UParser",
+   "MediaPlaylist@CM3UParser",
+   "MediaSegment@CM3UParser",
+   "MyCFileDialogA",
+   "ProxyConnection",
+   "RTMPConnection",
+   "RTMPPacket",
+   "RTMPSession",
+   "SE_Exception",
+   "Session",
+   "StringConvertor",
+   "UrlHandler",
+   "XAccessible@CWnd",
+   "XAccessibleServer@CWnd",
+   "XAmbientProps@COleControlSite",
+   "XBoundObjectSite@COleControlSite",
+   "XDataObject@COleDataSource",
+   "XDropSource@COleDropSource",
+   "XDropTarget@COleDropTarget",
+   "XEnumVOID@CEnumArray",
+   "XEventSink@COleControlSite",
+   "XMessageFilter@COleMessageFilter",
+   "XNotifyDBEvents@COleControlSite",
+   "XOleClientSite@COleControlSite",
+   "XOleContainer@COleControlContainer",
+   "XOleControlSite@COleControlSite",
+   "XOleIPFrame@COleControlContainer",
+   "XOleIPSite@COleControlSite",
+   "XPropertyNotifySink@COleControlSite",
+   "XRowsetNotify@COleControlSite",
+   "_AFX_BASE_MODULE_STATE",
+   "_AFX_HTMLHELP_STATE",
+   "_AFX_OLE_STATE",
+   "_AFX_THREAD_STATE",
+   "_com_error",
+   "bad_exception@std",
+   "decodingState@CM3UParser",
+   "exception@std",
+   "type_info"
+  ],
+  "templates": [
+   "?$CArray@HABH",
+   "?$CArray@JJ",
+   "?$CArray@KK",
+   "?$CArray@PAUHWND__@@PAU1@",
+   "?$CArray@PAUIDMSTRUCT_BROWSERINT@@AAPAU1@",
+   "?$CArray@PAUSUsedProxyFromBrowser@@AAPAU1@",
+   "?$CArray@PAVCDownloadQueue@@AAPAV1@",
+   "?$CArray@PAVCSchedulerOfGrabberProject@@AAPAV1@",
+   "?$CArray@UIDMGRABBER_CUSTOMTEMPLATE@@AAU1@",
+   "?$CArray@UIDMGRABBER_PROJECTINFO@@AAU1@",
+   "?$CArray@UIDMSPIDER_STRUCT_LI2@@AAU1@",
+   "?$CArray@UIDMSPIDER_STRUCT_RL@@AAU1@",
+   "?$CArray@UIDMSPIDER_STRUCT_SPL@@AAU1@",
+   "?$CArray@UIDMSTRUCT_BROWSERINTINFO@@AAU1@",
+   "?$CArray@UIDMSTRUCT_CUSTOMTOOLBARINFO@@AAU1@",
+   "?$CArray@UIDM_BROWSERINTINFO@@AAU1@",
+   "?$CArray@UIDM_CTDB_ITEM@@AAU1@",
+   "?$CArray@UIDM_DOWNLOADING_TO_CACHE_ITEM@@AAU1@",
+   "?$CArray@UIDM_SPIDERFILTER@@AAU1@",
+   "?$CArray@UIDM_STRUCT_LINK_INFO1@@AAU1@",
+   "?$CArray@UIDM_STRUCT_SITE_MCN@@AAU1@",
+   "?$CArray@UIDM_TREE_ITEM@@AAU1@",
+   "?$CArray@V?$CStringT@DV?$StrTraitMFC@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAV12@",
+   "?$CArray@V?$CStringT@DV?$StrTraitMFC@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBD",
+   "?$CArray@VCDownloadSession@@AAV1@",
+   "?$CArray@VCFile_Header@@AAV1@",
+   "?$CArray@VCVariantBoolPair@@ABV1@",
+   "?$CArray@W4LoadArrayObjType@CArchive@@ABW412@",
+   "?$CComObjectRootEx@VCComSingleThreadModel@ATL@@@ATL",
+   "?$CFixedStringT@V?$CStringT@_WV?$StrTraitMFC@_WV?$ChTraitsCRT@_W@ATL@@@@@ATL@@$0BAA@@ATL",
+   "?$CList@PAVIControlSiteFactory@@PAV1@",
+   "?$CList@UIDMSPIDER_STRUCT_RELPARSERINFO@CParsersReleaseController@@AAU12@",
+   "?$CList@UIDMSTRUCT_QUEUEITEM@@AAU1@",
+   "?$CMFCComObject@VCAccessibleProxy@ATL@@",
+   "?$CMap@HHHAAH",
+   "?$CMap@HHUIDMGR_LIITRANSLATORITEM@CIndexInImgListTranslator@@AAU12@",
+   "?$CMap@HHV?$CStringT@DV?$StrTraitMFC@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAV12@",
+   "?$CMap@JJPAUHWND__@@AAPAU1@",
+   "?$CMap@V?$CStringT@DV?$StrTraitMFC@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBDHAAH",
+   "?$CMap@V?$CStringT@DV?$StrTraitMFC@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBDHH",
+   "?$CMap@V?$CStringT@DV?$StrTraitMFC@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBDUCANCELED_DOWNLAD_INFO@@AAU3@",
+   "?$CMap@V?$CStringT@DV?$StrTraitMFC@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBDUSITE_PASSW_INFO@@AAU3@",
+   "?$CMap@V?$CStringT@DV?$StrTraitMFC@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBDUknown_tag@@AAU3@",
+   "?$CMap@V?$CStringT@DV?$StrTraitMFC@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBDVCIDMWString@@AAV3@",
+   "?$CSimpleStringT@_W$0A@@ATL",
+   "?$CStringT@_WV?$StrTraitMFC@_WV?$ChTraitsCRT@_W@ATL@@@@@ATL",
+   "?$CTypedPtrList@VCPtrList@@PAUCOleControlSiteOrWnd@@",
+   "?$IAccessibleProxyImpl@VCAccessibleProxy@ATL@@@ATL",
+   "?$_CTypedPtrList@VCPtrList@@PAUCOleControlSiteOrWnd@@"
+  ]
+ },
+ "sections": [
+  {
+   "characteristics": "0x60000020",
+   "entropy": 6.586,
+   "executable": true,
+   "name": ".text",
+   "raw_pointer": "0x400",
+   "raw_size": 2582016,
+   "virtual_address": "0x1000",
+   "virtual_size": 2581852,
+   "writable": false
+  },
+  {
+   "characteristics": "0x40000040",
+   "entropy": 5.193,
+   "executable": false,
+   "name": ".rdata",
+   "raw_pointer": "0x276a00",
+   "raw_size": 897536,
+   "virtual_address": "0x278000",
+   "virtual_size": 897126,
+   "writable": false
+  },
+  {
+   "characteristics": "0xc0000040",
+   "entropy": 4.767,
+   "executable": false,
+   "name": ".data",
+   "raw_pointer": "0x351c00",
+   "raw_size": 33280,
+   "virtual_address": "0x354000",
+   "virtual_size": 70748,
+   "writable": true
+  },
+  {
+   "characteristics": "0x40000040",
+   "entropy": 5.502,
+   "executable": false,
+   "name": ".rsrc",
+   "raw_pointer": "0x359e00",
+   "raw_size": 2283520,
+   "virtual_address": "0x366000",
+   "virtual_size": 2283328,
+   "writable": false
+  },
+  {
+   "characteristics": "0x42000040",
+   "entropy": 6.177,
+   "executable": false,
+   "name": ".reloc",
+   "raw_pointer": "0x587600",
+   "raw_size": 219648,
+   "virtual_address": "0x594000",
+   "virtual_size": 219168,
+   "writable": false
+  }
+ ],
+ "strings_summary": {
+  "ascii_count": 14384,
+  "module_names": [
+   "ADVAPI32.dll",
+   "COMCTL32.dll",
+   "COMDLG32.dll",
+   "GDI32.dll",
+   "IDMan.exe",
+   "KERNEL32.dll",
+   "MicrosoftEdgeCP.exe",
+   "Mozilla.exe",
+   "MozillaFirebird.exe",
+   "OLEACC.dll",
+   "OLEAUT32.dll",
+   "SHELL32.dll",
+   "SHLWAPI.dll",
+   "USER32.dll",
+   "WININET.dll",
+   "WS2_32.dll",
+   "chrome.exe",
+   "comctl32.dll",
+   "comdlg32.dll",
+   "explorer.exe",
+   "firefox.exe",
+   "idmbrbtn.dll",
+   "idmcchandler2.dll",
+   "idmcchandler2_64.dll",
+   "idmupdt.exe",
+   "idmupdt2.exe",
+   "iexplore.exe",
+   "kernel32.dll",
+   "mfcm90.dll",
+   "msedge.exe",
+   "net.exe",
+   "ntdll.dll",
+   "ole32.dll",
+   "opera.exe",
+   "schannel.dll",
+   "shell32.dll",
+   "sporder.dll",
+   "user32.dll",
+   "wininet.dll"
+  ],
+  "utf16_count": 1630
+ },
+ "version_info": {
+  "Comments": "http://www.internetdownloadmanager.com",
+  "CompanyName": "Tonec Inc.",
+  "FileDescription": "Internet Download Manager (IDM)",
+  "FileVersion": "6, 42, 22, 3",
+  "InternalName": "Internet Download Manager",
+  "LegalCopyright": "Tonec FZE, Copyright Â© 1999 - 2024",
+  "LegalTrademarks": "Internet Download Manager",
+  "OriginalFilename": "IDMan.exe",
+  "ProductName": "Internet Download Manager (IDM)",
+  "ProductVersion": "6, 42, 22, 3"
+ }
+}

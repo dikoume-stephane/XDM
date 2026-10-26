@@ -109,7 +109,23 @@ canal IPC `vault:read` reliant `ipcMain.handle` à `ipcRenderer.invoke`.
 
 Détail et limites : [`analysis/demo-electron-app-summary.md`](../analysis/demo-electron-app-summary.md).
 
-## 6. Règles d'usage dans ce dépôt
+## 6. Application à la cible IDM
+
+Le dépôt contient une cible réelle (`cible/IDMan.exe`, IDM 6.42.22.3) et toute la
+chaîne de preuve associée :
+
+```bash
+npm run evidence:idm    # 11 bundles Evidence -> analysis/raw/idman/
+npm run triage:idm      # agrégats déterministes -> analysis/idman/triage.json
+npm run extract:idm     # chaînes, RTTI, dialogues, menus -> analysis/raw/idman/
+```
+
+Ce qui fonctionne **sans** moteur natif : PE (en-têtes, sections, imports, ressources,
+load config, certificats), entropie, objdump (en-têtes/sections/symboles).
+Ce qui exige un moteur : `rea analyze`, `rea decompile`, `rea function`,
+`rea inspect-native-api` → Ghidra 12.1.x (`GHIDRA_INSTALL_DIR`), cf. `docs/ROADMAP-IDM.md` WP-03.
+
+## 7. Règles d'usage dans ce dépôt
 
 1. Ne jamais publier de JSON brut volumineux : les sorties complètes vont dans
    `analysis/raw/` (ignoré) ; on ne versionne qu'un résumé de quelques Ko.
