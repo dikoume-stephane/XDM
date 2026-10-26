@@ -1,0 +1,4 @@
+node_modules/
+# Sorties d'analyse volumineuses (Evidence JSON/MD brutes) : régénérables, non versionnées
+analysis/raw/
+*.log
