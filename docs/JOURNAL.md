@@ -640,6 +640,49 @@ seul état mutable partagé entre connexions est la carte, protégée par un ver
 
 ---
 
+### D-032 — Un filtre = `{id, motif, type, actif}`, projection des 16 octets observés
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-11` (`A-10`)
+
+**Contexte.** `CArray<IDM_SPIDERFILTER>::SetAtGrow` (`0xc2bc0`) prouve un pas de
+**16 octets** et quatre champs copiés : `CString nom` (`+0`), `CString motif` (`+4`),
+`int id` (`+8`), `BYTE actif` (`+0xC`). La portée inclusion/exclusion n'est **pas** dans
+l'enregistrement : elle est portée par deux tableaux distincts (`dialogue+0x124` /
+`+0x138`) et par deux clés de registre.
+
+**Options.** (a) filtre = objet riche (portée + activation + priorité, comme le laisse
+deviner l'IHM) ; (b) filtre = projection stricte des quatre champs observés.
+
+**Décision.** **(b)** : `{ id: number, motif: string, type: "include"|"exclude",
+actif: boolean }`, `motif` étant un masque glob pouvant contenir une liste séparée par des
+virgules (forme des défauts observés).
+
+**Justification.** Toute donnée supplémentaire serait inventée : le binaire ne stocke que
+ces quatre champs. La portée est une propriété de la **liste**, pas de la règle.
+
+**Conséquence.** `WP-11` valide `motif ≠ ""`, `id ≠ 0`, unicité de `id` ; les tests
+prennent les 11 motifs d'exclusion par défaut observés comme jeu de départ.
+
+---
+
+### D-033 — Les filtres de XDM vivent dans le projet, pas dans le registre
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-11` (`A-10`)
+
+**Contexte.** IDM sérialise ses filtres en deux clés
+`GrabberSts\IncludeFilters` / `\ExcludeFilters`, une valeur `REG_SZ` par filtre dont le
+**nom** vaut `"<id> <motif>"` et les **données** le nom du filtre (annexe 13 §4 bis).
+
+**Décision.** Les deux listes appartiennent au **projet** (`.xdmspider.json`), avec un
+compteur d'identifiants persistant qui démarre à **100** (valeur de repli observée en
+`0xc2cc9`).
+
+**Justification.** Portabilité et « un projet = un fichier » (annexe 11) ; le registre
+n'est pas disponible hors Windows — même raisonnement que `D-024`.
+
+**Conséquence.** Importer un projet IDM = lire les deux clés et remplir les deux tableaux ;
+aucun `.gsd` n'est requis pour les filtres.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
@@ -664,9 +707,9 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-03 | Upgrade Node ≥ 22.23.4 (REA le demande ; bloqué par le réseau) | `rea update`, SQLite | ⏳ |
 | A-04 | Préparer la VM Windows isolée + Frida pour la phase 6 | WP-11 | ⏳ |
 | A-06 | Lire en capstone les helpers de persistance du projet | WP-06/WP-11 | ✅ fait → annexes 11 & 12 |
-| A-08 | Format d'un filtre | WP-11 | ✅ partiel : compteur `nextFilterID` = `REG_DWORD`, deux listes UI (annexe 13) ; corps du filtre inconnu |
+| A-08 | Format d'un filtre | WP-11 | ✅ levée : corps = `IDM_SPIDERFILTER` (16 o : nom, motif, id, actif), persisté en `REG_SZ` sous `IncludeFilters`/`ExcludeFilters` (annexe 13 §2 bis, §4 bis) → `D-032`, `D-033` |
 | A-09 | Récupérer un vrai `.gsd` sur VM Windows et le dumper | WP-11, WP-30 | ⏳ phase 6 |
-| A-10 | Lire `0xc2e00`+ (producteur du corps de filtre) et `CArray<IDM_SPIDERFILTER>` | WP-11 | ⏳ prochaine étape |
+| A-10 | Lire le producteur du corps de filtre et `CArray<IDM_SPIDERFILTER>` | WP-11 | ✅ fait : `0xc2e00` n'est **pas** le producteur (remplissage + templates `CArray` fusionnés) ; structure prouvée par `SetAtGrow` `0xc2bc0` (16 o), saisie `0xc2c10`, sérialisation `0x137f00`, chargement `0x1385f0` ; premier id = **100** (annexe 13 v0.2, `tools/idman_filters.py`) |
 | A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ⏳ |
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | ⏳ |
 | A-11 | Structure logique d'un enregistrement `ChList` | lecture d'un état IDM existant | ✅ fait : `{ID, startPos, nextID}` = **liste de bornes** ; le morceau est un **intervalle** dans un fichier unique (preuve : aucun modèle `%s%d.tmp`, champ `file` partagé), assemblage = promotion du `.tmp` (annexe 14 §5, §7) → `D-030`, `D-031` ; reste l'encodage binaire exact, sans intérêt (D-024) |

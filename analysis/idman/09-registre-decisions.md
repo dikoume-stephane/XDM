@@ -37,6 +37,8 @@
 | D-029 | Taille de morceau adaptative bornée (1–10 MiB) par classe de taille | ✅ appliquée | WP-05 | annexe 14 §5.4 |
 | D-030 | Carte persistée = liste de bornes `{id, startOffset, nextId}`, sans champ `end` | ✅ appliquée | WP-05 | annexe 14 §5.1 |
 | D-031 | Compteur de progression = donnée dérivée de la carte, jamais persistée | ✅ appliquée | WP-05 | annexe 14 §5.3 |
+| D-032 | Filtre = `{id, motif, type, actif}` (projection des 16 octets observés) | ✅ appliquée | WP-11 | annexe 13 §2 bis |
+| D-033 | Les filtres vivent dans le projet, pas dans le registre ; ids à partir de 100 | ✅ appliquée | WP-11 | annexe 13 §4 bis |
 
 ## Points de vigilance associés
 

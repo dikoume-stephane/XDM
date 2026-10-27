@@ -1,0 +1,66 @@
+{
+  "cible": "IDMan.exe",
+  "structure": {
+    "nom": "IDM_SPIDERFILTER",
+    "taille": 16,
+    "champs": {
+      "+0x0": "CString nom",
+      "+0x4": "CString motif",
+      "+0x8": "int id",
+      "+0xC": "BYTE actif"
+    },
+    "preuve": {
+      "rva": "0xc2bc0",
+      "element_size": 16,
+      "copied_fields": [
+        {
+          "dst": "esi + 4",
+          "kind": "CString"
+        },
+        {
+          "dst": "esi + 8",
+          "kind": "dword"
+        },
+        {
+          "dst": "esi + 0xc",
+          "kind": "byte"
+        }
+      ]
+    }
+  },
+  "identifiants": {
+    "rva": "0xc2c10",
+    "first_id_if_absent": 100,
+    "reg_set_value_sites": [
+      "0xc2dbe"
+    ]
+  },
+  "persistance": {
+    "cle_exclusion": [
+      "0x2a9f48"
+    ],
+    "cle_inclusion": [
+      "0x2a9f7c"
+    ],
+    "compteur": [
+      "0x28c82c"
+    ],
+    "format_valeur": [
+      "0x284838"
+    ],
+    "reglage_niveaux": [
+      "0x2a9f40"
+    ],
+    "reglage_auto": [
+      "0x2a9f30"
+    ]
+  },
+  "motifs_exclus_par_defaut": {
+    "rva": "0x2a9fb0",
+    "motifs": "*.html,*.htm,*.js,*.css,*.gif,*.jpg,*.jpeg,*.jpe,*.bmp,*.png,*.tif"
+  },
+  "sites": {
+    "serialisation": "0x137f00",
+    "chargement": "0x1385f0"
+  }
+}

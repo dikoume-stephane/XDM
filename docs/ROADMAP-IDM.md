@@ -102,12 +102,15 @@ partiellement** : on sait *quelle* classe porte le grabber (`CSpiderSettings`,
 (4 fonctions non virtuelles), mais pas encore *ce que fait* leur code (pas de
 décompilateur).
 
-**Prochaine marche** : WP-05 est mûr pour la spécification (`A-05`) — les six actions de
-recherche qui le concernaient (A-11 → A-16) sont levées. Les trois valeurs encore
-assumées (taille minimale de morceau, tentatives, délais de reprise) sont documentées
-comme telles dans l'annexe 14 §11 et seront révisées par mesure sur les tests de `WP-05`.
-La prochaine action **de recherche** hors WP-05 est `A-10` (corps du filtre du grabber,
-`0xc2e00`+), qui appartient à `WP-11`.
+**Prochaine marche** : les actions de recherche de WP-05 (`A-11` → `A-16`) **et** celles
+de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet ordre :
+
+1. **`A-05` — ouvrir les fiches de spécification** (une par domaine P0) avec les gabarits
+   de `docs/specs/TEMPLATE.md` : les annexes 13 et 14 contiennent désormais de quoi
+   écrire les fiches « moteur de téléchargement » et « filtres / modèle de projet » sans
+   nouvelle rétro-ingénierie ;
+2. **`A-09` — lever les incertitudes d'exécution** sur VM Windows (sémantique du champ
+   `actif`, `empty.html`, `.gsd` réels), qui ne peuvent pas être tranchées en statique.
 
 **Porte G1** : pour chaque domaine P0, un document de spécification avec
 (a) entrées/sorties, (b) machine à états, (c) structures de données, (d) cas d'erreur,
@@ -120,7 +123,7 @@ La prochaine action **de recherche** hors WP-05 est `A-10` (corps du filtre du g
 | Lot | Contenu | Sortie |
 |---|---|---|
 | WP-10 | Fiches de spécification par domaine (format imposé : but, entrées, états, erreurs, preuves, questions ouvertes) | `docs/specs/` |
-| WP-11 | 🟡 Modèle de données : persistance résolue (`.gsd` + registre), compteur de filtres `REG_DWORD`, deux listes de filtres, page de remplacement `empty.html` | `analysis/idman/11-…` + `13-…` |
+| WP-11 | 🟡 Modèle de données : persistance résolue (`.gsd` + registre) ; **filtres entièrement décrits** (`A-10` : `IDM_SPIDERFILTER` 16 o, sérialisation `REG_SZ` sous `IncludeFilters`/`ExcludeFilters`, premier id = 100 → `D-032`/`D-033`) ; page de remplacement `empty.html` | `analysis/idman/11-…` + `13-…` (v0.2) |
 | WP-12 | Matrice de conformité : comportement observé → exigence → test | `docs/specs/conformance.md` |
 
 ---
