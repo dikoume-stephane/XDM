@@ -556,6 +556,40 @@ connexions par défaut (8) est une valeur de configuration, pas une constante de
 
 ---
 
+### D-029 — Taille de morceau **adaptative bornée** : 1 → 10 MiB, choisie par classe de taille
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-05` (A-16)
+
+**Contexte.** IDM calcule la taille d'un morceau par une table indexée par classe
+(`0x1559e0`, 171 valeurs, `classe − 0xA7`), rend une valeur 64 bits puis l'encadre :
+**plancher 1 MiB** (`0x100000`), **plafond 10 MiB** (`0xA00000`). Table observée
+(annexe 14 §5.4, reproduite par `tools/idman_chunks.py`) :
+
+| Classes | Fichier ≤ 512 Mio / 2 Gio | Au-delà |
+|---|---|---|
+| 15 | **1 MiB** | 5 MiB |
+| 9 | **5 MiB** | 10 MiB |
+| 147 (défaut, y compris hors table) | **2 MiB** | 10 MiB |
+
+**Options.** (a) taille fixe (ex. 1 MiB) ; (b) taille adaptative bornée, dérivée de la
+taille du fichier ; (c) taille adaptative dynamique (réajustée pendant le transfert selon
+le débit).
+
+**Décision.** **(b)** : `chunk = clamp(1 MiB, 10 MiB, f(classe, taille_fichier))`, avec
+les trois paliers observés (2 MiB par défaut jusqu'à 512 Mio, 10 MiB au-delà, 1 MiB ou
+5 MiB pour les classes qui découpent plus fin). (c) est reporté : le comportement observé d'IDM réduit déjà la taille
+en cas d'incohérence (« Change chunk size to %ld »), ce que XDM fait par rollback — un
+réajustement dynamique serait une optimisation à mesurer, pas un prérequis.
+
+**Justification.** (a) gaspille des connexions sur les gros fichiers et multiplie les
+recouvrements à vérifier ; (c) ajoute un asservissement dont on n'a pas de preuve
+d'utilité. (b) reproduit le comportement observé avec deux bornes simples à tester.
+
+**Conséquence.** `WP-05` expose `minChunkSize` / `maxChunkSize` en configuration, avec
+pour valeurs par défaut celles observées (1 MiB / 10 MiB) et un test unitaire vérifiant
+l'encadrement.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
@@ -587,7 +621,7 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | ⏳ |
 | A-11 | Contenu exact d'un enregistrement `ChList` (lire le *checkpoint* `0x15f600`) | lecture d'un état IDM existant | ⏳ non bloquant (D-024) |
 | A-12 | Énumérer les états de `Connection` | spécification de `WP-05` | ✅ fait : 39 états (0..38) en `this+0xa4`, 8 distributeurs, 115 transitions (annexe 14 §4) → `D-027` |
-| A-15 | Nommer les états 17..27 (MMS/RTMP/sessions) | complétude de la machine | ⏳ |
 | A-13 | Seuils et modèle d'E/S | valeurs par défaut de `WP-05` | 🟡 défaut **8** connexions (`0x0fbe17`), **128** sockets par session, `select` plafonné à **12 000 ms** (annexe 14 §4.4) → `D-028` ; reste la taille minimale de morceau |
-| A-16 | Taille minimale de morceau : lire l'appelant du loggueur `0x1ac8d0` (`0x1b0f22`) et le calcul en amont | politique de découpage | ⏳ |
-| A-14 | Identifier `HTTPConnection::MNSP` (message `Error %d … step1`) | complétude HTTP | ⏳ |
+| A-14 | Identifier `HTTPConnection::MNSP` | complétude HTTP | ✅ fait : `0x17dc90` = combinaison d'URL via **`InternetCombineUrlA`** (ICU_ENCODE_SPACES_ONLY puis ICU_BROWSER_MODE), tampon ≤ 10 239 o (annexe 14 §8.1) |
+| A-15 | Nommer les états 17..27 | complétude de la machine | ✅ fait : libellés tirés des chaînes de statut écrites juste avant l'état (annexe 14 §4.2) |
+| A-16 | Taille minimale de morceau | politique de découpage | ✅ fait : table `0x1559e0` (1/2/5 MiB) encadrée à **1–10 MiB** (`0x155bd0`), annexe 14 §5.4 → `D-029` |

@@ -45,6 +45,15 @@ def import_slots(pe: pefile.PE) -> dict[str, int]:
     return slots
 
 
+def import_owner(pe: pefile.PE, rva: int):
+    """(dll, nom, rva) pour le slot d'import demandé, imports classiques et différés."""
+    for entry in list(pe.DIRECTORY_ENTRY_IMPORT) + list(getattr(pe, "DIRECTORY_ENTRY_DELAY_IMPORT", [])):
+        for imp in entry.imports:
+            slot = imp.address - pe.OPTIONAL_HEADER.ImageBase
+            if slot == rva:
+                yield entry.dll.decode(), (imp.name.decode() if imp.name else f"ord{imp.ordinal}"), slot
+
+
 def call_sites(image: attrib.Image, iat_rva: int) -> list[int]:
     """`call dword ptr [iat]` = FF 15 <imm32>."""
     pattern = struct.pack("<I", image.base + iat_rva)
@@ -163,11 +172,21 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pe", default="cible/IDMan.exe")
     parser.add_argument("-o", "--output", default="analysis/idman/io-model.json")
+    parser.add_argument("--resolve", metavar="RVA",
+                        help="résout un slot d'import (ex. 0x35c0a0) et sort")
     args = parser.parse_args()
 
     image = attrib.Image(args.pe)
     pe = pefile.PE(args.pe)
     slots = import_slots(pe)
+
+    if args.resolve:
+        wanted = int(args.resolve, 16)
+        for dll, name, rva in import_owner(pe, wanted):
+            print(f"{hex(rva)} = {dll}!{name}")
+            return 0
+        print(f"{args.resolve} : aucun import à ce slot")
+        return 1
 
     imports = {}
     for name in WANTED:

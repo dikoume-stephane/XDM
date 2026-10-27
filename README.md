@@ -21,6 +21,8 @@ python3 tools/idman_symbols.py         # noms « Classe::Methode »  -> analysis
 python3 tools/idman_attrib.py          # noms -> adresses          -> analysis/idman/methods.json
 python3 tools/idman_states.py          # machine à états (39)      -> analysis/idman/states.json
 python3 tools/idman_io.py             # modèle d'E/S et seuils    -> analysis/idman/io-model.json
+python3 tools/idman_io.py --resolve 0x35c0a0   # slot d'import -> DLL!fonction
+python3 tools/idman_chunks.py         # politique de morceaux     -> analysis/idman/chunks.json
 python3 tools/idman_class_profile.py --pattern 'HTTPConnection'   # fiche par classe
 ```
 
@@ -77,6 +79,8 @@ tools/                     collecte de preuves, triage, extractions
   115 transitions (A-12 levée, `D-027`). Modèle d'E/S : un `select` par session,
   `fd_set` de 516 o (128 sockets), échéance plafonnée à 12 000 ms, 8 connexions par
   défaut (A-13, `D-028`).
+- 🟢 WP-05 v0.4 : taille de morceau **1–10 MiB** par classe de taille (`D-029`), états
+  17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
 - ⛔ WP-03 (décompilation Ghidra) **bloqué** dans ce sandbox : ni JVM ni accès au CDN des
   releases GitHub (`JOURNAL.md` D-019) — à reprendre hors sandbox.
 - ⏳ Reste à confirmer : le périmètre (action A-01) et la stack d'implémentation (D-017).

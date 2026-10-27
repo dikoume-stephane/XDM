@@ -18,7 +18,8 @@
     "profile:idm": "python3 tools/idman_class_profile.py",
     "attrib:idm": "python3 tools/idman_attrib.py",
     "states:idm": "python3 tools/idman_states.py",
-    "io:idm": "python3 tools/idman_io.py"
+    "io:idm": "python3 tools/idman_io.py",
+    "chunks:idm": "python3 tools/idman_chunks.py"
   },
   "devDependencies": {
     "rea-agents": "6.8.0"

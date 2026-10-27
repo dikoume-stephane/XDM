@@ -1,6 +1,6 @@
 # 14 — Moteur de téléchargement : architecture, morceaux, reprise
 
-> **Statut** : 🟡 v0.3 (WP-05) · **Dernière revue** : 2026-10-27
+> **Statut** : 🟡 v0.4 (WP-05) · **Dernière revue** : 2026-10-27
 > **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, sha256 `5f78da5a…2f11c9`
 > **Preuves principales** : `analysis/idman/symbols.json` (§1), `methods.json` (noms →
 > adresses), `states.json` (machine à états, §4), `classes.json`,
@@ -211,9 +211,27 @@ sémantique est une **déduction**, pas une lecture de nom d'énumération (il n
 | 14 | 25 sites (dont `HandleStatus`, `AuditForRestart`, `InsInChunksList`, `ProcessPasvReply`) | **transfert de données en cours** |
 | 15 | `RecvHTTPSData` | données lues dans le tunnel TLS |
 | 16 | `HttpsProxyConnect`, `GetState`, `GetInfo`, `HandleStatus` | tunnel proxy établi / état interrogé |
-| 17..19 | `MMSCn::HndlSt`, `HTTPSession::ReceiveData` | états MMS/RTMP (non nommés) |
+| 17 | `0x19fa50`, `0x1a0b5b` — écrit **juste après** `push "Receiving media header..."` | **réception de l'en-tête média** (MMS) |
+| 18 | `0x1a0393` (gestionnaire MMS) | en-tête média lu |
+| 19 | `0x19fac6`, `0x1a0c65` — après `push "Receiving data..."` | **réception des données média** |
+| 20 | `0x1ad035` — après `push "sending handshake, res = %ld"` | handshake RTMP envoyé |
+| 21 | `0x1b1646` — branche `cmp byte [ebx+5], 0x16` (paquet de **contrôle**) | paquet de contrôle RTMP reçu |
+| 22 | `0x1b156c` — remise à zéro du compteur de file `+0x49dc` | file de paquets vidée |
+| 23 | `0x1b142d` — branche `cl = 0` après traitement de paquet | paquet ordinaire traité |
+| 24 | `0x1b140c` — branche `cl = 1` | paquet spécial traité |
+| 25 | `0x1ac496` — après `push "RTMPT_Connect"` | connexion RTMPT |
+| 26 | `0x1adb93` — après `push "Recieved ID: %s"` puis `"idle"` | flux RTMP identifié |
+| 27 | `0x1ac340` — après `push "RTMPT_Ident_s2"` | identification RTMPT (étape 2) |
 | 31, 32 | `Connection::SelectForRead` | **E/S en attente** (deux variantes lecture/écriture) |
 | 38 | `RecvAllHeaders`, `GetInfo`, `HandleStatus` | fin de réception des en-têtes |
+
+**Preuve forte pour les états 17 à 27 (Observé)** : IDM écrit la *chaîne de statut affichée*
+dans la fenêtre de téléchargement juste avant de poser l'état (`push "Receiving data..."`,
+`push "RTMPT_Connect"`, `push "sending handshake, res = %ld"`…). Les libellés ci-dessus ne
+sont donc pas des devinettes : ils proviennent des textes d'interface voisins immédiats de
+chaque écriture. Les états 21 à 24 viennent du gestionnaire de paquets RTMP
+(`0x1b1470`–`0x1b1650`), qui maintient une file (`+0x49dc`), un type de paquet
+(`byte [paquet+5]`) et deux branches de traitement.
 
 **Constat de conception (Dérivé)** : les états 4, 5, 6, 7 et 14 sont écrits par *toutes*
 les classes de transport (HTTP, FTP, MMS, RTMP) — la machine est donc **commune** à tous
@@ -369,7 +387,42 @@ demandé par renommage/concaténation, le `.tmp` étant supprimé ensuite
 C'est la preuve directe que la reprise repose sur une **troncature au dernier octet
 confirmé**, et non sur un journal de transactions.
 
-### 5.4 Vérification de recouvrement entre connexions (Observé + Dérivé)
+### 5.4 Politique de taille de morceau (Observé, `A-16`)
+
+La taille d'un morceau n'est **pas** une constante : c'est une fonction de la classe de
+téléchargement et de la taille du fichier, puis un encadrement.
+
+Fonction `0x1559e0` — trois arguments `(classe, taille_lo, taille_hi)`, résultat 64 bits
+`edx:eax` :
+
+```text
+edx = 0 ; eax = 0x200000                     ; repli : 2 MiB
+if (classe - 0xA7 > 0xAA) goto defaut        ; classe hors table (167..337)
+jmp table_octets[classe-0xA7]                ; 0x155A68 -> 0x155A5C
+```
+
+| Branche | Classes | Taille si fichier ≤ seuil | Taille au-delà |
+|---|---|---|---|
+| A (`0x155a07`) | 15 | **1 MiB** (≤ 512 Mio, `0x20000000`) | **5 MiB** |
+| B (`0x155a28`) | 9 | **5 MiB** (≤ 2 Gio, `0x80000000`) | **10 MiB** |
+| défaut (`0x155a41`), y compris classe hors table | **147** | **2 MiB** (≤ 512 Mio) | **10 MiB** |
+
+Encadrement appliqué ensuite par l'appelant (`0x155bd0`) :
+
+| Règle | Preuve |
+|---|---|
+| **Plafond 10 MiB** (`0xA00000`) | `cmp ebp, ebx` + `cmp edi, 0xa00000` / `jbe` en `0x155bf4`, écriture en `0x155bfc` |
+| **Plancher 1 MiB** (`0x100000`) | `cmp edi, 0x100000` / `jae` en `0x155c0c`, écriture en `0x155c14` |
+
+Reproductible : `python3 tools/idman_chunks.py` (→ `analysis/idman/chunks.json`) décode
+la table, les trois gestionnaires, les seuils de taille et l'encadrement.
+
+**Dérivé** : IDM découpe **gros** pour les gros fichiers (moins de connexions, donc moins
+de recouvrement à vérifier) et **petit** pour les fichiers moyens, avec un plancher de
+1 MiB pour que plusieurs connexions restent utiles et un plafond de 10 MiB pour borner la
+perte en cas de rollback.
+
+### 5.5 Vérification de recouvrement entre connexions (Observé + Dérivé)
 
 Chaînes de diagnostic, toutes dans le voisinage immédiat du code de réception :
 
@@ -448,6 +501,30 @@ Séquence déduite des traces de `ChunksList::JoinFile` et des chaînes voisines
 (identité, `Range`, vérification de `Content-Range`), ce qui est incompatible avec une
 négociation de compression. Toute implémentation qui accepterait `gzip` sur une
 requête `Range` casserait la reprise : à retenir comme exigence.
+
+### 8.1 `HTTPConnection::MNSP()` = combinaison d'URL par WinINet (Observé, `A-14`)
+
+A-14 est levée : **MNSP** n'est ni un chiffrement ni un protocole maison, c'est un
+utilitaire de **résolution d'URL relative**.
+
+| Constat | Preuve |
+|---|---|
+| Fonction | `0x17dc90` (`ret 8`), contient les deux messages `step1`/`step2` |
+| Appel sous-jacent | `call dword ptr [0x75c0a0]` → **`InternetCombineUrlA`** (WININET, slot de delay-import `0x35c0a0`) — vérifiable par `python3 tools/idman_io.py --resolve 0x35c0a0` |
+| Signature utilisée | `(base, relative, tampon, &longueur, drapeaux)` |
+| Drapeau du 1ᵉʳ essai | `0x04000000` = `ICU_ENCODE_SPACES_ONLY` |
+| Drapeau du 2ᵉ essai | `0x02000000` = `ICU_BROWSER_MODE` |
+| Négociation de tampon | `cmp ecx, 0x27FF` (`0x17dd4e`) : au-delà de **10 239 octets**, l'appel est abandonné (`step1`) ; sinon la chaîne est redimensionnée (`0x402850`) et l'appel est rejoué (`step2`) |
+| Code de retour | `al = 1` si la seconde tentative réussit, `al = 0` sinon |
+
+Appelants (2) : `0x17f925` (dans la région de `GetRetrRangeReply`/`HandleStatus`) et
+`0x183667` (dans `Set_szURL`/`setNewLocation`). **Dérivé** : MNSP est utilisé pour
+reconstruire l'URL absolue à partir d'un `Location:` relatif — donc au service des
+redirections et des URL de référence, pas du transfert de données.
+
+Pour XDM, la leçon est double : (a) la résolution d'URL relative doit passer par une
+implémentation conforme à la RFC 3986 (`urljoin`), pas par une concaténation ; (b) une
+limite dure sur la longueur d'URL (~10 KiB) est raisonnable pour éviter les abus.
 
 ---
 
