@@ -404,6 +404,31 @@ spécifier et à tester (`WP-20`).
 
 ---
 
+### D-023 — `empty.html` : comportement reproduit, sous forme configurable
+**Statut** : appliquée · **Date** : 2026-10-27
+
+**Contexte.** IDM écrit, dans son **propre** dossier d'installation, un fichier
+`empty.html` contenant exactement `<HTML><BODY> </BODY></HTML>` (fonction `0xd1ed0`,
+annexe 13 §4), s'il n'existe pas déjà.
+
+**Options.** (a) ignorer ; (b) le recopier à l'identique dans `<install>/empty.html` ;
+(c) le produire **dans le dossier de destination du projet**, avec un contenu
+configurable, pour servir de page de remplacement des liens non téléchargés.
+
+**Décision.** **(c)**. XDM n'écrit rien dans son dossier d'installation ; il peut
+générer, à la demande, une page de remplacement dans chaque dossier de projet (option
+désactivée par défaut), et l'utiliser pour réécrire les liens morts lors de
+l'aspiration (`WP-24`).
+
+**Justification.** Reproduire le comportement observable qui a du sens pour
+l'utilisateur (site consultable hors ligne), sans hériter du placement discutable
+d'IDM (écriture dans le dossier du programme, souvent protégé par UAC).
+
+**Conséquence.** `WP-24` porte une exigence « page de remplacement optionnelle » ;
+l'annexe 13 §4 sert de référence de contenu par défaut.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
@@ -428,7 +453,8 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-03 | Upgrade Node ≥ 22.23.4 (REA le demande ; bloqué par le réseau) | `rea update`, SQLite | ⏳ |
 | A-04 | Préparer la VM Windows isolée + Frida pour la phase 6 | WP-11 | ⏳ |
 | A-06 | Lire en capstone les helpers de persistance du projet | WP-06/WP-11 | ✅ fait → annexes 11 & 12 |
-| A-08 | Lire `0xc2450` et `CArray<IDM_SPIDERFILTER>` pour le format d'un filtre | WP-11 | ⏳ prochaine étape |
+| A-08 | Format d'un filtre | WP-11 | ✅ partiel : compteur `nextFilterID` = `REG_DWORD`, deux listes UI (annexe 13) ; corps du filtre inconnu |
 | A-09 | Récupérer un vrai `.gsd` sur VM Windows et le dumper | WP-11, WP-30 | ⏳ phase 6 |
+| A-10 | Lire `0xc2e00`+ (producteur du corps de filtre) et `CArray<IDM_SPIDERFILTER>` | WP-11 | ⏳ prochaine étape |
 | A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ⏳ |
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | ⏳ |

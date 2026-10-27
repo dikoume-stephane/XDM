@@ -97,7 +97,12 @@ Trancher demande soit un `RegQueryValueExA` complet dépilé, soit une exécutio
    d'appartenance à un même enregistrement.
 4. Aucune exécution : le comportement décrit est une **lecture du code**.
 
-## 6. Prochaines actions (WP-06)
+## 6. Artefacts du dossier cible
+
+IDM dépose `empty.html` (`<HTML><BODY> </BODY></HTML>`) — voir annexe 13 §4 et la
+décision `D-023` (XDM le génère dans le dossier du projet, en option).
+
+## 7. Prochaines actions (WP-06)
 
 | # | Action | Outil | Sortie attendue |
 |---|---|---|---|

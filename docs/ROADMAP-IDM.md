@@ -107,7 +107,7 @@ décompilateur).
 | Lot | Contenu | Sortie |
 |---|---|---|
 | WP-10 | Fiches de spécification par domaine (format imposé : but, entrées, états, erreurs, preuves, questions ouvertes) | `docs/specs/` |
-| WP-11 | 🟡 Modèle de données : **persistance résolue** (fichier `.gsd` + registre d'état + `nextFilterID`) ; schéma proposé pour XDM | `analysis/idman/11-modele-donnees-projet.md` |
+| WP-11 | 🟡 Modèle de données : persistance résolue (`.gsd` + registre), compteur de filtres `REG_DWORD`, deux listes de filtres, page de remplacement `empty.html` | `analysis/idman/11-…` + `13-…` |
 | WP-12 | Matrice de conformité : comportement observé → exigence → test | `docs/specs/conformance.md` |
 
 ---

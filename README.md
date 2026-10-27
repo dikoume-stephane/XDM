@@ -35,6 +35,7 @@ Dépendances Python : `pefile`, `capstone` (`python3 -m pip install --break-syst
 | Vtables, classes, attribution | [`analysis/idman/10-vtables-et-classes.md`](analysis/idman/10-vtables-et-classes.md) |
 | Modèle de données du projet (v0.1) | [`analysis/idman/11-modele-donnees-projet.md`](analysis/idman/11-modele-donnees-projet.md) |
 | Spécification du grabber (v0.1) | [`analysis/idman/12-spec-grabber.md`](analysis/idman/12-spec-grabber.md) |
+| Filtres et artefacts (`empty.html`) | [`analysis/idman/13-filtres-et-artefacts.md`](analysis/idman/13-filtres-et-artefacts.md) |
 | Hypothèses à vérifier | [`analysis/idman/06-hypotheses.md`](analysis/idman/06-hypotheses.md) |
 | Gabarit de fiche de spécification | [`docs/specs/TEMPLATE.md`](docs/specs/TEMPLATE.md) |
 | Installation et usage de REA | [`docs/REA.md`](docs/REA.md) |

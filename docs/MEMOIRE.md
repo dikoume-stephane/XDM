@@ -39,7 +39,8 @@
 | [`analysis/idman/10-vtables-et-classes.md`](../analysis/idman/10-vtables-et-classes.md) | Vtables, méthodes, attribution chaîne→classe | ✅ v1 (WP-04) | `classes.json` |
 | [`analysis/idman/11-modele-donnees-projet.md`](../analysis/idman/11-modele-donnees-projet.md) | Modèle de données du projet (fichier `.gsd`, registre, filtres) | 🟡 brouillon (WP-11) | capstone + `classes.json` |
 | [`analysis/idman/12-spec-grabber.md`](../analysis/idman/12-spec-grabber.md) | Spécification du grabber (v0.1 : stockage du projet, schéma de valeurs) | 🟡 brouillon (WP-06) | `classes.json` + capstone |
-| `analysis/idman/13-spec-protocoles.md` | Spécification des transports et médias | ⛔ à venir (WP-07) | Ghidra + REA |
+| [`analysis/idman/13-filtres-et-artefacts.md`](../analysis/idman/13-filtres-et-artefacts.md) | Filtres (`nextFilterID`, listes UI) et artefacts du dossier cible (`empty.html`) | 🟡 v0.1 | capstone |
+| `analysis/idman/14-spec-protocoles.md` | Spécification des transports et médias | ⛔ à venir (WP-07) | Ghidra + REA |
 
 ---
 
