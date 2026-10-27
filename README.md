@@ -18,6 +18,8 @@ python3 tools/idman_triage.py          # agrégats déterministes    -> analysis
 python3 tools/idman_extract.py         # chaînes/RTTI/dialogues    -> analysis/raw/idman/
 python3 tools/idman_classes.py         # RTTI -> vtables/méthodes  -> analysis/idman/classes.json
 python3 tools/idman_symbols.py         # noms « Classe::Methode »  -> analysis/idman/symbols.json
+python3 tools/idman_attrib.py          # noms -> adresses          -> analysis/idman/methods.json
+python3 tools/idman_states.py          # machine à états (39)      -> analysis/idman/states.json
 python3 tools/idman_class_profile.py --pattern 'HTTPConnection'   # fiche par classe
 ```
 
@@ -67,9 +69,11 @@ tools/                     collecte de preuves, triage, extractions
 - 🟡 WP-06/WP-11 démarrés : projet de grabber = **fichier `.gsd`** dans
   `<IDM>\Grabber\Projects\` (classe `GrSh`) + miroir registre
   (`GrabberSts\Projects\%ld\%ld\ChList`, compteur `nextFilterID`) — annexes 11 et 12.
-- 🟡 WP-05 cadré (annexe 14) : moteur = `SessionManager` → `Session`/`Connection`
+- 🟡 WP-05 (annexe 14 v0.2) : moteur = `SessionManager` → `Session`/`Connection`
   (HTTP/FTP/MMS/RTMP + proxies) → `ChunksList` ; morceaux persistants, rollback par
-  troncature, anti-corruption par recouvrement, montée en charge progressive.
+  troncature, anti-corruption par recouvrement, montée en charge progressive ; état de
+  connexion = **entier en `this+0xa4`, 39 valeurs**, 8 `switch` en tables de sauts,
+  115 transitions (A-12 levée, `D-027`).
 - ⛔ WP-03 (décompilation Ghidra) **bloqué** dans ce sandbox : ni JVM ni accès au CDN des
   releases GitHub (`JOURNAL.md` D-019) — à reprendre hors sandbox.
 - ⏳ Reste à confirmer : le périmètre (action A-01) et la stack d'implémentation (D-017).

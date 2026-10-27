@@ -500,6 +500,33 @@ n'implémente que le rollback par troncature.
 
 ---
 
+### D-027 — Une machine à états **unique**, mais exposée en 6 états + sous-états de transport
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-05` (A-12)
+
+**Contexte.** L'état d'une connexion IDM est un entier en `this + 0xa4` avec **39 valeurs**
+(0..38), distribué par 8 `switch` compilés en tables de sauts (annexe 14 §4). Les états
+4, 5, 6, 7 et 14 sont écrits par **tous** les transports (HTTP, FTP, MMS, RTMP) ; les
+états 10-13 sont propres à FTP, 15-16 à HTTP/TLS, 17-19 à MMS/RTMP. Sur le switch de
+`HandleStatus`, 25 des 39 états tombent sur le même gestionnaire par défaut.
+
+**Options.** (a) reproduire l'énumération de 39 états ; (b) un état générique à 6 valeurs
++ des sous-états par transport ; (c) une machine à états indépendante par protocole.
+
+**Décision.** **(b)** : `CONNECTING`, `READY`, `SENDING`, `AWAITING_REPLY`, `TRANSFERRING`,
+`COMPLETED` (+ `FAILED`), chaque transport pouvant ajouter des sous-états internes
+(`FTP: PASV_OK`, `HTTP: TUNNEL`, …).
+
+**Justification.** (a) ferait fuiter des concepts FTP dans le moteur HTTP pour 39 cas dont
+la majorité est inatteignable hors d'un transport donné ; (c) dupliquerait la boucle
+d'E/S, alors que l'observation montre qu'elle est commune (états 4-7, 14 partagés) et que
+`Connection::SelectForRead` est unique pour toutes les classes.
+
+**Conséquence.** `WP-05` spécifie une seule machine, paramétrée par un descripteur de
+transport ; la table de correspondance état IDM ↔ état XDM vit dans le test de
+conformité (les 39 états restent la référence côté analyse).
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
@@ -530,6 +557,7 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ⏳ |
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | ⏳ |
 | A-11 | Contenu exact d'un enregistrement `ChList` (lire le *checkpoint* `0x15f600`) | lecture d'un état IDM existant | ⏳ non bloquant (D-024) |
-| A-12 | Énumérer les états de `Connection` (`GetState`/`RecvState`/`ProcessState`) | spécification de `WP-05` | ⏳ |
+| A-12 | Énumérer les états de `Connection` | spécification de `WP-05` | ✅ fait : 39 états (0..38) en `this+0xa4`, 8 distributeurs, 115 transitions (annexe 14 §4) → `D-027` |
+| A-15 | Nommer les états 17..27 (MMS/RTMP/sessions) | complétude de la machine | ⏳ |
 | A-13 | Seuils (taille minimale de morceau, délais, tentatives) autour de `"Change chunk size to %ld"` | valeurs par défaut de `WP-05` | ⏳ |
 | A-14 | Identifier `HTTPConnection::MNSP` (message `Error %d … step1`) | complétude HTTP | ⏳ |

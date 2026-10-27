@@ -1,0 +1,4265 @@
+{
+ "artifact": {
+  "path": "cible/IDMan.exe",
+  "sha256": "5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9"
+ },
+ "counts": {
+  "anchors": 4087,
+  "attributed": 323,
+  "confirmed": 246,
+  "functions": 253,
+  "messages": 323,
+  "unmatched": 0
+ },
+ "functions": {
+  "0x10290": [
+   "CBIr::CheckIEInt"
+  ],
+  "0x105a90": [
+   "COptGeneral::OnInit"
+  ],
+  "0x106ee0": [
+   "COptGeneralOld::OnInit"
+  ],
+  "0x108750": [
+   "COptProxy::OnTTNNeedText"
+  ],
+  "0x118c90": [
+   "QArr::CFN"
+  ],
+  "0x118e60": [
+   "QArr::Lk"
+  ],
+  "0x11fa40": [
+   "CRegistrationDlg::DoDataExchange"
+  ],
+  "0x120420": [
+   "CRegistrationDlg::OnInitDialog",
+   "CRegistrationDlg::OnOkreg",
+   "CRgDlg::OnOk",
+   "CRegistrationDlg::OnHowLicense"
+  ],
+  "0x122940": [
+   "SGPr::CFN"
+  ],
+  "0x123360": [
+   "SGPr::Load"
+  ],
+  "0x125530": [
+   "CShI::Load"
+  ],
+  "0x126d0": [
+   "CBrowsersIntegrator::GetNN6InstallDir",
+   "CBrowsersIntegrator::GetMozillaInstallDir",
+   "CBrowsersIntegrator::GetNN7InstallDir"
+  ],
+  "0x126fe0": [
+   "ShGrP::Load"
+  ],
+  "0x1400": [
+   "CAboutDlg::OnCtlColor"
+  ],
+  "0x14b3b0": [
+   "CUrlExporter::~CUrlExporter",
+   "CUrlExporter::WriteInTextFile"
+  ],
+  "0x14b5d0": [
+   "CUrlExporter::CUrlExporter",
+   "CUrlExporter::ReadFromTextFile",
+   "CUrlExporter::WriteInELFFile",
+   "CUrlExporter::ReadFromIEFFile"
+  ],
+  "0x14d800": [
+   "CUrlHistory::~CUrlHistory",
+   "CUrlHistory::OnAddUrl"
+  ],
+  "0x14ecc0": [
+   "CUrlHistory::CUrlHistory"
+  ],
+  "0x14f210": [
+   "CUrlHistory2::CUrlHistory2"
+  ],
+  "0x155460": [
+   "ChunksList::FindChunkWithZipCentralDir"
+  ],
+  "0x1555d0": [
+   "ChunksList::FindMaxFreeChunk"
+  ],
+  "0x156670": [
+   "ChunksList::EraseRegSubKey"
+  ],
+  "0x156940": [
+   "ChunksList::NeedNewConnection"
+  ],
+  "0x1595e0": [
+   "ChunksList::AppendFile",
+   "ChunksList::InsertFromReg"
+  ],
+  "0x15a480": [
+   "ChunksList::ApplyAlternative"
+  ],
+  "0x15a800": [
+   "ChL::CNI",
+   "ChunksList::CreateNewItem",
+   "ChunksList::CheckAlternative"
+  ],
+  "0x15b240": [
+   "ChunksList::Erase",
+   "ChunksList::InitFirst",
+   "ChunksList::JoinFile",
+   "ChLst::OnSDID"
+  ],
+  "0x160110": [
+   "ChunksList::AddAlternative"
+  ],
+  "0x161940": [
+   "ChunksListItem::set_fileName"
+  ],
+  "0x161d50": [
+   "ChListItem::savesk"
+  ],
+  "0x161e10": [
+   "ChListItem::getsk",
+   "ChunksListItem::JoinWithNext"
+  ],
+  "0x162910": [
+   "Connection::OnChangeBounds"
+  ],
+  "0x162e30": [
+   "Connection::SelectForRead"
+  ],
+  "0x1649b0": [
+   "Connection::OnComplete"
+  ],
+  "0x164a90": [
+   "Connection::SendConnInfoToDemoWnd"
+  ],
+  "0x165140": [
+   "Connection::ProcessRecv"
+  ],
+  "0x166a00": [
+   "Connection::CheckConnect"
+  ],
+  "0x16b6f0": [
+   "DMEH::SEM"
+  ],
+  "0x16d630": [
+   "FTPConnection::reset_lastcom_timesDiff"
+  ],
+  "0x16d6b0": [
+   "FTPConnection::set_sequence_cpbl"
+  ],
+  "0x16d730": [
+   "FTPConnection::try_set_pasv_cpbl"
+  ],
+  "0x16d7d0": [
+   "FTPConnection::TryConnect"
+  ],
+  "0x16d8b0": [
+   "FTPConnection::CloseDataConnection"
+  ],
+  "0x16d9b0": [
+   "FTPConnection::SendNoop",
+   "FTPConnection::FindSizeInRetrReply"
+  ],
+  "0x16dc80": [
+   "FTPConnection::OnNewLastModified",
+   "FTPConnection::GetReply"
+  ],
+  "0x16e1a0": [
+   "FTPConnection::SendQuit"
+  ],
+  "0x16e2d0": [
+   "FTPConnection::CheckConnectReply"
+  ],
+  "0x16e460": [
+   "FTPConnection::CheckUserReply"
+  ],
+  "0x16e5f0": [
+   "FTPConnection::CheckPasswordReply",
+   "FTPConnection::SendPasv"
+  ],
+  "0x16e8a0": [
+   "FTPConnection::BindSocket"
+  ],
+  "0x16eb30": [
+   "FTPConnection::Accept",
+   "FTPConnection::SendPort"
+  ],
+  "0x16ef20": [
+   "FTPConnection::CheckPortReply"
+  ],
+  "0x16f080": [
+   "FTPConnection::CheckOthersReplies"
+  ],
+  "0x16f200": [
+   "FTPConnection::SendType"
+  ],
+  "0x16f330": [
+   "FTPConnection::CheckTypeReply",
+   "FTPConnection::SendRest",
+   "FTPConnection::CheckRestReply"
+  ],
+  "0x16f710": [
+   "FTPConnection::CheckTransferEndReply",
+   "Connection::ReceiveData"
+  ],
+  "0x16f9e0": [
+   "FTPConnection::RollBack"
+  ],
+  "0x16fa70": [
+   "FTPConnection::Restart"
+  ],
+  "0x16fc10": [
+   "FTPConnection::OnSendError"
+  ],
+  "0x17004f": [
+   "FTPConnection::SetCompleted"
+  ],
+  "0x170100": [
+   "FTPC::CMDTMR"
+  ],
+  "0x170400": [
+   "FTPConnection::Disconnect"
+  ],
+  "0x170580": [
+   "FTPConnection::ProcessPasvReply"
+  ],
+  "0x170960": [
+   "FTPConnection::CheckListReply"
+  ],
+  "0x170af0": [
+   "FTPConnection::AuditForRestart"
+  ],
+  "0x1710c0": [
+   "FTPConnection::FTPConnection"
+  ],
+  "0x171270": [
+   "FTPConnection::SendUser",
+   "FTPConnection::SendPassword"
+  ],
+  "0x17150": [
+   "CBIr::IntIE"
+  ],
+  "0x1716a0": [
+   "FTPConnection::SendCWD"
+  ],
+  "0x171930": [
+   "FTPConnection::CheckCWDReply"
+  ],
+  "0x171e90": [
+   "FTPConnection::SendTestSequences"
+  ],
+  "0x172300": [
+   "FTPConnection::SendRetr"
+  ],
+  "0x1725f0": [
+   "FTPConnection::CheckRetrReply",
+   "FTPConnection::SendSize"
+  ],
+  "0x172c60": [
+   "FTPConnection::SendListFile",
+   "FTPConnection::CheckSizeReply",
+   "FTPConnection::RecvListData"
+  ],
+  "0x173560": [
+   "FTPConnection::ProcessReply"
+  ],
+  "0x173760": [
+   "FTPConnection::ProcessReplyQueue"
+  ],
+  "0x1738a0": [
+   "FTPConnection::StartGetChunk"
+  ],
+  "0x173960": [
+   "FTPConnection::SendInAddition"
+  ],
+  "0x173b10": [
+   "FTPConnection::InsInChunksList"
+  ],
+  "0x173c40": [
+   "FTPConnection::ProcessWaitTestSequ"
+  ],
+  "0x173e40": [
+   "FTPConnection::ProcessWaitSecSeqReply"
+  ],
+  "0x1740b0": [
+   "FTPC::SMDTM"
+  ],
+  "0x1742b0": [
+   "FTPConnection::OpenDataConnection"
+  ],
+  "0x1744b0": [
+   "FTPConnection::GetFileSize"
+  ],
+  "0x174870": [
+   "FTPConnection::ProcessWaitConn"
+  ],
+  "0x174940": [
+   "FTPConnection::ProcessPasvOK"
+  ],
+  "0x174b80": [
+   "FTPConnection::StartRetr"
+  ],
+  "0x174df0": [
+   "FTPConnection::ProcessWaitReply"
+  ],
+  "0x1752e0": [
+   "FTPConnection::HandleStatus"
+  ],
+  "0x1774f0": [
+   "ProxyConnection::Connect"
+  ],
+  "0x177ad0": [
+   "FTPSession::isPrecheckEnd"
+  ],
+  "0x177b80": [
+   "FTPSession::set_sequence_cpbl_ok"
+  ],
+  "0x177c50": [
+   "FTPSession::set_pass_need"
+  ],
+  "0x177df0": [
+   "FTPSession::set_rest_cpbl"
+  ],
+  "0x177eb0": [
+   "FTPSession::set_pasv_cpbl"
+  ],
+  "0x178380": [
+   "FTPSession::GetSlowestConnection"
+  ],
+  "0x1785c0": [
+   "FTPSession::InitSession"
+  ],
+  "0x178760": [
+   "FTPSession::CreateOptionalConnections"
+  ],
+  "0x178a00": [
+   "FTPSession::set_fds"
+  ],
+  "0x178f50": [
+   "FTPSession::ReceiveData"
+  ],
+  "0x1796d0": [
+   "FTPSession::getFile"
+  ],
+  "0x17ad50": [
+   "HTTPConnection::base64_encode"
+  ],
+  "0x17b3a0": [
+   "HTTPConnection::GetReplyIntoStorage"
+  ],
+  "0x17ba80": [
+   "HTTPConnection::GetTempEndPos"
+  ],
+  "0x17c3a0": [
+   "HTTPConnection::GetNextReplyLine"
+  ],
+  "0x17c730": [
+   "HTTPConnection::RecvState"
+  ],
+  "0x17c9b0": [
+   "HTTPConnection::OnNewLastModified"
+  ],
+  "0x17d5f0": [
+   "HTTPConnection::SkipAllHeaders"
+  ],
+  "0x17da30": [
+   "HTTPConnection::SkipAllHeaders2",
+   "HTTPConnection::MNSP"
+  ],
+  "0x17de20": [
+   "HTTPConnection::Disconnect"
+  ],
+  "0x17f4d0": [
+   "Connection::SetCompleted"
+  ],
+  "0x17faf0": [
+   "HTTPConnection::GetRetrRangeReply"
+  ],
+  "0x180db0": [
+   "HTTPC::AFR"
+  ],
+  "0x182900": [
+   "HTTPConnection::Set_szURL",
+   "HTTPConnection::ProcessSetCookieHeader",
+   "HTTPConnection::setNewLocation"
+  ],
+  "0x184920": [
+   "HTTPConnection::ProcessState"
+  ],
+  "0x186180": [
+   "HTTPConnection::SendGet",
+   "HTTPConnection::ProcessHeader",
+   "HTTPConnection::GetState",
+   "HTTPConnection::HttpsProxyConnect"
+  ],
+  "0x18a4f0": [
+   "HTTPConnection::RecvAllHeaders",
+   "HTTPConnection::HandleStatus",
+   "HTTPConnection::GetInfo"
+  ],
+  "0x190800": [
+   "HTTPSession::InitSession"
+  ],
+  "0x1910c0": [
+   "HTTPSession::SendAllConnInfo"
+  ],
+  "0x191150": [
+   "HTTPSession::TryStartNewOptionalConnections"
+  ],
+  "0x191740": [
+   "HTTPSession::GetSlowestConnection"
+  ],
+  "0x1a1200": [
+   "MMSCn::HndlSt"
+  ],
+  "0x1a2880": [
+   "HTTPSession::ReceiveData"
+  ],
+  "0x1a7ed0": [
+   "ProxyConn::SBPAS"
+  ],
+  "0x1a87a0": [
+   "ProxyConnection::SendGet"
+  ],
+  "0x1a9f60": [
+   "ProxyConnection::Set_szURL"
+  ],
+  "0x1aa850": [
+   "ReplyQueue::Add"
+  ],
+  "0x1aa8e0": [
+   "ReplyQueue::GetNext"
+  ],
+  "0x1aa9e0": [
+   "ReplyQueue::Erase"
+  ],
+  "0x1b34a0": [
+   "RTMPS::AFR"
+  ],
+  "0x1b3c80": [
+   "RTMPS::CWADTFM"
+  ],
+  "0x1b4d10": [
+   "Session::SaveDownloadedInRegistry"
+  ],
+  "0x1b5360": [
+   "Session::ResetDownlInCycle",
+   "Session::CalcSpeed"
+  ],
+  "0x1b5c30": [
+   "Session::SetDownlID",
+   "Session::set_fileSize"
+  ],
+  "0x1b6cb0": [
+   "Session::AddDescription",
+   "Session::CheckFormat"
+  ],
+  "0x1b76d0": [
+   "SessionManager::SetDescription"
+  ],
+  "0x1b7af0": [
+   "SessionManager::SetStatus"
+  ],
+  "0x1b7d10": [
+   "SessionManager::SetURL"
+  ],
+  "0x1b7e10": [
+   "SessionManager::SetLogin"
+  ],
+  "0x1b8290": [
+   "SessionManager::DeleteFromRegistry"
+  ],
+  "0x1b8490": [
+   "SessionManager::ConvertSizeToString"
+  ],
+  "0x1bb0e0": [
+   "SessionManager::CoverUpTheTraces"
+  ],
+  "0x1bec20": [
+   "SessionManager::SetLocalName"
+  ],
+  "0x1bed20": [
+   "SessionManager::CancelDownload"
+  ],
+  "0x1bee10": [
+   "SessionManager::ProcessCancelDownload"
+  ],
+  "0x1c1e40": [
+   "SessionManager::GetDefaultlocalName"
+  ],
+  "0x1c6fc0": [
+   "SessionManager::LoadUrlFromReg"
+  ],
+  "0x1c8740": [
+   "SessionManager::DoDownload"
+  ],
+  "0x1cb0": [
+   "CAboutDlg::OnSite"
+  ],
+  "0x1cbb50": [
+   "URL::set_description"
+  ],
+  "0x1ce680": [
+   "URL::set_localFileName",
+   "URL::OpenDMRegSubKey"
+  ],
+  "0x1d26b0": [
+   "URL::set_LastModified",
+   "URL::LoadLocalNamesFromReg"
+  ],
+  "0x1d32d0": [
+   "URL::SaveToReg"
+  ],
+  "0x1d4740": [
+   "URL::set_MDTM"
+  ],
+  "0x1d73e0": [
+   "CContentTypeChecker::CheckHTML"
+  ],
+  "0x1d79d0": [
+   "CContentTypeChecker::Check",
+   "CContentTypeChecker::CheckEnd"
+  ],
+  "0x1d7f70": [
+   "CFormatParsing::GetFSize",
+   "CFormatParsing::PreCheckMpg",
+   "CFormatParsing::Initialize",
+   "CFormatParsing::FillZipFormatStruct"
+  ],
+  "0x1d90": [
+   "CAboutDlg::OnEmail"
+  ],
+  "0x1d9620": [
+   "CFormatParsing::GetLastMp3"
+  ],
+  "0x1d9e30": [
+   "CMp3Format::GetID3Tag"
+  ],
+  "0x1db670": [
+   "CZipPreviewDlg::OnInitDialog"
+  ],
+  "0x1ddd80": [
+   "HTTPConnection::SendHTTPSGet"
+  ],
+  "0x1dfa20": [
+   "HTTPConnection::RecvHTTPSData"
+  ],
+  "0x2ea40": [
+   "CConfirm::Confirm"
+  ],
+  "0x2ed20": [
+   "CConfirm::OnYes",
+   "CConfirm::OnTimer"
+  ],
+  "0x3543": [
+   "CAboutDlg::OnInitDialog"
+  ],
+  "0x39540": [
+   "CDUP::iCntd"
+  ],
+  "0x39bf0": [
+   "CDUP::DDU"
+  ],
+  "0x3a870": [
+   "CDUPrgr::onCl"
+  ],
+  "0x3a9b0": [
+   "CDUPrgr::onDE",
+   "CDUPrgr::onCS"
+  ],
+  "0x3ad10": [
+   "CDUPrgr::RDF",
+   "CDUPrgr::onT",
+   "CDUPrgr::onRN"
+  ],
+  "0x3b220": [
+   "CDUPrgr::onID"
+  ],
+  "0x3ceb0": [
+   "CDownload::OnClose"
+  ],
+  "0x3d060": [
+   "CDownload::OnTimer"
+  ],
+  "0x3da80": [
+   "CDownload::OnZipPreview"
+  ],
+  "0x3e060": [
+   "CDownload::CDownload"
+  ],
+  "0x40f60": [
+   "CDownload::OnInitDialog",
+   "CDownload::AddDownload",
+   "CDownload::OnStart"
+  ],
+  "0x425a0": [
+   "CDownload::OnDownloadLater"
+  ],
+  "0x429a0": [
+   "CDownload::OnCommand"
+  ],
+  "0x45db0": [
+   "CDownloadComponents::StartDownload"
+  ],
+  "0x45ef0": [
+   "CDownloadComponents::OnTimer"
+  ],
+  "0x49dc0": [
+   "CDApp::FR"
+  ],
+  "0x515e0": [
+   "CDownloaderApp::InitInstance"
+  ],
+  "0x53330": [
+   "DownloaderCmdLine::ParseParam"
+  ],
+  "0x54fc0": [
+   "CDownloaderDlg::OnRestore"
+  ],
+  "0x55bd0": [
+   "CDownloaderDlg::OnNotifyIcon"
+  ],
+  "0x55c90": [
+   "CDownloaderDlg::OnRclickUrllist"
+  ],
+  "0x55f70": [
+   "CDownloaderDlg::OnChangeCbChain"
+  ],
+  "0x560a0": [
+   "CDownloaderDlg::SendRegistrationInfo"
+  ],
+  "0x568e0": [
+   "CDownloaderDlg::OnTutorials"
+  ],
+  "0x56c90": [
+   "CDownloaderDlg::GetStartDlgVisibility",
+   "CDownloaderDlg::DrawGhost"
+  ],
+  "0x57720": [
+   "CDownloaderDlg::NeedCheckLngFile"
+  ],
+  "0x57e50": [
+   "CDDlg::OnRGPFL"
+  ],
+  "0x58b60": [
+   "CDDlg::OnReloadLA"
+  ],
+  "0x5c4a0": [
+   "CDownloaderDlg::OnPaint",
+   "CDownloaderDlg::OnOptions"
+  ],
+  "0x5c810": [
+   "CDownloaderDlg::OnResumeAll",
+   "CDownloaderDlg::OnAbout"
+  ],
+  "0x5cfe0": [
+   "CDownloaderDlg::OnLButtonUp",
+   "CDownloaderDlg::OnLButtonDown"
+  ],
+  "0x5d2e0": [
+   "CDownloaderDlg::OnSetCursor"
+  ],
+  "0x5d3d0": [
+   "CDownloaderDlg::OnMouseMove"
+  ],
+  "0x5d6a0": [
+   "CDwnlDlg::SetBtnTxtVs"
+  ],
+  "0x5da20": [
+   "CDwnlDlg::SetTxtOnBtn"
+  ],
+  "0x5e050": [
+   "CDnlDlg::OnRdnld"
+  ],
+  "0x5f550": [
+   "CDDlg::OTF1"
+  ],
+  "0x5f740": [
+   "CDownloaderDlg::OnColumnclickUrlList"
+  ],
+  "0x5f860": [
+   "CDownloaderDlg::CreateTreePopupMenu"
+  ],
+  "0x619b0": [
+   "CDownloaderDlg::CDownloaderDlg"
+  ],
+  "0x61e70": [
+   "CDownloaderDlg::~CDownloaderDlg"
+  ],
+  "0x62400": [
+   "CDDlg::OnResume",
+   "CDownloaderDlg::OnItemchangedUrllist"
+  ],
+  "0x63150": [
+   "CDDlg::OnSchGr",
+   "CDDlg::DelGP"
+  ],
+  "0x651f0": [
+   "CDownloaderDlg::OnProperties"
+  ],
+  "0x655e0": [
+   "CDwnlDlg::CheckQueueState2"
+  ],
+  "0x6d72": [
+   "CAddUrlDlg::OnClose"
+  ],
+  "0x6dc0": [
+   "CAddUrlDlg::OnCancel"
+  ],
+  "0x6f00": [
+   "CAddUrlDlg::OnVerify"
+  ],
+  "0x7040": [
+   "CAddUrlDlg::CAddUrlDlg"
+  ],
+  "0x752d0": [
+   "CDownloaderDlg::OnStop"
+  ],
+  "0x756b0": [
+   "CDownloaderDlg::OnSize"
+  ],
+  "0x759a0": [
+   "CDownloaderDlg::OnPauseAll"
+  ],
+  "0x75cd0": [
+   "CDwnlDlg::OnDlAC"
+  ],
+  "0x76460": [
+   "CDownloaderDlg::ExportListToFile",
+   "CDownloaderDlg::ImportListFromFile"
+  ],
+  "0x77440": [
+   "CDwnlDlg::SGALFIED",
+   "CDwnlDlg::OnOpF"
+  ],
+  "0x7770": [
+   "CAddUrlDlg::OnEditchangeUrl"
+  ],
+  "0x782a0": [
+   "CDDlg::OGr",
+   "CDDlg::AddGrLinks"
+  ],
+  "0x78ae0": [
+   "CDDlg::OnOpGP"
+  ],
+  "0x78ca0": [
+   "CDDlg::OnDelGP"
+  ],
+  "0x7ce0": [
+   "CAddUrlDlg::OnInitDialog"
+  ],
+  "0x7df70": [
+   "CDownloaderDlg::ShowInitialDownloadDlg"
+  ],
+  "0x813d0": [
+   "CDownloaderDlg::ProcessOnNewUrl2"
+  ],
+  "0x84660": [
+   "CDownloaderDlg::OnStopAll",
+   "CDwnlDlg::OnDrawClipboard",
+   "CDownloaderDlg::OnTimer",
+   "CDlDlg::OT"
+  ],
+  "0x87700": [
+   "CDownloaderDlg::OnExit",
+   "CDllg::ODst"
+  ],
+  "0x90057": [
+   "CDownloaderDlg::ProcessOnNewUrl"
+  ],
+  "0x9a270": [
+   "DLmts::Load"
+  ],
+  "0x9bd60": [
+   "DwnlQ::LShI"
+  ],
+  "0x9c210": [
+   "DwnkQ::Load",
+   "CSA::GI"
+  ],
+  "0x9db30": [
+   "CSessionsArray::CheckLocalFileName"
+  ],
+  "0xa5310": [
+   "CDropTargetPicture::Initialize"
+  ],
+  "0xba110": [
+   "GALFIED::OnSODC"
+  ],
+  "0xc2ba0": [
+   "GrbFsDlg::OnAddF"
+  ],
+  "0xc31a0": [
+   "GrSh::CFN",
+   "GrSh::Lk"
+  ],
+  "0xc4a10": [
+   "CIDMFoldersTree::SetVisiblity",
+   "CIDMFoldersTree::CheckQAU",
+   "CIDMFoldersTree::DeleteQAU",
+   "CIDMFoldersTree::Save"
+  ],
+  "0xc6000": [
+   "CIDMFoldersTree::DeleteItem"
+  ],
+  "0xc7c50": [
+   "CIDMLC::DSA"
+  ],
+  "0xc85f0": [
+   "CIDMListCtrl::Initialize"
+  ],
+  "0xc88e0": [
+   "CIDMListCtrl::OnCreate",
+   "CIDMListCtrl::DrawSortArrow"
+  ],
+  "0xc9230": [
+   "CIDMListCtrl::OnBegindrag"
+  ],
+  "0xc9c10": [
+   "CIDMListCtrl::AddItem"
+  ],
+  "0xcad70": [
+   "CIDMMainDlgTree::OnEditItem"
+  ],
+  "0xd7c0": [
+   "CBrowsersIntegration::Save"
+  ],
+  "0xf3c10": [
+   "CIDMTreeCtrlDropTarget::OnDragEnter"
+  ],
+  "0xf3d40": [
+   "CIDMTreeCtrlDropTarget::OnDragOver"
+  ],
+  "0xf3ed0": [
+   "CIDMTreeCtrlDropTarget::OnDrop"
+  ],
+  "0xffc10": [
+   "COleListCtrlDropTarget::OnDragEnter"
+  ],
+  "0xfff40": [
+   "COleListCtrlDropTarget::OnDrop"
+  ]
+ },
+ "methods": [
+  {
+   "anchor": "vtable",
+   "class": "CAboutDlg",
+   "function_rva": "0x1400",
+   "gap": 144,
+   "message": "CAboutDlg::OnCtlColor()",
+   "method": "OnCtlColor",
+   "push_rva": "0x1490",
+   "vtable_classes": [
+    "CObArray"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CAboutDlg",
+   "function_rva": "0x1cb0",
+   "gap": 189,
+   "message": "CAboutDlg::OnSite()",
+   "method": "OnSite",
+   "push_rva": "0x1d6d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CAboutDlg",
+   "function_rva": "0x1d90",
+   "gap": 318,
+   "message": "CAboutDlg::OnEmail()",
+   "method": "OnEmail",
+   "push_rva": "0x1ece",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CAboutDlg",
+   "function_rva": "0x3543",
+   "gap": 1457,
+   "message": "CAboutDlg::OnInitDialog()",
+   "method": "OnInitDialog",
+   "push_rva": "0x3af4",
+   "vtable_classes": [
+    "CProtection"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CAddUrlDlg",
+   "function_rva": "0x6d72",
+   "gap": 37,
+   "message": "Unknown error during CAddUrlDlg::OnClose()",
+   "method": "OnClose",
+   "push_rva": "0x6d97",
+   "vtable_classes": [
+    "CAddMinSizeForDownlPanelDlg"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CAddUrlDlg",
+   "function_rva": "0x6dc0",
+   "gap": 87,
+   "message": "Unknown error during CAddUrlDlg::OnCancel()",
+   "method": "OnCancel",
+   "push_rva": "0x6e17",
+   "vtable_classes": [
+    "CAddUrlDlg"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CAddUrlDlg",
+   "function_rva": "0x6f00",
+   "gap": 236,
+   "message": "Unknown error during CAddUrlDlg::OnVerify()",
+   "method": "OnVerify",
+   "push_rva": "0x6fec",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CAddUrlDlg",
+   "function_rva": "0x7040",
+   "gap": 317,
+   "message": "Unknown error during CAddUrlDlg::CAddUrlDlg()",
+   "method": "CAddUrlDlg",
+   "push_rva": "0x717d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "after-terminator",
+   "class": "CAddUrlDlg",
+   "function_rva": "0x7770",
+   "gap": 234,
+   "message": "Unknown error during CAddUrlDlg::OnEditchangeUrl()",
+   "method": "OnEditchangeUrl",
+   "push_rva": "0x785a",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CAddUrlDlg",
+   "function_rva": "0x7ce0",
+   "gap": 1001,
+   "message": "Unknown error during CAddUrlDlg::OnInitDialog()",
+   "method": "OnInitDialog",
+   "push_rva": "0x80c9",
+   "vtable_classes": [
+    "CAddUrlDlg"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CBrowsersIntegration",
+   "function_rva": "0xd7c0",
+   "gap": 880,
+   "message": "Cannot open(/create) registry subkey during CBrowsersIntegration::Save().",
+   "method": "Save",
+   "push_rva": "0xdb30",
+   "vtable_classes": [
+    "CBrowserDetailsDlg"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CBIr",
+   "function_rva": "0x10290",
+   "gap": 1594,
+   "message": "Unkerrin CBIr::CheckIEInt()",
+   "method": "CheckIEInt",
+   "push_rva": "0x108ca",
+   "vtable_classes": [
+    "CFTPProxyConnection",
+    "Connection",
+    "FTPConnection",
+    "MMSConnection",
+    "RTMPConnection"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CBrowsersIntegrator",
+   "function_rva": "0x126d0",
+   "gap": 2084,
+   "message": "Unknown error during CBrowsersIntegrator::GetNN6InstallDir()",
+   "method": "GetNN6InstallDir",
+   "push_rva": "0x12ef4",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CBrowsersIntegrator",
+   "function_rva": "0x126d0",
+   "gap": 3060,
+   "message": "Unknown error during CBrowsersIntegrator::GetMozillaInstallDir()",
+   "method": "GetMozillaInstallDir",
+   "push_rva": "0x132c4",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CBrowsersIntegrator",
+   "function_rva": "0x126d0",
+   "gap": 3588,
+   "message": "Unknown error during CBrowsersIntegrator::GetNN7InstallDir()",
+   "method": "GetNN7InstallDir",
+   "push_rva": "0x134d4",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CBIr",
+   "function_rva": "0x17150",
+   "gap": 604,
+   "message": "Err %ld CBIr::IntIE, s7",
+   "method": "IntIE",
+   "push_rva": "0x173ac",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CConfirm",
+   "function_rva": "0x2ea40",
+   "gap": 194,
+   "message": "Unknown error during CConfirm::Confirm()",
+   "method": "Confirm",
+   "push_rva": "0x2eb02",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CConfirm",
+   "function_rva": "0x2ed20",
+   "gap": 1873,
+   "message": "Unknown error during CConfirm::OnYes()",
+   "method": "OnYes",
+   "push_rva": "0x2f471",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CConfirm",
+   "function_rva": "0x2ed20",
+   "gap": 3975,
+   "message": "Unknown error during CConfirm::OnTimer()",
+   "method": "OnTimer",
+   "push_rva": "0x2fca7",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDUP",
+   "function_rva": "0x39540",
+   "gap": 941,
+   "message": "Unknerr in CDUP::iCntd",
+   "method": "iCntd",
+   "push_rva": "0x398ed",
+   "vtable_classes": [
+    "CDialUpLogin"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDUP",
+   "function_rva": "0x39bf0",
+   "gap": 617,
+   "message": "Unknown error during CDUP::DDU()",
+   "method": "DDU",
+   "push_rva": "0x39e59",
+   "vtable_classes": [
+    "CDialUpProcessor"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDUPrgr",
+   "function_rva": "0x3a870",
+   "gap": 147,
+   "message": "CDUPrgr::onCl() failed",
+   "method": "onCl",
+   "push_rva": "0x3a903",
+   "vtable_classes": [
+    "CDialUpProgress"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CDUPrgr",
+   "function_rva": "0x3a9b0",
+   "gap": 453,
+   "message": "CDUPrgr::onDE() failed",
+   "method": "onDE",
+   "push_rva": "0x3ab75",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDUPrgr",
+   "function_rva": "0x3a9b0",
+   "gap": 820,
+   "message": "CDUPrgr::onCS() failed",
+   "method": "onCS",
+   "push_rva": "0x3ace4",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDUPrgr",
+   "function_rva": "0x3ad10",
+   "gap": 176,
+   "message": "CDUPrgr::RDF() failed",
+   "method": "RDF",
+   "push_rva": "0x3adc0",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDUPrgr",
+   "function_rva": "0x3ad10",
+   "gap": 917,
+   "message": "CDUPrgr::onT() failed",
+   "method": "onT",
+   "push_rva": "0x3b0a5",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDUPrgr",
+   "function_rva": "0x3ad10",
+   "gap": 1233,
+   "message": "CDUPrgr::onRN() failed",
+   "method": "onRN",
+   "push_rva": "0x3b1e1",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDUPrgr",
+   "function_rva": "0x3b220",
+   "gap": 395,
+   "message": "CDUPrgr::onID() failed",
+   "method": "onID",
+   "push_rva": "0x3b3ab",
+   "vtable_classes": [
+    "CDialUpProgress"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownload",
+   "function_rva": "0x3ceb0",
+   "gap": 393,
+   "message": "Unknown error during CDownload::OnClose(), s2",
+   "method": "OnClose",
+   "push_rva": "0x3d039",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownload",
+   "function_rva": "0x3d060",
+   "gap": 300,
+   "message": "Unknown error during CDownload::OnTimer()",
+   "method": "OnTimer",
+   "push_rva": "0x3d18c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownload",
+   "function_rva": "0x3da80",
+   "gap": 391,
+   "message": "Unknown error during CDownload::OnZipPreview()",
+   "method": "OnZipPreview",
+   "push_rva": "0x3dc07",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownload",
+   "function_rva": "0x3e060",
+   "gap": 636,
+   "message": "CDownload::CDownload()",
+   "method": "CDownload",
+   "push_rva": "0x3e2dc",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDownload",
+   "function_rva": "0x40f60",
+   "gap": 3843,
+   "message": "Unknown error during CDownload::OnInitDialog()",
+   "method": "OnInitDialog",
+   "push_rva": "0x41e63",
+   "vtable_classes": [
+    "CDownload"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDownload",
+   "function_rva": "0x40f60",
+   "gap": 5343,
+   "message": "Unknown error during CDownload::AddDownload()",
+   "method": "AddDownload",
+   "push_rva": "0x4243f",
+   "vtable_classes": [
+    "CDownload"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDownload",
+   "function_rva": "0x40f60",
+   "gap": 5659,
+   "message": "Unknown error during CDownload::OnStart()",
+   "method": "OnStart",
+   "push_rva": "0x4257b",
+   "vtable_classes": [
+    "CDownload"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownload",
+   "function_rva": "0x425a0",
+   "gap": 765,
+   "message": "Unknown error during CDownload::OnDownloadLater()",
+   "method": "OnDownloadLater",
+   "push_rva": "0x4289d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDownload",
+   "function_rva": "0x429a0",
+   "gap": 5011,
+   "message": "CDownload::OnCommand(wParam = %ld)",
+   "method": "OnCommand",
+   "push_rva": "0x43d33",
+   "vtable_classes": [
+    "CDownload"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloadComponents",
+   "function_rva": "0x45db0",
+   "gap": 250,
+   "message": "Unknown error during CDownloadComponents::StartDownload()",
+   "method": "StartDownload",
+   "push_rva": "0x45eaa",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloadComponents",
+   "function_rva": "0x45ef0",
+   "gap": 272,
+   "message": "Unknown error during CDownloadComponents::OnTimer()",
+   "method": "OnTimer",
+   "push_rva": "0x46000",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDApp",
+   "function_rva": "0x49dc0",
+   "gap": 13869,
+   "message": "Unkerr in CDApp::FR 2638",
+   "method": "FR",
+   "push_rva": "0x4d3ed",
+   "vtable_classes": [
+    "CDownloaderApp"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDownloaderApp",
+   "function_rva": "0x515e0",
+   "gap": 6046,
+   "message": "Unknown error during CDownloaderApp::InitInstance()",
+   "method": "InitInstance",
+   "push_rva": "0x52d7e",
+   "vtable_classes": [
+    "CDownloaderApp"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "DownloaderCmdLine",
+   "function_rva": "0x53330",
+   "gap": 1174,
+   "message": "DownloaderCmdLine::ParseParam",
+   "method": "ParseParam",
+   "push_rva": "0x537c6",
+   "vtable_classes": [
+    "DownloaderCmdLine"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x54fc0",
+   "gap": 188,
+   "message": "Unknown error during CDownloaderDlg::OnRestore()",
+   "method": "OnRestore",
+   "push_rva": "0x5507c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x55bd0",
+   "gap": 153,
+   "message": "Unknown error during CDownloaderDlg::OnNotifyIcon()",
+   "method": "OnNotifyIcon",
+   "push_rva": "0x55c69",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x55c90",
+   "gap": 101,
+   "message": "Unknown error during CDownloaderDlg::OnRclickUrllist()",
+   "method": "OnRclickUrllist",
+   "push_rva": "0x55cf5",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x55f70",
+   "gap": 127,
+   "message": "Unknown error during CDownloaderDlg::OnChangeCbChain()",
+   "method": "OnChangeCbChain",
+   "push_rva": "0x55fef",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x560a0",
+   "gap": 860,
+   "message": "Unknown error during CDownloaderDlg::SendRegistrationInfo()",
+   "method": "SendRegistrationInfo",
+   "push_rva": "0x563fc",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x568e0",
+   "gap": 116,
+   "message": "Unknown error during CDownloaderDlg::OnTutorials()",
+   "method": "OnTutorials",
+   "push_rva": "0x56954",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x56c90",
+   "gap": 120,
+   "message": "Unknown error during CDownloaderDlg::GetStartDlgVisibility()",
+   "method": "GetStartDlgVisibility",
+   "push_rva": "0x56d08",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x56c90",
+   "gap": 1976,
+   "message": "Unknown error during CDownloaderDlg::DrawGhost()",
+   "method": "DrawGhost",
+   "push_rva": "0x57448",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x57720",
+   "gap": 189,
+   "message": "Unknown error during CDownloaderDlg::NeedCheckLngFile()",
+   "method": "NeedCheckLngFile",
+   "push_rva": "0x577dd",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDDlg",
+   "function_rva": "0x57e50",
+   "gap": 131,
+   "message": "Unkerrin CDDlg::OnRGPFL",
+   "method": "OnRGPFL",
+   "push_rva": "0x57ed3",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDDlg",
+   "function_rva": "0x58b60",
+   "gap": 139,
+   "message": "Unk err in CDDlg::OnReloadLA",
+   "method": "OnReloadLA",
+   "push_rva": "0x58beb",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x5c4a0",
+   "gap": 339,
+   "message": "Unknown error during CDownloaderDlg::OnPaint()",
+   "method": "OnPaint",
+   "push_rva": "0x5c5f3",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x5c4a0",
+   "gap": 761,
+   "message": "Unknown error during CDownloaderDlg::OnOptions()",
+   "method": "OnOptions",
+   "push_rva": "0x5c799",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x5c810",
+   "gap": 335,
+   "message": "Unknown error during CDownloaderDlg::OnResumeAll()",
+   "method": "OnResumeAll",
+   "push_rva": "0x5c95f",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x5c810",
+   "gap": 517,
+   "message": "Unknown error during CDownloaderDlg::OnAbout()",
+   "method": "OnAbout",
+   "push_rva": "0x5ca15",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x5cfe0",
+   "gap": 300,
+   "message": "Unknown error during CDownloaderDlg::OnLButtonUp()",
+   "method": "OnLButtonUp",
+   "push_rva": "0x5d10c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x5cfe0",
+   "gap": 112,
+   "message": "Unknown error during CDownloaderDlg::OnLButtonDown(), step1",
+   "method": "OnLButtonDown",
+   "push_rva": "0x5d050",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x5d2e0",
+   "gap": 175,
+   "message": "Unknown error during CDownloaderDlg::OnSetCursor()",
+   "method": "OnSetCursor",
+   "push_rva": "0x5d38f",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x5d3d0",
+   "gap": 168,
+   "message": "Unknown error during CDownloaderDlg::OnMouseMove()",
+   "method": "OnMouseMove",
+   "push_rva": "0x5d478",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDwnlDlg",
+   "function_rva": "0x5d6a0",
+   "gap": 585,
+   "message": "Unk err in CDwnlDlg::SetBtnTxtVs",
+   "method": "SetBtnTxtVs",
+   "push_rva": "0x5d8e9",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDwnlDlg",
+   "function_rva": "0x5da20",
+   "gap": 1077,
+   "message": "Unk err in CDwnlDlg::SetTxtOnBtn",
+   "method": "SetTxtOnBtn",
+   "push_rva": "0x5de55",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDnlDlg",
+   "function_rva": "0x5e050",
+   "gap": 421,
+   "message": "Unk err in CDnlDlg::OnRdnld()",
+   "method": "OnRdnld",
+   "push_rva": "0x5e1f5",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDDlg",
+   "function_rva": "0x5f550",
+   "gap": 159,
+   "message": "Unk err in CDDlg::OTF1",
+   "method": "OTF1",
+   "push_rva": "0x5f5ef",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x5f740",
+   "gap": 184,
+   "message": "Unknown error during CDownloaderDlg::OnColumnclickUrlList()",
+   "method": "OnColumnclickUrlList",
+   "push_rva": "0x5f7f8",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x5f860",
+   "gap": 890,
+   "message": "Unknown error during CDownloaderDlg::CreateTreePopupMenu()",
+   "method": "CreateTreePopupMenu",
+   "push_rva": "0x5fbda",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x619b0",
+   "gap": 1150,
+   "message": "Unknown error during CDownloaderDlg::CDownloaderDlg()",
+   "method": "CDownloaderDlg",
+   "push_rva": "0x61e2e",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x61e70",
+   "gap": 384,
+   "message": "Unknown error during CDownloaderDlg::~CDownloaderDlg()",
+   "method": "~CDownloaderDlg",
+   "push_rva": "0x61ff0",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDDlg",
+   "function_rva": "0x62400",
+   "gap": 382,
+   "message": "Unk err in CDDlg::OnResume()",
+   "method": "OnResume",
+   "push_rva": "0x6257e",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x62400",
+   "gap": 2981,
+   "message": "Unknown error during CDownloaderDlg::OnItemchangedUrllist()",
+   "method": "OnItemchangedUrllist",
+   "push_rva": "0x62fa5",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDDlg",
+   "function_rva": "0x63150",
+   "gap": 1889,
+   "message": "Unkerrin CDDlg::OnSchGr",
+   "method": "OnSchGr",
+   "push_rva": "0x638b1",
+   "vtable_classes": [
+    "CDownloaderDlg"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDDlg",
+   "function_rva": "0x63150",
+   "gap": 3367,
+   "message": "Unkerrin CDDlg::DelGP",
+   "method": "DelGP",
+   "push_rva": "0x63e77",
+   "vtable_classes": [
+    "CDownloaderDlg"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x651f0",
+   "gap": 976,
+   "message": "Unknown error during CDownloaderDlg::OnProperties()",
+   "method": "OnProperties",
+   "push_rva": "0x655c0",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "after-terminator",
+   "class": "CDwnlDlg",
+   "function_rva": "0x655e0",
+   "gap": 758,
+   "message": "Unkerr in CDwnlDlg::CheckQueueState2",
+   "method": "CheckQueueState2",
+   "push_rva": "0x658d6",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x752d0",
+   "gap": 416,
+   "message": "Unknown error during CDownloaderDlg::OnStop()",
+   "method": "OnStop",
+   "push_rva": "0x75470",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x756b0",
+   "gap": 712,
+   "message": "Unknown error during CDownloaderDlg::OnSize()",
+   "method": "OnSize",
+   "push_rva": "0x75978",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x759a0",
+   "gap": 313,
+   "message": "Unknown error during CDownloaderDlg::OnPauseAll()",
+   "method": "OnPauseAll",
+   "push_rva": "0x75ad9",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDwnlDlg",
+   "function_rva": "0x75cd0",
+   "gap": 387,
+   "message": "uein CDwnlDlg::OnDlAC",
+   "method": "OnDlAC",
+   "push_rva": "0x75e53",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x76460",
+   "gap": 1203,
+   "message": "Unknown error during CDownloaderDlg::ExportListToFile()",
+   "method": "ExportListToFile",
+   "push_rva": "0x76913",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x76460",
+   "gap": 2184,
+   "message": "Unknown error during CDownloaderDlg::ImportListFromFile()",
+   "method": "ImportListFromFile",
+   "push_rva": "0x76ce8",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDwnlDlg",
+   "function_rva": "0x77440",
+   "gap": 2525,
+   "message": "Unk err in CDwnlDlg::SGALFIED()",
+   "method": "SGALFIED",
+   "push_rva": "0x77e1d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDwnlDlg",
+   "function_rva": "0x77440",
+   "gap": 3648,
+   "message": "Unk err in CDwnlDlg::OnOpF",
+   "method": "OnOpF",
+   "push_rva": "0x78280",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "after-terminator",
+   "class": "CDDlg",
+   "function_rva": "0x782a0",
+   "gap": 239,
+   "message": "Unk err in CDDlg::OGr",
+   "method": "OGr",
+   "push_rva": "0x7838f",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "after-terminator",
+   "class": "CDDlg",
+   "function_rva": "0x782a0",
+   "gap": 2078,
+   "message": "Unkerrin CDDlg::AddGrLinks",
+   "method": "AddGrLinks",
+   "push_rva": "0x78abe",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDDlg",
+   "function_rva": "0x78ae0",
+   "gap": 411,
+   "message": "Unkerrin CDDlg::OnOpGP",
+   "method": "OnOpGP",
+   "push_rva": "0x78c7b",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDDlg",
+   "function_rva": "0x78ca0",
+   "gap": 391,
+   "message": "Unkerrin CDDlg::OnDelGP",
+   "method": "OnDelGP",
+   "push_rva": "0x78e27",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x7df70",
+   "gap": 12478,
+   "message": "Unknown error during CDownloaderDlg::ShowInitialDownloadDlg()",
+   "method": "ShowInitialDownloadDlg",
+   "push_rva": "0x8102e",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x813d0",
+   "gap": 428,
+   "message": "Unknown error during CDownloaderDlg::ProcessOnNewUrl2()",
+   "method": "ProcessOnNewUrl2",
+   "push_rva": "0x8157c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x84660",
+   "gap": 414,
+   "message": "Unknown error during CDownloaderDlg::OnStopAll()",
+   "method": "OnStopAll",
+   "push_rva": "0x847fe",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDwnlDlg",
+   "function_rva": "0x84660",
+   "gap": 2105,
+   "message": "Unkerr in CDwnlDlg::OnDrawClipboard",
+   "method": "OnDrawClipboard",
+   "push_rva": "0x84e99",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x84660",
+   "gap": 7865,
+   "message": "Unknown error during CDownloaderDlg::OnTimer(nIDEvent = QUEUE_TIMER)",
+   "method": "OnTimer",
+   "push_rva": "0x86519",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDlDlg",
+   "function_rva": "0x84660",
+   "gap": 2682,
+   "message": "Unk err in CDlDlg::OT(ev=DELETESPIDERDLG_TIMER)",
+   "method": "OT",
+   "push_rva": "0x850da",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x87700",
+   "gap": 667,
+   "message": "Unknown error during CDownloaderDlg::OnExit()",
+   "method": "OnExit",
+   "push_rva": "0x8799b",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDllg",
+   "function_rva": "0x87700",
+   "gap": 493,
+   "message": "Unk err in CDllg::ODst, del spdlg",
+   "method": "ODst",
+   "push_rva": "0x878ed",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CDownloaderDlg",
+   "function_rva": "0x90057",
+   "gap": 36080,
+   "message": "Unknown error during CDownloaderDlg::ProcessOnNewUrl()",
+   "method": "ProcessOnNewUrl",
+   "push_rva": "0x98d47",
+   "vtable_classes": [
+    "CUserCaptionButton"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "DLmts",
+   "function_rva": "0x9a270",
+   "gap": 2137,
+   "message": "DLmts::Load exc 80",
+   "method": "Load",
+   "push_rva": "0x9aac9",
+   "vtable_classes": [
+    "CDownloadingTab"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "DwnlQ",
+   "function_rva": "0x9bd60",
+   "gap": 264,
+   "message": "DwnlQ::LShI exc 507",
+   "method": "LShI",
+   "push_rva": "0x9be68",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "DwnkQ",
+   "function_rva": "0x9c210",
+   "gap": 3544,
+   "message": "DwnkQ::Load exc 114",
+   "method": "Load",
+   "push_rva": "0x9cfe8",
+   "vtable_classes": [
+    "?$CList@UIDMSTRUCT_QUEUEITEM@@AAU1@",
+    "CDownloadQueue"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CSA",
+   "function_rva": "0x9c210",
+   "gap": 4407,
+   "message": "Unkerr CSA::GI 278",
+   "method": "GI",
+   "push_rva": "0x9d347",
+   "vtable_classes": [
+    "?$CList@UIDMSTRUCT_QUEUEITEM@@AAU1@",
+    "CDownloadQueue"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CSessionsArray",
+   "function_rva": "0x9db30",
+   "gap": 1526,
+   "message": "Unknown error during CSessionsArray::CheckLocalFileName()",
+   "method": "CheckLocalFileName",
+   "push_rva": "0x9e126",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CDropTargetPicture",
+   "function_rva": "0xa5310",
+   "gap": 172,
+   "message": "Unknown error during CDropTargetPicture::Initialize()",
+   "method": "Initialize",
+   "push_rva": "0xa53bc",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "GALFIED",
+   "function_rva": "0xba110",
+   "gap": 1329,
+   "message": "Unk err in GALFIED::OnSODC",
+   "method": "OnSODC",
+   "push_rva": "0xba641",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "GrbFsDlg",
+   "function_rva": "0xc2ba0",
+   "gap": 467,
+   "message": "GrbFsDlg::OnAddF:RegQVE failed, err=%ld",
+   "method": "OnAddF",
+   "push_rva": "0xc2d73",
+   "vtable_classes": [
+    "CGrabberFiltersDlg"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "GrSh",
+   "function_rva": "0xc31a0",
+   "gap": 403,
+   "message": "GrSh::CFN exc 111",
+   "method": "CFN",
+   "push_rva": "0xc3333",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "GrSh",
+   "function_rva": "0xc31a0",
+   "gap": 992,
+   "message": "GrSh::Lk exc 164",
+   "method": "Lk",
+   "push_rva": "0xc3580",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMFoldersTree",
+   "function_rva": "0xc4a10",
+   "gap": 566,
+   "message": "Cannot open(/create) registry key during CIDMFoldersTree::SetVisiblity().",
+   "method": "SetVisiblity",
+   "push_rva": "0xc4c46",
+   "vtable_classes": [
+    "CHardwareSNs"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMFoldersTree",
+   "function_rva": "0xc4a10",
+   "gap": 807,
+   "message": "Cannot open(/create) registry key during CIDMFoldersTree::CheckQAU().",
+   "method": "CheckQAU",
+   "push_rva": "0xc4d37",
+   "vtable_classes": [
+    "CHardwareSNs"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMFoldersTree",
+   "function_rva": "0xc4a10",
+   "gap": 1071,
+   "message": "Cannot open(/create) registry key during CIDMFoldersTree::DeleteQAU().",
+   "method": "DeleteQAU",
+   "push_rva": "0xc4e3f",
+   "vtable_classes": [
+    "CHardwareSNs"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMFoldersTree",
+   "function_rva": "0xc4a10",
+   "gap": 2228,
+   "message": "Cannot open(/create) registry subkey during CIDMFoldersTree::Save().",
+   "method": "Save",
+   "push_rva": "0xc52c4",
+   "vtable_classes": [
+    "CHardwareSNs"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMFoldersTree",
+   "function_rva": "0xc6000",
+   "gap": 257,
+   "message": "Cannot open(/create) registry key during CIDMFoldersTree::DeleteItem().",
+   "method": "DeleteItem",
+   "push_rva": "0xc6101",
+   "vtable_classes": [
+    "?$CArray@UIDM_TREE_ITEM@@AAU1@"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMLC",
+   "function_rva": "0xc7c50",
+   "gap": 400,
+   "message": "Unk err in CIDMLC::DSA",
+   "method": "DSA",
+   "push_rva": "0xc7de0",
+   "vtable_classes": [
+    "CIDMListCtrl"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMListCtrl",
+   "function_rva": "0xc85f0",
+   "gap": 702,
+   "message": "Unknown error during CIDMListCtrl::Initialize()",
+   "method": "Initialize",
+   "push_rva": "0xc88ae",
+   "vtable_classes": [
+    "CIDMListCtrl"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CIDMListCtrl",
+   "function_rva": "0xc88e0",
+   "gap": 140,
+   "message": "Unknown error during CIDMListCtrl::OnCreate()",
+   "method": "OnCreate",
+   "push_rva": "0xc896c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CIDMListCtrl",
+   "function_rva": "0xc88e0",
+   "gap": 593,
+   "message": "Unknown error during CIDMListCtrl::DrawSortArrow()",
+   "method": "DrawSortArrow",
+   "push_rva": "0xc8b31",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMListCtrl",
+   "function_rva": "0xc9230",
+   "gap": 1660,
+   "message": "Unknown error during CIDMListCtrl::OnBegindrag()",
+   "method": "OnBegindrag",
+   "push_rva": "0xc98ac",
+   "vtable_classes": [
+    "CIDMWStringsArray"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMListCtrl",
+   "function_rva": "0xc9c10",
+   "gap": 2565,
+   "message": "Unknown error during CIDMListCtrl::AddItem()",
+   "method": "AddItem",
+   "push_rva": "0xca615",
+   "vtable_classes": [
+    "CIDMListCtrl"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMMainDlgTree",
+   "function_rva": "0xcad70",
+   "gap": 5724,
+   "message": "Cannot open(/create) registry key during CIDMMainDlgTree::OnEditItem().",
+   "method": "OnEditItem",
+   "push_rva": "0xcc3cc",
+   "vtable_classes": [
+    "CIDMMainDlgTree"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMTreeCtrlDropTarget",
+   "function_rva": "0xf3c10",
+   "gap": 146,
+   "message": "Unknown error during CIDMTreeCtrlDropTarget::OnDragEnter()",
+   "method": "OnDragEnter",
+   "push_rva": "0xf3ca2",
+   "vtable_classes": [
+    "CIDMTreeCtrlDropTarget"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMTreeCtrlDropTarget",
+   "function_rva": "0xf3d40",
+   "gap": 310,
+   "message": "Unknown error during CIDMTreeCtrlDropTarget::OnDragOver()",
+   "method": "OnDragOver",
+   "push_rva": "0xf3e76",
+   "vtable_classes": [
+    "CIDMTreeCtrlDropTarget"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CIDMTreeCtrlDropTarget",
+   "function_rva": "0xf3ed0",
+   "gap": 593,
+   "message": "Unknown error during CIDMTreeCtrlDropTarget::OnDrop()",
+   "method": "OnDrop",
+   "push_rva": "0xf4121",
+   "vtable_classes": [
+    "CIDMTreeCtrlDropTarget"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "COleListCtrlDropTarget",
+   "function_rva": "0xffc10",
+   "gap": 725,
+   "message": "Unknown error during COleListCtrlDropTarget::OnDragEnter()",
+   "method": "OnDragEnter",
+   "push_rva": "0xffee5",
+   "vtable_classes": [
+    "COleListCtrlDropTarget"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "COleListCtrlDropTarget",
+   "function_rva": "0xfff40",
+   "gap": 2938,
+   "message": "Unknown error during COleListCtrlDropTarget::OnDrop()",
+   "method": "OnDrop",
+   "push_rva": "0x100aba",
+   "vtable_classes": [
+    "COleListCtrlDropTarget"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "COptGeneral",
+   "function_rva": "0x105a90",
+   "gap": 1101,
+   "message": "COptGeneral::OnInit",
+   "method": "OnInit",
+   "push_rva": "0x105edd",
+   "vtable_classes": [
+    "COptGeneral"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "COptGeneralOld",
+   "function_rva": "0x106ee0",
+   "gap": 1511,
+   "message": "COptGeneralOld::OnInit",
+   "method": "OnInit",
+   "push_rva": "0x1074c7",
+   "vtable_classes": [
+    "COptGeneralOld"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "COptProxy",
+   "function_rva": "0x108750",
+   "gap": 219,
+   "message": "COptProxy::OnTTNNeedText()",
+   "method": "OnTTNNeedText",
+   "push_rva": "0x10882b",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "QArr",
+   "function_rva": "0x118c90",
+   "gap": 380,
+   "message": "QArr::CFN exc 125",
+   "method": "CFN",
+   "push_rva": "0x118e0c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "QArr",
+   "function_rva": "0x118e60",
+   "gap": 712,
+   "message": "QArr::Lk exc 198",
+   "method": "Lk",
+   "push_rva": "0x119128",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CRegistrationDlg",
+   "function_rva": "0x11fa40",
+   "gap": 75,
+   "message": "CRegistrationDlg::DoDataExchange(CDataExchange* pDX)",
+   "method": "DoDataExchange",
+   "push_rva": "0x11fa8b",
+   "vtable_classes": [
+    "CRegistrationDlg"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CRegistrationDlg",
+   "function_rva": "0x120420",
+   "gap": 558,
+   "message": "CRegistrationDlg::OnInitDialog()",
+   "method": "OnInitDialog",
+   "push_rva": "0x12064e",
+   "vtable_classes": [
+    "CRegistrationDlg"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CRegistrationDlg",
+   "function_rva": "0x120420",
+   "gap": 5281,
+   "message": "CRegistrationDlg::OnOkreg()",
+   "method": "OnOkreg",
+   "push_rva": "0x1218c1",
+   "vtable_classes": [
+    "CRegistrationDlg"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CRgDlg",
+   "function_rva": "0x120420",
+   "gap": 2699,
+   "message": "Reg err4 in CRgDlg::OnOk, err = %ld",
+   "method": "OnOk",
+   "push_rva": "0x120eab",
+   "vtable_classes": [
+    "CRegistrationDlg"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CRegistrationDlg",
+   "function_rva": "0x120420",
+   "gap": 6198,
+   "message": "CRegistrationDlg::OnHowLicense()",
+   "method": "OnHowLicense",
+   "push_rva": "0x121c56",
+   "vtable_classes": [
+    "CRegistrationDlg"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "SGPr",
+   "function_rva": "0x122940",
+   "gap": 428,
+   "message": "SGPr::CFN exc 248",
+   "method": "CFN",
+   "push_rva": "0x122aec",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "SGPr",
+   "function_rva": "0x123360",
+   "gap": 1910,
+   "message": "SGPr::Load exc 181",
+   "method": "Load",
+   "push_rva": "0x123ad6",
+   "vtable_classes": [
+    "CSavedGrabberProjects"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CShI",
+   "function_rva": "0x125530",
+   "gap": 4131,
+   "message": "CShI::Load exc 208",
+   "method": "Load",
+   "push_rva": "0x126553",
+   "vtable_classes": [
+    "CScheduleGrabberDlg"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "ShGrP",
+   "function_rva": "0x126fe0",
+   "gap": 1802,
+   "message": "ShGrP::Load exc 113",
+   "method": "Load",
+   "push_rva": "0x1276ea",
+   "vtable_classes": [
+    "CSchedulerInfo"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CUrlExporter",
+   "function_rva": "0x14b3b0",
+   "gap": 131,
+   "message": "Unknown error during CUrlExporter::~CUrlExporter()",
+   "method": "~CUrlExporter",
+   "push_rva": "0x14b433",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CUrlExporter",
+   "function_rva": "0x14b3b0",
+   "gap": 361,
+   "message": "Unknown error during CUrlExporter::WriteInTextFile()",
+   "method": "WriteInTextFile",
+   "push_rva": "0x14b519",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CUrlExporter",
+   "function_rva": "0x14b5d0",
+   "gap": 339,
+   "message": "Unknown error during CUrlExporter::CUrlExporter()",
+   "method": "CUrlExporter",
+   "push_rva": "0x14b723",
+   "vtable_classes": [
+    "CUrlExporter"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CUrlExporter",
+   "function_rva": "0x14b5d0",
+   "gap": 1341,
+   "message": "Unknown error during CUrlExporter::ReadFromTextFile()",
+   "method": "ReadFromTextFile",
+   "push_rva": "0x14bb0d",
+   "vtable_classes": [
+    "CUrlExporter"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CUrlExporter",
+   "function_rva": "0x14b5d0",
+   "gap": 1899,
+   "message": "Unknown error during CUrlExporter::WriteInELFFile()",
+   "method": "WriteInELFFile",
+   "push_rva": "0x14bd3b",
+   "vtable_classes": [
+    "CUrlExporter"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CUrlExporter",
+   "function_rva": "0x14b5d0",
+   "gap": 3256,
+   "message": "Unknown error during CUrlExporter::ReadFromIEFFile()",
+   "method": "ReadFromIEFFile",
+   "push_rva": "0x14c288",
+   "vtable_classes": [
+    "CUrlExporter"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CUrlHistory",
+   "function_rva": "0x14d800",
+   "gap": 4857,
+   "message": "Unknown error during CUrlHistory::~CUrlHistory()",
+   "method": "~CUrlHistory",
+   "push_rva": "0x14eaf9",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CUrlHistory",
+   "function_rva": "0x14d800",
+   "gap": 5259,
+   "message": "Unknown error during CUrlHistory::OnAddUrl()",
+   "method": "OnAddUrl",
+   "push_rva": "0x14ec8b",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CUrlHistory",
+   "function_rva": "0x14ecc0",
+   "gap": 794,
+   "message": "Unknown error during CUrlHistory::CUrlHistory()",
+   "method": "CUrlHistory",
+   "push_rva": "0x14efda",
+   "vtable_classes": [
+    "CUrlHistory"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CUrlHistory2",
+   "function_rva": "0x14f210",
+   "gap": 505,
+   "message": "Unk err in CUrlHistory2::CUrlHistory2",
+   "method": "CUrlHistory2",
+   "push_rva": "0x14f409",
+   "vtable_classes": [
+    "CUrlHistory2"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x155460",
+   "gap": 270,
+   "message": "Unknown error during ChunksList::FindChunkWithZipCentralDir()",
+   "method": "FindChunkWithZipCentralDir",
+   "push_rva": "0x15556e",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x1555d0",
+   "gap": 487,
+   "message": "Unknown error during ChunksList::FindMaxFreeChunk()",
+   "method": "FindMaxFreeChunk",
+   "push_rva": "0x1557b7",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x156670",
+   "gap": 536,
+   "message": "Unknown error during ChunksList::EraseRegSubKey()",
+   "method": "EraseRegSubKey",
+   "push_rva": "0x156888",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x156940",
+   "gap": 153,
+   "message": "Unknown error during ChunksList::NeedNewConnection()",
+   "method": "NeedNewConnection",
+   "push_rva": "0x1569d9",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x1595e0",
+   "gap": 1581,
+   "message": "Unknown error during ChunksList::AppendFile()",
+   "method": "AppendFile",
+   "push_rva": "0x159c0d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x1595e0",
+   "gap": 3441,
+   "message": "Unknown error during ChunksList::InsertFromReg()",
+   "method": "InsertFromReg",
+   "push_rva": "0x15a351",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x15a480",
+   "gap": 857,
+   "message": "Unknown error during ChunksList::ApplyAlternative().",
+   "method": "ApplyAlternative",
+   "push_rva": "0x15a7d9",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChL",
+   "function_rva": "0x15a800",
+   "gap": 557,
+   "message": "Unkerr in ChL::CNI 4654",
+   "method": "CNI",
+   "push_rva": "0x15aa2d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x15a800",
+   "gap": 319,
+   "message": "Set filename error in ChunksList::CreateNewItem()",
+   "method": "CreateNewItem",
+   "push_rva": "0x15a93f",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x15a800",
+   "gap": 2321,
+   "message": "Unknown error during ChunksList::CheckAlternative().",
+   "method": "CheckAlternative",
+   "push_rva": "0x15b111",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x15b240",
+   "gap": 374,
+   "message": "Unknown error during ChunksList::Erase()",
+   "method": "Erase",
+   "push_rva": "0x15b3b6",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x15b240",
+   "gap": 2041,
+   "message": "Unknown error during ChunksList::InitFirst()",
+   "method": "InitFirst",
+   "push_rva": "0x15ba39",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x15b240",
+   "gap": 10330,
+   "message": "Unknown error during ChunksList::JoinFile()",
+   "method": "JoinFile",
+   "push_rva": "0x15da9a",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChLst",
+   "function_rva": "0x15b240",
+   "gap": 13790,
+   "message": "Unkerr in ChLst::OnSDID 1515",
+   "method": "OnSDID",
+   "push_rva": "0x15e81e",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksList",
+   "function_rva": "0x160110",
+   "gap": 697,
+   "message": "Unknown error during ChunksList::AddAlternative()",
+   "method": "AddAlternative",
+   "push_rva": "0x1603c9",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksListItem",
+   "function_rva": "0x161940",
+   "gap": 199,
+   "message": "Unknown error during ChunksListItem::set_fileName().",
+   "method": "set_fileName",
+   "push_rva": "0x161a07",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChListItem",
+   "function_rva": "0x161d50",
+   "gap": 158,
+   "message": "Unkerr in ChListItem::savesk",
+   "method": "savesk",
+   "push_rva": "0x161dee",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChListItem",
+   "function_rva": "0x161e10",
+   "gap": 201,
+   "message": "Unkerr in ChListItem::getsk",
+   "method": "getsk",
+   "push_rva": "0x161ed9",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ChunksListItem",
+   "function_rva": "0x161e10",
+   "gap": 955,
+   "message": "Unknown error during ChunksListItem::JoinWithNext().",
+   "method": "JoinWithNext",
+   "push_rva": "0x1621cb",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "Connection",
+   "function_rva": "0x162910",
+   "gap": 135,
+   "message": "Unknown error during Connection::OnChangeBounds()",
+   "method": "OnChangeBounds",
+   "push_rva": "0x162997",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "Connection",
+   "function_rva": "0x162e30",
+   "gap": 6940,
+   "message": "Unknown error during Connection::SelectForRead()",
+   "method": "SelectForRead",
+   "push_rva": "0x16494c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "Connection",
+   "function_rva": "0x1649b0",
+   "gap": 187,
+   "message": "Unknown error during Connection::OnComplete()",
+   "method": "OnComplete",
+   "push_rva": "0x164a6b",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "Connection",
+   "function_rva": "0x164a90",
+   "gap": 350,
+   "message": "Unknown error during Connection::SendConnInfoToDemoWnd()",
+   "method": "SendConnInfoToDemoWnd",
+   "push_rva": "0x164bee",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "Connection",
+   "function_rva": "0x165140",
+   "gap": 6246,
+   "message": "Unknown error during Connection::ProcessRecv()",
+   "method": "ProcessRecv",
+   "push_rva": "0x1669a6",
+   "vtable_classes": [
+    "Connection",
+    "FTPConnection",
+    "HTTPConnection",
+    "MMSConnection",
+    "RTMPConnection"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "Connection",
+   "function_rva": "0x166a00",
+   "gap": 1382,
+   "message": "Unknown error during Connection::CheckConnect()",
+   "method": "CheckConnect",
+   "push_rva": "0x166f66",
+   "vtable_classes": [
+    "Connection",
+    "FTPConnection",
+    "HTTPConnection",
+    "MMSConnection",
+    "RTMPConnection"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "DMEH",
+   "function_rva": "0x16b6f0",
+   "gap": 166,
+   "message": "Unker in DMEH::SEM 175",
+   "method": "SEM",
+   "push_rva": "0x16b796",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16d630",
+   "gap": 99,
+   "message": "Unknown error during FTPConnection::reset_lastcom_timesDiff().",
+   "method": "reset_lastcom_timesDiff",
+   "push_rva": "0x16d693",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16d6b0",
+   "gap": 97,
+   "message": "Unknown error during FTPConnection::set_sequence_cpbl().",
+   "method": "set_sequence_cpbl",
+   "push_rva": "0x16d711",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16d730",
+   "gap": 122,
+   "message": "Unknown error during FTPConnection::try_set_pasv_cpbl().",
+   "method": "try_set_pasv_cpbl",
+   "push_rva": "0x16d7aa",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16d7d0",
+   "gap": 160,
+   "message": "Unknown error during FTPConnection::TryConnect().",
+   "method": "TryConnect",
+   "push_rva": "0x16d870",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16d8b0",
+   "gap": 174,
+   "message": "Unknown error during FTPConnection::CloseDataConnection().",
+   "method": "CloseDataConnection",
+   "push_rva": "0x16d95e",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16d9b0",
+   "gap": 193,
+   "message": "Unknown error during FTPConnection::SendNoop().",
+   "method": "SendNoop",
+   "push_rva": "0x16da71",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16d9b0",
+   "gap": 690,
+   "message": "Unknown error during FTPConnection::FindSizeInRetrReply().",
+   "method": "FindSizeInRetrReply",
+   "push_rva": "0x16dc62",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16dc80",
+   "gap": 205,
+   "message": "Error during FTPConnection::OnNewLastModified()",
+   "method": "OnNewLastModified",
+   "push_rva": "0x16dd4d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16dc80",
+   "gap": 1203,
+   "message": "Unknown error during FTPConnection::GetReply().",
+   "method": "GetReply",
+   "push_rva": "0x16e133",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16e1a0",
+   "gap": 225,
+   "message": "Unknown error during FTPConnection::SendQuit().",
+   "method": "SendQuit",
+   "push_rva": "0x16e281",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16e2d0",
+   "gap": 325,
+   "message": "Unknown error during FTPConnection::CheckConnectReply().",
+   "method": "CheckConnectReply",
+   "push_rva": "0x16e415",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16e460",
+   "gap": 329,
+   "message": "Unknown error during FTPConnection::CheckUserReply().",
+   "method": "CheckUserReply",
+   "push_rva": "0x16e5a9",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16e5f0",
+   "gap": 332,
+   "message": "Unknown error during FTPConnection::CheckPasswordReply().",
+   "method": "CheckPasswordReply",
+   "push_rva": "0x16e73c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16e5f0",
+   "gap": 606,
+   "message": "Unknown error during FTPConnection::SendPasv().",
+   "method": "SendPasv",
+   "push_rva": "0x16e84e",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16e8a0",
+   "gap": 576,
+   "message": "Unknown error during FTPConnection::BindSocket().",
+   "method": "BindSocket",
+   "push_rva": "0x16eae0",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16eb30",
+   "gap": 343,
+   "message": "Unknown error during FTPConnection::Accept().",
+   "method": "Accept",
+   "push_rva": "0x16ec87",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16eb30",
+   "gap": 925,
+   "message": "Unknown error during FTPConnection::SendPort().",
+   "method": "SendPort",
+   "push_rva": "0x16eecd",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16ef20",
+   "gap": 280,
+   "message": "Unknown error during FTPConnection::CheckPortReply().",
+   "method": "CheckPortReply",
+   "push_rva": "0x16f038",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16f080",
+   "gap": 310,
+   "message": "Unknown error during FTPConnection::CheckOthersReplies().",
+   "method": "CheckOthersReplies",
+   "push_rva": "0x16f1b6",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16f200",
+   "gap": 220,
+   "message": "Unknown error during FTPConnection::SendType().",
+   "method": "SendType",
+   "push_rva": "0x16f2dc",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16f330",
+   "gap": 217,
+   "message": "Unknown error during FTPConnection::CheckTypeReply().",
+   "method": "CheckTypeReply",
+   "push_rva": "0x16f409",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16f330",
+   "gap": 590,
+   "message": "Unknown error during FTPConnection::SendRest().",
+   "method": "SendRest",
+   "push_rva": "0x16f57e",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16f330",
+   "gap": 927,
+   "message": "Unknown error during FTPConnection::CheckRestReply().",
+   "method": "CheckRestReply",
+   "push_rva": "0x16f6cf",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16f710",
+   "gap": 250,
+   "message": "Unknown error during FTPConnection::CheckTransferEndReply().",
+   "method": "CheckTransferEndReply",
+   "push_rva": "0x16f80a",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "Connection",
+   "function_rva": "0x16f710",
+   "gap": 628,
+   "message": "Unknown error in Connection::ReceiveData",
+   "method": "ReceiveData",
+   "push_rva": "0x16f984",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16f9e0",
+   "gap": 112,
+   "message": "Unknown error during FTPConnection::RollBack().",
+   "method": "RollBack",
+   "push_rva": "0x16fa50",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16fa70",
+   "gap": 372,
+   "message": "Unknown error during FTPConnection::Restart().",
+   "method": "Restart",
+   "push_rva": "0x16fbe4",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x16fc10",
+   "gap": 177,
+   "message": "Unknown error during FTPConnection::OnSendError().",
+   "method": "OnSendError",
+   "push_rva": "0x16fcc1",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "FTPConnection",
+   "function_rva": "0x17004f",
+   "gap": 64,
+   "message": "Unknown error during FTPConnection::SetCompleted().",
+   "method": "SetCompleted",
+   "push_rva": "0x17008f",
+   "vtable_classes": [
+    "CUserCaptionButton"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "FTPC",
+   "function_rva": "0x170100",
+   "gap": 505,
+   "message": "Unk err in FTPC::CMDTMR",
+   "method": "CMDTMR",
+   "push_rva": "0x1702f9",
+   "vtable_classes": [
+    "CFTPProxyConnection",
+    "FTPConnection"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "FTPConnection",
+   "function_rva": "0x170400",
+   "gap": 208,
+   "message": "Unknown error during FTPConnection::Disconnect().",
+   "method": "Disconnect",
+   "push_rva": "0x1704d0",
+   "vtable_classes": [
+    "CFTPProxyConnection",
+    "FTPConnection"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x170580",
+   "gap": 918,
+   "message": "Unknown error during FTPConnection::ProcessPasvReply().",
+   "method": "ProcessPasvReply",
+   "push_rva": "0x170916",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x170960",
+   "gap": 332,
+   "message": "Unknown error during FTPConnection::CheckListReply().",
+   "method": "CheckListReply",
+   "push_rva": "0x170aac",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x170af0",
+   "gap": 751,
+   "message": "Unknown error during FTPConnection::AuditForRestart().",
+   "method": "AuditForRestart",
+   "push_rva": "0x170ddf",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x1710c0",
+   "gap": 223,
+   "message": "Unknown error during FTPConnection::FTPConnection() constructor.",
+   "method": "FTPConnection",
+   "push_rva": "0x17119f",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x171270",
+   "gap": 307,
+   "message": "Unknown error during FTPConnection::SendUser().",
+   "method": "SendUser",
+   "push_rva": "0x1713a3",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x171270",
+   "gap": 635,
+   "message": "Unknown error during FTPConnection::SendPassword().",
+   "method": "SendPassword",
+   "push_rva": "0x1714eb",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x1716a0",
+   "gap": 577,
+   "message": "Unknown error during FTPConnection::SendCWD().",
+   "method": "SendCWD",
+   "push_rva": "0x1718e1",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x171930",
+   "gap": 438,
+   "message": "Unknown error during FTPConnection::CheckCWDReply().",
+   "method": "CheckCWDReply",
+   "push_rva": "0x171ae6",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x171e90",
+   "gap": 278,
+   "message": "Unknown error during FTPConnection::SendTestSequences().",
+   "method": "SendTestSequences",
+   "push_rva": "0x171fa6",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x172300",
+   "gap": 669,
+   "message": "Unknown error during FTPConnection::SendRetr().",
+   "method": "SendRetr",
+   "push_rva": "0x17259d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x1725f0",
+   "gap": 851,
+   "message": "Unknown error during FTPConnection::CheckRetrReply().",
+   "method": "CheckRetrReply",
+   "push_rva": "0x172943",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x1725f0",
+   "gap": 1574,
+   "message": "Unknown error during FTPConnection::SendSize().",
+   "method": "SendSize",
+   "push_rva": "0x172c16",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x172c60",
+   "gap": 713,
+   "message": "Unknown error during FTPConnection::SendListFile().",
+   "method": "SendListFile",
+   "push_rva": "0x172f29",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x172c60",
+   "gap": 1305,
+   "message": "Unknown error during FTPConnection::CheckSizeReply().",
+   "method": "CheckSizeReply",
+   "push_rva": "0x173179",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x172c60",
+   "gap": 2261,
+   "message": "Unknown error during FTPConnection::RecvListData().",
+   "method": "RecvListData",
+   "push_rva": "0x173535",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x173560",
+   "gap": 356,
+   "message": "Unknown error during FTPConnection::ProcessReply().",
+   "method": "ProcessReply",
+   "push_rva": "0x1736c4",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x173760",
+   "gap": 256,
+   "message": "Unknown error during FTPConnection::ProcessReplyQueue().",
+   "method": "ProcessReplyQueue",
+   "push_rva": "0x173860",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x1738a0",
+   "gap": 132,
+   "message": "Unknown error during FTPConnection::StartGetChunk().",
+   "method": "StartGetChunk",
+   "push_rva": "0x173924",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "after-terminator",
+   "class": "FTPConnection",
+   "function_rva": "0x173960",
+   "gap": 331,
+   "message": "Unknown error during FTPConnection::SendInAddition().",
+   "method": "SendInAddition",
+   "push_rva": "0x173aab",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x173b10",
+   "gap": 262,
+   "message": "Unknown error during FTPConnection::InsInChunksList().",
+   "method": "InsInChunksList",
+   "push_rva": "0x173c16",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x173c40",
+   "gap": 464,
+   "message": "Unknown error during FTPConnection::ProcessWaitTestSequ().",
+   "method": "ProcessWaitTestSequ",
+   "push_rva": "0x173e10",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x173e40",
+   "gap": 308,
+   "message": "Unknown error during FTPConnection::ProcessWaitSecSeqReply().",
+   "method": "ProcessWaitSecSeqReply",
+   "push_rva": "0x173f74",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPC",
+   "function_rva": "0x1740b0",
+   "gap": 452,
+   "message": "Unk err in FTPC::SMDTM().",
+   "method": "SMDTM",
+   "push_rva": "0x174274",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "after-terminator",
+   "class": "FTPConnection",
+   "function_rva": "0x1742b0",
+   "gap": 450,
+   "message": "Unknown error during FTPConnection::OpenDataConnection().",
+   "method": "OpenDataConnection",
+   "push_rva": "0x174472",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x1744b0",
+   "gap": 900,
+   "message": "Unknown error during FTPConnection::GetFileSize().",
+   "method": "GetFileSize",
+   "push_rva": "0x174834",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "after-terminator",
+   "class": "FTPConnection",
+   "function_rva": "0x174870",
+   "gap": 156,
+   "message": "Unknown error during FTPConnection::ProcessWaitConn().",
+   "method": "ProcessWaitConn",
+   "push_rva": "0x17490c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x174940",
+   "gap": 523,
+   "message": "Unknown error during FTPConnection::ProcessPasvOK().",
+   "method": "ProcessPasvOK",
+   "push_rva": "0x174b4b",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x174b80",
+   "gap": 574,
+   "message": "Unknown error during FTPConnection::StartRetr().",
+   "method": "StartRetr",
+   "push_rva": "0x174dbe",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x174df0",
+   "gap": 1052,
+   "message": "Unknown error during FTPConnection::ProcessWaitReply().",
+   "method": "ProcessWaitReply",
+   "push_rva": "0x17520c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPConnection",
+   "function_rva": "0x1752e0",
+   "gap": 4659,
+   "message": "Unknown error during FTPConnection::HandleStatus().",
+   "method": "HandleStatus",
+   "push_rva": "0x176513",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "ProxyConnection",
+   "function_rva": "0x1774f0",
+   "gap": 785,
+   "message": "Unknown error during ProxyConnection::Connect()",
+   "method": "Connect",
+   "push_rva": "0x177801",
+   "vtable_classes": [
+    "CFTPProxyConnection"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPSession",
+   "function_rva": "0x177ad0",
+   "gap": 116,
+   "message": "Unknown error during FTPSession::isPrecheckEnd().",
+   "method": "isPrecheckEnd",
+   "push_rva": "0x177b44",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPSession",
+   "function_rva": "0x177b80",
+   "gap": 156,
+   "message": "Unknown error during FTPSession::set_sequence_cpbl_ok().",
+   "method": "set_sequence_cpbl_ok",
+   "push_rva": "0x177c1c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPSession",
+   "function_rva": "0x177c50",
+   "gap": 112,
+   "message": "Unknown error during FTPSession::set_pass_need().",
+   "method": "set_pass_need",
+   "push_rva": "0x177cc0",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "FTPSession",
+   "function_rva": "0x177df0",
+   "gap": 153,
+   "message": "Unknown error during FTPSession::set_rest_cpbl().",
+   "method": "set_rest_cpbl",
+   "push_rva": "0x177e89",
+   "vtable_classes": [
+    "FTPSession"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPSession",
+   "function_rva": "0x177eb0",
+   "gap": 114,
+   "message": "Unknown error during FTPSession::set_pasv_cpbl().",
+   "method": "set_pasv_cpbl",
+   "push_rva": "0x177f22",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "after-terminator",
+   "class": "FTPSession",
+   "function_rva": "0x178380",
+   "gap": 373,
+   "message": "Unknown error during FTPSession::GetSlowestConnection()",
+   "method": "GetSlowestConnection",
+   "push_rva": "0x1784f5",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPSession",
+   "function_rva": "0x1785c0",
+   "gap": 382,
+   "message": "Unknown error during FTPSession::InitSession().",
+   "method": "InitSession",
+   "push_rva": "0x17873e",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPSession",
+   "function_rva": "0x178760",
+   "gap": 640,
+   "message": "Unknown error during FTPSession::CreateOptionalConnections().",
+   "method": "CreateOptionalConnections",
+   "push_rva": "0x1789e0",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPSession",
+   "function_rva": "0x178a00",
+   "gap": 1041,
+   "message": "Unknown error during FTPSession::set_fds()",
+   "method": "set_fds",
+   "push_rva": "0x178e11",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "FTPSession",
+   "function_rva": "0x178f50",
+   "gap": 1869,
+   "message": "Unknown error during FTPSession::ReceiveData()",
+   "method": "ReceiveData",
+   "push_rva": "0x17969d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "FTPSession",
+   "function_rva": "0x1796d0",
+   "gap": 1771,
+   "message": "Unknown error during FTPSession::getFile()",
+   "method": "getFile",
+   "push_rva": "0x179dbb",
+   "vtable_classes": [
+    "FTPSession"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x17ad50",
+   "gap": 504,
+   "message": "Unknown error during HTTPConnection::base64_encode().",
+   "method": "base64_encode",
+   "push_rva": "0x17af48",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x17b3a0",
+   "gap": 1643,
+   "message": "Error during HTTPConnection::GetReplyIntoStorage()",
+   "method": "GetReplyIntoStorage",
+   "push_rva": "0x17ba0b",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x17ba80",
+   "gap": 284,
+   "message": "Error during HTTPConnection::GetTempEndPos()",
+   "method": "GetTempEndPos",
+   "push_rva": "0x17bb9c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x17c3a0",
+   "gap": 221,
+   "message": "Error during HTTPConnection::GetNextReplyLine()",
+   "method": "GetNextReplyLine",
+   "push_rva": "0x17c47d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x17c730",
+   "gap": 345,
+   "message": "Error during HTTPConnection::RecvState()",
+   "method": "RecvState",
+   "push_rva": "0x17c889",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x17c9b0",
+   "gap": 338,
+   "message": "Error during HTTPConnection::OnNewLastModified()",
+   "method": "OnNewLastModified",
+   "push_rva": "0x17cb02",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x17d5f0",
+   "gap": 236,
+   "message": "Error during HTTPConnection::SkipAllHeaders()",
+   "method": "SkipAllHeaders",
+   "push_rva": "0x17d6dc",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x17da30",
+   "gap": 549,
+   "message": "Error during HTTPConnection::SkipAllHeaders2()",
+   "method": "SkipAllHeaders2",
+   "push_rva": "0x17dc55",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x17da30",
+   "gap": 923,
+   "message": "Error %d during HTTPConnection::MNSP(), step1.",
+   "method": "MNSP",
+   "push_rva": "0x17ddcb",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x17de20",
+   "gap": 649,
+   "message": "Unknown error during HTTPConnection::Disconnect().",
+   "method": "Disconnect",
+   "push_rva": "0x17e0a9",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "Connection",
+   "function_rva": "0x17f4d0",
+   "gap": 806,
+   "message": "Unknown error during Connection::SetCompleted()",
+   "method": "SetCompleted",
+   "push_rva": "0x17f7f6",
+   "vtable_classes": [
+    "HTTPConnection"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x17faf0",
+   "gap": 4747,
+   "message": "Error during HTTPConnection::GetRetrRangeReply()",
+   "method": "GetRetrRangeReply",
+   "push_rva": "0x180d7b",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPC",
+   "function_rva": "0x180db0",
+   "gap": 1272,
+   "message": "Err in HTTPC::AFR",
+   "method": "AFR",
+   "push_rva": "0x1812a8",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "HTTPConnection",
+   "function_rva": "0x182900",
+   "gap": 649,
+   "message": "Error during HTTPConnection::Set_szURL()",
+   "method": "Set_szURL",
+   "push_rva": "0x182b89",
+   "vtable_classes": [
+    "HTTPConnection"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "HTTPConnection",
+   "function_rva": "0x182900",
+   "gap": 2056,
+   "message": "Error during HTTPConnection::ProcessSetCookieHeader()",
+   "method": "ProcessSetCookieHeader",
+   "push_rva": "0x183108",
+   "vtable_classes": [
+    "HTTPConnection"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "HTTPConnection",
+   "function_rva": "0x182900",
+   "gap": 8186,
+   "message": "Error during HTTPConnection::setNewLocation()",
+   "method": "setNewLocation",
+   "push_rva": "0x1848fa",
+   "vtable_classes": [
+    "HTTPConnection"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x184920",
+   "gap": 5904,
+   "message": "Error during HTTPConnection::ProcessState()",
+   "method": "ProcessState",
+   "push_rva": "0x186030",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "HTTPConnection",
+   "function_rva": "0x186180",
+   "gap": 4979,
+   "message": "Error during HTTPConnection::SendGet()",
+   "method": "SendGet",
+   "push_rva": "0x1874f3",
+   "vtable_classes": [
+    "HTTPConnection"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "HTTPConnection",
+   "function_rva": "0x186180",
+   "gap": 14453,
+   "message": "Error during HTTPConnection::ProcessHeader()",
+   "method": "ProcessHeader",
+   "push_rva": "0x1899f5",
+   "vtable_classes": [
+    "HTTPConnection"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "HTTPConnection",
+   "function_rva": "0x186180",
+   "gap": 15376,
+   "message": "Error during HTTPConnection::GetState()",
+   "method": "GetState",
+   "push_rva": "0x189d90",
+   "vtable_classes": [
+    "HTTPConnection"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "HTTPConnection",
+   "function_rva": "0x186180",
+   "gap": 17192,
+   "message": "Unknown error during HTTPConnection::HttpsProxyConnect()",
+   "method": "HttpsProxyConnect",
+   "push_rva": "0x18a4a8",
+   "vtable_classes": [
+    "HTTPConnection"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "HTTPConnection",
+   "function_rva": "0x18a4f0",
+   "gap": 652,
+   "message": "Error during HTTPConnection::RecvAllHeaders()",
+   "method": "RecvAllHeaders",
+   "push_rva": "0x18a77c",
+   "vtable_classes": [
+    "HTTPConnection",
+    "ProxyConnection"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "HTTPConnection",
+   "function_rva": "0x18a4f0",
+   "gap": 11508,
+   "message": "Error during HTTPConnection::HandleStatus",
+   "method": "HandleStatus",
+   "push_rva": "0x18d1e4",
+   "vtable_classes": [
+    "HTTPConnection",
+    "ProxyConnection"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "HTTPConnection",
+   "function_rva": "0x18a4f0",
+   "gap": 20672,
+   "message": "Error during HTTPConnection::GetInfo()",
+   "method": "GetInfo",
+   "push_rva": "0x18f5b0",
+   "vtable_classes": [
+    "HTTPConnection",
+    "ProxyConnection"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPSession",
+   "function_rva": "0x190800",
+   "gap": 297,
+   "message": "Unknown error during HTTPSession::InitSession().",
+   "method": "InitSession",
+   "push_rva": "0x190929",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "HTTPSession",
+   "function_rva": "0x1910c0",
+   "gap": 111,
+   "message": "Unknown error during HTTPSession::SendAllConnInfo()",
+   "method": "SendAllConnInfo",
+   "push_rva": "0x19112f",
+   "vtable_classes": [
+    "HTTPSession"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPSession",
+   "function_rva": "0x191150",
+   "gap": 770,
+   "message": "Unknown error during HTTPSession::TryStartNewOptionalConnections()",
+   "method": "TryStartNewOptionalConnections",
+   "push_rva": "0x191452",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPSession",
+   "function_rva": "0x191740",
+   "gap": 369,
+   "message": "Unknown error during HTTPSession::GetSlowestConnection()",
+   "method": "GetSlowestConnection",
+   "push_rva": "0x1918b1",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "MMSCn",
+   "function_rva": "0x1a1200",
+   "gap": 2666,
+   "message": "Unk err in MMSCn::HndlSt, time %I64d, status %d",
+   "method": "HndlSt",
+   "push_rva": "0x1a1c6a",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPSession",
+   "function_rva": "0x1a2880",
+   "gap": 2281,
+   "message": "Unknown error during HTTPSession::ReceiveData()",
+   "method": "ReceiveData",
+   "push_rva": "0x1a3169",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ProxyConn",
+   "function_rva": "0x1a7ed0",
+   "gap": 375,
+   "message": "Err ProxyConn::SBPAS 715",
+   "method": "SBPAS",
+   "push_rva": "0x1a8047",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "ProxyConnection",
+   "function_rva": "0x1a87a0",
+   "gap": 5988,
+   "message": "Unknown error during ProxyConnection::SendGet()",
+   "method": "SendGet",
+   "push_rva": "0x1a9f04",
+   "vtable_classes": [
+    "ProxyConnection"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "ProxyConnection",
+   "function_rva": "0x1a9f60",
+   "gap": 1073,
+   "message": "Unknown error during ProxyConnection::Set_szURL()",
+   "method": "Set_szURL",
+   "push_rva": "0x1aa391",
+   "vtable_classes": [
+    "ProxyConnection"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "ReplyQueue",
+   "function_rva": "0x1aa850",
+   "gap": 116,
+   "message": "Unknown error during ReplyQueue::Add()",
+   "method": "Add",
+   "push_rva": "0x1aa8c4",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "after-terminator",
+   "class": "ReplyQueue",
+   "function_rva": "0x1aa8e0",
+   "gap": 112,
+   "message": "Unknown error during ReplyQueue::GetNext()",
+   "method": "GetNext",
+   "push_rva": "0x1aa950",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "ReplyQueue",
+   "function_rva": "0x1aa9e0",
+   "gap": 98,
+   "message": "Unknown error during ReplyQueue::Erase()",
+   "method": "Erase",
+   "push_rva": "0x1aaa42",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "RTMPS",
+   "function_rva": "0x1b34a0",
+   "gap": 126,
+   "message": "Unknerr in RTMPS::AFR, 412",
+   "method": "AFR",
+   "push_rva": "0x1b351e",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "RTMPS",
+   "function_rva": "0x1b3c80",
+   "gap": 254,
+   "message": "Unknerr in RTMPS::CWADTFM, 399",
+   "method": "CWADTFM",
+   "push_rva": "0x1b3d7e",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "Session",
+   "function_rva": "0x1b4d10",
+   "gap": 317,
+   "message": "Unknown error during Session::SaveDownloadedInRegistry()",
+   "method": "SaveDownloadedInRegistry",
+   "push_rva": "0x1b4e4d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "Session",
+   "function_rva": "0x1b5360",
+   "gap": 120,
+   "message": "Unknown error during Session::ResetDownlInCycle()",
+   "method": "ResetDownlInCycle",
+   "push_rva": "0x1b53d8",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "Session",
+   "function_rva": "0x1b5360",
+   "gap": 1273,
+   "message": "Unknown error during Session::CalcSpeed()",
+   "method": "CalcSpeed",
+   "push_rva": "0x1b5859",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "Session",
+   "function_rva": "0x1b5c30",
+   "gap": 912,
+   "message": "Unknown error during Session::SetDownlID()",
+   "method": "SetDownlID",
+   "push_rva": "0x1b5fc0",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "Session",
+   "function_rva": "0x1b5c30",
+   "gap": 2784,
+   "message": "Unknown error during Session::set_fileSize()",
+   "method": "set_fileSize",
+   "push_rva": "0x1b6710",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "Session",
+   "function_rva": "0x1b6cb0",
+   "gap": 773,
+   "message": "Unknown error during Session::AddDescription(...)",
+   "method": "AddDescription",
+   "push_rva": "0x1b6fb5",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "Session",
+   "function_rva": "0x1b6cb0",
+   "gap": 1290,
+   "message": "Unknown error during Session::CheckFormat(), step 2",
+   "method": "CheckFormat",
+   "push_rva": "0x1b71ba",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "SessionManager",
+   "function_rva": "0x1b76d0",
+   "gap": 205,
+   "message": "Unknown error during SessionManager::SetDescription()",
+   "method": "SetDescription",
+   "push_rva": "0x1b779d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "SessionManager",
+   "function_rva": "0x1b7af0",
+   "gap": 288,
+   "message": "Unknown error during SessionManager::SetStatus()",
+   "method": "SetStatus",
+   "push_rva": "0x1b7c10",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "SessionManager",
+   "function_rva": "0x1b7d10",
+   "gap": 199,
+   "message": "Unknown error during SessionManager::SetURL()",
+   "method": "SetURL",
+   "push_rva": "0x1b7dd7",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "SessionManager",
+   "function_rva": "0x1b7e10",
+   "gap": 153,
+   "message": "Unknown error during SessionManager::SetLogin()",
+   "method": "SetLogin",
+   "push_rva": "0x1b7ea9",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "SessionManager",
+   "function_rva": "0x1b8290",
+   "gap": 406,
+   "message": "Unknown error during SessionManager::DeleteFromRegistry()",
+   "method": "DeleteFromRegistry",
+   "push_rva": "0x1b8426",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "SessionManager",
+   "function_rva": "0x1b8490",
+   "gap": 463,
+   "message": "Unknown error during SessionManager::ConvertSizeToString()",
+   "method": "ConvertSizeToString",
+   "push_rva": "0x1b865f",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "SessionManager",
+   "function_rva": "0x1bb0e0",
+   "gap": 1077,
+   "message": "Unknown error during SessionManager::CoverUpTheTraces()",
+   "method": "CoverUpTheTraces",
+   "push_rva": "0x1bb515",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "SessionManager",
+   "function_rva": "0x1bec20",
+   "gap": 199,
+   "message": "Unknown error during SessionManager::SetLocalName()",
+   "method": "SetLocalName",
+   "push_rva": "0x1bece7",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "SessionManager",
+   "function_rva": "0x1bed20",
+   "gap": 208,
+   "message": "Unknown error during SessionManager::CancelDownload()",
+   "method": "CancelDownload",
+   "push_rva": "0x1bedf0",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "after-terminator",
+   "class": "SessionManager",
+   "function_rva": "0x1bee10",
+   "gap": 231,
+   "message": "Unknown error during SessionManager::ProcessCancelDownload()",
+   "method": "ProcessCancelDownload",
+   "push_rva": "0x1beef7",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "SessionManager",
+   "function_rva": "0x1c1e40",
+   "gap": 6717,
+   "message": "Unknown error during SessionManager::GetDefaultlocalName()",
+   "method": "GetDefaultlocalName",
+   "push_rva": "0x1c387d",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "SessionManager",
+   "function_rva": "0x1c6fc0",
+   "gap": 5639,
+   "message": "Unknown error during SessionManager::LoadUrlFromReg()",
+   "method": "LoadUrlFromReg",
+   "push_rva": "0x1c85c7",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "SessionManager",
+   "function_rva": "0x1c8740",
+   "gap": 177,
+   "message": "Unknown error during SessionManager::DoDownload()",
+   "method": "DoDownload",
+   "push_rva": "0x1c87f1",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "URL",
+   "function_rva": "0x1cbb50",
+   "gap": 3002,
+   "message": "URL::set_description(): Not enough memory!",
+   "method": "set_description",
+   "push_rva": "0x1cc70a",
+   "vtable_classes": [
+    "CTSOutBeffer"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "URL",
+   "function_rva": "0x1ce680",
+   "gap": 2932,
+   "message": "URL::set_localFileName(): Not enough memory!",
+   "method": "set_localFileName",
+   "push_rva": "0x1cf1f4",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "URL",
+   "function_rva": "0x1ce680",
+   "gap": 6577,
+   "message": "Error %ld opening registry key in URL::OpenDMRegSubKey()",
+   "method": "OpenDMRegSubKey",
+   "push_rva": "0x1d0031",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "URL",
+   "function_rva": "0x1d26b0",
+   "gap": 327,
+   "message": "Unknown error during URL::set_LastModified()",
+   "method": "set_LastModified",
+   "push_rva": "0x1d27f7",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "URL",
+   "function_rva": "0x1d26b0",
+   "gap": 2421,
+   "message": "Unknown error during URL::LoadLocalNamesFromReg()",
+   "method": "LoadLocalNamesFromReg",
+   "push_rva": "0x1d3025",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "after-terminator",
+   "class": "URL",
+   "function_rva": "0x1d32d0",
+   "gap": 1977,
+   "message": "Unknown error during URL::SaveToReg()",
+   "method": "SaveToReg",
+   "push_rva": "0x1d3a89",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "URL",
+   "function_rva": "0x1d4740",
+   "gap": 204,
+   "message": "Unk err in URL::set_MDTM()",
+   "method": "set_MDTM",
+   "push_rva": "0x1d480c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CContentTypeChecker",
+   "function_rva": "0x1d73e0",
+   "gap": 484,
+   "message": "Unknown error during CContentTypeChecker::CheckHTML()",
+   "method": "CheckHTML",
+   "push_rva": "0x1d75c4",
+   "vtable_classes": [
+    "CAviFormat"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CContentTypeChecker",
+   "function_rva": "0x1d79d0",
+   "gap": 311,
+   "message": "Unknown error during CContentTypeChecker::Check(), step 2",
+   "method": "Check",
+   "push_rva": "0x1d7b07",
+   "vtable_classes": [
+    "CContentTypeChecker"
+   ]
+  },
+  {
+   "anchor": "vtable",
+   "class": "CContentTypeChecker",
+   "function_rva": "0x1d79d0",
+   "gap": 689,
+   "message": "Unknown error during CContentTypeChecker::CheckEnd(), step 2",
+   "method": "CheckEnd",
+   "push_rva": "0x1d7c81",
+   "vtable_classes": [
+    "CContentTypeChecker"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "CFormatParsing",
+   "function_rva": "0x1d7f70",
+   "gap": 262,
+   "message": "GetFileSize() error in CFormatParsing::GetFSize(), errcode = %ld.",
+   "method": "GetFSize",
+   "push_rva": "0x1d8076",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CFormatParsing",
+   "function_rva": "0x1d7f70",
+   "gap": 2743,
+   "message": "ReadFile() error %ld in CFormatParsing::PreCheckMpg()",
+   "method": "PreCheckMpg",
+   "push_rva": "0x1d8a27",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CFormatParsing",
+   "function_rva": "0x1d7f70",
+   "gap": 2897,
+   "message": "CreateFile() error %ld in CFormatParsing::Initialize()",
+   "method": "Initialize",
+   "push_rva": "0x1d8ac1",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CFormatParsing",
+   "function_rva": "0x1d7f70",
+   "gap": 4140,
+   "message": "ParseCentralDir failed in CFormatParsing::FillZipFormatStruct()",
+   "method": "FillZipFormatStruct",
+   "push_rva": "0x1d8f9c",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CFormatParsing",
+   "function_rva": "0x1d9620",
+   "gap": 1559,
+   "message": "ReadFile() error %ld in CFormatParsing::GetLastMp3()",
+   "method": "GetLastMp3",
+   "push_rva": "0x1d9c37",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "padded",
+   "class": "CMp3Format",
+   "function_rva": "0x1d9e30",
+   "gap": 259,
+   "message": "Unknown exception during CMp3Format::GetID3Tag(), lastError %ld",
+   "method": "GetID3Tag",
+   "push_rva": "0x1d9f33",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "CZipPreviewDlg",
+   "function_rva": "0x1db670",
+   "gap": 1389,
+   "message": "Unknown error during CZipPreviewDlg::OnInitDialog()",
+   "method": "OnInitDialog",
+   "push_rva": "0x1dbbdd",
+   "vtable_classes": [
+    "CZipPreviewDlg"
+   ]
+  },
+  {
+   "anchor": "padded",
+   "class": "HTTPConnection",
+   "function_rva": "0x1ddd80",
+   "gap": 1817,
+   "message": "Error during HTTPConnection::SendHTTPSGet()",
+   "method": "SendHTTPSGet",
+   "push_rva": "0x1de499",
+   "vtable_classes": []
+  },
+  {
+   "anchor": "vtable",
+   "class": "HTTPConnection",
+   "function_rva": "0x1dfa20",
+   "gap": 2095,
+   "message": "Error during HTTPConnection::RecvHTTPSData()",
+   "method": "RecvHTTPSData",
+   "push_rva": "0x1e024f",
+   "vtable_classes": [
+    "HTTPConnection",
+    "ProxyConnection"
+   ]
+  }
+ ]
+}

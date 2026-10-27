@@ -1,8 +1,9 @@
 # 14 — Moteur de téléchargement : architecture, morceaux, reprise
 
-> **Statut** : 🟡 v0.1 (WP-05) · **Dernière revue** : 2026-10-27
+> **Statut** : 🟡 v0.2 (WP-05) · **Dernière revue** : 2026-10-27
 > **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, sha256 `5f78da5a…2f11c9`
-> **Preuves principales** : `analysis/idman/symbols.json` (nouveau, §1), `classes.json`,
+> **Preuves principales** : `analysis/idman/symbols.json` (§1), `methods.json` (noms →
+> adresses), `states.json` (machine à états, §4), `classes.json`,
 > `analysis/raw/idman/strings-*.txt`, désassemblage `capstone` ciblé.
 > **Niveau** : chaque affirmation est **Observé** (lu dans le binaire : chaîne, vtable,
 > instruction) ou **Dérivé** (interprétation explicitement signalée). Aucune ligne
@@ -51,6 +52,14 @@ confirme la lecture :
 | Stockage | `ChunksList` (13), `ChunksListItem` (2), `ReplyQueue` (3) | 18 |
 | Interface | `CDownloaderDlg` (34), `CDownload` (9), `CDDlg` (10), `CDwnlDlg` (7) | 60+ |
 | Grabber | `GrbFsDlg` (1), `GrSh` (2), `CDDlg::AddGrLinks`… | ~6 |
+
+`tools/idman_attrib.py` va plus loin : il rattache chaque message à la **fonction** qui
+le pousse (`analysis/idman/methods.json`), en s'appuyant sur des ancrages de fonctions
+(adresses de vtables, prologues `55 8B EC` précédés de remplissage). Résultat :
+**253 fonctions nommées**, **246 attributions confirmées** sur 323 messages (les 77
+autres ont un `gap` > 0x800, donc une frontière probablement manquée : ne pas les citer
+comme des adresses exactes). C'est ce qui permet, en §4 et §9, de donner des adresses
+de méthodes.
 
 **Conséquence quantitative (Observé)** : les vtables ne montrent qu'une **minorité** des
 méthodes. `tools/idman_class_profile.py --pattern '^(HTTPConnection|FTPSession|Session)$'`
@@ -134,31 +143,94 @@ coopérative, jamais de `TerminateThread`).
 
 ---
 
-## 4. Machine à états d'une connexion (Observé + Dérivé)
+## 4. Machine à états d'une connexion (Observé, `tools/idman_states.py`)
 
-`Connection` (générique) et `HTTPConnection` fournissent le squelette :
+### 4.1 Le champ d'état et sa distribution (Observé)
 
-| Groupe | Méthodes (Observé) |
+`Connection` (générique) et ses dérivées fournissent le squelette :
+
+| Groupe | Méthodes (attribuées par `methods.json`) |
 |---|---|
-| Établissement | `Connection::CheckConnect`, `HTTPConnection::HttpsProxyConnect`, `FTPConnection::TryConnect`, `BindSocket`, `Accept` |
-| Boucle d'E/S | `Connection::SelectForRead`, `ProcessRecv`, `ReceiveData`, `SendConnInfoToDemoWnd` |
-| Émission | `HTTPConnection::SendGet`, `SendHTTPSGet` ; `FTPConnection::Send*` (16 verbes) |
-| Réception d'en-têtes | `RecvAllHeaders`, `SkipAllHeaders`, `SkipAllHeaders2`, `GetNextReplyLine`, `GetReplyIntoStorage`, `ProcessHeader`, `ProcessSetCookieHeader` |
-| Interprétation | `HandleStatus`, `ProcessState`, `RecvState`, `GetState`, `GetRetrRangeReply`, `GetTempEndPos`, `setNewLocation`, `OnNewLastModified` |
-| Fin | `SetCompleted`, `Connection::OnComplete`, `Disconnect`, `FTPConnection::RollBack`, `Restart` |
+| Établissement | `Connection::CheckConnect` (`0x166a00`), `ProxyConnection::Connect` (`0x1774f0`), `FTPConnection::TryConnect` (`0x16d7d0`), `BindSocket` (`0x16e8a0`), `Accept` (`0x16eb30`), `HTTPConnection::HttpsProxyConnect` |
+| Boucle d'E/S | `Connection::SelectForRead` ; fonction `0x165140` (message `Connection::ProcessRecv`), fonction `0x16f710` (message `Connection::ReceiveData`) |
+| Émission | fonction `0x186180` (`HTTPConnection::SendGet`), `0x1dbd30` (`SendHTTPSGet`) ; `FTPConnection::Send*` (16 fonctions distinctes nommées) |
+| En-têtes | fonction `0x18a4f0` (messages `RecvAllHeaders`, `HandleStatus`, `GetInfo`), `0x17d710` (`SkipAllHeaders`), `0x17de20` (`SkipAllHeaders2`), `0x17c3a0` (`GetNextReplyLine`), `0x17b3a0` (`GetReplyIntoStorage`) |
+| Interprétation | `0x17c730` (`RecvState`), `0x17faf0` (`GetRetrRangeReply`), `0x17ba80` (`GetTempEndPos`), `0x182900` (`Set_szURL`/`setNewLocation`), `ProcessState`, `GetState` |
+| Fin | `Connection::SetCompleted` (`0x17f4d0`), `OnComplete` (`0x1649b0`), `FTPConnection::Disconnect` (`0x170400`), `RollBack` (`0x16f9e0`), `Restart` (`0x16fa70`) |
 
-Trois méthodes s'appellent **`GetState` / `RecvState` / `ProcessState`** et une
-quatrième manipule un statut (`HandleStatus`, avec la trace `time %I64d, status %d`
-côté MMS). **Dérivé** : l'état est un **entier par connexion**, avancé par une machine
-à états explicite ; l'énumération exacte reste un trou (§10, A-12).
+*Note de lecture* : une adresse n'est donnée que lorsque `methods.json` l'attribue au nom
+cité **et** que le `gap` est faible ; les fonctions qui portent plusieurs messages sont
+désignées par leur adresse suivie de la liste des messages qu'elles contiennent, sans
+prétendre qu'elles *sont* l'une de ces méthodes.
 
-Signaux de robustesse relevés dans le voisinage (Observé) :
+**L'état est un entier en `this + 0xa4`** — et non une abstraction cachée :
+
+| Constat | Preuve |
+|---|---|
+| Champ | `mov eax, dword ptr [esi + 0xa4]` en `0x180de6` (HTTP) et `0x18a7fa` (HTTP) |
+| Taille | `cmp eax, 0x26` avant chaque `switch` ⇒ **39 états, indices 0 à 38** |
+| Distribution | compilée par MSVC en **table d'octets → table de sauts** : `movzx eax, byte ptr [eax + B]` puis `jmp dword ptr [eax*4 + T]` |
+| Switch sur ce champ | **8** (`states.json` §`dispatchers`), tous bornés entre 0..28 et 0..38 |
+| Écritures (transitions) | **115 sites**, **30** valeurs distinctes écrites |
+
+Détail des huit distributeurs (`analysis/idman/states.json`) :
+
+| Site | Table de sauts | Gestionnaires | États couverts | Zone |
+|---|---|---|---|---|
+| `0x170b99` | `0x170e08` | 7 | 0..36 | FTP |
+| `0x1753e6` | `0x17656c` | 22 | 0..37 | FTP (fonction contenant `FTPConnection::HandleStatus`) |
+| `0x178af4` | `0x178e40` | 10 | 0..37 | `FTPSession` |
+| `0x180e07` | `0x1812c4` | 6 | 0..38 | HTTP, avant `GetRetrRangeReply` |
+| `0x18a809` | `0x18d230` | 15 | 0..38 | HTTP, fonction `0x18a4f0` (`HandleStatus`) |
+| `0x1a1244` | `0x1a1ca0` | 14 | 0..32 | MMS |
+| `0x1ad546` | `0x1ad664` | 4 | 0..28 | RTMP |
+| `0x1b28df` | `0x1b3014` | 18 | 0..32 | `Session` |
+
+Sur le switch HTTP de `HandleStatus` (`0x18a809`), **25 des 39 états retombent sur le
+même gestionnaire par défaut** (`0x18d1d7`) : la machine n'a donc qu'une quinzaine
+d'états « vivants » pour HTTP.
+
+### 4.2 Lectures des états (Dérivé, adossé aux sites d'écriture)
+
+Chaque ligne lie un état aux méthodes qui l'écrivent (`states.json` §`by_state`) ; la
+sémantique est une **déduction**, pas une lecture de nom d'énumération (il n'y en a pas).
+
+| État | Écrit par (extrait) | Lecture proposée |
+|---|---|---|
+| 1 | `ProxyConnection::Connect` | connexion en cours vers le proxy |
+| 2 | `Connection::CheckConnect` (chemin de succès, après `call 0x562830`) | **connecté** |
+| 3 | `CDownloadComponents::StartDownload` | démarrage demandé par l'interface |
+| 4 | tous les `FTPConnection::Send*` (`User`, `Password`, `Type`, `Cwd`, `Pasv`, `Rest`, `Retr`, `Size`, `Port`, `ListFile`…) | **commande envoyée, réponse attendue** |
+| 5 | `SkipAllHeaders`, `SkipAllHeaders2`, `RecvAllHeaders`, `MNSP` | lecture/saut des en-têtes |
+| 6 | `CheckRetrReply`, `SendSize`, `GetRetrRangeReply`, `GetInfo` | réponse interprétée |
+| 7 | `Connection::SetCompleted` (après remise à zéro de `+0xc0`), `RollBack`, `ProcessWaitTestSequ`, `GetRetrRangeReply` | **terminé / clôturé** |
+| 10 | `ProcessPasvOK` | `PASV` accepté |
+| 11 | `SendTestSequences` | test des séquences FTP |
+| 12 | `ProcessWaitTestSequ` | séquences testées |
+| 13 | `CheckListReply` | réponse de `LIST` reçue |
+| 14 | 25 sites (dont `HandleStatus`, `AuditForRestart`, `InsInChunksList`, `ProcessPasvReply`) | **transfert de données en cours** |
+| 15 | `RecvHTTPSData` | données lues dans le tunnel TLS |
+| 16 | `HttpsProxyConnect`, `GetState`, `GetInfo`, `HandleStatus` | tunnel proxy établi / état interrogé |
+| 17..19 | `MMSCn::HndlSt`, `HTTPSession::ReceiveData` | états MMS/RTMP (non nommés) |
+| 31, 32 | `Connection::SelectForRead` | **E/S en attente** (deux variantes lecture/écriture) |
+| 38 | `RecvAllHeaders`, `GetInfo`, `HandleStatus` | fin de réception des en-têtes |
+
+**Constat de conception (Dérivé)** : les états 4, 5, 6, 7 et 14 sont écrits par *toutes*
+les classes de transport (HTTP, FTP, MMS, RTMP) — la machine est donc **commune** à tous
+les protocoles, chaque transport n'ayant que quelques états propres (10-13 pour FTP,
+15-16 pour HTTP/TLS, 17-19 pour MMS/RTMP). C'est un point important pour XDM : une seule
+machine à états paramétrée par transport, pas quatre machines.
+
+### 4.3 Robustesse (Observé, voisinage des transitions)
 
 - `"Select failed, err code = %d, socket = %d"` → `SelectForRead` journalise l'échec de
-  `select()` (sockets non bloquantes, pas de thread par connexion) ;
+  `select()` (sockets non bloquantes ; pas de thread par connexion) ;
 - `"Connection restarted because of timeout"` → reprise sur expiration ;
-- `"File write error! Received %d bytes, wrote %d bytes, errCode = %ld"` → écriture
-  partielle traitée comme cas normal, pas comme erreur fatale.
+- `"File write error! Received %d bytes, wrote %d bytes, errCode = %ld"` → l'écriture
+  partielle est un cas normal, pas une erreur fatale ;
+- le chemin d'erreur de `Connection::CheckConnect` passe par un gestionnaire SEH qui
+  journalise `"Unknown error during Connection::CheckConnect"` puis retourne `-1`
+  (`0x166f66`–`0x166f93`) : **aucune exception ne remonte** au moteur.
 
 ---
 
@@ -389,7 +461,7 @@ n'implémente que le rollback (`ftruncate`) — équivalent de `0x15ff52`.
 | ID | Question | Pourquoi c'est bloquant | Moyen |
 |---|---|---|---|
 | A-11 | Contenu exact d'un enregistrement `ChList` (binaire ? champs ?) | Aucun intérêt pour XDM (D-024) mais utile pour lire un `.gsd`/état existant | capstone sur `0x15f600` (checkpoint) |
-| A-12 | Énumération des états de `Connection` | La machine à états est le cœur de `WP-05` | comparer les `cmp`/`switch` autour de `GetState` |
+| A-12 | ~~Énumération des états de `Connection`~~ **levée le 2026-10-27** : 39 états (0..38) sur `this+0xa4`, 8 distributeurs, 115 écritures (annexe 14 §4, `states.json`). Reste à nommer les états 17..27 (MMS/RTMP/sessions) | — | `tools/idman_states.py` |
 | A-13 | Seuils : taille minimale de morceau, temporisations, nombre de tentatives | Détermine les valeurs par défaut de XDM | lecture des constantes voisines de `"Change chunk size to %ld"` |
 | A-14 | Rôle de `HTTPConnection::MNSP` (message `Error %d … step1`) | Inconnu à ce jour | désassemblage ciblé |
 
