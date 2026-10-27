@@ -1,6 +1,6 @@
 # 14 — Moteur de téléchargement : architecture, morceaux, reprise
 
-> **Statut** : 🟡 v0.6 (WP-05) · **Dernière revue** : 2026-10-27
+> **Statut** : 🟡 v0.7 (WP-05) · **Dernière revue** : 2026-10-27
 > **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, sha256 `5f78da5a…2f11c9`
 > **Preuves principales** : `analysis/idman/symbols.json` (§1), `methods.json` (noms →
 > adresses), `states.json` (machine à états, §4), `classes.json`,
@@ -706,5 +706,6 @@ une empreinte.
 | v0.2 | 2026-10-27 | §4 : état = `this+0xa4`, 39 états, 8 distributeurs (`states.json`) |
 | v0.3 | 2026-10-27 | `A-13` modèle d'E/S et seuils, `D-028` |
 | v0.4 | 2026-10-27 | `A-14` (`MNSP` = `InternetCombineUrlA`), `A-15` (états 17..27), `A-16` (1–10 MiB, `D-029`) |
+| v0.7 | 2026-10-27 | `A-16` clos : balayage des tailles rondes du bloc `ChunksList`, plancher 1 MiB = minimum réel, `0x800` = tampon, `0x200000` = pas d'avance |
 | v0.6 | 2026-10-27 | `A-13` complétée : formule du délai `select` (÷10 ou ÷2, plafond 12 s), attente courte de 2–3 s, **§4.5** délai d'inactivité **30 s** (300 s en mode particulier) et redémarrage de connexion, réglage `mAttempts` |
 | v0.5 | 2026-10-27 | `A-11` : le morceau est un **intervalle** dans un fichier unique, `file` partagé (preuve par absence de modèle `%s%d.tmp`), assemblage = promotion du `.tmp`, rollback détaillé jusqu'au compteur `0x15ff9b` ; `D-026` corrigée, `D-030`, `D-031` ; §11 remis à jour |
