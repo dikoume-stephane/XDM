@@ -1,6 +1,6 @@
 # 14 — Moteur de téléchargement : architecture, morceaux, reprise
 
-> **Statut** : 🟡 v0.2 (WP-05) · **Dernière revue** : 2026-10-27
+> **Statut** : 🟡 v0.3 (WP-05) · **Dernière revue** : 2026-10-27
 > **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, sha256 `5f78da5a…2f11c9`
 > **Preuves principales** : `analysis/idman/symbols.json` (§1), `methods.json` (noms →
 > adresses), `states.json` (machine à états, §4), `classes.json`,
@@ -231,6 +231,52 @@ machine à états paramétrée par transport, pas quatre machines.
 - le chemin d'erreur de `Connection::CheckConnect` passe par un gestionnaire SEH qui
   journalise `"Unknown error during Connection::CheckConnect"` puis retourne `-1`
   (`0x166f66`–`0x166f93`) : **aucune exception ne remonte** au moteur.
+
+### 4.4 Modèle d'E/S et seuils (Observé, `A-13`)
+
+Le moteur n'ouvre pas un thread par connexion : il fait **un `select()` pour toute la
+session**. Deux sites d'appel seulement (`0x19503c`, `0x1959bd`) et trois
+`CreateThread` dans tout le binaire (aucun dans la boucle de transfert).
+
+| Élément | Valeur | Preuve |
+|---|---|---|
+| Tableau des connexions | pointeur `session+0x274`, **compte `session+0x1b0`** | boucle `cmp edi, [esi+0x1b0]` en `0x194fe4` ; `mov eax, [esi+0x274]` puis `imul edx, edx, 0x3488` |
+| **Taille d'un objet connexion** | **`0x3488` octets** (13 448) | `imul edx, edx, 0x3488` en `0x194fee` — pas de division, c'est bien un pas de tableau |
+| `fd_set` de lecture / écriture / exceptions | `session+0x278`, `+0x47c`, `+0x680` | remis à zéro en `0x1958fe`–`0x19590a` |
+| **Taille d'un `fd_set`** | **516 octets** = 4 + **128**×4 | `0x47c − 0x278 = 0x204` (idem `0x680 − 0x47c`), et garde `cmp edx, 0x80` en `0x195930` |
+| **Sockets max par session** | **128** | la garde `jae` saute l'ajout au-delà de `0x80` entrées |
+| Sockets | non bloquantes | `ioctlsocket` appelé en `0x190786`, `0x19a1e8` |
+| **Plafond du délai `select()`** | **12 000 ms** (`0x2EE0`) | `cmp ecx, 0x2ee0` / `jle` en `0x1958a7` |
+| Ajustement du délai | **÷10** si l'échéance n'est pas atteinte, **÷2** sinon | division par 10 (magie `0x66666667`, `sar edx,3`) en `0x19588d` ; `sub eax,edx; sar eax,1` en `0x1958d8` |
+| Échéance | 64 bits en `session+0x1d0`, comparée à l'horloge (`0x625460`) | `mov eax, [esi+0x1d0]` + comparaison 64 bits en `0x195869`–`0x19588b` |
+| Repli si `select` échoue | `Sleep(délai)` | `push ecx; call dword ptr [0x6784a0]` en `0x1959c5` |
+| Conversion en `timeval` | `sec = ms/1000`, `usec = (ms%1000)×1000` | magie `0x10624dd3` + `imul eax,eax,0x3e8` en `0x195984`–`0x1959a6` |
+
+Toutes ces valeurs sont reproduites par `tools/idman_io.py`
+(`analysis/idman/io-model.json`) : sites d'appel des primitives d'E/S, constantes
+comparées autour de chaque `select`, décalages d'objets de la boucle, pas de tableau,
+et valeur par défaut du nombre de connexions. Le balayage des constantes est
+alignement-insensible (lecture des encodages `cmp`), donc il peut remonter du bruit :
+ne retenir que les valeurs cohérentes avec le code voisin (`0x80`, `0x2EE0`, `0x12C`,
+`0xFA` ici).
+
+**Défaut du nombre de connexions (Observé)** : propriété `MaxConnectionsNumber` lue par
+`RegQueryValueExA` dans le constructeur des options (`0xfbdff`) ; en cas d'absence de la
+valeur, le code écrit **`8`** (`0x0fbe17`). L'écriture se fait par un *setter* dédié
+(`0x0fb4c0`, `RegSetValueExA` type 4, `cbData = 4`).
+
+**Note pour éviter une fausse piste (Observé)** : la fonction `0x1b0ed0` est un
+**dispatcher de journalisation** (switch sur `byte [esi+5]`, 20 cas, table
+`0x1b10a0`/`0x1b10cc`), dont le cas 1 appelle le loggueur `0x1ac8d0`
+(« Change chunk size to %ld »). Ce n'est **pas** l'algorithme de taille de morceau :
+celui-ci est calculé par l'appelant et transmis en argument. Les messages
+« The file chunk %d is reassigned to connection %d » et « Change chunk size to %ld »
+appartiennent à ce canal de journalisation, pas à la boucle de transfert.
+
+**Dérivé** : le couple « un `select` par session / 128 sockets / échéance plafonnée à
+12 s » explique pourquoi IDM plafonne pratiquement le nombre de connexions simultanées
+autour de la centaine même si l'utilisateur demande davantage (`CMaxConnNumbers` borne
+déjà par site, annexe 12).
 
 ---
 

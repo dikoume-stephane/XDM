@@ -33,6 +33,7 @@
 | D-025 | Anti-corruption par empreinte + repli à une connexion | ✅ appliquée | WP-05 | annexe 14 §5.4 |
 | D-026 | Fichier préalloué + carte de morceaux, sans `.tmp` par morceau | ✅ appliquée | WP-05 | annexe 14 §10 |
 | D-027 | Machine à états unique (39 états observés) exposée en 6 états + sous-états | ✅ appliquée | WP-05 | annexe 14 §4 |
+| D-028 | Un réacteur unique par session, plafond de sockets, échéance ≤ 12 s | ✅ appliquée | WP-05 | annexe 14 §4.4 |
 
 ## Points de vigilance associés
 

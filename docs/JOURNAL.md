@@ -527,6 +527,35 @@ conformité (les 39 états restent la référence côté analyse).
 
 ---
 
+### D-028 — Un **réacteur unique par session**, plafond de sockets explicite, échéance ≤ 12 s
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-05` (A-13)
+
+**Contexte.** IDM ne crée pas de thread par connexion : la boucle est un `select()`
+unique par session (2 sites d'appel, `0x19503c` et `0x1959bd`), sur trois `fd_set` de
+516 octets (`session+0x278`, `+0x47c`, `+0x680`) — donc **128 sockets** au plus —, avec
+un délai plafonné à **12 000 ms**, divisé par 10 quand l'échéance est loin, par 2 quand
+elle est passée, et un `Sleep()` de repli si `select` échoue (annexe 14 §4.4). Trois
+`CreateThread` existent dans tout le binaire, aucun dans le transfert.
+
+**Options.** (a) un thread par connexion ; (b) un réacteur unique par session ;
+(c) une pile asynchrone (io_uring / async runtime) ; (d) un pool de workers.
+
+**Décision.** **(b)**, avec un plafond de sockets **explicite et configurable**
+(valeur par défaut alignée sur l'observation : 8 connexions par téléchargement), une
+échéance maximale d'attente et un repli sur attente bornée.
+
+**Justification.** (a) coûte une pile par connexion et complique l'annulation et le
+rollback (état partagé entre sockets) ; (c) ajoute une dépendance et une abstraction
+dont on n'a pas besoin pour ≤ 128 sockets ; (d) n'apporte rien sans (a). (b) reproduit
+le modèle observé, qui explique aussi pourquoi IDM plafonne en pratique autour de la
+centaine de connexions.
+
+**Conséquence.** `WP-05` spécifie **un** réacteur par téléchargement, une constante
+« sockets max » vérifiée par test, et l'échéance maximale comme paramètre ; le nombre de
+connexions par défaut (8) est une valeur de configuration, pas une constante de code.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
@@ -559,5 +588,6 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-11 | Contenu exact d'un enregistrement `ChList` (lire le *checkpoint* `0x15f600`) | lecture d'un état IDM existant | ⏳ non bloquant (D-024) |
 | A-12 | Énumérer les états de `Connection` | spécification de `WP-05` | ✅ fait : 39 états (0..38) en `this+0xa4`, 8 distributeurs, 115 transitions (annexe 14 §4) → `D-027` |
 | A-15 | Nommer les états 17..27 (MMS/RTMP/sessions) | complétude de la machine | ⏳ |
-| A-13 | Seuils (taille minimale de morceau, délais, tentatives) autour de `"Change chunk size to %ld"` | valeurs par défaut de `WP-05` | ⏳ |
+| A-13 | Seuils et modèle d'E/S | valeurs par défaut de `WP-05` | 🟡 défaut **8** connexions (`0x0fbe17`), **128** sockets par session, `select` plafonné à **12 000 ms** (annexe 14 §4.4) → `D-028` ; reste la taille minimale de morceau |
+| A-16 | Taille minimale de morceau : lire l'appelant du loggueur `0x1ac8d0` (`0x1b0f22`) et le calcul en amont | politique de découpage | ⏳ |
 | A-14 | Identifier `HTTPConnection::MNSP` (message `Error %d … step1`) | complétude HTTP | ⏳ |
