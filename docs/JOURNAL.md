@@ -375,6 +375,35 @@ présente qu'une **sélection curatée**. Toute nouvelle attribution passe par l
 
 ---
 
+### D-022 — Le projet de grabber est un **fichier `.gsd`** ; le registre n'est qu'un état auxiliaire
+**Statut** : appliquée · **Date** : 2026-10-27
+
+**Contexte.** L'annexe 12 avait établi que le grabber lit/écrit son projet dans le
+registre (`GrabberSts\Projects\%ld\%ld\ChList`, valeurs `LocalFileName`/`LocalPath`/
+`LogFileName`) et laissait ouverte la piste d'un fichier (`H-08`).
+
+**Découverte (A-06).** La classe `GrSh` (« Grabber Shell », fonction `0xc30??`) construit
+`"%sGrabber\Projects\"`, crée le dossier si `GetFileAttributesW` échoue, puis formate
+`"%sproject%s.gsd"`. Chaînes d'erreur voisines : `GrSh::CFN exc 111` (*Create File*),
+`GrSh::Lk exc 164` (*Lock*). Par ailleurs `GrbFsDlg::OnAddF` maintient
+`HKCU\Software\DownloadManager\GrabberSts\nextFilterID` par
+`RegQueryValueExA`/`RegSetValueExA`.
+
+**Décision.** Corriger le modèle : **le projet persistant est un fichier `.gsd`** dans
+`<dossier IDM>\Grabber\Projects\` ; le registre porte l'état de travail (miroir d'un
+élément en cours de promotion) et les **compteurs d'identifiants** (`nextFilterID`).
+Notre implémentation adoptera un fichier de projet unique (JSON/SQLite, `D-017`) plus une
+base d'état, sans reproduire le couple `.gsd` + registre.
+
+**Justification.** Le couple fichier+registre d'IDM est fragile (perte de cohérence,
+nécessite `KEY_ALL_ACCESS`) ; un stockage transactionnel unique est plus simple à
+spécifier et à tester (`WP-20`).
+
+**Conséquence.** `H-08` **confirmée** ; annexe 11 créée (modèle de données) ; l'annexe 12
+§3 renvoie désormais à l'annexe 11.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
@@ -398,6 +427,8 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-02 | Installer Ghidra 12.1.x + `GHIDRA_INSTALL_DIR` — **impossible ici** (D-019) ; à faire hors sandbox | WP-03, décompilation | 🚫 bloqué |
 | A-03 | Upgrade Node ≥ 22.23.4 (REA le demande ; bloqué par le réseau) | `rea update`, SQLite | ⏳ |
 | A-04 | Préparer la VM Windows isolée + Frida pour la phase 6 | WP-11 | ⏳ |
-| A-06 | Lire en capstone les 4 helpers de persistance du projet (`0x156670`, `0x1b5c30`, `0x1bbea0`, `0x1d26b0`) | WP-06 | ⏳ prochaine étape |
+| A-06 | Lire en capstone les helpers de persistance du projet | WP-06/WP-11 | ✅ fait → annexes 11 & 12 |
+| A-08 | Lire `0xc2450` et `CArray<IDM_SPIDERFILTER>` pour le format d'un filtre | WP-11 | ⏳ prochaine étape |
+| A-09 | Récupérer un vrai `.gsd` sur VM Windows et le dumper | WP-11, WP-30 | ⏳ phase 6 |
 | A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ⏳ |
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | ⏳ |

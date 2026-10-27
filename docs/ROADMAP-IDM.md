@@ -87,7 +87,7 @@ une hypothèse de planification.
 | **WP-03** | ~~Installer Ghidra 12.1.x headless~~ — **bloqué** : ni JVM ni accès au CDN des releases depuis le sandbox (`D-019`). À reprendre hors sandbox. | Ghidra + REA | `analysis/idman/ghidra/` (à produire) |
 | **WP-04** | ✅ **Ancrage des classes RTTI → méthodes** : 422 classes, 427 vtables, **13 760 méthodes**, 45 chaînes attribuées. Outil maison (`D-019`, `D-020`) | pefile | `analysis/idman/10-vtables-et-classes.md` + `classes.json` |
 | **WP-05** | **Moteur de téléchargement** : cycle de vie d'un `CDownload`, machine à états, gestion des `CFilePart`, reprise, multi-connexions, limites | Ghidra, REA `function` | `analysis/idman/11-spec-moteur.md` |
-| **WP-06** | 🟡 **Grabber** : stockage du projet **résolu** (registre `GrabberSts\Projects\%ld\%ld[\ChList]`, valeurs `LocalFileName`/`LocalPath`/`LogFileName`) ; restent exploration, filtres, plan de site | capstone, `classes.json` | `analysis/idman/12-spec-grabber.md` (v0.1) |
+| **WP-06** | 🟡 **Grabber** : stockage du projet **résolu** (fichier `.gsd` + miroir registre, annexe 11) (registre `GrabberSts\Projects\%ld\%ld[\ChList]`, valeurs `LocalFileName`/`LocalPath`/`LogFileName`) ; restent exploration, filtres, plan de site | capstone, `classes.json` | `analysis/idman/12-spec-grabber.md` (v0.1) |
 | **WP-07** | **Transports + médias** : HTTP/FTP (en-têtes, redirections, cookies), HLS/DASH (M3U8, SIDX, MP4), RTMP/MMS/TS | Ghidra, marqueurs | `analysis/idman/13-spec-protocoles.md` |
 
 **État au 2026-10-27** : WP-04 terminé (v1) · WP-03 bloqué · WP-05/WP-06 **débloqués
@@ -107,7 +107,7 @@ décompilateur).
 | Lot | Contenu | Sortie |
 |---|---|---|
 | WP-10 | Fiches de spécification par domaine (format imposé : but, entrées, états, erreurs, preuves, questions ouvertes) | `docs/specs/` |
-| WP-11 | Modèle de données du grabber : projet, plan de site, file, filtres, stats — plus schéma de persistance | `docs/specs/modele-donnees.md` |
+| WP-11 | 🟡 Modèle de données : **persistance résolue** (fichier `.gsd` + registre d'état + `nextFilterID`) ; schéma proposé pour XDM | `analysis/idman/11-modele-donnees-projet.md` |
 | WP-12 | Matrice de conformité : comportement observé → exigence → test | `docs/specs/conformance.md` |
 
 ---

@@ -7,7 +7,7 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-27.
+- **Dernière revue** : 2026-10-27 (annexes 11 et 12 mises à jour).
 
 ---
 
@@ -37,7 +37,7 @@
 | [`08-index-citations.md`](../analysis/idman/08-index-citations.md) | Offsets, IDs de ressources, offsets de chaînes : de quoi rejouer chaque citation | ✅ | `triage.json` |
 | [`09-registre-decisions.md`](../analysis/idman/09-registre-decisions.md) | Tableau récapitulatif des décisions (vue dense du journal) | ✅ | `JOURNAL.md` |
 | [`analysis/idman/10-vtables-et-classes.md`](../analysis/idman/10-vtables-et-classes.md) | Vtables, méthodes, attribution chaîne→classe | ✅ v1 (WP-04) | `classes.json` |
-| `analysis/idman/11-spec-moteur.md` | Spécification du moteur de téléchargement | ⛔ à venir (WP-05) | Ghidra + REA |
+| [`analysis/idman/11-modele-donnees-projet.md`](../analysis/idman/11-modele-donnees-projet.md) | Modèle de données du projet (fichier `.gsd`, registre, filtres) | 🟡 brouillon (WP-11) | capstone + `classes.json` |
 | [`analysis/idman/12-spec-grabber.md`](../analysis/idman/12-spec-grabber.md) | Spécification du grabber (v0.1 : stockage du projet, schéma de valeurs) | 🟡 brouillon (WP-06) | `classes.json` + capstone |
 | `analysis/idman/13-spec-protocoles.md` | Spécification des transports et médias | ⛔ à venir (WP-07) | Ghidra + REA |
 

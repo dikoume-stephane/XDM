@@ -1,5 +1,9 @@
 # 12 — Spécification du grabber (brouillon v0.1, WP-06)
 
+> **⚠ Mise à jour 2026-10-27** : le §3 ci-dessous est **tranché** par l'annexe 11 — le
+> projet est un fichier `.gsd` dans `<IDM>\Grabber\Projects\` (classe `GrSh`), le registre
+> n'est qu'un état auxiliaire.
+>
 > **Statut** : 🟡 **brouillon partiel** — ce qui est prouvé par désassemblage ciblé, et
 > rien de plus. **Dernière revue** : 2026-10-27.
 > **Preuves** : `classes.json` (annexe 10), `tools/idman_function.py`, désassemblage

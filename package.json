@@ -12,7 +12,8 @@
     "triage:idm": "python3 tools/idman_triage.py",
     "extract:idm": "python3 tools/idman_extract.py",
     "classes:idm": "python3 tools/idman_classes.py",
-    "function:idm": "python3 tools/idman_function.py"
+    "function:idm": "python3 tools/idman_function.py",
+    "args:idm": "python3 tools/idman_args.py"
   },
   "devDependencies": {
     "rea-agents": "6.8.0"
