@@ -320,6 +320,61 @@ Un identifiant n'est jamais réutilisé.
 
 ---
 
+### D-019 — Ghidra n'est pas installable dans ce sandbox : le lot WP-04 est exécuté avec un outil maison
+**Statut** : appliquée · **Date** : 2026-10-27
+
+**Contexte.** `rea doctor` attend Ghidra 12.1.x (`GHIDRA_INSTALL_DIR`). Aucun JVM n'est
+présent, et les archives ne sont pas téléchargeables ici :
+
+| Tentative | Résultat |
+|---|---|
+| `api.adoptium.net` (JDK 21) | HTTP `000` (non routé) |
+| `github.com/…/releases/download/ghidra_12.1.4…zip` | HTTP **302** vers `release-assets.githubusercontent.com` |
+| `release-assets.githubusercontent.com` | HTTP `000` — hôte **hors** de la liste autorisée |
+
+**Options.** (a) attendre un environnement avec Ghidra ; (b) installer radare2/rizin
+(également hors réseau autorisé) ; (c) écrire l'extraction de vtables/RTTI en Python
+(pefile + capstone), ce qui est de toute façon le prérequis de WP-04.
+
+**Décision.** **(c)**, et documenter le blocage comme un fait d'environnement, pas comme
+un échec d'outil. WP-03 reste **bloqué** (décompilation indisponible) ; WP-04 est
+**exécuté** avec `tools/idman_classes.py`.
+
+**Conséquence.** Les spécifications WP-05/06 seront produites soit hors sandbox avec
+Ghidra, soit par lecture ciblée capstone sur les fonctions listées en annexe 10 §6.
+
+---
+
+### D-020 — Règles d'attribution chaîne → fonction, avec deux niveaux de confiance
+**Statut** : appliquée
+
+**Décision.** Une référence `push imm32` est toujours considérée comme **exacte** (elle
+existe dans le code). En revanche la **fonction englobante** est estimée par deux voies
+concurrentes, conservées séparément : `classes_method` (méthode de vtable la plus proche,
+frontière exacte) et `classes_prologue` (prologue `55 8B EC` le plus proche).
+La confiance est `élevée` (méthode seule), `moyenne` (les deux concordent), `faible`
+(désaccord ou prologue non vérifié).
+
+**Justification.** Sans décompilateur, une borne de fonction est une hypothèse. Séparer
+les deux voies évite de transformer une proximité d'adresse en fait — c'est exactement
+le risque `R-04`.
+
+**Conséquence.** Toute affirmation d'attribution dans une spécification doit recopier sa
+confiance et la liste des classes concurrentes.
+
+---
+
+### D-021 — `classes.json` devient la source de vérité de la carte objets, l'annexe 10 sa lecture
+**Statut** : appliquée
+
+**Décision.** `analysis/idman/classes.json` (461 Ko, déterministe, versionné) porte les
+422 classes, 427 vtables, 13 760 méthodes et 255 sites de référence ; l'annexe 10 ne
+présente qu'une **sélection curatée**. Toute nouvelle attribution passe par le script.
+
+**Conséquence.** Comme pour `triage.json` (`D-009`) : pas de saisie manuelle d'adresses.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
@@ -340,7 +395,9 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | ID | Action | Bloquant pour | État |
 |---|---|---|---|
 | A-01 | Confirmer le périmètre : « çonage » = Site Grabber ? projet = XDM ? | tout | ⏳ demande à l'utilisateur |
-| A-02 | Installer Ghidra 12.1.x + `GHIDRA_INSTALL_DIR` | WP-04, WP-05, WP-06 | ⏳ |
+| A-02 | Installer Ghidra 12.1.x + `GHIDRA_INSTALL_DIR` — **impossible ici** (D-019) ; à faire hors sandbox | WP-03, décompilation | 🚫 bloqué |
 | A-03 | Upgrade Node ≥ 22.23.4 (REA le demande ; bloqué par le réseau) | `rea update`, SQLite | ⏳ |
 | A-04 | Préparer la VM Windows isolée + Frida pour la phase 6 | WP-11 | ⏳ |
+| A-06 | Lire en capstone les 4 helpers de persistance du projet (`0x156670`, `0x1b5c30`, `0x1bbea0`, `0x1d26b0`) | WP-06 | ⏳ prochaine étape |
+| A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ⏳ |
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | ⏳ |

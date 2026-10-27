@@ -84,11 +84,17 @@ une hypothèse de planification.
 
 | Lot | Contenu | Outils | Sortie |
 |---|---|---|---|
-| **WP-03** | **Installer Ghidra 12.1.x headless** et l'enregistrer dans REA (`GHIDRA_INSTALL_DIR`) ; script d'analyse `headlessAnalyzer` avec export CSV des fonctions, du graphe d'appels et des xrefs vers chaînes | Ghidra + REA | `analysis/idman/ghidra/` (CSV/JSON), `rea analyze` + `rea function` fonctionnels sur le PE |
-| **WP-04** | **Ancrage des classes RTTI → fonctions** : localiser les vtables (`.rdata`) et relier les 390 classes aux constructeurs/méthodes ; produire la table `classe → RVA` | Ghidra script, pefile | `analysis/idman/10-vtables-et-classes.md` |
+| **WP-03** | ~~Installer Ghidra 12.1.x headless~~ — **bloqué** : ni JVM ni accès au CDN des releases depuis le sandbox (`D-019`). À reprendre hors sandbox. | Ghidra + REA | `analysis/idman/ghidra/` (à produire) |
+| **WP-04** | ✅ **Ancrage des classes RTTI → méthodes** : 422 classes, 427 vtables, **13 760 méthodes**, 45 chaînes attribuées. Outil maison (`D-019`, `D-020`) | pefile | `analysis/idman/10-vtables-et-classes.md` + `classes.json` |
 | **WP-05** | **Moteur de téléchargement** : cycle de vie d'un `CDownload`, machine à états, gestion des `CFilePart`, reprise, multi-connexions, limites | Ghidra, REA `function` | `analysis/idman/11-spec-moteur.md` |
-| **WP-06** | **Grabber** : `CIDMSpider` — algorithme d'exploration, file de frontière, filtres, plan de site, templates, sérialisation projet | Ghidra, chaînes, dialogues | `analysis/idman/12-spec-grabber.md` |
+| **WP-06** | 🟡 **Grabber** : stockage du projet **résolu** (registre `GrabberSts\Projects\%ld\%ld[\ChList]`, valeurs `LocalFileName`/`LocalPath`/`LogFileName`) ; restent exploration, filtres, plan de site | capstone, `classes.json` | `analysis/idman/12-spec-grabber.md` (v0.1) |
 | **WP-07** | **Transports + médias** : HTTP/FTP (en-têtes, redirections, cookies), HLS/DASH (M3U8, SIDX, MP4), RTMP/MMS/TS | Ghidra, marqueurs | `analysis/idman/13-spec-protocoles.md` |
+
+**État au 2026-10-27** : WP-04 terminé (v1) · WP-03 bloqué · WP-05/WP-06 **débloqués
+partiellement** : on sait *quelle* classe porte le grabber (`CSpiderSettings`,
+`CGrabberFiltersDlg`, `CSpiderSelectSaveToDlg`) et les helpers de persistance du projet
+(4 fonctions non virtuelles), mais pas encore *ce que fait* leur code (pas de
+décompilateur).
 
 **Porte G1** : pour chaque domaine P0, un document de spécification avec
 (a) entrées/sorties, (b) machine à états, (c) structures de données, (d) cas d'erreur,
@@ -150,7 +156,7 @@ une hypothèse de planification.
 | Jalon | Contenu | Dépend de | Critère |
 |---|---|---|---|
 | **M1 — Carte** | Anatomie + cartographie fonctionnelle + protocoles + modules (fait) | — | ✅ annexes 01-05 |
-| **M2 — Squelette** | Ghidra opérationnel, table `classe → RVA`, graphe d'appels exporté | A-02 | `rea function` renvoie du code pour 5 fonctions choisies |
+| **M2 — Squelette** | Table `classe → méthode → chaînes` extraite (422 classes / 13 760 méthodes) ✅ ; Ghidra opérationnel ⛔ (bloqué) | A-02, WP-04 | WP-04 atteint ; le volet décompilation reste ouvert |
 | **M3 — Spécifications** | Specs moteur + grabber + protocoles revues | M2 | Porte G1 |
 | **M4 — Prototype** | Parcours complet sur site local | M3 | Porte G3 |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |

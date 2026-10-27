@@ -32,6 +32,8 @@ Dépendances Python : `pefile`, `capstone` (`python3 -m pip install --break-syst
 | Protocoles et formats attestés | [`analysis/idman/03-protocoles-et-formats.md`](analysis/idman/03-protocoles-et-formats.md) |
 | Modules de la suite IDM | [`analysis/idman/04-modules-et-composants.md`](analysis/idman/04-modules-et-composants.md) |
 | Registre, navigateurs, état du grabber | [`analysis/idman/05-integrations-et-registre.md`](analysis/idman/05-integrations-et-registre.md) |
+| Vtables, classes, attribution | [`analysis/idman/10-vtables-et-classes.md`](analysis/idman/10-vtables-et-classes.md) |
+| Spécification du grabber (v0.1) | [`analysis/idman/12-spec-grabber.md`](analysis/idman/12-spec-grabber.md) |
 | Hypothèses à vérifier | [`analysis/idman/06-hypotheses.md`](analysis/idman/06-hypotheses.md) |
 | Gabarit de fiche de spécification | [`docs/specs/TEMPLATE.md`](docs/specs/TEMPLATE.md) |
 | Installation et usage de REA | [`docs/REA.md`](docs/REA.md) |
@@ -54,7 +56,12 @@ tools/                     collecte de preuves, triage, extractions
 - ✅ Triage statique complet : PE, sections, mitigations, imports (509 + 111), ressources
   (436), 439 noms RTTI, 105 dialogues, marqueurs de protocoles, 124 clés de registre.
 - ✅ Journal, roadmap, index mémoire et 10 annexes rédigés.
-- ⏳ Prochaine étape bloquante : installation de **Ghidra 12.1.x** (lot WP-03) et
-  confirmation du périmètre par le porteur de projet (action A-01).
+- ✅ WP-04 terminé : **422 classes / 427 vtables / 13 760 méthodes** extraites des RTTI
+  (`analysis/idman/classes.json`, annexe 10), 45 chaînes fonctionnelles attribuées.
+- 🟡 WP-06 démarré : le projet de grabber est stocké dans le registre
+  (`GrabberSts\Projects\%ld\%ld\ChList`), schéma de valeurs identifié (annexe 12).
+- ⛔ WP-03 (décompilation Ghidra) **bloqué** dans ce sandbox : ni JVM ni accès au CDN des
+  releases GitHub (`JOURNAL.md` D-019) — à reprendre hors sandbox.
+- ⏳ Reste à confirmer : le périmètre (action A-01) et la stack d'implémentation (D-017).
 - ⛔ Hors périmètre par décision : licence/activation, contournement anti-débogage,
   extraction des cookies de navigateurs (voir `docs/JOURNAL.md` D-004).
