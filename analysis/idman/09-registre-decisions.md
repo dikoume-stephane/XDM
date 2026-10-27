@@ -31,10 +31,12 @@
 | D-023 | `empty.html` généré **dans le dossier du projet**, en option | ✅ appliquée | WP-24 | annexe 13 |
 | D-024 | État de reprise XDM = `<fichier>.xdm-part.json`, jamais le registre | ✅ appliquée | WP-05 | annexe 14 §10 |
 | D-025 | Anti-corruption par empreinte + repli à une connexion | ✅ appliquée | WP-05 | annexe 14 §5.4 |
-| D-026 | Fichier préalloué + carte de morceaux, sans `.tmp` par morceau | ✅ appliquée | WP-05 | annexe 14 §10 |
+| D-026 | Fichier préalloué + carte de morceaux, **écrit en place** (corrigée le 2026-10-27 : IDM n'a pas de `.tmp` par morceau) | ✅ appliquée (corrigée) | WP-05 | annexe 14 §10 |
 | D-027 | Machine à états unique (39 états observés) exposée en 6 états + sous-états | ✅ appliquée | WP-05 | annexe 14 §4 |
 | D-028 | Un réacteur unique par session, plafond de sockets, échéance ≤ 12 s | ✅ appliquée | WP-05 | annexe 14 §4.4 |
 | D-029 | Taille de morceau adaptative bornée (1–10 MiB) par classe de taille | ✅ appliquée | WP-05 | annexe 14 §5.4 |
+| D-030 | Carte persistée = liste de bornes `{id, startOffset, nextId}`, sans champ `end` | ✅ appliquée | WP-05 | annexe 14 §5.1 |
+| D-031 | Compteur de progression = donnée dérivée de la carte, jamais persistée | ✅ appliquée | WP-05 | annexe 14 §5.3 |
 
 ## Points de vigilance associés
 

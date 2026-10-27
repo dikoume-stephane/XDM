@@ -1,6 +1,6 @@
 # 14 — Moteur de téléchargement : architecture, morceaux, reprise
 
-> **Statut** : 🟡 v0.4 (WP-05) · **Dernière revue** : 2026-10-27
+> **Statut** : 🟡 v0.5 (WP-05) · **Dernière revue** : 2026-10-27
 > **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, sha256 `5f78da5a…2f11c9`
 > **Preuves principales** : `analysis/idman/symbols.json` (§1), `methods.json` (noms →
 > adresses), `states.json` (machine à états, §4), `classes.json`,
@@ -323,23 +323,33 @@ sttm=%ld, etm=%ld
 | `isCompl` / `compl` | `long` | morceau terminé | `isCompl=%ld` |
 | `alt`, `altN` | `long` | **connexion alternative** (reprise sur une autre socket) | `alt=%ld, altN=%ld`, `AddAlternative` |
 | `sttm`, `etm` | `long` | horodatages début/fin (débit, `totalDuration`) | `sttm=%ld, etm=%ld` |
-| `file` | chaîne | **fichier temporaire** du morceau | `file=%s`, `%s.tmp` |
+| `file` | chaîne | **fichier de travail partagé** par tous les morceaux du téléchargement | `file=%s` (même valeur dans `first listitem` et `new listitem`), `%s.tmp` |
 
-**Dérivé** : un morceau n'est pas seulement une paire d'offsets, il possède son propre
-fichier temporaire et peut être « doublé » (`alt`) par une connexion de secours. Le
-`ChunksList` est donc une **liste chaînée persistante** dont chaque nœud est un
-descripteur de transfert partiel.
+**Dérivé (corrigé en v0.5, `A-11`)** : un morceau est un **intervalle** `[start, end)`
+dans **un fichier de travail unique**, pas un fichier. Trois preuves :
+
+1. le champ `file` est imprimé avec la **même** sémantique pour le premier et pour tout
+   nouveau morceau (`file=%s`) et il est **commun** à la session ;
+2. les seuls modèles de nom temporaire du binaire sont `%s.tmp` (`0x2ad01c`), `%s_tmp`
+   (`0x2ade3c`), `%s.tmpv0` (`0x2b3afc`), `%s.tmpa` (`0x2b6798`), `%s.tmpv` (`0x2b67f0`),
+   `%s.result.tmp` (`0x2b67f8`) : **aucun** modèle numéroté (`%s%d.tmp`), donc pas un
+   fichier par morceau ;
+3. `SetFilePointer` est appelé **avant chaque écriture** (bloc `0x15b240`–`0x160110`),
+   ce qui n'a de sens que sur un fichier partagé écrit en place.
+
+Le `ChunksList` reste une **liste chaînée persistante**, mais ses nœuds décrivent des
+intervalles d'un même fichier.
 
 Opérations observées (noms de `symbols.json`) :
 
 | Opération | Rôle |
 |---|---|
 | `InitFirst` | crée le premier morceau (toute la taille du fichier) |
-| `CreateNewItem` (+ `set_fileName`) | instancie un morceau et nomme son fichier temporaire |
+| `CreateNewItem` | instancie un morceau (intervalle) dans le fichier de travail |
 | `InsertFromReg` | reconstruit la liste depuis le registre (reprise) |
 | `FindMaxFreeChunk` | choisit le plus gros morceau libre pour une nouvelle connexion |
 | `NeedNewConnection` | décide s'il faut ouvrir une connexion supplémentaire |
-| `AppendFile`, `JoinFile` | concaténation des morceaux → fichier final |
+| `AppendFile`, `JoinFile` | reprise sur fichier préexistant puis promotion du `.tmp` (§7) |
 | `Erase`, `EraseRegSubKey` | purge mémoire + clé de registre |
 | `AddAlternative`, `CheckAlternative`, `ApplyAlternative` | bascule d'un morceau vers une connexion alternative |
 | `FindChunkWithZipCentralDir` | localise la « fin de zip » (reprise d'une archive partielle) |
@@ -368,10 +378,12 @@ trancher (A-11).
 | Création | `CreateFileW(<local>.tmp, 0xC0020000, 0, NULL, 1, 0x80, 0)` en `0x156d42`–`0x156d4e` — `GENERIC_READ|GENERIC_WRITE|READ_CONTROL`, partage 0, `CREATE_NEW` (échoue si présent), `FILE_ATTRIBUTE_NORMAL` |
 | Dossier | `%sDwnlData\%s\` (`0x6e031`, `0x6e078`), préfixé par la racine IDM lue en `[0x75fc3c]` |
 
-**Dérivé** : chaque téléchargement possède un **dossier temporaire** `<IDM>\DwnlData\<nom>\`
-contenant un fichier `.tmp` par morceau ; l'assemblage final produit le fichier
-demandé par renommage/concaténation, le `.tmp` étant supprimé ensuite
-(`"Delete temp file %s"`).
+**Dérivé** : chaque téléchargement possède **un** fichier de travail
+`<IDM>\DwnlData\<nom>\<nom>.tmp`, ouvert en `CREATE_NEW`, **écrit en place** par toutes
+les connexions à des offsets différents, puis promu par renommage
+(`"Rename temp file %s to %s"`) et supprimé en cas d'abandon
+(`"Delete temp file %s"`). Un seul site de création (`0x156d48`) pour six modèles de
+noms possibles confirme qu'il n'y a pas de fichier par morceau.
 
 ### 5.3 Rollback = troncature du fichier (Observé, désassemblage `0x15fe9e`–`0x15ff52`)
 
@@ -382,7 +394,8 @@ demandé par renommage/concaténation, le `.tmp` étant supprimé ensuite
 | `0x15fee5` | `SetFilePointer(hFile, low, &high, FILE_BEGIN)` | replace le pointeur sur la dernière position **validée** |
 | `0x15feee` | `GetLastError` | échec si `-1` |
 | `0x15ff22`, `0x15ff29` | `CloseHandle` ×2 | libère les deux fichiers temporaires concernés |
-| `0x15ff52` | `SetEndOfFile(hFile)` | **tronque** le `.tmp` à la position validée |
+| `0x15ff52` | `SetEndOfFile(hFile)` | **tronque** le fichier de travail à la position validée |
+| `0x15ff9b`–`0x15ffad` | `add [esi+0xa0], ecx` / `adc [esi+0xa4], edx` | corrige le compteur 64 bits de la liste : les octets abandonnés sont **rendus** au crédit du morceau |
 
 C'est la preuve directe que la reprise repose sur une **troncature au dernier octet
 confirmé**, et non sur un journal de transactions.
@@ -464,21 +477,35 @@ reproduire pour `WP-05` (et non « N connexions dès le départ »).
 
 ---
 
-## 7. Assemblage final (Observé)
+## 7. Assemblage final (Observé, `A-11`)
 
-Séquence déduite des traces de `ChunksList::JoinFile` et des chaînes voisines :
+Le bloc `ChunksList` `0x15b240`–`0x160110` (≈ 10 Ko, plusieurs méthodes fusionnées par le
+compilateur, d'où l'absence de prologues) contient la séquence complète. Elle est lue sur
+les traces poussées à l'intérieur du bloc, dans cet ordre :
 
-1. `"Rebuilding old downloaded files before resume."` → `InsertFromReg` ;
-2. `"Assembling all downloaded portions into one file..."` ;
-3. `"Skip first bytes via temp file %s"` → saute l'en-tête déjà présent dans le fichier
-   cible (cas d'une reprise sur fichier préexistant) ;
-4. `"Rename temp file %s to %s."` / `"Rename2 temp file %s to %s."` puis
-   `"Can not rename temp file %s, errno = %ld"` ;
-5. `"Delete temp file %s"`, `"Delete old file %s"` ;
-6. `RegDeleteKeyA` sur `ChList` (`0x15682c`) → l'état de reprise disparaît ;
-7. cas d'échec disque : `"Not enough disk space to rebuild downloaded chunks."`,
-   `"Disk is full. Cannot add next chunks."` ⇒ arrêt propre, **pas** de fichier
-   partiel promu.
+| # | Trace / API | Site | Rôle |
+|---|---|---|---|
+| 1 | `"Rebuilding old downloaded files before resume."` | `0x15ddcc`, `0x15f373` | relit la carte (`InsertFromReg`) |
+| 2 | `"Size of %s is %I64d"`, `"Adding file %s to file %s."` | `0x15d253`, `0x15d2cb` | reprend un fichier partiel préexistant |
+| 3 | `"Skip first bytes via temp file %s."` | `0x15cf97` | saute le préfixe déjà présent dans la cible |
+| 4 | `"Assembling all downloaded portions into one file..."` | `0x15ca03` | entre en assemblage |
+| 5 | `"Rename temp file %s to %s."` / `"Rename2 temp file %s to %s."` / `"Rename back file %s to %s."` | `0x15cdac`, `0x15cc59`, `0x15d43e` | promotion **ou** retour arrière du `.tmp` |
+| 6 | `"Delete temp file %s"`, `"Delete old file %s"` | `0x15d528`, `0x15caed` | nettoyage |
+| 7 | `"Rebuilding complete, real size = %I64d"` | `0x15d783` | contrôle de la taille finale |
+| 8 | `RegDeleteKeyA` sur `ChList` | `0x15682c` | l'état de reprise disparaît |
+| échec | `"Not enough disk space to rebuild downloaded chunks."`, `"Not enough disk space to store files chunks, canceling download."` (`0x164d78`, `0x1b6305`) | — | arrêt propre, **pas** de fichier partiel promu |
+
+Deux règles de sûreté observées :
+
+* un morceau incomplet n'est **pas** copié — `"This file has flag isCmpleted = 0, it has
+  not been added."` (`0x15d4be`) ;
+* l'ordre de la liste est vérifié avant assemblage — `"Chunk order violation error,
+  cInf.ID %ld, startPos %I64d"` (`0x15fe7a`) déclenche le rollback de §5.3.
+
+**Conséquence pour XDM (D-026, corrigé)** : l'assemblage d'IDM n'est pas une
+concaténation de N fichiers mais la **promotion d'un fichier déjà écrit en place**, avec
+le cas particulier « fichier cible préexistant ». XDM n'a donc rien à assembler : il lui
+suffit de renommer son fichier de travail après vérification de la carte.
 
 ---
 
@@ -566,31 +593,58 @@ entre connexions), coût mémoire constant et testable unitairement.
 `"IDM started to download the file using one connection because of data corruption…"`)
 et testable sans réseau réel.
 
-### D-026 — Un fichier préalloué + carte de morceaux, pas un `.tmp` par morceau
+### D-026 — Un fichier préalloué + carte de morceaux (corrigé en v0.5)
 **Décision** : XDM ouvre **un seul** fichier de travail préalloué et écrit chaque
-morceau à son offset (`pwrite`), au lieu du schéma IDM « un `.tmp` par morceau puis
-`JoinFile` ».
-**Justification** : supprime l'étape d'assemblage (source de deux modes d'échec
-observés : `"Can not rename temp file %s"`, `"Not enough disk space to rebuild
-downloaded chunks."`), rend la reprise triviale (`ftruncate` + carte) et divise par
-deux l'espace disque temporaire.
+morceau à son offset (`pwrite`).
+**Justification** : la reprise devient triviale (`ftruncate` + carte) et il n'y a **aucun**
+assemblage à faire — ni concaténation, ni promotion conditionnelle.
+**Correction v0.5 (`A-11`)** : la version v0.4 justifiait cette décision en décrivant IDM
+comme « un `.tmp` par morceau puis `JoinFile` ». C'est **faux** : le champ `file` est
+partagé et aucun modèle de nom numéroté n'existe (§5). IDM écrit lui aussi **en place**
+dans un fichier unique. La décision reste bonne, mais elle **aligne** XDM sur IDM au lieu
+de s'en écarter ; la seule différence est la technique de promotion (renommage vs
+`rename` atomique après vérification de la carte).
 **Conséquence** : `ChunksList::JoinFile` n'a **pas** d'équivalent dans XDM ; `WP-05`
-n'implémente que le rollback (`ftruncate`) — équivalent de `0x15ff52`.
+n'implémente que la vérification de la carte et le rollback (`ftruncate`) — équivalent de
+`0x15ff52`, avec remise à zéro du compteur de progression comme en `0x15ff9b`.
+
+### D-030 — La carte persistée est une liste de bornes, pas un tableau de morceaux
+**Décision** : le fichier `<cible>.xdm-part.json` enregistre, par morceau, `{id,
+startOffset, nextId, completed}` **sans** champ `end` explicite : la fin d'un morceau est
+le `startOffset` du morceau chaîné, exactement comme l'enregistrement `ChList` observé
+(`ID`, `startPos`, `nextID`).
+**Justification** : c'est la seule forme dont le contenu est **prouvé** par le binaire
+(§5.1) ; toute autre forme serait une invention. Elle rend aussi impossible l'état
+incohérent « deux morceaux qui se chevauchent » : une carte valide est une chaîne
+strictement croissante, donc vérifiable par un simple parcours.
+**Conséquence** : le schéma de `WP-05` comporte une validation `next*` monotone et un
+test unitaire « carte cyclique », « carte non monotone », « `nextId` orphelin ».
+
+### D-031 — Le compteur de progression est une donnée dérivée, jamais de référence
+**Décision** : XDM ne persiste pas le nombre d'octets téléchargés ; il le recalcule en
+sommant les intervalles `completed` de la carte au chargement.
+**Justification** : IDM maintient un compteur 64 bits en mémoire et doit le **corriger**
+manuellement après un rollback (`0x15ff9b`). Une valeur dérivée ne peut pas diverger de
+la carte.
 
 ---
 
 ## 11. Trous restants (à lever avant de coder `WP-05` en entier)
 
-| ID | Question | Pourquoi c'est bloquant | Moyen |
-|---|---|---|---|
-| A-11 | Contenu exact d'un enregistrement `ChList` (binaire ? champs ?) | Aucun intérêt pour XDM (D-024) mais utile pour lire un `.gsd`/état existant | capstone sur `0x15f600` (checkpoint) |
-| A-12 | ~~Énumération des états de `Connection`~~ **levée le 2026-10-27** : 39 états (0..38) sur `this+0xa4`, 8 distributeurs, 115 écritures (annexe 14 §4, `states.json`). Reste à nommer les états 17..27 (MMS/RTMP/sessions) | — | `tools/idman_states.py` |
-| A-13 | Seuils : taille minimale de morceau, temporisations, nombre de tentatives | Détermine les valeurs par défaut de XDM | lecture des constantes voisines de `"Change chunk size to %ld"` |
-| A-14 | Rôle de `HTTPConnection::MNSP` (message `Error %d … step1`) | Inconnu à ce jour | désassemblage ciblé |
+| ID | État | Question restante |
+|---|---|---|
+| A-11 | ✅ **levée le 2026-10-27** | modèle logique du morceau et de l'assemblage établis (§5, §7). Reste, sans intérêt pour XDM : l'**encodage binaire** exact d'une valeur `ChList` (struct C++ sérialisée ?), qui ne servirait qu'à relire un état IDM existant |
+| A-12 | ✅ **levée** | 39 états (0..38) sur `this+0xa4`, 8 distributeurs, 115 écritures (`states.json`) |
+| A-13 | ✅ **levée** | un `select` par session, 128 sockets, échéance ≤ 12 s, 8 connexions par défaut (`D-028`) |
+| A-14 | ✅ **levée** | `MNSP` = `InternetCombineUrlA` (§8.1) |
+| A-15 | ✅ **levée** | états 17..27 nommés (§4.2) |
+| A-16 | ✅ **levée** | taille de morceau adaptative bornée 1–10 MiB (§5.4, `D-029`) |
+| — | ⏳ ouvert, non bloquant | taille **minimale** de morceau : le plancher observé (1 MiB) est-il aussi le minimum ? XDM retient 1 MiB (`D-029`) |
+| — | ⏳ ouvert, non bloquant | nombre de tentatives et temporisations de reprise : XDM retient 3 essais / backoff 1-2-4 s, à confronter aux constantes voisines de `"Change chunk size to %ld"` (`0x1ac92c`) |
+| — | ⏳ ouvert, non bloquant | rendu exact du corps de `JoinFile` : 10 Ko non décompilés (pas de décompilateur, D-019) ; le comportement est décrit par ses traces et validé par les tests de `WP-05` sur fichiers > 10 Mo |
 
-Ces quatre points sont **non bloquants pour démarrer** : les décisions D-024→D-026
-permettent d'écrire la spécification et les tests de `WP-05` avec des valeurs par
-défaut assumées, puis de les réviser.
+Aucun de ces points ne bloque l'écriture de la spécification : `D-024`→`D-031` fixent les
+choix, et les valeurs par défaut sont assumées explicitement.
 
 ---
 
@@ -599,9 +653,22 @@ défaut assumées, puis de les réviser.
 IDM télécharge par **morceaux persistants** pilotés par un `SessionManager` non
 polymorphe, chaque morceau appartenant à une `Connection` polymorphe
 (HTTP/FTP/MMS/RTMP, avec variantes proxy) regroupée dans une `Session` par protocole ;
-l'état de reprise vit dans le registre, les données dans des `.tmp` par morceau
-assemblés à la fin, et la fiabilité repose sur une **comparaison de recouvrement** qui
-peut dégrader le transfert à une seule connexion. XDM reprend le modèle logique
-(morceaux, reprise, montée en charge progressive, repli) et remplace les trois
-artefacts fragiles (registre, `.tmp` multiples, assemblage) par un fichier annexe, une
-empreinte et un fichier préalloué.
+l'état de reprise est une liste de bornes (`ID`, `startPos`, `nextID`) dans le registre,
+les données sont écrites **en place** dans un unique `.tmp`, et la fiabilité repose sur
+une **comparaison de recouvrement** qui peut dégrader le transfert à une seule
+connexion. XDM reprend le modèle logique à l'identique (intervalles, une seule donnée
+écrite en place, reprise par troncature, montée en charge progressive, repli) et ne
+remplace que deux artefacts : le registre par un fichier annexe, la comparaison brute par
+une empreinte.
+
+---
+
+## Annexe — Journal des versions
+
+| Version | Date | Changement |
+|---|---|---|
+| v0.1 | 2026-10-26 | première version (architecture, morceaux, reprise) |
+| v0.2 | 2026-10-27 | §4 : état = `this+0xa4`, 39 états, 8 distributeurs (`states.json`) |
+| v0.3 | 2026-10-27 | `A-13` modèle d'E/S et seuils, `D-028` |
+| v0.4 | 2026-10-27 | `A-14` (`MNSP` = `InternetCombineUrlA`), `A-15` (états 17..27), `A-16` (1–10 MiB, `D-029`) |
+| v0.5 | 2026-10-27 | `A-11` : le morceau est un **intervalle** dans un fichier unique, `file` partagé (preuve par absence de modèle `%s%d.tmp`), assemblage = promotion du `.tmp`, rollback détaillé jusqu'au compteur `0x15ff9b` ; `D-026` corrigée, `D-030`, `D-031` ; §11 remis à jour |

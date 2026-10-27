@@ -477,13 +477,20 @@ serveurs produisent en pratique (compression, cache régional).
 
 ---
 
-### D-026 — Un fichier préalloué + carte de morceaux, **pas** un `.tmp` par morceau
-**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-05`
+### D-026 — Un fichier préalloué + carte de morceaux, écrit en place
+**Statut** : appliquée · **Date** : 2026-10-27 · **Corrigée** : 2026-10-27 (`A-11`) · **Portée** : `WP-05`
 
-**Contexte.** IDM ouvre un fichier `<local>.tmp` par morceau
+**Contexte.** IDM ouvre **un seul** fichier `<local>.tmp`
 (`CreateFileW(…, 0xC0020000, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL)`,
-6 sites, annexe 14 §5.2), dans `<IDM>\DwnlData\<nom>\`, puis assemble le tout
-(`ChunksList::JoinFile`, renommages en cascade, annexe 14 §7).
+`0x156d48`) dans `<IDM>\DwnlData\<nom>\`, l'écrit **en place** (`SetFilePointer` avant
+chaque écriture) puis le promeut par renommage (annexe 14 §5.2 et §7).
+
+> **Correction du 2026-10-27 (`A-11`).** La version initiale de cette décision affirmait
+> « un fichier `.tmp` **par morceau**, puis assemblage ». C'était **faux** : le champ
+> `file` d'un morceau est partagé par toute la session, et le binaire ne contient aucun
+> modèle de nom numéroté (`%s%d.tmp` absent ; seuls `%s.tmp`, `%s_tmp`, `%s.tmpv0`,
+> `%s.tmpa`, `%s.tmpv`, `%s.result.tmp` existent). La décision reste valable mais elle
+> **aligne** XDM sur IDM au lieu de s'en écarter.
 
 **Options.** (a) reproduire ; (b) un fichier préalloué, écriture à l'offset du morceau
 (`pwrite`), état dans un fichier annexe (D-024).
@@ -491,12 +498,12 @@ serveurs produisent en pratique (compression, cache régional).
 **Décision.** **(b)**. Le rollback devient un `ftruncate` — équivalent exact de
 `SetFilePointer` + `SetEndOfFile` observé en `0x15fee5`/`0x15ff52`.
 
-**Justification.** Supprime l'étape d'assemblage, donc deux modes d'échec observés chez
-IDM (`"Can not rename temp file %s"`, `"Not enough disk space to rebuild downloaded
-chunks."`) ; espace disque temporaire divisé par deux ; reprise triviale.
+**Justification.** Supprime l'étape de promotion conditionnelle, donc deux modes d'échec
+observés chez IDM (`"Can not rename temp file %s"`, `"Not enough disk space to rebuild
+downloaded chunks."`) ; pas de double espace disque ; reprise triviale.
 
 **Conséquence.** `ChunksList::JoinFile` n'a **pas** d'équivalent dans XDM ; `WP-05`
-n'implémente que le rollback par troncature.
+n'implémente que la vérification de la carte et le rollback par troncature.
 
 ---
 
@@ -590,6 +597,49 @@ l'encadrement.
 
 ---
 
+### D-030 — La carte persistée est une **liste de bornes**, sans champ `end`
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-05` (`A-11`)
+
+**Contexte.** L'enregistrement `ChList` observé contient exactement trois nombres par
+morceau — `ID`, `startPos`, `nextID` (annexe 14 §5.1 : `"Adding record to registry with
+ID %ld, startPos %I64d, nextID %ld"`, `"Read record num. %s from registry: ID = %ld,
+startPos = %I64d, nextID = %ld"`). La fin d'un morceau n'est donc **pas** stockée : elle
+est le `startPos` du morceau chaîné.
+
+**Options.** (a) tableau de morceaux avec `{start, end}` explicites ; (b) liste de bornes
+`{id, startOffset, nextId}` dont la fin est dérivée.
+
+**Décision.** **(b)** dans `<cible>.xdm-part.json` (D-024), plus la taille cible du
+fichier et un horodatage de version.
+
+**Justification.** C'est la seule forme dont le contenu est **prouvé** par le binaire ;
+(b) rend en outre impossible l'état incohérent « deux morceaux qui se chevauchent » : une
+carte valide est une chaîne strictement croissante, vérifiable par un parcours unique.
+
+**Conséquence.** Validation obligatoire au chargement : `nextId` orphelin, cycle,
+`startOffset` non monotone ⇒ carte rejetée, téléchargement repris de zéro après
+confirmation (pas de réparation silencieuse). Trois tests unitaires correspondants.
+
+---
+
+### D-031 — Le compteur de progression est une donnée **dérivée**
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-05` (`A-11`)
+
+**Contexte.** IDM maintient un compteur 64 bits en mémoire et doit le **corriger à la
+main** après un rollback (`add [esi+0xa0], ecx` / `adc [esi+0xa4], edx`, `0x15ff9b`).
+
+**Décision.** XDM ne persiste jamais le nombre d'octets reçus ; il le recalcule en
+sommant les intervalles marqués `completed` de la carte (D-030) au chargement et après
+chaque rollback.
+
+**Justification.** Une valeur dérivée ne peut pas diverger de la carte ; la classe de
+bug « progression fausse après reprise » disparaît par construction.
+
+**Conséquence.** L'IHM affiche une valeur recalculée (pas d'écriture concurrente), et le
+seul état mutable partagé entre connexions est la carte, protégée par un verrou unique.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
@@ -619,7 +669,7 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-10 | Lire `0xc2e00`+ (producteur du corps de filtre) et `CArray<IDM_SPIDERFILTER>` | WP-11 | ⏳ prochaine étape |
 | A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ⏳ |
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | ⏳ |
-| A-11 | Contenu exact d'un enregistrement `ChList` (lire le *checkpoint* `0x15f600`) | lecture d'un état IDM existant | ⏳ non bloquant (D-024) |
+| A-11 | Structure logique d'un enregistrement `ChList` | lecture d'un état IDM existant | ✅ fait : `{ID, startPos, nextID}` = **liste de bornes** ; le morceau est un **intervalle** dans un fichier unique (preuve : aucun modèle `%s%d.tmp`, champ `file` partagé), assemblage = promotion du `.tmp` (annexe 14 §5, §7) → `D-030`, `D-031` ; reste l'encodage binaire exact, sans intérêt (D-024) |
 | A-12 | Énumérer les états de `Connection` | spécification de `WP-05` | ✅ fait : 39 états (0..38) en `this+0xa4`, 8 distributeurs, 115 transitions (annexe 14 §4) → `D-027` |
 | A-13 | Seuils et modèle d'E/S | valeurs par défaut de `WP-05` | 🟡 défaut **8** connexions (`0x0fbe17`), **128** sockets par session, `select` plafonné à **12 000 ms** (annexe 14 §4.4) → `D-028` ; reste la taille minimale de morceau |
 | A-14 | Identifier `HTTPConnection::MNSP` | complétude HTTP | ✅ fait : `0x17dc90` = combinaison d'URL via **`InternetCombineUrlA`** (ICU_ENCODE_SPACES_ONLY puis ICU_BROWSER_MODE), tampon ≤ 10 239 o (annexe 14 §8.1) |

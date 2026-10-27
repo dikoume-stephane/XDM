@@ -86,7 +86,7 @@ une hypothèse de planification.
 |---|---|---|---|
 | **WP-03** | ~~Installer Ghidra 12.1.x headless~~ — **bloqué** : ni JVM ni accès au CDN des releases depuis le sandbox (`D-019`). À reprendre hors sandbox. | Ghidra + REA | `analysis/idman/ghidra/` (à produire) |
 | **WP-04** | ✅ **Ancrage des classes RTTI → méthodes** : 422 classes, 427 vtables, **13 760 méthodes**, 45 chaînes attribuées. Outil maison (`D-019`, `D-020`) | pefile | `analysis/idman/10-vtables-et-classes.md` + `classes.json` |
-| **WP-05** | 🟡 **Moteur de téléchargement** — cadrage corrigé : `CDownload` est un **dialogue de suivi**, le moteur est `SessionManager` + `Session`/`Connection` + `ChunksList` (annexe 14 §2). v0.4 : architecture en anneaux, noms→adresses (246/323 confirmés), machine à états (39 états en `this+0xa4`, 8 switch, 115 transitions → `D-027`), modèle de morceaux (12 champs), persistance, rollback par troncature, anti-corruption, multi-connexion progressive, HTTP/FTP. Modèle d'E/S et seuils (A-13) : un `select` par session, 128 sockets, échéance ≤ 12 s, 8 connexions par défaut → `D-028`. Taille de morceau adaptative bornée 1–10 MiB (`D-029`) ; états 17..27 nommés (A-15) ; `MNSP` identifié (`A-14`). Restent hors WP-05 : A-10 (corps du filtre du grabber), A-09 (`A-09` VM) | capstone, `classes.json`, `symbols.json`, `methods.json`, `states.json` | `analysis/idman/14-moteur-de-telechargement.md` (v0.4) |
+| **WP-05** | 🟡 **Moteur de téléchargement** — `CDownload` est un **dialogue de suivi**, le moteur est `SessionManager` + `Session`/`Connection` + `ChunksList` (annexe 14 §2). v0.5 : architecture en anneaux, noms→adresses (246/323 confirmés), machine à états (39 états en `this+0xa4`, 8 switch, 115 transitions → `D-027`), modèle de morceaux (`A-11` : le morceau est un **intervalle** dans un fichier unique, carte = liste de bornes `{id, startPos, nextID}` → `D-030`), persistance, rollback par troncature (`0x15ff52`), anti-corruption, assemblage = promotion du `.tmp`, multi-connexion progressive, HTTP/FTP. Modèle d'E/S et seuils (`A-13`) → `D-028`. Taille de morceau 1–10 MiB → `D-029`. États 17..27 nommés (`A-15`) ; `MNSP` identifié (`A-14`). Reste hors WP-05 : A-10 (corps du filtre du grabber), A-09 (`.gsd` réels) | capstone, `classes.json`, `symbols.json`, `methods.json`, `states.json`, `chunks.json`, `io-model.json` | `analysis/idman/14-moteur-de-telechargement.md` (v0.5) |
 | **WP-06** | 🟡 **Grabber** : stockage du projet **résolu** (fichier `.gsd` + miroir registre, annexe 11) (registre `GrabberSts\Projects\%ld\%ld[\ChList]`, valeurs `LocalFileName`/`LocalPath`/`LogFileName`) ; restent exploration, filtres, plan de site | capstone, `classes.json` | `analysis/idman/12-spec-grabber.md` (v0.1) |
 | **WP-07** | **Transports + médias** : HTTP/FTP (en-têtes, redirections, cookies), HLS/DASH (M3U8, SIDX, MP4), RTMP/MMS/TS | Ghidra, marqueurs | `analysis/idman/15-spec-protocoles.md` |
 
@@ -102,11 +102,12 @@ partiellement** : on sait *quelle* classe porte le grabber (`CSpiderSettings`,
 (4 fonctions non virtuelles), mais pas encore *ce que fait* leur code (pas de
 décompilateur).
 
-**Prochaine marche pour WP-05** : A-13 (seuils : taille minimale de morceau, délais de
-reprise, nombre de tentatives) — désormais faisable en lisant le corps des méthodes
-**nommées** (`methods.json` donne leurs adresses), à partir des chaînes `"Change chunk
-size to %ld"`, `"Connection restarted because of timeout"`, `"Select failed, err code =
-%d"` ; puis A-14 (`MNSP`) et A-15 (états 17..27).
+**Prochaine marche** : WP-05 est mûr pour la spécification (`A-05`) — les six actions de
+recherche qui le concernaient (A-11 → A-16) sont levées. Les trois valeurs encore
+assumées (taille minimale de morceau, tentatives, délais de reprise) sont documentées
+comme telles dans l'annexe 14 §11 et seront révisées par mesure sur les tests de `WP-05`.
+La prochaine action **de recherche** hors WP-05 est `A-10` (corps du filtre du grabber,
+`0xc2e00`+), qui appartient à `WP-11`.
 
 **Porte G1** : pour chaque domaine P0, un document de spécification avec
 (a) entrées/sorties, (b) machine à états, (c) structures de données, (d) cas d'erreur,

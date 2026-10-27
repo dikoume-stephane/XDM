@@ -7,7 +7,7 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-27 (annexe 14 v0.4 : états nommés, taille de morceau, MNSP).
+- **Dernière revue** : 2026-10-27 (annexe 14 v0.5 : le morceau est un intervalle dans un fichier unique, `A-11` ; `D-030`/`D-031`).
 
 ---
 
@@ -40,7 +40,7 @@
 | [`analysis/idman/11-modele-donnees-projet.md`](../analysis/idman/11-modele-donnees-projet.md) | Modèle de données du projet (fichier `.gsd`, registre, filtres) | 🟡 brouillon (WP-11) | capstone + `classes.json` |
 | [`analysis/idman/12-spec-grabber.md`](../analysis/idman/12-spec-grabber.md) | Spécification du grabber (v0.1 : stockage du projet, schéma de valeurs) | 🟡 brouillon (WP-06) | `classes.json` + capstone |
 | [`analysis/idman/13-filtres-et-artefacts.md`](../analysis/idman/13-filtres-et-artefacts.md) | Filtres (`nextFilterID`, listes UI) et artefacts du dossier cible (`empty.html`) | 🟡 v0.1 | capstone |
-| [`analysis/idman/14-moteur-de-telechargement.md`](../analysis/idman/14-moteur-de-telechargement.md) | Moteur : architecture en anneaux, noms→adresses, machine à états (39 états nommés), E/S et seuils, taille de morceau, MNSP, reprise, multi-connexion, HTTP/FTP | 🟡 v0.4 (WP-05) | `methods.json` + `states.json` + capstone |
+| [`analysis/idman/14-moteur-de-telechargement.md`](../analysis/idman/14-moteur-de-telechargement.md) | Moteur : architecture en anneaux, noms→adresses, machine à états (39 états nommés), E/S et seuils, taille de morceau 1–10 MiB, `MNSP`, **modèle de morceau = intervalle dans un fichier unique**, carte = liste de bornes, assemblage = promotion du `.tmp`, rollback par troncature, multi-connexion, HTTP/FTP | 🟡 v0.5 (WP-05) | `methods.json` + `states.json` + `chunks.json` + `io-model.json` + capstone |
 | `analysis/idman/15-spec-protocoles.md` | Spécification des transports et médias | ⛔ à venir (WP-07) | Ghidra + REA |
 
 ---
