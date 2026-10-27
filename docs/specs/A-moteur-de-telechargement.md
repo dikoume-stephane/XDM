@@ -167,7 +167,7 @@ CONNECT --(socket prêt)--> HEADERS --(206 attendu)--> DATA --(morceau plein)-->
 
 | ID | Question | Bloque | Qui/quoi peut trancher |
 |---|---|---|---|
-| `Q-A-01` | Le plancher de 1 MiB est-il aussi la taille **minimale** de morceau chez IDM ? | non | constante voisine de `0x1ac92c` (`Change chunk size to %ld`), ou mesure sur VM (`A-09`) |
+| `Q-A-01` | ~~Le plancher de 1 MiB est-il aussi la taille minimale de morceau ?~~ **Résolue** : oui, aucune constante de morceau plus petite n'existe dans le bloc `ChunksList` (annexe 14 §5.4) | — | — |
 | `Q-A-02` | **Valeur par défaut** du réglage `mAttempts` (nombre de reprises d'une connexion) | non | lecture de l'initialisation des réglages autour de `0x399a5` ; à défaut, XDM retient 3 |
 | `Q-A-03` | Comportement exact quand `Content-Length` est absent et que le serveur ignore `Range` | non | banc d'essai `T-A-08` |
 | `Q-A-04` | Politique de reprise sur `ETag`/`Last-Modified` changés entre deux sessions | non | `If-Range` observé chez IDM (annexe 14 §8) |

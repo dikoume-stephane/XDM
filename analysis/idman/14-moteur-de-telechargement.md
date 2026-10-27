@@ -451,6 +451,20 @@ Encadrement appliqué ensuite par l'appelant (`0x155bd0`) :
 Reproductible : `python3 tools/idman_chunks.py` (→ `analysis/idman/chunks.json`) décode
 la table, les trois gestionnaires, les seuils de taille et l'encadrement.
 
+**Pas de minimum plus petit que 1 MiB (Observé, `A-16` clos)** — le balayage des tailles
+rondes (`0x400`…`0x200000`) dans tout le bloc `ChunksList` (`0x153000`–`0x162000`) ne rend
+que :
+
+| Constante | Site | Rôle réel |
+|---|---|---|
+| `0x800` (2 Kio) | `0x155001`, `0x155009`, `0x15502b`, `0x156bf6`, `0x156c28` | **capacité d'un tampon d'accumulation** en `objet+0x800` (`lea esi, [ecx + eax]` puis `cmp esi, 0x800`), **pas** un morceau |
+| `0x400` / `0x800` | `0x15eb9d`, `0x15eba4` | taille de paquet MMS |
+| `0x200000` (2 MiB) | `0x157e06` (`add edi, 0x200000`) | pas d'avance de la borne suivante, ensuite borné au reste (`cmp edi, ecx` / `jbe`) — cohérent avec le palier 2 MiB de `D-029` |
+| `0x100000` (1 MiB) | `0x155a0d`, `0x155c0c`, `0x155c14` | plancher de la politique (`D-029`) |
+
+Donc le plancher **est** le minimum : aucun morceau de moins de 1 MiB n'est produit par
+cette politique, et XDM peut s'aligner sans risque (`D-029`).
+
 **Dérivé** : IDM découpe **gros** pour les gros fichiers (moins de connexions, donc moins
 de recouvrement à vérifier) et **petit** pour les fichiers moyens, avec un plancher de
 1 MiB pour que plusieurs connexions restent utiles et un plafond de 10 MiB pour borner la
