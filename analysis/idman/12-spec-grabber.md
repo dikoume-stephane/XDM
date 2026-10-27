@@ -82,7 +82,7 @@ Trancher demande soit un `RegQueryValueExA` complet dépilé, soit une exécutio
 | Question | État | Moyen de la trancher |
 |---|---|---|
 | Format de `ChList` : sous-clés numérotées ? un blob binaire ? | **Inconnu** | lire le code qui énumère `ChList` (appelant de `RegQueryInfoKeyA`), ou observer le registre après une exploration |
-| Où sont stockés `IncludeFilters` / `ExcludeFilters` | clé connue (annexe 05 §3), format inconnu | `CGrabberFiltersDlg` + `CSpiderSettings` (`0x1381c0`) |
+| ~~Où sont stockés `IncludeFilters` / `ExcludeFilters`~~ | ✅ **levée le 2026-10-27** (`A-10`) : `GrabberSts\IncludeFilters` et `\ExcludeFilters`, une valeur `REG_SZ` par filtre (`"<id> <motif>"`), voir annexe 13 §4 bis | — |
 | Comment le plan de site (arborescence explorée) est conservé | **Inconnu** | `CSpiderSiteMapDlg` / `CArray<IDMSPIDER_STRUCT_LI2>` |
 | Algorithme d'exploration (BFS/DFS, profondeur, robots.txt) | **Inconnu** (`H-05`) | décompilation de `CIDMSpider` (1 seule méthode virtuelle : le gros du code est en méthodes non virtuelles) |
 | Rôle de `nAggrV`, `TPswitch` | Hypothèse `H-16` | décompilation du producteur de ces valeurs |

@@ -49,6 +49,8 @@ Dépendances Python : `pefile`, `capstone` (`python3 -m pip install --break-syst
 | Hypothèses à vérifier | [`analysis/idman/06-hypotheses.md`](analysis/idman/06-hypotheses.md) |
 | Gabarit de fiche de spécification | [`docs/specs/TEMPLATE.md`](docs/specs/TEMPLATE.md) |
 | Fiche A — moteur de téléchargement (brouillon, `A-05`) | [`docs/specs/A-moteur-de-telechargement.md`](docs/specs/A-moteur-de-telechargement.md) |
+| Fiche B — grabber / aspiration de site (brouillon, `A-05`) | [`docs/specs/B-grabber.md`](docs/specs/B-grabber.md) |
+| Matrice de conformité exigence → preuve → test (`WP-12`) | [`docs/specs/conformance.md`](docs/specs/conformance.md) |
 | Installation et usage de REA | [`docs/REA.md`](docs/REA.md) |
 
 ## Structure

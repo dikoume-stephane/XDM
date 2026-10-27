@@ -105,10 +105,11 @@ décompilateur).
 **Prochaine marche** : les actions de recherche de WP-05 (`A-11` → `A-16`) **et** celles
 de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet ordre :
 
-1. **`A-05` — ouvrir les fiches de spécification** (une par domaine P0) : la fiche
-   `docs/specs/A-moteur-de-telechargement.md` est ouverte (domaine A, 17 exigences,
-   4 questions ouvertes) ; la fiche du domaine B (filtres / projet) peut être écrite de
-   la même façon à partir de l'annexe 13 v0.2, sans nouvelle rétro-ingénierie ;
+1. **`A-05` — fiches de spécification** : domaine A (moteur, 19 exigences, testable
+   immédiatement) et domaine B (grabber, 13 exigences dont **3 bloquées** par
+   l'algorithme d'exploration) sont ouvertes ; la matrice `docs/specs/conformance.md`
+   recense 32 exigences et 0 test. Prochaine marche concrète : écrire les tests de
+   spécification du domaine A (`T-A-03`, `T-A-04`, `T-A-01`, `T-A-09`) **avant** le code ;
 2. **`A-09` — lever les incertitudes d'exécution** sur VM Windows (sémantique du champ
    `actif`, `empty.html`, `.gsd` réels), qui ne peuvent pas être tranchées en statique.
 
@@ -122,9 +123,9 @@ de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet
 
 | Lot | Contenu | Sortie |
 |---|---|---|
-| WP-10 | Fiches de spécification par domaine (format imposé : but, entrées, états, erreurs, preuves, questions ouvertes) — **1ʳᵉ fiche ouverte** : domaine A (moteur), `A-05` | `docs/specs/` (`A-moteur-de-telechargement.md`) |
+| WP-10 | Fiches de spécification par domaine (format imposé : but, entrées, états, erreurs, preuves, questions ouvertes) — **2 fiches ouvertes** : domaine A (moteur) et domaine B (grabber), `A-05` | `docs/specs/` (`A-moteur-de-telechargement.md`, `B-grabber.md`) |
 | WP-11 | 🟡 Modèle de données : persistance résolue (`.gsd` + registre) ; **filtres entièrement décrits** (`A-10` : `IDM_SPIDERFILTER` 16 o, sérialisation `REG_SZ` sous `IncludeFilters`/`ExcludeFilters`, premier id = 100 → `D-032`/`D-033`) ; page de remplacement `empty.html` | `analysis/idman/11-…` + `13-…` (v0.2) |
-| WP-12 | Matrice de conformité : comportement observé → exigence → test | `docs/specs/conformance.md` |
+| WP-12 | 🟡 Matrice de conformité : comportement observé → exigence → test (32 exigences recensées, 3 bloquées, 0 test écrit) | `docs/specs/conformance.md` (v0.1) |
 
 ---
 

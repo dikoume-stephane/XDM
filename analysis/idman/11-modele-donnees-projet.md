@@ -62,7 +62,7 @@ Project
 ├─ entries       [Entry]        (fichiers retenus, cochés/décochés)
 └─ schedule      Schedule?      (annexe 02 §G)
 
-Filter { id, kind: include|exclude, pattern, scope: url|path|extension, enabled }
+Filter { id, pattern, actif }        // la portée est la liste qui le contient (D-032)
 Sitemap { nodes: [ { url, depth, status, content_type, size } ] }
 Entry { url, local_path, local_file_name, expected_size, status, log }
 ```
@@ -78,12 +78,13 @@ Entry { url, local_path, local_file_name, expected_size, status, log }
 | Format binaire de `.gsd` (en-tête, version, sérialisation MFC `CArchive` ?) | **Inconnu** | observer un fichier réel (VM) ou décompiler `GrSh` |
 | Ordre exact des deux `%s` de `"%sproject%s.gsd"` | **Dérivé** : `(nom, identifiant)` | lire le producteur du 1er argument (`0x6241e2`, format `%d`) |
 | Format de `ChList` : valeurs nommées de 8/16 octets (observé), rôle de chaque nom | **Partiel** | lire les producteurs (`0x1b5c30`, `0x1d26b0`) |
-| Sémantique exacte d'un filtre (regex ? masque ? extension ?) | **Inconnu** | `CSpiderSettings` (`0x1381e0`) + `CArray<IDM_SPIDERFILTER>` |
+| ~~Sémantique exacte d'un filtre~~ | ✅ **levée le 2026-10-27** (`A-10`) : un filtre = 16 octets `{CString nom, CString motif, int id, BYTE actif}`, motif = masque glob ; portée portée par la **liste** (clé de registre) | annexe 13 §2 bis et §4 bis |
 | Plan de site persistant ou recalculé à chaque session | **Inconnu** | `CArray<IDMSPIDER_STRUCT_LI2>` (`0xd1eb0`), qui écrit aussi `%sempty.html` |
 
 ## 6. Prochaines actions
 
-1. Lire `0xc2450` (« Filters ») et `CArray<IDM_SPIDERFILTER>` pour le format d'un filtre.
+1. ~~Lire `0xc2450` (« Filters ») et `CArray<IDM_SPIDERFILTER>` pour le format d'un filtre.~~
+   ✅ fait : voir annexe 13 §2 bis / §4 bis (`D-032`, `D-033`).
 2. Lire `0xd1eb0` : il manipule `%sempty.html` et `GetFileAttributesW` → probablement la
    génération d'une **page d'index vide** dans le dossier cible (comportement à spécifier).
 3. Sur VM Windows (phase 6) : créer un projet, récupérer le `.gsd`, le dumper en hexadécimal
