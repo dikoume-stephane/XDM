@@ -561,6 +561,14 @@ centaine de connexions.
 « sockets max » vérifiée par test, et l'échéance maximale comme paramètre ; le nombre de
 connexions par défaut (8) est une valeur de configuration, pas une constante de code.
 
+> **Complément du 2026-10-27 (`A-13`).** Le plafond de 12 s est confirmé comme **borne du
+> délai de sommeil** (`cmp ecx, 0x2ee0` / `mov ecx, 0x2ee0`, `0x1958a7`), et non comme
+> timeout de transfert : celui-ci est un **délai d'inactivité de 30 s** (`cmp eax, 0x1e`,
+> `0x1a139f` / `0x18adad`), porté à **300 s** quand `[conn+0x13c] == 2` (`0x18becf`),
+> suivi d'un redémarrage de connexion ; les reprises sont bornées par le réglage
+> `mAttempts` (annexe 14 §4.5). XDM adopte les deux valeurs : `select ≤ 12 s`,
+> `inactivité 30 s ⇒ reconnexion`.
+
 ---
 
 ### D-029 — Taille de morceau **adaptative bornée** : 1 → 10 MiB, choisie par classe de taille
@@ -714,7 +722,7 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | 🟡 1ʳᵉ fiche ouverte : domaine A (`docs/specs/A-moteur-de-telechargement.md`, brouillon : 17 exigences, modèle de données, machine à états, 8 cas d'erreur, 6 écarts, 4 questions ouvertes). Reste : domaine B (grabber/filtres), C (transports), F (persistance) |
 | A-11 | Structure logique d'un enregistrement `ChList` | lecture d'un état IDM existant | ✅ fait : `{ID, startPos, nextID}` = **liste de bornes** ; le morceau est un **intervalle** dans un fichier unique (preuve : aucun modèle `%s%d.tmp`, champ `file` partagé), assemblage = promotion du `.tmp` (annexe 14 §5, §7) → `D-030`, `D-031` ; reste l'encodage binaire exact, sans intérêt (D-024) |
 | A-12 | Énumérer les états de `Connection` | spécification de `WP-05` | ✅ fait : 39 états (0..38) en `this+0xa4`, 8 distributeurs, 115 transitions (annexe 14 §4) → `D-027` |
-| A-13 | Seuils et modèle d'E/S | valeurs par défaut de `WP-05` | 🟡 défaut **8** connexions (`0x0fbe17`), **128** sockets par session, `select` plafonné à **12 000 ms** (annexe 14 §4.4) → `D-028` ; reste la taille minimale de morceau |
+| A-13 | Seuils et modèle d'E/S | valeurs par défaut de `WP-05` | ✅ levée : défaut **8** connexions (`0x0fbe17`), **128** sockets par session, `select` par session (`0x19503c`, `0x1959bd`) avec `délai = écoulé/10` (échéance atteinte) ou `/2`, **plafonné à 12 000 ms** (`0x2ee0`, `0x1958a7`), attente courte de 2–3 s (`0x19505d`) ; **timeout d'inactivité = 30 s** (`0x1e`), **300 s** pour `[conn+0x13c] == 2` (annexe 14 §4.4, §4.5) → `D-028` ; tentatives bornées par le réglage `mAttempts` (défaut non établi) |
 | A-14 | Identifier `HTTPConnection::MNSP` | complétude HTTP | ✅ fait : `0x17dc90` = combinaison d'URL via **`InternetCombineUrlA`** (ICU_ENCODE_SPACES_ONLY puis ICU_BROWSER_MODE), tampon ≤ 10 239 o (annexe 14 §8.1) |
 | A-15 | Nommer les états 17..27 | complétude de la machine | ✅ fait : libellés tirés des chaînes de statut écrites juste avant l'état (annexe 14 §4.2) |
 | A-16 | Taille minimale de morceau | politique de découpage | ✅ fait : table `0x1559e0` (1/2/5 MiB) encadrée à **1–10 MiB** (`0x155bd0`), annexe 14 §5.4 → `D-029` |

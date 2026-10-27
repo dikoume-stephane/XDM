@@ -1,6 +1,6 @@
 # 14 — Moteur de téléchargement : architecture, morceaux, reprise
 
-> **Statut** : 🟡 v0.5 (WP-05) · **Dernière revue** : 2026-10-27
+> **Statut** : 🟡 v0.6 (WP-05) · **Dernière revue** : 2026-10-27
 > **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, sha256 `5f78da5a…2f11c9`
 > **Preuves principales** : `analysis/idman/symbols.json` (§1), `methods.json` (noms →
 > adresses), `states.json` (machine à états, §4), `classes.json`,
@@ -268,6 +268,8 @@ session**. Deux sites d'appel seulement (`0x19503c`, `0x1959bd`) et trois
 | Ajustement du délai | **÷10** si l'échéance n'est pas atteinte, **÷2** sinon | division par 10 (magie `0x66666667`, `sar edx,3`) en `0x19588d` ; `sub eax,edx; sar eax,1` en `0x1958d8` |
 | Échéance | 64 bits en `session+0x1d0`, comparée à l'horloge (`0x625460`) | `mov eax, [esi+0x1d0]` + comparaison 64 bits en `0x195869`–`0x19588b` |
 | Repli si `select` échoue | `Sleep(délai)` | `push ecx; call dword ptr [0x6784a0]` en `0x1959c5` |
+| **Formule du délai** | `délai = écoulé/10` si l'échéance est **atteinte**, `écoulé/2` sinon, puis **plafond 12 000 ms** | `0x19588d` (÷10, magie `0x66666667` + `sar edx,3`) ; `0x1958d8` (`sar eax,1`) ; `cmp ecx, 0x2ee0` / `jle` / `mov ecx, 0x2ee0` en `0x1958a7`–`0x1958b4` |
+| Attente courte (boucle d'attente) | `tv_sec = 2` ou **3**, `tv_usec = 0` | `xor edx,edx` / `cmp byte [esi+0x258], dl` / `sete dl` / `add edx, 2` en `0x195052`–`0x195060`, consommé en `0x195022` |
 | Conversion en `timeval` | `sec = ms/1000`, `usec = (ms%1000)×1000` | magie `0x10624dd3` + `imul eax,eax,0x3e8` en `0x195984`–`0x1959a6` |
 
 Toutes ces valeurs sont reproduites par `tools/idman_io.py`
@@ -283,6 +285,24 @@ ne retenir que les valeurs cohérentes avec le code voisin (`0x80`, `0x2EE0`, `0
 valeur, le code écrit **`8`** (`0x0fbe17`). L'écriture se fait par un *setter* dédié
 (`0x0fb4c0`, `RegSetValueExA` type 4, `cbData = 4`).
 
+### 4.5 Délai d'inactivité et redémarrage de connexion (Observé, `A-13` complément)
+
+| Élément | Valeur | Preuve |
+|---|---|---|
+| Horloge utilisée | secondes écoulées renvoyées par `0x562800` (appelée avant chaque test) | `call 0x562800` en `0x1a139a`, `0x18ada8`, `0x18beb7` |
+| **Délai d'inactivité standard** | **30 s** (`0x1E`) | `cmp eax, 0x1e` / `jl` en `0x1a139f`, `0x18adad`, `0x190069` |
+| Délai pour `[conn+0x13c] == 2` | **300 s** (`0x12C`) | `cmp [esi+0x346c]`… puis `and edx, 0xfffffef2` + `add edx, 0x12c` en `0x18becf`–`0x18bed5` (branche « égal à 2 » ⇒ `0x12c`, sinon ⇒ `0x1e`) |
+| Message | `"Connection restarted because of timeout"` (+ variantes `(1)`, `(2)`, `(3)`) | littéral `0x2b0670`, **11 sites** de `push` (`0x1700d2`, `0x1756f2`, `0x17597a`, `0x1759e9`, `0x175bed`, `0x1a13b0`, `0x1a16bc`, `0x1a1a78`, `0x1a1b30`, `0x1ad5f9`, `0x1b2a14`) |
+| Action | bascule d'état puis redémarrage de la connexion | `mov byte ptr [esi+0x3289], 1` puis appels virtuels `[edx+0x20]`/`[edx+0x18]` en `0x1a13a8`–`0x1a13cc` |
+| Repli avant redémarrage | `Sleep(500)` après échec d'attente | `push 0x1f4` / `call [0x6784a0]` en `0x17024`–`0x17029` |
+| Compteur de tentatives | réglage persistant **`mAttempts`** (`0x281ce0`), lu par `RegQueryValueExA` vers `[réglages+0x2c]` | `0x399a5`–`0x399b1` ; **valeur par défaut non établie** |
+| Autres `Sleep` observés | 100 ms (`0xeaf0`, `0xeb11`), 200 ms (`0x77983`, `0x7d2f7`), 250 ms (`0x748f3`) | `push` immédiat précédant l'appel |
+
+**Dérivé** : IDM ne compte pas les tentatives dans la boucle de transfert ; il **redémarre
+la connexion** dès que l'inactivité dépasse 30 s (300 s dans un mode particulier), et c'est
+le réglage `mAttempts` qui borne les reprises. Le `select` n'est donc pas le mécanisme de
+timeout : il ne fait que rendre la main assez souvent pour que ce test soit appliqué.
+
 **Note pour éviter une fausse piste (Observé)** : la fonction `0x1b0ed0` est un
 **dispatcher de journalisation** (switch sur `byte [esi+5]`, 20 cas, table
 `0x1b10a0`/`0x1b10cc`), dont le cas 1 appelle le loggueur `0x1ac8d0`
@@ -291,10 +311,11 @@ celui-ci est calculé par l'appelant et transmis en argument. Les messages
 « The file chunk %d is reassigned to connection %d » et « Change chunk size to %ld »
 appartiennent à ce canal de journalisation, pas à la boucle de transfert.
 
-**Dérivé** : le couple « un `select` par session / 128 sockets / échéance plafonnée à
-12 s » explique pourquoi IDM plafonne pratiquement le nombre de connexions simultanées
-autour de la centaine même si l'utilisateur demande davantage (`CMaxConnNumbers` borne
-déjà par site, annexe 12).
+**Dérivé** : le couple « un `select` par session / 128 sockets / délai plafonné à 12 s »
+explique pourquoi IDM plafonne pratiquement le nombre de connexions simultanées autour de
+la centaine même si l'utilisateur demande davantage (`CMaxConnNumbers` borne déjà par
+site, annexe 12). Le délai de 12 s n'est **pas** un timeout de transfert (celui-ci est de
+30 s, §4.5) : c'est le temps maximal pendant lequel le réacteur accepte de dormir.
 
 ---
 
@@ -640,7 +661,7 @@ la carte.
 | A-15 | ✅ **levée** | états 17..27 nommés (§4.2) |
 | A-16 | ✅ **levée** | taille de morceau adaptative bornée 1–10 MiB (§5.4, `D-029`) |
 | — | ⏳ ouvert, non bloquant | taille **minimale** de morceau : le plancher observé (1 MiB) est-il aussi le minimum ? XDM retient 1 MiB (`D-029`) |
-| — | ⏳ ouvert, non bloquant | nombre de tentatives et temporisations de reprise : XDM retient 3 essais / backoff 1-2-4 s, à confronter aux constantes voisines de `"Change chunk size to %ld"` (`0x1ac92c`) |
+| — | ✅ **levée (v0.6)** | temporisation de reprise : **inactivité > 30 s** (300 s pour `[conn+0x13c] == 2`) ⇒ redémarrage de connexion (§4.5). Reste non établie la **valeur par défaut du réglage `mAttempts`** (`0x281ce0`), qui borne le nombre de reprises : XDM retient 3 |
 | — | ⏳ ouvert, non bloquant | rendu exact du corps de `JoinFile` : 10 Ko non décompilés (pas de décompilateur, D-019) ; le comportement est décrit par ses traces et validé par les tests de `WP-05` sur fichiers > 10 Mo |
 
 Aucun de ces points ne bloque l'écriture de la spécification : `D-024`→`D-031` fixent les
@@ -671,4 +692,5 @@ une empreinte.
 | v0.2 | 2026-10-27 | §4 : état = `this+0xa4`, 39 états, 8 distributeurs (`states.json`) |
 | v0.3 | 2026-10-27 | `A-13` modèle d'E/S et seuils, `D-028` |
 | v0.4 | 2026-10-27 | `A-14` (`MNSP` = `InternetCombineUrlA`), `A-15` (états 17..27), `A-16` (1–10 MiB, `D-029`) |
+| v0.6 | 2026-10-27 | `A-13` complétée : formule du délai `select` (÷10 ou ÷2, plafond 12 s), attente courte de 2–3 s, **§4.5** délai d'inactivité **30 s** (300 s en mode particulier) et redémarrage de connexion, réglage `mAttempts` |
 | v0.5 | 2026-10-27 | `A-11` : le morceau est un **intervalle** dans un fichier unique, `file` partagé (preuve par absence de modèle `%s%d.tmp`), assemblage = promotion du `.tmp`, rollback détaillé jusqu'au compteur `0x15ff9b` ; `D-026` corrigée, `D-030`, `D-031` ; §11 remis à jour |

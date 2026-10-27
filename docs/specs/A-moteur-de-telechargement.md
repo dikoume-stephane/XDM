@@ -34,7 +34,9 @@ l'intégrité est vérifiable.
 | `EX-A-10` | Deux contenus divergents entre connexions ⇒ détection (empreinte SHA-256 par bloc de recouvrement) puis **repli à une connexion** | **Observé** (phénomène) + **Décision** (mécanisme) | annexe 14 §5.5 ; `D-025` | `T-A-10` : flux divergents injectés → repli + journal |
 | `EX-A-11` | Un morceau incomplet n'est **jamais** marqué terminé ni copié dans le fichier final | **Observé** | annexe 14 §7 (`isCmpleted = 0`) | `T-A-11` |
 | `EX-A-12` | Le fichier final n'est promu qu'après vérification de la carte et de la taille attendue | **Observé** + **Décision** | annexe 14 §7 ; `D-026` | `T-A-12` : taille incohérente ⇒ pas de promotion |
-| `EX-A-13` | Un seul réacteur d'E/S par session, plafond de **128 sockets**, échéance `select` ≤ **12 000 ms** | **Observé** + **Décision** | annexe 14 §4.4 ; `io-model.json` ; `D-028` | `T-A-13` : 130 morceaux demandés → 128 sockets au plus |
+| `EX-A-13` | Un seul réacteur d'E/S par session, plafond de **128 sockets**, délai `select` ≤ **12 000 ms** | **Observé** + **Décision** | annexe 14 §4.4 ; `io-model.json` ; `D-028` | `T-A-13` : 130 morceaux demandés → 128 sockets au plus |
+| `EX-A-18` | Inactivité d'une connexion **> 30 s** ⇒ la connexion est redémarrée (nouvelle `Range` au dernier offset confirmé), pas le téléchargement | **Observé** | annexe 14 §4.5 (`cmp eax, 0x1e` en `0x1a139f`, `0x18adad`) | `T-A-25` : serveur muet 35 s → reconnexion unique, données conservées |
+| `EX-A-19` | Une tentative de reprise ne repart **jamais** de zéro tant que la carte est valide | **Observé** + **Décision** | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` : 3 redémarrages successifs, progression strictement croissante |
 | `EX-A-14` | Le nom final est déduit de l'URL (`Content-Disposition` prioritaire), assaini (pas de `..`, pas de séparateur de chemin) | **Observé** (déduction du nom) + **Dérivé** (assainissement) | annexe 14 §3 (`GetDefaultlocalName`) | `T-A-14` : `?a=../../etc/passwd` → nom inoffensif |
 | `EX-A-15` | Toute redirection (`Location:`) est résolue en URL absolue (RFC 3986), avec limite de 10 redirections et URL ≤ 10 239 octets | **Observé** | annexe 14 §8.1 (`InternetCombineUrlA`, `cmp ecx, 0x27ff`) | `T-A-15` : chaîne de 11 redirections → abandon explicite |
 | `EX-A-16` | Compression désactivée pour les transferts par morceaux (`Accept-Encoding: identity`) | **Observé** | annexe 14 §8 | `T-A-16` |
@@ -166,7 +168,7 @@ CONNECT --(socket prêt)--> HEADERS --(206 attendu)--> DATA --(morceau plein)-->
 | ID | Question | Bloque | Qui/quoi peut trancher |
 |---|---|---|---|
 | `Q-A-01` | Le plancher de 1 MiB est-il aussi la taille **minimale** de morceau chez IDM ? | non | constante voisine de `0x1ac92c` (`Change chunk size to %ld`), ou mesure sur VM (`A-09`) |
-| `Q-A-02` | Nombre de tentatives et délais réels de reprise | non | chaînes `Connection restarted because of timeout`, `Select failed, err code = %d` |
+| `Q-A-02` | **Valeur par défaut** du réglage `mAttempts` (nombre de reprises d'une connexion) | non | lecture de l'initialisation des réglages autour de `0x399a5` ; à défaut, XDM retient 3 |
 | `Q-A-03` | Comportement exact quand `Content-Length` est absent et que le serveur ignore `Range` | non | banc d'essai `T-A-08` |
 | `Q-A-04` | Politique de reprise sur `ETag`/`Last-Modified` changés entre deux sessions | non | `If-Range` observé chez IDM (annexe 14 §8) |
 
@@ -174,4 +176,5 @@ CONNECT --(socket prêt)--> HEADERS --(206 attendu)--> DATA --(morceau plein)-->
 
 | Date | Auteur | Changement |
 |---|---|---|
+| 2026-10-27 | analyse statique | v0.2 : `A-13` complétée — `EX-A-18` (inactivité 30 s ⇒ reconnexion), `EX-A-19` (reprise sans perte), `Q-A-02` restreinte à la valeur de `mAttempts` |
 | 2026-10-27 | analyse statique | création (brouillon) : 17 exigences, modèle de données, machine à états, 8 cas d'erreur, 6 écarts, 4 questions ouvertes — dérivée des annexes 13 et 14, sans nouvelle rétro-ingénierie |
