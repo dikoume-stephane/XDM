@@ -24,6 +24,14 @@
 | D-016 | Convention d'identifiants (D/WP/EV/H/R/A) | ✅ appliquée | tout | `MEMOIRE.md` §4 |
 | D-017 | Stack de réimplémentation | ⛔ ouverte | WP-20+ | journal |
 | D-018 | Stockage des artefacts lourds | ⛔ ouverte | WP-23+ | journal |
+| D-019 | Ghidra non installable ici → outils maison (`idman_classes`, `idman_args`, `idman_symbols`) | ✅ appliquée | WP-04/05 | `tools/` |
+| D-020 | Attribution chaîne→fonction à deux niveaux (certaine / probable) | ✅ appliquée | annexes 10-14 | annexe 10 |
+| D-021 | `classes.json` = source de vérité de la carte objets | ✅ appliquée | WP-04+ | `tools/idman_classes.py` |
+| D-022 | Projet de grabber = fichier `.gsd`, registre = état auxiliaire | ✅ appliquée | WP-06/WP-11 | annexe 11 |
+| D-023 | `empty.html` généré **dans le dossier du projet**, en option | ✅ appliquée | WP-24 | annexe 13 |
+| D-024 | État de reprise XDM = `<fichier>.xdm-part.json`, jamais le registre | ✅ appliquée | WP-05 | annexe 14 §10 |
+| D-025 | Anti-corruption par empreinte + repli à une connexion | ✅ appliquée | WP-05 | annexe 14 §5.4 |
+| D-026 | Fichier préalloué + carte de morceaux, sans `.tmp` par morceau | ✅ appliquée | WP-05 | annexe 14 §10 |
 
 ## Points de vigilance associés
 

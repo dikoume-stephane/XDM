@@ -16,6 +16,9 @@ npm run doctor                     # état de l'environnement et des providers
 bash tools/collect-idman-evidence.sh   # preuves REA sur la cible  -> analysis/raw/idman/
 python3 tools/idman_triage.py          # agrégats déterministes    -> analysis/idman/triage.json
 python3 tools/idman_extract.py         # chaînes/RTTI/dialogues    -> analysis/raw/idman/
+python3 tools/idman_classes.py         # RTTI -> vtables/méthodes  -> analysis/idman/classes.json
+python3 tools/idman_symbols.py         # noms « Classe::Methode »  -> analysis/idman/symbols.json
+python3 tools/idman_class_profile.py --pattern 'HTTPConnection'   # fiche par classe
 ```
 
 Dépendances Python : `pefile`, `capstone` (`python3 -m pip install --break-system-packages pefile capstone`).
@@ -36,6 +39,7 @@ Dépendances Python : `pefile`, `capstone` (`python3 -m pip install --break-syst
 | Modèle de données du projet (v0.1) | [`analysis/idman/11-modele-donnees-projet.md`](analysis/idman/11-modele-donnees-projet.md) |
 | Spécification du grabber (v0.1) | [`analysis/idman/12-spec-grabber.md`](analysis/idman/12-spec-grabber.md) |
 | Filtres et artefacts (`empty.html`) | [`analysis/idman/13-filtres-et-artefacts.md`](analysis/idman/13-filtres-et-artefacts.md) |
+| Moteur de téléchargement (morceaux, reprise) | [`analysis/idman/14-moteur-de-telechargement.md`](analysis/idman/14-moteur-de-telechargement.md) |
 | Hypothèses à vérifier | [`analysis/idman/06-hypotheses.md`](analysis/idman/06-hypotheses.md) |
 | Gabarit de fiche de spécification | [`docs/specs/TEMPLATE.md`](docs/specs/TEMPLATE.md) |
 | Installation et usage de REA | [`docs/REA.md`](docs/REA.md) |
@@ -45,7 +49,7 @@ Dépendances Python : `pefile`, `capstone` (`python3 -m pip install --break-syst
 ```text
 cible/IDMan.exe            cible d'analyse (fournie sur main)
 docs/                      journal, roadmap, index mémoire, specs, doc REA
-analysis/idman/            annexes de mémoire (00 → 09) + triage.json
+analysis/idman/            annexes de mémoire (00 → 14) + triage.json + classes.json
 analysis/raw/              bundles Evidence + extractions brutes (non versionnés)
 samples/demo-electron-app  app témoin pour valider REA
 tools/                     collecte de preuves, triage, extractions
@@ -63,6 +67,9 @@ tools/                     collecte de preuves, triage, extractions
 - 🟡 WP-06/WP-11 démarrés : projet de grabber = **fichier `.gsd`** dans
   `<IDM>\Grabber\Projects\` (classe `GrSh`) + miroir registre
   (`GrabberSts\Projects\%ld\%ld\ChList`, compteur `nextFilterID`) — annexes 11 et 12.
+- 🟡 WP-05 cadré (annexe 14) : moteur = `SessionManager` → `Session`/`Connection`
+  (HTTP/FTP/MMS/RTMP + proxies) → `ChunksList` ; morceaux persistants, rollback par
+  troncature, anti-corruption par recouvrement, montée en charge progressive.
 - ⛔ WP-03 (décompilation Ghidra) **bloqué** dans ce sandbox : ni JVM ni accès au CDN des
   releases GitHub (`JOURNAL.md` D-019) — à reprendre hors sandbox.
 - ⏳ Reste à confirmer : le périmètre (action A-01) et la stack d'implémentation (D-017).

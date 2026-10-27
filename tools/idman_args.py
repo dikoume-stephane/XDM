@@ -40,6 +40,10 @@ class Binary:
         self.base = self.pe.OPTIONAL_HEADER.ImageBase
         self.sections = [(s.VirtualAddress, s.SizeOfRawData, s.PointerToRawData)
                          for s in self.pe.sections]
+        # sections de données : seules zones où une chaîne est crédible
+        self.data_ranges = [(s.VirtualAddress, s.VirtualAddress + s.SizeOfRawData)
+                            for s in self.pe.sections
+                            if not (s.Characteristics & 0x20000000)]
         self.iat = self._build_iat()
 
     def _build_iat(self) -> dict[int, str]:
@@ -65,7 +69,13 @@ class Binary:
                 return va + offset - ptr
         return None
 
+    def _in_data(self, va: int) -> bool:
+        rva = va - self.base
+        return any(low <= rva < high for low, high in self.data_ranges)
+
     def string_at(self, va: int, limit: int = 400) -> str | None:
+        if not self._in_data(va):
+            return None
         offset = self.rva_to_offset(va - self.base)
         if offset is None:
             return None
@@ -78,6 +88,8 @@ class Binary:
         return blob.decode("latin-1")
 
     def wide_string_at(self, va: int, limit: int = 400) -> str | None:
+        if not self._in_data(va):
+            return None
         offset = self.rva_to_offset(va - self.base)
         if offset is None:
             return None
@@ -86,13 +98,15 @@ class Binary:
             if self.raw[end:end + 2] == b"\x00\x00":
                 break
             end += 2
-        if end - offset < 6:
+        if end - offset < 8:
             return None
         try:
             text = self.raw[offset:end].decode("utf-16le")
         except UnicodeDecodeError:
             return None
-        return text if text.isprintable() else None
+        # une chaîne UTF-16 crédible reste dans l'ASCII imprimable : le code ou les
+        # ressources relus en UTF-16 produisent des idéogrammes, à rejeter.
+        return text if text and all(0x20 <= ord(c) < 0x7F for c in text) else None
 
 
 def describe_immediate(binary: Binary, value: int) -> str:

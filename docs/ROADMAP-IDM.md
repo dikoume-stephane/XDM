@@ -86,15 +86,23 @@ une hypothèse de planification.
 |---|---|---|---|
 | **WP-03** | ~~Installer Ghidra 12.1.x headless~~ — **bloqué** : ni JVM ni accès au CDN des releases depuis le sandbox (`D-019`). À reprendre hors sandbox. | Ghidra + REA | `analysis/idman/ghidra/` (à produire) |
 | **WP-04** | ✅ **Ancrage des classes RTTI → méthodes** : 422 classes, 427 vtables, **13 760 méthodes**, 45 chaînes attribuées. Outil maison (`D-019`, `D-020`) | pefile | `analysis/idman/10-vtables-et-classes.md` + `classes.json` |
-| **WP-05** | **Moteur de téléchargement** : cycle de vie d'un `CDownload`, machine à états, gestion des `CFilePart`, reprise, multi-connexions, limites | Ghidra, REA `function` | `analysis/idman/11-spec-moteur.md` |
+| **WP-05** | 🟡 **Moteur de téléchargement** — cadrage corrigé : `CDownload` est un **dialogue de suivi**, le moteur est `SessionManager` + `Session`/`Connection` + `ChunksList` (annexe 14 §2). v0.1 : architecture en anneaux, modèle de morceaux (12 champs), persistance, rollback par troncature, anti-corruption, multi-connexion progressive, HTTP/FTP. Restent : énumération des états (A-12), seuils (A-13) | capstone, `classes.json`, `symbols.json` | `analysis/idman/14-moteur-de-telechargement.md` (v0.1) |
 | **WP-06** | 🟡 **Grabber** : stockage du projet **résolu** (fichier `.gsd` + miroir registre, annexe 11) (registre `GrabberSts\Projects\%ld\%ld[\ChList]`, valeurs `LocalFileName`/`LocalPath`/`LogFileName`) ; restent exploration, filtres, plan de site | capstone, `classes.json` | `analysis/idman/12-spec-grabber.md` (v0.1) |
-| **WP-07** | **Transports + médias** : HTTP/FTP (en-têtes, redirections, cookies), HLS/DASH (M3U8, SIDX, MP4), RTMP/MMS/TS | Ghidra, marqueurs | `analysis/idman/13-spec-protocoles.md` |
+| **WP-07** | **Transports + médias** : HTTP/FTP (en-têtes, redirections, cookies), HLS/DASH (M3U8, SIDX, MP4), RTMP/MMS/TS | Ghidra, marqueurs | `analysis/idman/15-spec-protocoles.md` |
 
-**État au 2026-10-27** : WP-04 terminé (v1) · WP-03 bloqué · WP-05/WP-06 **débloqués
+**État au 2026-10-27** : WP-04 terminé (v1) · WP-03 bloqué · **WP-05 cadré (v0.1,
+annexe 14)** : la couche moteur est identifiée par les RTTI (`Session` → 4 sessions,
+`Connection` → 4 transports + 2 variantes proxy) et par 323 noms auto-documentés
+(`tools/idman_symbols.py`) ; les décisions D-024→D-026 fixent le stockage d'état, la
+vérification anti-corruption et l'absence d'assemblage. WP-06 **débloqué
 partiellement** : on sait *quelle* classe porte le grabber (`CSpiderSettings`,
 `CGrabberFiltersDlg`, `CSpiderSelectSaveToDlg`) et les helpers de persistance du projet
 (4 fonctions non virtuelles), mais pas encore *ce que fait* leur code (pas de
 décompilateur).
+
+**Prochaine marche pour WP-05** : A-12 (états de `Connection`) puis A-13 (seuils), à
+partir des chaînes `"Change chunk size to %ld"`, `"Connection restarted because of
+timeout"`, `"Select failed, err code = %d"`.
 
 **Porte G1** : pour chaque domaine P0, un document de spécification avec
 (a) entrées/sorties, (b) machine à états, (c) structures de données, (d) cas d'erreur,

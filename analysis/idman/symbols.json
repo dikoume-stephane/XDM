@@ -1,0 +1,2439 @@
+{
+ "artifact": {
+  "path": "cible/IDMan.exe",
+  "sha256": "5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9"
+ },
+ "by_domain": {
+  "grabber": {},
+  "http": {
+   "CContentTypeChecker": 3,
+   "HTTPConnection": 24
+  },
+  "moteur": {
+   "CDownload": 9,
+   "CSessionsArray": 1,
+   "ChunksList": 13
+  },
+  "transport": {
+   "Connection": 8,
+   "FTPConnection": 58,
+   "FTPSession": 11,
+   "HTTPConnection": 24,
+   "HTTPSession": 5,
+   "ProxyConnection": 3,
+   "Session": 7
+  }
+ },
+ "classes": {
+  "CAboutDlg": [
+   "OnCtlColor",
+   "OnEmail",
+   "OnInitDialog",
+   "OnSite"
+  ],
+  "CAddUrlDlg": [
+   "CAddUrlDlg",
+   "OnCancel",
+   "OnClose",
+   "OnEditchangeUrl",
+   "OnInitDialog",
+   "OnVerify"
+  ],
+  "CBIr": [
+   "CheckIEInt",
+   "IntIE"
+  ],
+  "CBrowsersIntegration": [
+   "Save"
+  ],
+  "CBrowsersIntegrator": [
+   "GetMozillaInstallDir",
+   "GetNN6InstallDir",
+   "GetNN7InstallDir"
+  ],
+  "CConfirm": [
+   "Confirm",
+   "OnTimer",
+   "OnYes"
+  ],
+  "CContentTypeChecker": [
+   "Check",
+   "CheckEnd",
+   "CheckHTML"
+  ],
+  "CDApp": [
+   "FR"
+  ],
+  "CDDlg": [
+   "AddGrLinks",
+   "DelGP",
+   "OGr",
+   "OTF1",
+   "OnDelGP",
+   "OnOpGP",
+   "OnRGPFL",
+   "OnReloadLA",
+   "OnResume",
+   "OnSchGr"
+  ],
+  "CDUP": [
+   "DDU",
+   "iCntd"
+  ],
+  "CDUPrgr": [
+   "RDF",
+   "onCS",
+   "onCl",
+   "onDE",
+   "onID",
+   "onRN",
+   "onT"
+  ],
+  "CDlDlg": [
+   "OT"
+  ],
+  "CDllg": [
+   "ODst"
+  ],
+  "CDnlDlg": [
+   "OnRdnld"
+  ],
+  "CDownload": [
+   "AddDownload",
+   "CDownload",
+   "OnClose",
+   "OnCommand",
+   "OnDownloadLater",
+   "OnInitDialog",
+   "OnStart",
+   "OnTimer",
+   "OnZipPreview"
+  ],
+  "CDownloadComponents": [
+   "OnTimer",
+   "StartDownload"
+  ],
+  "CDownloaderApp": [
+   "InitInstance"
+  ],
+  "CDownloaderDlg": [
+   "CDownloaderDlg",
+   "CreateTreePopupMenu",
+   "DrawGhost",
+   "ExportListToFile",
+   "GetStartDlgVisibility",
+   "ImportListFromFile",
+   "NeedCheckLngFile",
+   "OnAbout",
+   "OnChangeCbChain",
+   "OnColumnclickUrlList",
+   "OnExit",
+   "OnItemchangedUrllist",
+   "OnLButtonDown",
+   "OnLButtonUp",
+   "OnMouseMove",
+   "OnNotifyIcon",
+   "OnOptions",
+   "OnPaint",
+   "OnPauseAll",
+   "OnProperties",
+   "OnRclickUrllist",
+   "OnRestore",
+   "OnResumeAll",
+   "OnSetCursor",
+   "OnSize",
+   "OnStop",
+   "OnStopAll",
+   "OnTimer",
+   "OnTutorials",
+   "ProcessOnNewUrl",
+   "ProcessOnNewUrl2",
+   "SendRegistrationInfo",
+   "ShowInitialDownloadDlg",
+   "~CDownloaderDlg"
+  ],
+  "CDropTargetPicture": [
+   "Initialize"
+  ],
+  "CDwnlDlg": [
+   "CheckQueueState2",
+   "OnDlAC",
+   "OnDrawClipboard",
+   "OnOpF",
+   "SGALFIED",
+   "SetBtnTxtVs",
+   "SetTxtOnBtn"
+  ],
+  "CFormatParsing": [
+   "FillZipFormatStruct",
+   "GetFSize",
+   "GetLastMp3",
+   "Initialize",
+   "PreCheckMpg"
+  ],
+  "CIDMFoldersTree": [
+   "CheckQAU",
+   "DeleteItem",
+   "DeleteQAU",
+   "Save",
+   "SetVisiblity"
+  ],
+  "CIDMLC": [
+   "DSA"
+  ],
+  "CIDMListCtrl": [
+   "AddItem",
+   "DrawSortArrow",
+   "Initialize",
+   "OnBegindrag",
+   "OnCreate"
+  ],
+  "CIDMMainDlgTree": [
+   "OnEditItem"
+  ],
+  "CIDMTreeCtrlDropTarget": [
+   "OnDragEnter",
+   "OnDragOver",
+   "OnDrop"
+  ],
+  "CMp3Format": [
+   "GetID3Tag"
+  ],
+  "COleListCtrlDropTarget": [
+   "OnDragEnter",
+   "OnDrop"
+  ],
+  "COptGeneral": [
+   "OnInit"
+  ],
+  "COptGeneralOld": [
+   "OnInit"
+  ],
+  "COptProxy": [
+   "OnTTNNeedText"
+  ],
+  "CRegistrationDlg": [
+   "DoDataExchange",
+   "OnHowLicense",
+   "OnInitDialog",
+   "OnOkreg"
+  ],
+  "CRgDlg": [
+   "OnOk"
+  ],
+  "CSA": [
+   "GI"
+  ],
+  "CSessionsArray": [
+   "CheckLocalFileName"
+  ],
+  "CShI": [
+   "Load"
+  ],
+  "CUrlExporter": [
+   "CUrlExporter",
+   "ReadFromIEFFile",
+   "ReadFromTextFile",
+   "WriteInELFFile",
+   "WriteInTextFile",
+   "~CUrlExporter"
+  ],
+  "CUrlHistory": [
+   "CUrlHistory",
+   "OnAddUrl",
+   "~CUrlHistory"
+  ],
+  "CUrlHistory2": [
+   "CUrlHistory2"
+  ],
+  "CZipPreviewDlg": [
+   "OnInitDialog"
+  ],
+  "ChL": [
+   "CNI"
+  ],
+  "ChListItem": [
+   "getsk",
+   "savesk"
+  ],
+  "ChLst": [
+   "OnSDID"
+  ],
+  "ChunksList": [
+   "AddAlternative",
+   "AppendFile",
+   "ApplyAlternative",
+   "CheckAlternative",
+   "CreateNewItem",
+   "Erase",
+   "EraseRegSubKey",
+   "FindChunkWithZipCentralDir",
+   "FindMaxFreeChunk",
+   "InitFirst",
+   "InsertFromReg",
+   "JoinFile",
+   "NeedNewConnection"
+  ],
+  "ChunksListItem": [
+   "JoinWithNext",
+   "set_fileName"
+  ],
+  "Connection": [
+   "CheckConnect",
+   "OnChangeBounds",
+   "OnComplete",
+   "ProcessRecv",
+   "ReceiveData",
+   "SelectForRead",
+   "SendConnInfoToDemoWnd",
+   "SetCompleted"
+  ],
+  "DLmts": [
+   "Load"
+  ],
+  "DMEH": [
+   "SEM"
+  ],
+  "DownloaderCmdLine": [
+   "ParseParam"
+  ],
+  "DwnkQ": [
+   "Load"
+  ],
+  "DwnlQ": [
+   "LShI"
+  ],
+  "FTPC": [
+   "CMDTMR",
+   "SMDTM"
+  ],
+  "FTPConnection": [
+   "Accept",
+   "AuditForRestart",
+   "BindSocket",
+   "CheckCWDReply",
+   "CheckConnectReply",
+   "CheckListReply",
+   "CheckOthersReplies",
+   "CheckPasswordReply",
+   "CheckPortReply",
+   "CheckRestReply",
+   "CheckRetrReply",
+   "CheckSizeReply",
+   "CheckTransferEndReply",
+   "CheckTypeReply",
+   "CheckUserReply",
+   "CloseDataConnection",
+   "Disconnect",
+   "FTPConnection",
+   "FindSizeInRetrReply",
+   "GetFileSize",
+   "GetReply",
+   "HandleStatus",
+   "InsInChunksList",
+   "OnNewLastModified",
+   "OnSendError",
+   "OpenDataConnection",
+   "ProcessPasvOK",
+   "ProcessPasvReply",
+   "ProcessReply",
+   "ProcessReplyQueue",
+   "ProcessWaitConn",
+   "ProcessWaitReply",
+   "ProcessWaitSecSeqReply",
+   "ProcessWaitTestSequ",
+   "RecvListData",
+   "Restart",
+   "RollBack",
+   "SendCWD",
+   "SendInAddition",
+   "SendListFile",
+   "SendNoop",
+   "SendPassword",
+   "SendPasv",
+   "SendPort",
+   "SendQuit",
+   "SendRest",
+   "SendRetr",
+   "SendSize",
+   "SendTestSequences",
+   "SendType",
+   "SendUser",
+   "SetCompleted",
+   "StartGetChunk",
+   "StartRetr",
+   "TryConnect",
+   "reset_lastcom_timesDiff",
+   "set_sequence_cpbl",
+   "try_set_pasv_cpbl"
+  ],
+  "FTPSession": [
+   "CreateOptionalConnections",
+   "GetSlowestConnection",
+   "InitSession",
+   "ReceiveData",
+   "getFile",
+   "isPrecheckEnd",
+   "set_fds",
+   "set_pass_need",
+   "set_pasv_cpbl",
+   "set_rest_cpbl",
+   "set_sequence_cpbl_ok"
+  ],
+  "GALFIED": [
+   "OnSODC"
+  ],
+  "GrSh": [
+   "CFN",
+   "Lk"
+  ],
+  "GrbFsDlg": [
+   "OnAddF"
+  ],
+  "HTTPC": [
+   "AFR"
+  ],
+  "HTTPConnection": [
+   "Disconnect",
+   "GetInfo",
+   "GetNextReplyLine",
+   "GetReplyIntoStorage",
+   "GetRetrRangeReply",
+   "GetState",
+   "GetTempEndPos",
+   "HandleStatus",
+   "HttpsProxyConnect",
+   "MNSP",
+   "OnNewLastModified",
+   "ProcessHeader",
+   "ProcessSetCookieHeader",
+   "ProcessState",
+   "RecvAllHeaders",
+   "RecvHTTPSData",
+   "RecvState",
+   "SendGet",
+   "SendHTTPSGet",
+   "Set_szURL",
+   "SkipAllHeaders",
+   "SkipAllHeaders2",
+   "base64_encode",
+   "setNewLocation"
+  ],
+  "HTTPSession": [
+   "GetSlowestConnection",
+   "InitSession",
+   "ReceiveData",
+   "SendAllConnInfo",
+   "TryStartNewOptionalConnections"
+  ],
+  "MMSCn": [
+   "HndlSt"
+  ],
+  "ProxyConn": [
+   "SBPAS"
+  ],
+  "ProxyConnection": [
+   "Connect",
+   "SendGet",
+   "Set_szURL"
+  ],
+  "QArr": [
+   "CFN",
+   "Lk"
+  ],
+  "RTMPS": [
+   "AFR",
+   "CWADTFM"
+  ],
+  "ReplyQueue": [
+   "Add",
+   "Erase",
+   "GetNext"
+  ],
+  "SGPr": [
+   "CFN",
+   "Load"
+  ],
+  "Session": [
+   "AddDescription",
+   "CalcSpeed",
+   "CheckFormat",
+   "ResetDownlInCycle",
+   "SaveDownloadedInRegistry",
+   "SetDownlID",
+   "set_fileSize"
+  ],
+  "SessionManager": [
+   "CancelDownload",
+   "ConvertSizeToString",
+   "CoverUpTheTraces",
+   "DeleteFromRegistry",
+   "DoDownload",
+   "GetDefaultlocalName",
+   "LoadUrlFromReg",
+   "ProcessCancelDownload",
+   "SetDescription",
+   "SetLocalName",
+   "SetLogin",
+   "SetStatus",
+   "SetURL"
+  ],
+  "ShGrP": [
+   "Load"
+  ],
+  "URL": [
+   "LoadLocalNamesFromReg",
+   "OpenDMRegSubKey",
+   "SaveToReg",
+   "set_LastModified",
+   "set_MDTM",
+   "set_description",
+   "set_localFileName"
+  ]
+ },
+ "counts": {
+  "classes_named": 71,
+  "messages": 323,
+  "methods_named": 323
+ },
+ "messages": [
+  {
+   "class": "CAboutDlg",
+   "method": "OnCtlColor",
+   "rva": "0x279be0",
+   "text": "CAboutDlg::OnCtlColor()"
+  },
+  {
+   "class": "CAboutDlg",
+   "method": "OnSite",
+   "rva": "0x279d74",
+   "text": "CAboutDlg::OnSite()"
+  },
+  {
+   "class": "CAboutDlg",
+   "method": "OnEmail",
+   "rva": "0x279da4",
+   "text": "CAboutDlg::OnEmail()"
+  },
+  {
+   "class": "CAboutDlg",
+   "method": "OnInitDialog",
+   "rva": "0x279dc4",
+   "text": "CAboutDlg::OnInitDialog()"
+  },
+  {
+   "class": "CAddUrlDlg",
+   "method": "OnClose",
+   "rva": "0x27a9d1",
+   "text": "Unknown error during CAddUrlDlg::OnClose()\n"
+  },
+  {
+   "class": "CAddUrlDlg",
+   "method": "OnCancel",
+   "rva": "0x27a9fd",
+   "text": "Unknown error during CAddUrlDlg::OnCancel()\n"
+  },
+  {
+   "class": "CAddUrlDlg",
+   "method": "OnVerify",
+   "rva": "0x27aa2d",
+   "text": "Unknown error during CAddUrlDlg::OnVerify()\n"
+  },
+  {
+   "class": "CAddUrlDlg",
+   "method": "CAddUrlDlg",
+   "rva": "0x27aa5d",
+   "text": "Unknown error during CAddUrlDlg::CAddUrlDlg()\n"
+  },
+  {
+   "class": "CAddUrlDlg",
+   "method": "OnEditchangeUrl",
+   "rva": "0x27ac05",
+   "text": "Unknown error during CAddUrlDlg::OnEditchangeUrl()\n"
+  },
+  {
+   "class": "CAddUrlDlg",
+   "method": "OnInitDialog",
+   "rva": "0x27ac91",
+   "text": "Unknown error during CAddUrlDlg::OnInitDialog()\n"
+  },
+  {
+   "class": "CBrowsersIntegration",
+   "method": "Save",
+   "rva": "0x27c0ac",
+   "text": "Cannot open(/create) registry subkey during CBrowsersIntegration::Save().\r\n"
+  },
+  {
+   "class": "CBIr",
+   "method": "CheckIEInt",
+   "rva": "0x27c791",
+   "text": "Unkerrin CBIr::CheckIEInt()\n"
+  },
+  {
+   "class": "CBrowsersIntegrator",
+   "method": "GetNN6InstallDir",
+   "rva": "0x27d281",
+   "text": "Unknown error during CBrowsersIntegrator::GetNN6InstallDir()\n"
+  },
+  {
+   "class": "CBrowsersIntegrator",
+   "method": "GetMozillaInstallDir",
+   "rva": "0x27d3cd",
+   "text": "Unknown error during CBrowsersIntegrator::GetMozillaInstallDir()\n"
+  },
+  {
+   "class": "CBrowsersIntegrator",
+   "method": "GetNN7InstallDir",
+   "rva": "0x27d431",
+   "text": "Unknown error during CBrowsersIntegrator::GetNN7InstallDir()\n"
+  },
+  {
+   "class": "CBIr",
+   "method": "IntIE",
+   "rva": "0x27db04",
+   "text": "Err %ld CBIr::IntIE, s7\n"
+  },
+  {
+   "class": "CConfirm",
+   "method": "Confirm",
+   "rva": "0x27fee9",
+   "text": "Unknown error during CConfirm::Confirm()\n"
+  },
+  {
+   "class": "CConfirm",
+   "method": "OnYes",
+   "rva": "0x280081",
+   "text": "Unknown error during CConfirm::OnYes()\n"
+  },
+  {
+   "class": "CConfirm",
+   "method": "OnTimer",
+   "rva": "0x28014d",
+   "text": "Unknown error during CConfirm::OnTimer()\n"
+  },
+  {
+   "class": "CDUP",
+   "method": "iCntd",
+   "rva": "0x281cc3",
+   "text": "Unknerr in CDUP::iCntd\r\n"
+  },
+  {
+   "class": "CDUP",
+   "method": "DDU",
+   "rva": "0x281d25",
+   "text": "Unknown error during CDUP::DDU()\r\n"
+  },
+  {
+   "class": "CDUPrgr",
+   "method": "onCl",
+   "rva": "0x282048",
+   "text": "CDUPrgr::onCl() failed\r\n"
+  },
+  {
+   "class": "CDUPrgr",
+   "method": "onDE",
+   "rva": "0x282064",
+   "text": "CDUPrgr::onDE() failed\r\n"
+  },
+  {
+   "class": "CDUPrgr",
+   "method": "onCS",
+   "rva": "0x28208c",
+   "text": "CDUPrgr::onCS() failed\r\n"
+  },
+  {
+   "class": "CDUPrgr",
+   "method": "RDF",
+   "rva": "0x2820a8",
+   "text": "CDUPrgr::RDF() failed\r\n"
+  },
+  {
+   "class": "CDUPrgr",
+   "method": "onT",
+   "rva": "0x2820c0",
+   "text": "CDUPrgr::onT() failed\r\n"
+  },
+  {
+   "class": "CDUPrgr",
+   "method": "onRN",
+   "rva": "0x2820d8",
+   "text": "CDUPrgr::onRN() failed\r\n"
+  },
+  {
+   "class": "CDUPrgr",
+   "method": "onID",
+   "rva": "0x282148",
+   "text": "CDUPrgr::onID() failed\r\n"
+  },
+  {
+   "class": "CDownload",
+   "method": "OnClose",
+   "rva": "0x2823a9",
+   "text": "Unknown error during CDownload::OnClose(), s2\n"
+  },
+  {
+   "class": "CDownload",
+   "method": "OnTimer",
+   "rva": "0x282405",
+   "text": "Unknown error during CDownload::OnTimer()\n"
+  },
+  {
+   "class": "CDownload",
+   "method": "OnZipPreview",
+   "rva": "0x28247d",
+   "text": "Unknown error during CDownload::OnZipPreview()\n"
+  },
+  {
+   "class": "CDownload",
+   "method": "CDownload",
+   "rva": "0x2824a0",
+   "text": "CDownload::CDownload()"
+  },
+  {
+   "class": "CDownload",
+   "method": "OnInitDialog",
+   "rva": "0x282b05",
+   "text": "Unknown error during CDownload::OnInitDialog()\n"
+  },
+  {
+   "class": "CDownload",
+   "method": "AddDownload",
+   "rva": "0x282b55",
+   "text": "Unknown error during CDownload::AddDownload()\n"
+  },
+  {
+   "class": "CDownload",
+   "method": "OnStart",
+   "rva": "0x282b99",
+   "text": "Unknown error during CDownload::OnStart()\n"
+  },
+  {
+   "class": "CDownload",
+   "method": "OnDownloadLater",
+   "rva": "0x282bc5",
+   "text": "Unknown error during CDownload::OnDownloadLater()\n"
+  },
+  {
+   "class": "CDownload",
+   "method": "OnCommand",
+   "rva": "0x282be4",
+   "text": "CDownload::OnCommand(wParam = %ld)\n"
+  },
+  {
+   "class": "CDownloadComponents",
+   "method": "StartDownload",
+   "rva": "0x28315d",
+   "text": "Unknown error during CDownloadComponents::StartDownload()\n"
+  },
+  {
+   "class": "CDownloadComponents",
+   "method": "OnTimer",
+   "rva": "0x283199",
+   "text": "Unknown error during CDownloadComponents::OnTimer()\n"
+  },
+  {
+   "class": "CDApp",
+   "method": "FR",
+   "rva": "0x2843c6",
+   "text": "Unkerr in CDApp::FR 2638\n"
+  },
+  {
+   "class": "CDownloaderApp",
+   "method": "InitInstance",
+   "rva": "0x28485d",
+   "text": "Unknown error during CDownloaderApp::InitInstance()\n"
+  },
+  {
+   "class": "DownloaderCmdLine",
+   "method": "ParseParam",
+   "rva": "0x284c08",
+   "text": "DownloaderCmdLine::ParseParam"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnRestore",
+   "rva": "0x2851bd",
+   "text": "Unknown error during CDownloaderDlg::OnRestore()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnNotifyIcon",
+   "rva": "0x285219",
+   "text": "Unknown error during CDownloaderDlg::OnNotifyIcon()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnRclickUrllist",
+   "rva": "0x285251",
+   "text": "Unknown error during CDownloaderDlg::OnRclickUrllist()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnChangeCbChain",
+   "rva": "0x285289",
+   "text": "Unknown error during CDownloaderDlg::OnChangeCbChain()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "SendRegistrationInfo",
+   "rva": "0x2852e1",
+   "text": "Unknown error during CDownloaderDlg::SendRegistrationInfo()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnTutorials",
+   "rva": "0x28539d",
+   "text": "Unknown error during CDownloaderDlg::OnTutorials()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "GetStartDlgVisibility",
+   "rva": "0x285401",
+   "text": "Unknown error during CDownloaderDlg::GetStartDlgVisibility()\r\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "DrawGhost",
+   "rva": "0x285451",
+   "text": "Unknown error during CDownloaderDlg::DrawGhost()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "NeedCheckLngFile",
+   "rva": "0x285485",
+   "text": "Unknown error during CDownloaderDlg::NeedCheckLngFile()\n"
+  },
+  {
+   "class": "CDDlg",
+   "method": "OnRGPFL",
+   "rva": "0x2855bd",
+   "text": "Unkerrin CDDlg::OnRGPFL\n"
+  },
+  {
+   "class": "CDDlg",
+   "method": "OnReloadLA",
+   "rva": "0x285647",
+   "text": "Unk err in CDDlg::OnReloadLA\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnPaint",
+   "rva": "0x285821",
+   "text": "Unknown error during CDownloaderDlg::OnPaint()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnOptions",
+   "rva": "0x285851",
+   "text": "Unknown error during CDownloaderDlg::OnOptions()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnResumeAll",
+   "rva": "0x285885",
+   "text": "Unknown error during CDownloaderDlg::OnResumeAll()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnAbout",
+   "rva": "0x2858b9",
+   "text": "Unknown error during CDownloaderDlg::OnAbout()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnLButtonUp",
+   "rva": "0x2858fd",
+   "text": "Unknown error during CDownloaderDlg::OnLButtonUp()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnLButtonDown",
+   "rva": "0x285931",
+   "text": "Unknown error during CDownloaderDlg::OnLButtonDown(), step1\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnSetCursor",
+   "rva": "0x28597d",
+   "text": "Unknown error during CDownloaderDlg::OnSetCursor()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnMouseMove",
+   "rva": "0x2859b1",
+   "text": "Unknown error during CDownloaderDlg::OnMouseMove()\n"
+  },
+  {
+   "class": "CDwnlDlg",
+   "method": "SetBtnTxtVs",
+   "rva": "0x2859db",
+   "text": "Unk err in CDwnlDlg::SetBtnTxtVs\n"
+  },
+  {
+   "class": "CDwnlDlg",
+   "method": "SetTxtOnBtn",
+   "rva": "0x2859ff",
+   "text": "Unk err in CDwnlDlg::SetTxtOnBtn\n"
+  },
+  {
+   "class": "CDnlDlg",
+   "method": "OnRdnld",
+   "rva": "0x285a23",
+   "text": "Unk err in CDnlDlg::OnRdnld()\n"
+  },
+  {
+   "class": "CDDlg",
+   "method": "OTF1",
+   "rva": "0x285a63",
+   "text": "Unk err in CDDlg::OTF1\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnColumnclickUrlList",
+   "rva": "0x285a85",
+   "text": "Unknown error during CDownloaderDlg::OnColumnclickUrlList()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "CreateTreePopupMenu",
+   "rva": "0x285ac5",
+   "text": "Unknown error during CDownloaderDlg::CreateTreePopupMenu()\r\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "CDownloaderDlg",
+   "rva": "0x285b15",
+   "text": "Unknown error during CDownloaderDlg::CDownloaderDlg()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "~CDownloaderDlg",
+   "rva": "0x285ccd",
+   "text": "Unknown error during CDownloaderDlg::~CDownloaderDlg()\n"
+  },
+  {
+   "class": "CDDlg",
+   "method": "OnResume",
+   "rva": "0x285cfb",
+   "text": "Unk err in CDDlg::OnResume()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnItemchangedUrllist",
+   "rva": "0x285d25",
+   "text": "Unknown error during CDownloaderDlg::OnItemchangedUrllist()\n"
+  },
+  {
+   "class": "CDDlg",
+   "method": "OnSchGr",
+   "rva": "0x285d79",
+   "text": "Unkerrin CDDlg::OnSchGr\n"
+  },
+  {
+   "class": "CDDlg",
+   "method": "DelGP",
+   "rva": "0x285d95",
+   "text": "Unkerrin CDDlg::DelGP\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnProperties",
+   "rva": "0x285eb9",
+   "text": "Unknown error during CDownloaderDlg::OnProperties()\n"
+  },
+  {
+   "class": "CDwnlDlg",
+   "method": "CheckQueueState2",
+   "rva": "0x285ee6",
+   "text": "Unkerr in CDwnlDlg::CheckQueueState2\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnStop",
+   "rva": "0x28624d",
+   "text": "Unknown error during CDownloaderDlg::OnStop()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnSize",
+   "rva": "0x2862b5",
+   "text": "Unknown error during CDownloaderDlg::OnSize()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnPauseAll",
+   "rva": "0x2862e5",
+   "text": "Unknown error during CDownloaderDlg::OnPauseAll()\n"
+  },
+  {
+   "class": "CDwnlDlg",
+   "method": "OnDlAC",
+   "rva": "0x286329",
+   "text": "uein CDwnlDlg::OnDlAC\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "ExportListToFile",
+   "rva": "0x2863c9",
+   "text": "Unknown error during CDownloaderDlg::ExportListToFile()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "ImportListFromFile",
+   "rva": "0x286481",
+   "text": "Unknown error during CDownloaderDlg::ImportListFromFile()\n"
+  },
+  {
+   "class": "CDwnlDlg",
+   "method": "SGALFIED",
+   "rva": "0x2864d3",
+   "text": "Unk err in CDwnlDlg::SGALFIED()\r\n"
+  },
+  {
+   "class": "CDwnlDlg",
+   "method": "OnOpF",
+   "rva": "0x2864f7",
+   "text": "Unk err in CDwnlDlg::OnOpF\n"
+  },
+  {
+   "class": "CDDlg",
+   "method": "OGr",
+   "rva": "0x286523",
+   "text": "Unk err in CDDlg::OGr\n"
+  },
+  {
+   "class": "CDDlg",
+   "method": "AddGrLinks",
+   "rva": "0x286539",
+   "text": "Unkerrin CDDlg::AddGrLinks\n"
+  },
+  {
+   "class": "CDDlg",
+   "method": "OnOpGP",
+   "rva": "0x2865a1",
+   "text": "Unkerrin CDDlg::OnOpGP\n"
+  },
+  {
+   "class": "CDDlg",
+   "method": "OnDelGP",
+   "rva": "0x2865b9",
+   "text": "Unkerrin CDDlg::OnDelGP\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "ShowInitialDownloadDlg",
+   "rva": "0x286729",
+   "text": "Unknown error during CDownloaderDlg::ShowInitialDownloadDlg()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "ProcessOnNewUrl2",
+   "rva": "0x286791",
+   "text": "Unknown error during CDownloaderDlg::ProcessOnNewUrl2()\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnStopAll",
+   "rva": "0x2869e9",
+   "text": "Unknown error during CDownloaderDlg::OnStopAll()\n"
+  },
+  {
+   "class": "CDwnlDlg",
+   "method": "OnDrawClipboard",
+   "rva": "0x286a32",
+   "text": "Unkerr in CDwnlDlg::OnDrawClipboard\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnTimer",
+   "rva": "0x286a65",
+   "text": "Unknown error during CDownloaderDlg::OnTimer(nIDEvent = QUEUE_TIMER)\n"
+  },
+  {
+   "class": "CDlDlg",
+   "method": "OT",
+   "rva": "0x286e57",
+   "text": "Unk err in CDlDlg::OT(ev=DELETESPIDERDLG_TIMER)\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "OnExit",
+   "rva": "0x286ee9",
+   "text": "Unknown error during CDownloaderDlg::OnExit()\n"
+  },
+  {
+   "class": "CDllg",
+   "method": "ODst",
+   "rva": "0x286f0f",
+   "text": "Unk err in CDllg::ODst, del spdlg\n"
+  },
+  {
+   "class": "CDownloaderDlg",
+   "method": "ProcessOnNewUrl",
+   "rva": "0x2873e9",
+   "text": "Unknown error during CDownloaderDlg::ProcessOnNewUrl()\n"
+  },
+  {
+   "class": "DLmts",
+   "method": "Load",
+   "rva": "0x2885ac",
+   "text": "DLmts::Load exc 80\n"
+  },
+  {
+   "class": "DwnlQ",
+   "method": "LShI",
+   "rva": "0x288920",
+   "text": "DwnlQ::LShI exc 507\n"
+  },
+  {
+   "class": "DwnkQ",
+   "method": "Load",
+   "rva": "0x288aac",
+   "text": "DwnkQ::Load exc 114\n"
+  },
+  {
+   "class": "CSA",
+   "method": "GI",
+   "rva": "0x288aeb",
+   "text": "Unkerr CSA::GI 278\n"
+  },
+  {
+   "class": "CSessionsArray",
+   "method": "CheckLocalFileName",
+   "rva": "0x288b69",
+   "text": "Unknown error during CSessionsArray::CheckLocalFileName()\n"
+  },
+  {
+   "class": "CDropTargetPicture",
+   "method": "Initialize",
+   "rva": "0x28946d",
+   "text": "Unknown error during CDropTargetPicture::Initialize()\n"
+  },
+  {
+   "class": "GALFIED",
+   "method": "OnSODC",
+   "rva": "0x28c013",
+   "text": "Unk err in GALFIED::OnSODC\n"
+  },
+  {
+   "class": "GrbFsDlg",
+   "method": "OnAddF",
+   "rva": "0x28c800",
+   "text": "GrbFsDlg::OnAddF:RegQVE failed, err=%ld\n"
+  },
+  {
+   "class": "GrSh",
+   "method": "CFN",
+   "rva": "0x28c958",
+   "text": "GrSh::CFN exc 111\n"
+  },
+  {
+   "class": "GrSh",
+   "method": "Lk",
+   "rva": "0x28c980",
+   "text": "GrSh::Lk exc 164\n"
+  },
+  {
+   "class": "CIDMFoldersTree",
+   "method": "SetVisiblity",
+   "rva": "0x28cc19",
+   "text": "Cannot open(/create) registry key during CIDMFoldersTree::SetVisiblity().\r\n"
+  },
+  {
+   "class": "CIDMFoldersTree",
+   "method": "CheckQAU",
+   "rva": "0x28cc99",
+   "text": "Cannot open(/create) registry key during CIDMFoldersTree::CheckQAU().\r\n"
+  },
+  {
+   "class": "CIDMFoldersTree",
+   "method": "DeleteQAU",
+   "rva": "0x28cce1",
+   "text": "Cannot open(/create) registry key during CIDMFoldersTree::DeleteQAU().\r\n"
+  },
+  {
+   "class": "CIDMFoldersTree",
+   "method": "Save",
+   "rva": "0x28cdd4",
+   "text": "Cannot open(/create) registry subkey during CIDMFoldersTree::Save().\r\n"
+  },
+  {
+   "class": "CIDMFoldersTree",
+   "method": "DeleteItem",
+   "rva": "0x28ce71",
+   "text": "Cannot open(/create) registry key during CIDMFoldersTree::DeleteItem().\r\n"
+  },
+  {
+   "class": "CIDMLC",
+   "method": "DSA",
+   "rva": "0x28d25f",
+   "text": "Unk err in CIDMLC::DSA"
+  },
+  {
+   "class": "CIDMListCtrl",
+   "method": "Initialize",
+   "rva": "0x28d345",
+   "text": "Unknown error during CIDMListCtrl::Initialize()\n"
+  },
+  {
+   "class": "CIDMListCtrl",
+   "method": "OnCreate",
+   "rva": "0x28d379",
+   "text": "Unknown error during CIDMListCtrl::OnCreate()\n"
+  },
+  {
+   "class": "CIDMListCtrl",
+   "method": "DrawSortArrow",
+   "rva": "0x28d3a9",
+   "text": "Unknown error during CIDMListCtrl::DrawSortArrow()"
+  },
+  {
+   "class": "CIDMListCtrl",
+   "method": "OnBegindrag",
+   "rva": "0x28d3ed",
+   "text": "Unknown error during CIDMListCtrl::OnBegindrag()\n"
+  },
+  {
+   "class": "CIDMListCtrl",
+   "method": "AddItem",
+   "rva": "0x28d4ed",
+   "text": "Unknown error during CIDMListCtrl::AddItem()\n"
+  },
+  {
+   "class": "CIDMMainDlgTree",
+   "method": "OnEditItem",
+   "rva": "0x28db19",
+   "text": "Cannot open(/create) registry key during CIDMMainDlgTree::OnEditItem().\r\n"
+  },
+  {
+   "class": "CIDMTreeCtrlDropTarget",
+   "method": "OnDragEnter",
+   "rva": "0x2a11fd",
+   "text": "Unknown error during CIDMTreeCtrlDropTarget::OnDragEnter()\n"
+  },
+  {
+   "class": "CIDMTreeCtrlDropTarget",
+   "method": "OnDragOver",
+   "rva": "0x2a1239",
+   "text": "Unknown error during CIDMTreeCtrlDropTarget::OnDragOver()\n"
+  },
+  {
+   "class": "CIDMTreeCtrlDropTarget",
+   "method": "OnDrop",
+   "rva": "0x2a1275",
+   "text": "Unknown error during CIDMTreeCtrlDropTarget::OnDrop()\n"
+  },
+  {
+   "class": "COleListCtrlDropTarget",
+   "method": "OnDragEnter",
+   "rva": "0x2a2d2d",
+   "text": "Unknown error during COleListCtrlDropTarget::OnDragEnter()\n"
+  },
+  {
+   "class": "COleListCtrlDropTarget",
+   "method": "OnDrop",
+   "rva": "0x2a2d69",
+   "text": "Unknown error during COleListCtrlDropTarget::OnDrop()\n"
+  },
+  {
+   "class": "COptGeneral",
+   "method": "OnInit",
+   "rva": "0x2a3a9c",
+   "text": "COptGeneral::OnInit\n"
+  },
+  {
+   "class": "COptGeneralOld",
+   "method": "OnInit",
+   "rva": "0x2a3dcc",
+   "text": "COptGeneralOld::OnInit\n"
+  },
+  {
+   "class": "COptProxy",
+   "method": "OnTTNNeedText",
+   "rva": "0x2a3fa4",
+   "text": "COptProxy::OnTTNNeedText()"
+  },
+  {
+   "class": "QArr",
+   "method": "CFN",
+   "rva": "0x2a5a08",
+   "text": "QArr::CFN exc 125\n"
+  },
+  {
+   "class": "QArr",
+   "method": "Lk",
+   "rva": "0x2a5a2c",
+   "text": "QArr::Lk exc 198\n"
+  },
+  {
+   "class": "CRegistrationDlg",
+   "method": "DoDataExchange",
+   "rva": "0x2a6884",
+   "text": "CRegistrationDlg::DoDataExchange(CDataExchange* pDX)"
+  },
+  {
+   "class": "CRegistrationDlg",
+   "method": "OnInitDialog",
+   "rva": "0x2a6a44",
+   "text": "CRegistrationDlg::OnInitDialog()"
+  },
+  {
+   "class": "CRegistrationDlg",
+   "method": "OnOkreg",
+   "rva": "0x2a6a88",
+   "text": "CRegistrationDlg::OnOkreg()"
+  },
+  {
+   "class": "CRgDlg",
+   "method": "OnOk",
+   "rva": "0x2a6b98",
+   "text": "Reg err4 in CRgDlg::OnOk, err = %ld"
+  },
+  {
+   "class": "CRegistrationDlg",
+   "method": "OnHowLicense",
+   "rva": "0x2a6c1c",
+   "text": "CRegistrationDlg::OnHowLicense()"
+  },
+  {
+   "class": "SGPr",
+   "method": "CFN",
+   "rva": "0x2a6d94",
+   "text": "SGPr::CFN exc 248\n"
+  },
+  {
+   "class": "SGPr",
+   "method": "Load",
+   "rva": "0x2a6de8",
+   "text": "SGPr::Load exc 181\n"
+  },
+  {
+   "class": "CShI",
+   "method": "Load",
+   "rva": "0x2a732c",
+   "text": "CShI::Load exc 208\n"
+  },
+  {
+   "class": "ShGrP",
+   "method": "Load",
+   "rva": "0x2a737c",
+   "text": "ShGrP::Load exc 113\n"
+  },
+  {
+   "class": "CUrlExporter",
+   "method": "~CUrlExporter",
+   "rva": "0x2abc21",
+   "text": "Unknown error during CUrlExporter::~CUrlExporter()\n"
+  },
+  {
+   "class": "CUrlExporter",
+   "method": "WriteInTextFile",
+   "rva": "0x2abc5d",
+   "text": "Unknown error during CUrlExporter::WriteInTextFile()\n"
+  },
+  {
+   "class": "CUrlExporter",
+   "method": "CUrlExporter",
+   "rva": "0x2abc95",
+   "text": "Unknown error during CUrlExporter::CUrlExporter()\n"
+  },
+  {
+   "class": "CUrlExporter",
+   "method": "ReadFromTextFile",
+   "rva": "0x2abd05",
+   "text": "Unknown error during CUrlExporter::ReadFromTextFile()\n"
+  },
+  {
+   "class": "CUrlExporter",
+   "method": "WriteInELFFile",
+   "rva": "0x2abd4d",
+   "text": "Unknown error during CUrlExporter::WriteInELFFile()\n"
+  },
+  {
+   "class": "CUrlExporter",
+   "method": "ReadFromIEFFile",
+   "rva": "0x2abdc1",
+   "text": "Unknown error during CUrlExporter::ReadFromIEFFile()\n"
+  },
+  {
+   "class": "CUrlHistory",
+   "method": "~CUrlHistory",
+   "rva": "0x2ac049",
+   "text": "Unknown error during CUrlHistory::~CUrlHistory()\n"
+  },
+  {
+   "class": "CUrlHistory",
+   "method": "OnAddUrl",
+   "rva": "0x2ac085",
+   "text": "Unknown error during CUrlHistory::OnAddUrl()\n"
+  },
+  {
+   "class": "CUrlHistory",
+   "method": "CUrlHistory",
+   "rva": "0x2ac0b5",
+   "text": "Unknown error during CUrlHistory::CUrlHistory()\n"
+  },
+  {
+   "class": "CUrlHistory2",
+   "method": "CUrlHistory2",
+   "rva": "0x2ac133",
+   "text": "Unk err in CUrlHistory2::CUrlHistory2\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "FindChunkWithZipCentralDir",
+   "rva": "0x2ace19",
+   "text": "Unknown error during ChunksList::FindChunkWithZipCentralDir()\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "FindMaxFreeChunk",
+   "rva": "0x2ace75",
+   "text": "Unknown error during ChunksList::FindMaxFreeChunk()\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "EraseRegSubKey",
+   "rva": "0x2acee5",
+   "text": "Unknown error during ChunksList::EraseRegSubKey()\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "NeedNewConnection",
+   "rva": "0x2acf99",
+   "text": "Unknown error during ChunksList::NeedNewConnection()\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "AppendFile",
+   "rva": "0x2ad269",
+   "text": "Unknown error during ChunksList::AppendFile()\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "InsertFromReg",
+   "rva": "0x2ad3a5",
+   "text": "Unknown error during ChunksList::InsertFromReg()\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "ApplyAlternative",
+   "rva": "0x2ad4fd",
+   "text": "Unknown error during ChunksList::ApplyAlternative().\n"
+  },
+  {
+   "class": "ChL",
+   "method": "CNI",
+   "rva": "0x2ad6f6",
+   "text": "Unkerr in ChL::CNI 4654\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "CreateNewItem",
+   "rva": "0x2ad71e",
+   "text": "Set filename error in ChunksList::CreateNewItem()\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "CheckAlternative",
+   "rva": "0x2ad8a9",
+   "text": "Unknown error during ChunksList::CheckAlternative().\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "Erase",
+   "rva": "0x2ad9e1",
+   "text": "Unknown error during ChunksList::Erase()\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "InitFirst",
+   "rva": "0x2ada39",
+   "text": "Unknown error during ChunksList::InitFirst()\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "JoinFile",
+   "rva": "0x2adc91",
+   "text": "Unknown error during ChunksList::JoinFile()\n"
+  },
+  {
+   "class": "ChLst",
+   "method": "OnSDID",
+   "rva": "0x2adf0e",
+   "text": "Unkerr in ChLst::OnSDID 1515\n"
+  },
+  {
+   "class": "ChunksList",
+   "method": "AddAlternative",
+   "rva": "0x2ae471",
+   "text": "Unknown error during ChunksList::AddAlternative()\n"
+  },
+  {
+   "class": "ChunksListItem",
+   "method": "set_fileName",
+   "rva": "0x2ae621",
+   "text": "Unknown error during ChunksListItem::set_fileName().\n"
+  },
+  {
+   "class": "ChListItem",
+   "method": "savesk",
+   "rva": "0x2ae682",
+   "text": "Unkerr in ChListItem::savesk\n"
+  },
+  {
+   "class": "ChListItem",
+   "method": "getsk",
+   "rva": "0x2ae6aa",
+   "text": "Unkerr in ChListItem::getsk\n"
+  },
+  {
+   "class": "ChunksListItem",
+   "method": "JoinWithNext",
+   "rva": "0x2ae6d5",
+   "text": "Unknown error during ChunksListItem::JoinWithNext().\n"
+  },
+  {
+   "class": "Connection",
+   "method": "OnChangeBounds",
+   "rva": "0x2ae7e1",
+   "text": "Unknown error during Connection::OnChangeBounds()\n"
+  },
+  {
+   "class": "Connection",
+   "method": "SelectForRead",
+   "rva": "0x2aed31",
+   "text": "Unknown error during Connection::SelectForRead()\n"
+  },
+  {
+   "class": "Connection",
+   "method": "OnComplete",
+   "rva": "0x2aed91",
+   "text": "Unknown error during Connection::OnComplete()\n"
+  },
+  {
+   "class": "Connection",
+   "method": "SendConnInfoToDemoWnd",
+   "rva": "0x2aedc1",
+   "text": "Unknown error during Connection::SendConnInfoToDemoWnd()\n"
+  },
+  {
+   "class": "Connection",
+   "method": "ProcessRecv",
+   "rva": "0x2aef8d",
+   "text": "Unknown error during Connection::ProcessRecv()\n"
+  },
+  {
+   "class": "Connection",
+   "method": "CheckConnect",
+   "rva": "0x2af031",
+   "text": "Unknown error during Connection::CheckConnect()\n"
+  },
+  {
+   "class": "DMEH",
+   "method": "SEM",
+   "rva": "0x2afb8d",
+   "text": "Unker in DMEH::SEM 175"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "reset_lastcom_timesDiff",
+   "rva": "0x2afcad",
+   "text": "Unknown error during FTPConnection::reset_lastcom_timesDiff().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "set_sequence_cpbl",
+   "rva": "0x2afced",
+   "text": "Unknown error during FTPConnection::set_sequence_cpbl().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "try_set_pasv_cpbl",
+   "rva": "0x2afd29",
+   "text": "Unknown error during FTPConnection::try_set_pasv_cpbl().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "TryConnect",
+   "rva": "0x2afd65",
+   "text": "Unknown error during FTPConnection::TryConnect().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CloseDataConnection",
+   "rva": "0x2afd99",
+   "text": "Unknown error during FTPConnection::CloseDataConnection().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendNoop",
+   "rva": "0x2afdf1",
+   "text": "Unknown error during FTPConnection::SendNoop().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "FindSizeInRetrReply",
+   "rva": "0x2afe49",
+   "text": "Unknown error during FTPConnection::FindSizeInRetrReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "OnNewLastModified",
+   "rva": "0x2afee5",
+   "text": "Error during FTPConnection::OnNewLastModified()\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "GetReply",
+   "rva": "0x2aff21",
+   "text": "Unknown error during FTPConnection::GetReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendQuit",
+   "rva": "0x2aff89",
+   "text": "Unknown error during FTPConnection::SendQuit().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CheckConnectReply",
+   "rva": "0x2affd1",
+   "text": "Unknown error during FTPConnection::CheckConnectReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CheckUserReply",
+   "rva": "0x2b004d",
+   "text": "Unknown error during FTPConnection::CheckUserReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CheckPasswordReply",
+   "rva": "0x2b00ad",
+   "text": "Unknown error during FTPConnection::CheckPasswordReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendPasv",
+   "rva": "0x2b010d",
+   "text": "Unknown error during FTPConnection::SendPasv().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "BindSocket",
+   "rva": "0x2b0155",
+   "text": "Unknown error during FTPConnection::BindSocket().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "Accept",
+   "rva": "0x2b01a5",
+   "text": "Unknown error during FTPConnection::Accept().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendPort",
+   "rva": "0x2b01d5",
+   "text": "Unknown error during FTPConnection::SendPort().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CheckPortReply",
+   "rva": "0x2b0231",
+   "text": "Unknown error during FTPConnection::CheckPortReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CheckOthersReplies",
+   "rva": "0x2b0285",
+   "text": "Unknown error during FTPConnection::CheckOthersReplies().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendType",
+   "rva": "0x2b02f1",
+   "text": "Unknown error during FTPConnection::SendType().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CheckTypeReply",
+   "rva": "0x2b033d",
+   "text": "Unknown error during FTPConnection::CheckTypeReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendRest",
+   "rva": "0x2b0391",
+   "text": "Unknown error during FTPConnection::SendRest().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CheckRestReply",
+   "rva": "0x2b03e1",
+   "text": "Unknown error during FTPConnection::CheckRestReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CheckTransferEndReply",
+   "rva": "0x2b0435",
+   "text": "Unknown error during FTPConnection::CheckTransferEndReply().\n"
+  },
+  {
+   "class": "Connection",
+   "method": "ReceiveData",
+   "rva": "0x2b04d5",
+   "text": "Unknown error in Connection::ReceiveData\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "RollBack",
+   "rva": "0x2b0505",
+   "text": "Unknown error during FTPConnection::RollBack().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "Restart",
+   "rva": "0x2b0539",
+   "text": "Unknown error during FTPConnection::Restart().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "OnSendError",
+   "rva": "0x2b0569",
+   "text": "Unknown error during FTPConnection::OnSendError().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SetCompleted",
+   "rva": "0x2b059d",
+   "text": "Unknown error during FTPConnection::SetCompleted().\n"
+  },
+  {
+   "class": "FTPC",
+   "method": "CMDTMR",
+   "rva": "0x2b06a7",
+   "text": "Unk err in FTPC::CMDTMR\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "Disconnect",
+   "rva": "0x2b06e9",
+   "text": "Unknown error during FTPConnection::Disconnect().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "ProcessPasvReply",
+   "rva": "0x2b0739",
+   "text": "Unknown error during FTPConnection::ProcessPasvReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CheckListReply",
+   "rva": "0x2b07bd",
+   "text": "Unknown error during FTPConnection::CheckListReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "AuditForRestart",
+   "rva": "0x2b0811",
+   "text": "Unknown error during FTPConnection::AuditForRestart().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "FTPConnection",
+   "rva": "0x2b0885",
+   "text": "Unknown error during FTPConnection::FTPConnection() constructor.\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendUser",
+   "rva": "0x2b08f1",
+   "text": "Unknown error during FTPConnection::SendUser().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendPassword",
+   "rva": "0x2b0945",
+   "text": "Unknown error during FTPConnection::SendPassword().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendCWD",
+   "rva": "0x2b09ad",
+   "text": "Unknown error during FTPConnection::SendCWD().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CheckCWDReply",
+   "rva": "0x2b09f5",
+   "text": "Unknown error during FTPConnection::CheckCWDReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendTestSequences",
+   "rva": "0x2b0a5d",
+   "text": "Unknown error during FTPConnection::SendTestSequences().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendRetr",
+   "rva": "0x2b0af5",
+   "text": "Unknown error during FTPConnection::SendRetr().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CheckRetrReply",
+   "rva": "0x2b0b41",
+   "text": "Unknown error during FTPConnection::CheckRetrReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendSize",
+   "rva": "0x2b0be5",
+   "text": "Unknown error during FTPConnection::SendSize().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendListFile",
+   "rva": "0x2b0c31",
+   "text": "Unknown error during FTPConnection::SendListFile().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "CheckSizeReply",
+   "rva": "0x2b0c81",
+   "text": "Unknown error during FTPConnection::CheckSizeReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "RecvListData",
+   "rva": "0x2b0cd5",
+   "text": "Unknown error during FTPConnection::RecvListData().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "ProcessReply",
+   "rva": "0x2b0d75",
+   "text": "Unknown error during FTPConnection::ProcessReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "ProcessReplyQueue",
+   "rva": "0x2b0dad",
+   "text": "Unknown error during FTPConnection::ProcessReplyQueue().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "StartGetChunk",
+   "rva": "0x2b0de9",
+   "text": "Unknown error during FTPConnection::StartGetChunk().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "SendInAddition",
+   "rva": "0x2b0e21",
+   "text": "Unknown error during FTPConnection::SendInAddition().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "InsInChunksList",
+   "rva": "0x2b0e5d",
+   "text": "Unknown error during FTPConnection::InsInChunksList().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "ProcessWaitTestSequ",
+   "rva": "0x2b0e95",
+   "text": "Unknown error during FTPConnection::ProcessWaitTestSequ().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "ProcessWaitSecSeqReply",
+   "rva": "0x2b0f79",
+   "text": "Unknown error during FTPConnection::ProcessWaitSecSeqReply().\n"
+  },
+  {
+   "class": "FTPC",
+   "method": "SMDTM",
+   "rva": "0x2b0faf",
+   "text": "Unk err in FTPC::SMDTM().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "OpenDataConnection",
+   "rva": "0x2b0ffd",
+   "text": "Unknown error during FTPConnection::OpenDataConnection().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "GetFileSize",
+   "rva": "0x2b105d",
+   "text": "Unknown error during FTPConnection::GetFileSize().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "ProcessWaitConn",
+   "rva": "0x2b1091",
+   "text": "Unknown error during FTPConnection::ProcessWaitConn().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "ProcessPasvOK",
+   "rva": "0x2b10c9",
+   "text": "Unknown error during FTPConnection::ProcessPasvOK().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "StartRetr",
+   "rva": "0x2b1105",
+   "text": "Unknown error during FTPConnection::StartRetr().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "ProcessWaitReply",
+   "rva": "0x2b1139",
+   "text": "Unknown error during FTPConnection::ProcessWaitReply().\n"
+  },
+  {
+   "class": "FTPConnection",
+   "method": "HandleStatus",
+   "rva": "0x2b11a5",
+   "text": "Unknown error during FTPConnection::HandleStatus().\n"
+  },
+  {
+   "class": "ProxyConnection",
+   "method": "Connect",
+   "rva": "0x2b122d",
+   "text": "Unknown error during ProxyConnection::Connect()\n"
+  },
+  {
+   "class": "FTPSession",
+   "method": "isPrecheckEnd",
+   "rva": "0x2b12ed",
+   "text": "Unknown error during FTPSession::isPrecheckEnd().\n"
+  },
+  {
+   "class": "FTPSession",
+   "method": "set_sequence_cpbl_ok",
+   "rva": "0x2b1321",
+   "text": "Unknown error during FTPSession::set_sequence_cpbl_ok().\n"
+  },
+  {
+   "class": "FTPSession",
+   "method": "set_pass_need",
+   "rva": "0x2b135d",
+   "text": "Unknown error during FTPSession::set_pass_need().\n"
+  },
+  {
+   "class": "FTPSession",
+   "method": "set_rest_cpbl",
+   "rva": "0x2b1391",
+   "text": "Unknown error during FTPSession::set_rest_cpbl().\n"
+  },
+  {
+   "class": "FTPSession",
+   "method": "set_pasv_cpbl",
+   "rva": "0x2b13c5",
+   "text": "Unknown error during FTPSession::set_pasv_cpbl().\n"
+  },
+  {
+   "class": "FTPSession",
+   "method": "GetSlowestConnection",
+   "rva": "0x2b146d",
+   "text": "Unknown error during FTPSession::GetSlowestConnection()\n"
+  },
+  {
+   "class": "FTPSession",
+   "method": "InitSession",
+   "rva": "0x2b14a9",
+   "text": "Unknown error during FTPSession::InitSession().\n"
+  },
+  {
+   "class": "FTPSession",
+   "method": "CreateOptionalConnections",
+   "rva": "0x2b14dd",
+   "text": "Unknown error during FTPSession::CreateOptionalConnections().\n"
+  },
+  {
+   "class": "FTPSession",
+   "method": "set_fds",
+   "rva": "0x2b155d",
+   "text": "Unknown error during FTPSession::set_fds()\n"
+  },
+  {
+   "class": "FTPSession",
+   "method": "ReceiveData",
+   "rva": "0x2b167d",
+   "text": "Unknown error during FTPSession::ReceiveData()\n"
+  },
+  {
+   "class": "FTPSession",
+   "method": "getFile",
+   "rva": "0x2b16e9",
+   "text": "Unknown error during FTPSession::getFile()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "base64_encode",
+   "rva": "0x2b1bdd",
+   "text": "Unknown error during HTTPConnection::base64_encode().\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "GetReplyIntoStorage",
+   "rva": "0x2b1c59",
+   "text": "Error during HTTPConnection::GetReplyIntoStorage()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "GetTempEndPos",
+   "rva": "0x2b1c9d",
+   "text": "Error during HTTPConnection::GetTempEndPos()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "GetNextReplyLine",
+   "rva": "0x2b1d2d",
+   "text": "Error during HTTPConnection::GetNextReplyLine()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "RecvState",
+   "rva": "0x2b1d75",
+   "text": "Error during HTTPConnection::RecvState()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "OnNewLastModified",
+   "rva": "0x2b1dbd",
+   "text": "Error during HTTPConnection::OnNewLastModified()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "SkipAllHeaders",
+   "rva": "0x2b1f09",
+   "text": "Error during HTTPConnection::SkipAllHeaders()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "SkipAllHeaders2",
+   "rva": "0x2b1f45",
+   "text": "Error during HTTPConnection::SkipAllHeaders2()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "MNSP",
+   "rva": "0x2b1f78",
+   "text": "Error %d during HTTPConnection::MNSP(), step1.\r\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "Disconnect",
+   "rva": "0x2b1fe5",
+   "text": "Unknown error during HTTPConnection::Disconnect().\n"
+  },
+  {
+   "class": "Connection",
+   "method": "SetCompleted",
+   "rva": "0x2b2129",
+   "text": "Unknown error during Connection::SetCompleted()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "GetRetrRangeReply",
+   "rva": "0x2b2171",
+   "text": "Error during HTTPConnection::GetRetrRangeReply()\n"
+  },
+  {
+   "class": "HTTPC",
+   "method": "AFR",
+   "rva": "0x2b223b",
+   "text": "Err in HTTPC::AFR\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "Set_szURL",
+   "rva": "0x2b23f1",
+   "text": "Error during HTTPConnection::Set_szURL()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "ProcessSetCookieHeader",
+   "rva": "0x2b2421",
+   "text": "Error during HTTPConnection::ProcessSetCookieHeader()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "setNewLocation",
+   "rva": "0x2b24a1",
+   "text": "Error during HTTPConnection::setNewLocation()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "ProcessState",
+   "rva": "0x2b2539",
+   "text": "Error during HTTPConnection::ProcessState()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "SendGet",
+   "rva": "0x2b258d",
+   "text": "Error during HTTPConnection::SendGet()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "ProcessHeader",
+   "rva": "0x2b28ed",
+   "text": "Error during HTTPConnection::ProcessHeader()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "GetState",
+   "rva": "0x2b2af5",
+   "text": "Error during HTTPConnection::GetState()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "HttpsProxyConnect",
+   "rva": "0x2b2b29",
+   "text": "Unknown error during HTTPConnection::HttpsProxyConnect()\r\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "RecvAllHeaders",
+   "rva": "0x2b2ca5",
+   "text": "Error during HTTPConnection::RecvAllHeaders()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "HandleStatus",
+   "rva": "0x2b2cf5",
+   "text": "Error during HTTPConnection::HandleStatus\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "GetInfo",
+   "rva": "0x2b2ec5",
+   "text": "Error during HTTPConnection::GetInfo()\n"
+  },
+  {
+   "class": "HTTPSession",
+   "method": "InitSession",
+   "rva": "0x2b33fd",
+   "text": "Unknown error during HTTPSession::InitSession().\n"
+  },
+  {
+   "class": "HTTPSession",
+   "method": "SendAllConnInfo",
+   "rva": "0x2b3461",
+   "text": "Unknown error during HTTPSession::SendAllConnInfo()\n"
+  },
+  {
+   "class": "HTTPSession",
+   "method": "TryStartNewOptionalConnections",
+   "rva": "0x2b349d",
+   "text": "Unknown error during HTTPSession::TryStartNewOptionalConnections()\n"
+  },
+  {
+   "class": "HTTPSession",
+   "method": "GetSlowestConnection",
+   "rva": "0x2b34e1",
+   "text": "Unknown error during HTTPSession::GetSlowestConnection()\n"
+  },
+  {
+   "class": "MMSCn",
+   "method": "HndlSt",
+   "rva": "0x2b4753",
+   "text": "Unk err in MMSCn::HndlSt, time %I64d, status %d\n"
+  },
+  {
+   "class": "HTTPSession",
+   "method": "ReceiveData",
+   "rva": "0x2b4825",
+   "text": "Unknown error during HTTPSession::ReceiveData()\n"
+  },
+  {
+   "class": "ProxyConn",
+   "method": "SBPAS",
+   "rva": "0x2b4b3c",
+   "text": "Err ProxyConn::SBPAS 715\n"
+  },
+  {
+   "class": "ProxyConnection",
+   "method": "SendGet",
+   "rva": "0x2b4b69",
+   "text": "Unknown error during ProxyConnection::SendGet()\n"
+  },
+  {
+   "class": "ProxyConnection",
+   "method": "Set_szURL",
+   "rva": "0x2b4c15",
+   "text": "Unknown error during ProxyConnection::Set_szURL()\n"
+  },
+  {
+   "class": "ReplyQueue",
+   "method": "Add",
+   "rva": "0x2b4c81",
+   "text": "Unknown error during ReplyQueue::Add()\n"
+  },
+  {
+   "class": "ReplyQueue",
+   "method": "GetNext",
+   "rva": "0x2b4ca9",
+   "text": "Unknown error during ReplyQueue::GetNext()\n"
+  },
+  {
+   "class": "ReplyQueue",
+   "method": "Erase",
+   "rva": "0x2b4cd5",
+   "text": "Unknown error during ReplyQueue::Erase()\n"
+  },
+  {
+   "class": "RTMPS",
+   "method": "AFR",
+   "rva": "0x2b5b43",
+   "text": "Unknerr in RTMPS::AFR, 412\n"
+  },
+  {
+   "class": "RTMPS",
+   "method": "CWADTFM",
+   "rva": "0x2b5bef",
+   "text": "Unknerr in RTMPS::CWADTFM, 399\n"
+  },
+  {
+   "class": "Session",
+   "method": "SaveDownloadedInRegistry",
+   "rva": "0x2b5cad",
+   "text": "Unknown error during Session::SaveDownloadedInRegistry()\n"
+  },
+  {
+   "class": "Session",
+   "method": "ResetDownlInCycle",
+   "rva": "0x2b5d15",
+   "text": "Unknown error during Session::ResetDownlInCycle()\n"
+  },
+  {
+   "class": "Session",
+   "method": "CalcSpeed",
+   "rva": "0x2b5d49",
+   "text": "Unknown error during Session::CalcSpeed()\n"
+  },
+  {
+   "class": "Session",
+   "method": "SetDownlID",
+   "rva": "0x2b5e1d",
+   "text": "Unknown error during Session::SetDownlID()\n"
+  },
+  {
+   "class": "Session",
+   "method": "set_fileSize",
+   "rva": "0x2b5e49",
+   "text": "Unknown error during Session::set_fileSize()\n"
+  },
+  {
+   "class": "Session",
+   "method": "AddDescription",
+   "rva": "0x2b5f69",
+   "text": "Unknown error during Session::AddDescription(...)\n"
+  },
+  {
+   "class": "Session",
+   "method": "CheckFormat",
+   "rva": "0x2b5fad",
+   "text": "Unknown error during Session::CheckFormat(), step 2\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "SetDescription",
+   "rva": "0x2b6075",
+   "text": "Unknown error during SessionManager::SetDescription()\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "SetStatus",
+   "rva": "0x2b6135",
+   "text": "Unknown error during SessionManager::SetStatus()\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "SetURL",
+   "rva": "0x2b6175",
+   "text": "Unknown error during SessionManager::SetURL()\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "SetLogin",
+   "rva": "0x2b61a5",
+   "text": "Unknown error during SessionManager::SetLogin()\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "DeleteFromRegistry",
+   "rva": "0x2b6221",
+   "text": "Unknown error during SessionManager::DeleteFromRegistry()\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "ConvertSizeToString",
+   "rva": "0x2b625d",
+   "text": "Unknown error during SessionManager::ConvertSizeToString()\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "CoverUpTheTraces",
+   "rva": "0x2b64f9",
+   "text": "Unknown error during SessionManager::CoverUpTheTraces()\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "SetLocalName",
+   "rva": "0x2b6901",
+   "text": "Unknown error during SessionManager::SetLocalName()\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "CancelDownload",
+   "rva": "0x2b6939",
+   "text": "Unknown error during SessionManager::CancelDownload()\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "ProcessCancelDownload",
+   "rva": "0x2b6971",
+   "text": "Unknown error during SessionManager::ProcessCancelDownload()\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "GetDefaultlocalName",
+   "rva": "0x2b6bb9",
+   "text": "Unknown error during SessionManager::GetDefaultlocalName()\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "LoadUrlFromReg",
+   "rva": "0x2b6dd1",
+   "text": "Unknown error during SessionManager::LoadUrlFromReg()\n"
+  },
+  {
+   "class": "SessionManager",
+   "method": "DoDownload",
+   "rva": "0x2b6edd",
+   "text": "Unknown error during SessionManager::DoDownload()\n"
+  },
+  {
+   "class": "URL",
+   "method": "set_description",
+   "rva": "0x2b7538",
+   "text": "URL::set_description(): Not enough memory!\n"
+  },
+  {
+   "class": "URL",
+   "method": "set_localFileName",
+   "rva": "0x2b78dc",
+   "text": "URL::set_localFileName(): Not enough memory!\n"
+  },
+  {
+   "class": "URL",
+   "method": "OpenDMRegSubKey",
+   "rva": "0x2b7956",
+   "text": "Error %ld opening registry key in URL::OpenDMRegSubKey()\r\n"
+  },
+  {
+   "class": "URL",
+   "method": "set_LastModified",
+   "rva": "0x2b7b91",
+   "text": "Unknown error during URL::set_LastModified()\n"
+  },
+  {
+   "class": "URL",
+   "method": "LoadLocalNamesFromReg",
+   "rva": "0x2b7c5d",
+   "text": "Unknown error during URL::LoadLocalNamesFromReg()\n"
+  },
+  {
+   "class": "URL",
+   "method": "SaveToReg",
+   "rva": "0x2b7c91",
+   "text": "Unknown error during URL::SaveToReg()\n"
+  },
+  {
+   "class": "URL",
+   "method": "set_MDTM",
+   "rva": "0x2b7e33",
+   "text": "Unk err in URL::set_MDTM()\n"
+  },
+  {
+   "class": "CContentTypeChecker",
+   "method": "CheckHTML",
+   "rva": "0x2b85dd",
+   "text": "Unknown error during CContentTypeChecker::CheckHTML()\n"
+  },
+  {
+   "class": "CContentTypeChecker",
+   "method": "Check",
+   "rva": "0x2b865d",
+   "text": "Unknown error during CContentTypeChecker::Check(), step 2\n"
+  },
+  {
+   "class": "CContentTypeChecker",
+   "method": "CheckEnd",
+   "rva": "0x2b86cd",
+   "text": "Unknown error during CContentTypeChecker::CheckEnd(), step 2\n"
+  },
+  {
+   "class": "CFormatParsing",
+   "method": "GetFSize",
+   "rva": "0x2b87bf",
+   "text": "GetFileSize() error in CFormatParsing::GetFSize(), errcode = %ld.\r\n"
+  },
+  {
+   "class": "CFormatParsing",
+   "method": "PreCheckMpg",
+   "rva": "0x2b88dc",
+   "text": "ReadFile() error %ld in CFormatParsing::PreCheckMpg()\r\n"
+  },
+  {
+   "class": "CFormatParsing",
+   "method": "Initialize",
+   "rva": "0x2b8916",
+   "text": "CreateFile() error %ld in CFormatParsing::Initialize()\r\n"
+  },
+  {
+   "class": "CFormatParsing",
+   "method": "FillZipFormatStruct",
+   "rva": "0x2b896a",
+   "text": "ParseCentralDir failed in CFormatParsing::FillZipFormatStruct()\r\n"
+  },
+  {
+   "class": "CFormatParsing",
+   "method": "GetLastMp3",
+   "rva": "0x2b8b78",
+   "text": "ReadFile() error %ld in CFormatParsing::GetLastMp3()\r\n"
+  },
+  {
+   "class": "CMp3Format",
+   "method": "GetID3Tag",
+   "rva": "0x2b9309",
+   "text": "Unknown exception during CMp3Format::GetID3Tag(), lastError %ld\r\n"
+  },
+  {
+   "class": "CZipPreviewDlg",
+   "method": "OnInitDialog",
+   "rva": "0x2b9645",
+   "text": "Unknown error during CZipPreviewDlg::OnInitDialog()\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "SendHTTPSGet",
+   "rva": "0x2b9d79",
+   "text": "Error during HTTPConnection::SendHTTPSGet()\r\n"
+  },
+  {
+   "class": "HTTPConnection",
+   "method": "RecvHTTPSData",
+   "rva": "0x2ba1e1",
+   "text": "Error during HTTPConnection::RecvHTTPSData()\r\n"
+  }
+ ]
+}

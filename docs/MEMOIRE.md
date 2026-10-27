@@ -7,7 +7,7 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-27 (annexes 11 et 12 mises à jour).
+- **Dernière revue** : 2026-10-27 (annexe 14 créée : moteur de téléchargement).
 
 ---
 
@@ -40,7 +40,8 @@
 | [`analysis/idman/11-modele-donnees-projet.md`](../analysis/idman/11-modele-donnees-projet.md) | Modèle de données du projet (fichier `.gsd`, registre, filtres) | 🟡 brouillon (WP-11) | capstone + `classes.json` |
 | [`analysis/idman/12-spec-grabber.md`](../analysis/idman/12-spec-grabber.md) | Spécification du grabber (v0.1 : stockage du projet, schéma de valeurs) | 🟡 brouillon (WP-06) | `classes.json` + capstone |
 | [`analysis/idman/13-filtres-et-artefacts.md`](../analysis/idman/13-filtres-et-artefacts.md) | Filtres (`nextFilterID`, listes UI) et artefacts du dossier cible (`empty.html`) | 🟡 v0.1 | capstone |
-| `analysis/idman/14-spec-protocoles.md` | Spécification des transports et médias | ⛔ à venir (WP-07) | Ghidra + REA |
+| [`analysis/idman/14-moteur-de-telechargement.md`](../analysis/idman/14-moteur-de-telechargement.md) | Moteur : architecture en anneaux, morceaux, reprise, multi-connexion, HTTP/FTP | 🟡 v0.1 (WP-05) | `symbols.json` + capstone |
+| `analysis/idman/15-spec-protocoles.md` | Spécification des transports et médias | ⛔ à venir (WP-07) | Ghidra + REA |
 
 ---
 
@@ -50,6 +51,8 @@
 |---|---|---|---|
 | `analysis/idman/triage.json` | `tools/idman_triage.py` | ✅ (déterministe, 74 Ko) | `python3 tools/idman_triage.py` |
 | `analysis/idman/classes.json` | `tools/idman_classes.py` | ✅ (déterministe, 461 Ko) | `python3 tools/idman_classes.py` |
+| `analysis/idman/symbols.json` | `tools/idman_symbols.py` | ✅ (déterministe, 55 Ko) | `python3 tools/idman_symbols.py` |
+| `analysis/idman/profiles/*.json` | `tools/idman_class_profile.py` | ❌ (exploration) | `python3 tools/idman_class_profile.py --pattern '<Classe>'` |
 | `analysis/raw/idman/*.json` | `tools/collect-idman-evidence.sh` | ❌ (ignoré) | `bash tools/collect-idman-evidence.sh` |
 | `analysis/raw/idman/strings-*.txt`, `rtti-classes.txt`, `rt-string.txt`, `dialog-captions.txt`, `menus.txt` | scripts ad hoc documentés en annexe 08 | ❌ (ignoré) | voir annexe 08 §3 |
 

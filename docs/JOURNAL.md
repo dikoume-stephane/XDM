@@ -429,6 +429,77 @@ l'annexe 13 §4 sert de référence de contenu par défaut.
 
 ---
 
+### D-024 — Le magasin de morceaux de XDM est un **fichier annexe**, pas le registre
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-05`
+
+**Contexte.** IDM persiste l'état de découpage dans
+`HKCU\Software\DownloadManager\<id>\ChList` (8 sites de construction de la clé,
+`RegSetValueExA` + `RegFlushKey`, relecture `RegQueryValueExA`/`RegQueryInfoKeyA`,
+suppression `RegDeleteKeyA`) — annexe 14 §5.1. Le format d'une valeur n'est pas
+entièrement connu (A-11).
+
+**Options.** (a) reproduire le registre ; (b) écrire un fichier annexe à côté du
+fichier téléchargé ; (c) base de données unique pour tous les téléchargements.
+
+**Décision.** **(b)** : `<fichier>.xdm-part.json`, écrit de façon atomique
+(fichier temporaire + `rename`), versionné par un champ `version`.
+
+**Justification.** Le registre Windows n'existe pas sur toutes les cibles de XDM ; le
+format IDM est inconnu dans le détail ; un état qui **voyage avec le fichier** rend la
+reprise portable et testable sans mock système.
+
+**Conséquence.** L'annexe 11 §2 (modèle de données) devient la référence du schéma ;
+`WP-05` définit son propre format ; le registre IDM n'est plus cité que comme preuve
+historique.
+
+---
+
+### D-025 — Vérification anti-corruption par **empreinte**, pas comparaison d'octets
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-05`
+
+**Contexte.** À chaque écriture, IDM compare les octets de recouvrement entre morceaux
+voisins (`"Check w_st_o_n_cn failed!"`, tampon `Buff3`, annexe 14 §5.4) ; en cas de
+divergence il réaffecte le morceau, réduit la taille de morceau, puis peut **revenir à
+une seule connexion** (message observé : *« IDM started to download the file using one
+connection because of data corruption… »*).
+
+**Options.** (a) comparaison d'octets bruts comme IDM ; (b) empreinte SHA-256 par bloc
+de recouvrement ; (c) aucune vérification, confiance dans `Content-Range`.
+
+**Décision.** **(b)**, avec le comportement de repli (a→c) conservé comme exigence.
+
+**Justification.** Même garantie fonctionnelle pour un coût mémoire constant, et
+testable unitairement sans réseau réel (on injecte deux flux divergents).
+
+**Conséquence.** `WP-05` porte une exigence « détection de divergence + repli à une
+connexion », avec un test dédié. `(c)` est rejeté : c'est précisément le cas que les
+serveurs produisent en pratique (compression, cache régional).
+
+---
+
+### D-026 — Un fichier préalloué + carte de morceaux, **pas** un `.tmp` par morceau
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-05`
+
+**Contexte.** IDM ouvre un fichier `<local>.tmp` par morceau
+(`CreateFileW(…, 0xC0020000, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL)`,
+6 sites, annexe 14 §5.2), dans `<IDM>\DwnlData\<nom>\`, puis assemble le tout
+(`ChunksList::JoinFile`, renommages en cascade, annexe 14 §7).
+
+**Options.** (a) reproduire ; (b) un fichier préalloué, écriture à l'offset du morceau
+(`pwrite`), état dans un fichier annexe (D-024).
+
+**Décision.** **(b)**. Le rollback devient un `ftruncate` — équivalent exact de
+`SetFilePointer` + `SetEndOfFile` observé en `0x15fee5`/`0x15ff52`.
+
+**Justification.** Supprime l'étape d'assemblage, donc deux modes d'échec observés chez
+IDM (`"Can not rename temp file %s"`, `"Not enough disk space to rebuild downloaded
+chunks."`) ; espace disque temporaire divisé par deux ; reprise triviale.
+
+**Conséquence.** `ChunksList::JoinFile` n'a **pas** d'équivalent dans XDM ; `WP-05`
+n'implémente que le rollback par troncature.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
@@ -458,3 +529,7 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-10 | Lire `0xc2e00`+ (producteur du corps de filtre) et `CArray<IDM_SPIDERFILTER>` | WP-11 | ⏳ prochaine étape |
 | A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ⏳ |
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | ⏳ |
+| A-11 | Contenu exact d'un enregistrement `ChList` (lire le *checkpoint* `0x15f600`) | lecture d'un état IDM existant | ⏳ non bloquant (D-024) |
+| A-12 | Énumérer les états de `Connection` (`GetState`/`RecvState`/`ProcessState`) | spécification de `WP-05` | ⏳ |
+| A-13 | Seuils (taille minimale de morceau, délais, tentatives) autour de `"Change chunk size to %ld"` | valeurs par défaut de `WP-05` | ⏳ |
+| A-14 | Identifier `HTTPConnection::MNSP` (message `Error %d … step1`) | complétude HTTP | ⏳ |

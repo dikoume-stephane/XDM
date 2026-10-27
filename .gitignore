@@ -2,3 +2,7 @@ node_modules/
 # Sorties d'analyse volumineuses (Evidence JSON/MD brutes) : régénérables, non versionnées
 analysis/raw/
 *.log
+# Fiches exploratoires par classe (bruit variable, régénérables à la demande)
+analysis/idman/profiles/
+__pycache__/
+*.pyc

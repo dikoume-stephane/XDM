@@ -13,7 +13,9 @@
     "extract:idm": "python3 tools/idman_extract.py",
     "classes:idm": "python3 tools/idman_classes.py",
     "function:idm": "python3 tools/idman_function.py",
-    "args:idm": "python3 tools/idman_args.py"
+    "args:idm": "python3 tools/idman_args.py",
+    "symbols:idm": "python3 tools/idman_symbols.py",
+    "profile:idm": "python3 tools/idman_class_profile.py"
   },
   "devDependencies": {
     "rea-agents": "6.8.0"

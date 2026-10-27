@@ -212,34 +212,57 @@ def main() -> int:
             if col_rva is None:
                 continue
 
-            # un COL peut être référencé à plusieurs endroits : on garde la plus
-            # longue suite de pointeurs vers .text (la vtable réelle).
-            best: list[int] = []
+            # la longueur réelle est déterminée en seconde passe (voir plus bas),
+            # bornée par la vtable suivante : on enregistre ici les candidats.
+            best_slot = None
             alternatives = 0
+            fallback = None
             for slot in find_dword_positions(raw, data_secs[0]["raw"],
                                              data_hi - data_lo + data_secs[0]["raw"],
                                              base + col_rva):
                 alternatives += 1
-                cursor = slot + 4
-                candidate: list[int] = []
-                while len(candidate) < args.max_methods:
-                    value = dword(raw, cursor)
-                    if not value:
-                        break
-                    rva = to_rva(value)
-                    if not in_text(rva):
-                        break
-                    candidate.append(rva)
-                    cursor += 4
-                if len(candidate) > len(best):
-                    best = candidate
-            methods = best
+                if fallback is None:
+                    fallback = slot
+                # une vraie vtable commence par au moins deux pointeurs de code
+                following = [to_rva(dword(raw, slot + 4 + 4 * k) or 0) for k in range(3)]
+                if sum(1 for rva in following if in_text(rva)) >= 2:
+                    best_slot = slot
+                    break
+            if best_slot is None:
+                best_slot = fallback
+            methods = []
+            slot_off = best_slot
+
+            bases = []
+            chd_off = rva_to_offset(sections, chd)
+            if chd_off is not None:
+                num_base = dword(raw, chd_off + 8) or 0
+                base_array_rva = to_rva(dword(raw, chd_off + 12) or 0)
+                array_off = rva_to_offset(sections, base_array_rva)
+                if array_off is not None and 0 < num_base < 16:
+                    for index in range(num_base):
+                        # pointeurs stockés en VA absolues (cf. méthode §2)
+                        bcd_rva = to_rva(dword(raw, array_off + 4 * index) or 0)
+                        bcd_off = rva_to_offset(sections, bcd_rva)
+                        if bcd_off is None:
+                            continue
+                        td2_rva = to_rva(dword(raw, bcd_off) or 0)
+                        td2_off = rva_to_offset(sections, td2_rva)
+                        if td2_off is None:
+                            continue
+                        text_off = td2_off + 8          # nom inline après vftbl + 0
+                        end = raw.find(b"\x00", text_off, text_off + 200)
+                        if end < 0:
+                            continue
+                        bases.append(raw[text_off:end].decode("latin-1"))
 
             entries.append({
                 "type_info_rva": hex(td_rva),
+                "bases": bases,
                 "col_rva": hex(col_rva),
                 "class_hierarchy_rva": hex(chd),
                 "col_references": alternatives,
+                "vtable_slot_offset": slot_off,
                 "method_count": len(methods),
                 "methods": [hex(m) for m in methods],
             })
@@ -248,6 +271,39 @@ def main() -> int:
             classes.append({"class": name, "entries": entries})
         else:
             unresolved.append({"class": name, "reason": "COL/vtable non résolus"})
+
+    # ------------------------------- 2 bis. longueur des vtables (seconde passe)
+    # Les vtables sont contiguës en .rdata : sans borne, on lit celle de la classe
+    # suivante (constat : CDownload et ses voisines recevaient toutes 89 méthodes).
+    # Borne retenue : la position du prochain pointeur de COL connu, ou la sortie de
+    # .text. C'est la seule frontière observable sans décompileur.
+    slots = sorted({entry["vtable_slot_offset"]
+                    for item in classes for entry in item["entries"]
+                    if entry.get("vtable_slot_offset") is not None})
+    slot_set = set(slots)
+    truncated = 0
+    for item in classes:
+        for entry in item["entries"]:
+            slot = entry.get("vtable_slot_offset")
+            if slot is None:
+                continue
+            methods: list[int] = []
+            cursor = slot + 4
+            while len(methods) < args.max_methods:
+                if cursor in slot_set and cursor != slot + 4:
+                    break                          # début de la vtable suivante
+                value = dword(raw, cursor)
+                if not value:
+                    break
+                rva = to_rva(value)
+                if not in_text(rva):
+                    break
+                methods.append(rva)
+                cursor += 4
+            if len(methods) >= args.max_methods:
+                truncated += 1
+            entry["methods"] = [hex(m) for m in methods]
+            entry["method_count"] = len(methods)
 
     # -------------------------------------- 3. chaînes intéressantes -> RVA/VA
     located: dict[int, str] = {}
@@ -361,6 +417,7 @@ def main() -> int:
             "vtables": sum(len(c["entries"]) for c in classes),
             "methods_total": sum(e["method_count"] for c in classes for e in c["entries"]),
             "classes_with_methods": sum(1 for c in classes if c["entries"][0]["method_count"]),
+            "vtables_truncated": truncated,
             "strings_located": len(located),
             "strings_with_reference": len(xrefs),
             "references_total": sum(len(x["references"]) for x in xrefs),
