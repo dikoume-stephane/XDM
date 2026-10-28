@@ -5,7 +5,11 @@ import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { USAGE, filtersOf, main, parseArgs } from '../bin/xdm-grab.js';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
+
+import { USAGE, filtersOf, main, outputFormat, parseArgs, summarize } from '../bin/xdm-grab.js';
 import { createProject, addFilter, loadProject, loadQueue } from '../src/index.js';
 import { EMPTY_HTML, EMPTY_HTML_NAME } from '../src/grabber.js';
 
@@ -80,11 +84,25 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
     maxPages: 2000,
     connections: 4,
     robots: true,
+    resume: false,
+    output: 'texte',
   });
   assert.deepEqual(
     parseArgs(['http://h/', 'dl', '--profondeur', '3', '--pages', '10', '--connexions', '2', '--sans-robots']),
-    { url: 'http://h/', directory: 'dl', depth: 3, maxPages: 10, connections: 2, robots: false },
+    {
+      url: 'http://h/', directory: 'dl', depth: 3, maxPages: 10, connections: 2,
+      robots: false, resume: false, output: 'texte',
+    },
   );
+  assert.deepEqual(
+    parseArgs(['http://h/', '--reprendre', '--sortie', 'json']),
+    {
+      url: 'http://h/', directory: '.', depth: 2, maxPages: 2000, connections: 4,
+      robots: true, resume: true, output: 'json',
+    },
+  );
+  assert.throws(() => parseArgs(['http://h/', '--sortie', 'yaml']), /format de sortie inconnu/);
+  assert.match(USAGE, /--reprendre/);
   assert.throws(() => parseArgs([]), /usage/);
   assert.throws(() => parseArgs(['pas-une-url']), /URL invalide/);
   assert.throws(() => parseArgs(['http://h/', '--profondeur', '0']), /valeur invalide/);
@@ -145,6 +163,90 @@ test('T-B-10 : aspiration de bout en bout depuis la CLI', async () => {
       assert.deepEqual(queue.tasks.map((t) => t.state), ['DONE', 'DONE']);
       assert.ok(lines.some((line) => line.includes('2 page(s) visitée(s)')));
       assert.ok(lines.some((line) => line.includes('téléchargés : 2 / 2')));
+    } finally {
+      await site.close();
+    }
+  });
+});
+
+test('T-B-22 : sortie machine — le résumé JSON est le seul contenu de stdout', async () => {
+  assert.equal(outputFormat([]), 'texte');
+  assert.equal(outputFormat(['http://h/', '--sortie', 'json']), 'json');
+  assert.equal(outputFormat(['http://h/', '--sortie', 'texte']), 'texte');
+
+  const site = await startSite();
+  await withTempDir(async (dir) => {
+    try {
+      const cli = fileURLToPath(new URL('../bin/xdm-grab.js', import.meta.url));
+      const { stdout, stderr } = await promisify(execFile)(
+        process.execPath,
+        [cli, `${site.origin}/`, dir, '--profondeur', '1', '--connexions', '2', '--sortie', 'json'],
+        { encoding: 'utf8' },
+      );
+      const summary = JSON.parse(stdout);
+      assert.deepEqual(Object.keys(summary).sort(), [
+        'directory', 'done', 'failed', 'pages', 'retained', 'tasks', 'url',
+      ]);
+      assert.equal(summary.done, 2);
+      assert.equal(summary.tasks, 2);
+      assert.equal(summary.url, `${site.origin}/`);
+      assert.match(stderr, /parcours de /, 'la progression reste sur stderr');
+      assert.deepEqual(summarize({
+        project: { rootUrl: 'http://h/' },
+        queue: { tasks: [1, 2] },
+        pages: 1, retained: 2, done: 1, failed: 1, directory: '/tmp',
+      }), {
+        url: 'http://h/', directory: '/tmp', pages: 1, retained: 2, done: 1, failed: 1, tasks: 2,
+      });
+    } finally {
+      await site.close();
+    }
+  });
+});
+
+test('T-B-21 : reprise explicite — la file sur disque fait foi, les échecs sont rejoués', async () => {
+  const site = await startSite();
+  await withTempDir(async (dir) => {
+    try {
+      // Première passe : la ressource `b.bin` échoue (404 temporaire simulé).
+      let blockB = true;
+      const flaky = {
+        runTask: async (task) => {
+          if (blockB && task.url.endsWith('b.bin')) throw new Error('404 temporaire');
+          return { target: task.target, size: 0, requests: 0 };
+        },
+      };
+      const first = await main([`${site.origin}/`, dir, '--profondeur', '1'], {
+        log: () => {},
+        ...flaky,
+      });
+      assert.equal(first.done, 1);
+      assert.equal(first.failed, 1);
+      assert.deepEqual((await loadQueue(dir)).tasks.map((t) => t.state), ['DONE', 'FAILED']);
+
+      // Seconde passe en reprise : aucun parcours réseau, l'échec est rejoué.
+      blockB = false;
+      const pages = [];
+      const second = await main([`${site.origin}/`, dir, '--reprendre'], {
+        log: (line) => pages.push(line),
+        fetchPage: async () => {
+          throw new Error('le parcours ne doit pas être relancé en reprise');
+        },
+        runTask: async (task) => ({ target: task.target, size: 0, requests: 0 }),
+      });
+      assert.equal(second.pages, 0, 'aucune page visitée en reprise');
+      assert.equal(second.done, 2, 'les deux tâches sont terminées');
+      assert.equal(second.failed, 0);
+      assert.deepEqual((await loadQueue(dir)).tasks.map((t) => t.state), ['DONE', 'DONE']);
+      assert.ok(pages.some((line) => line.startsWith('reprise de')));
+
+      // Reprise sans projet : erreur explicite, pas un plantage silencieux.
+      const empty = await mkdtemp(join(tmpdir(), 'xdm-vide-'));
+      await assert.rejects(
+        main([`${site.origin}/`, empty, '--reprendre'], { log: () => {} }),
+        /ENOENT|n'existe pas|introuvable/,
+      );
+      await rm(empty, { recursive: true, force: true });
     } finally {
       await site.close();
     }

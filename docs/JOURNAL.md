@@ -996,6 +996,55 @@ l'exécutait : il manquait le lien entre « tâche `PENDING` » et « fichier su
 **Conséquence.** `bin/xdm-grab.js` rend le domaine B utilisable : parcours → arborescence →
 file → téléchargements → promotion, en une commande. **106 tests.**
 
+### D-044 — Aspiration **reprenable** et **scriptable** : `--reprendre`, `--sortie json`
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-23` (suite)
+
+**Contexte.** `xdm-grab` ne savait faire qu'un parcours complet : relancer une aspiration
+interrompue obligeait à tout re-parcourir, et lire le résultat depuis un script demandait
+d'analyser des lignes de texte.
+
+**Décision.**
+1. **`--reprendre`** : le couple projet (`<hôte>.xdmspider.json`) + file (`queue.json`) sur
+   disque fait foi ; le parcours n'est **pas** relancé. Rejouer un parcours produirait un
+   autre plan et invaliderait les chemins locaux déjà calculés.
+2. **Les échecs sont rejouables, les succès non** : `retryFailed` ne remet en `PENDING` que
+   les tâches `FAILED` (`FAILED → PENDING`, seule transition arrière autorisée par `D-036`) ;
+   une tâche `DONE` garde son fichier promu. Les transitions de `task-queue.js` étant
+   **pures**, `retryFailed` renvoie une nouvelle file — le muter en place ne faisait rien.
+3. **`--sortie json`** : `stdout` ne contient **que** l'objet (`url`, `directory`, `pages`,
+   `retained`, `done`, `failed`, `tasks`) ; la progression part sur `stderr`. Un script peut
+   donc rediriger `stdout` sans le polluer.
+
+**Conséquence.** L'aspiration se comporte comme un outil Unix : reprenable, filtrable,
+composable. **108 tests** (`T-B-21`, `T-B-22`).
+
+### D-045 — Fiches C et D : **transports** et **médias** séparés, observé ≠ dérivé
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-07` / `A-05`
+
+**Contexte.** Il restait à spécifier ce qui n'est ni le moteur (fiche A) ni le grabber
+(fiche B). Deux matières très différentes s'y mélangeaient : les transports (HTTP, FTP,
+RTMP, MMS, proxys) et les médias (HLS, DASH, conteneurs).
+
+**Décision.**
+1. **Deux fiches, un document** (`analysis/idman/15-spec-protocoles.md`) : C = transports
+   (10 exigences), D = médias (10 exigences), avec la même règle de traçabilité que A et B.
+2. **Ce qui est mesuré est daté** : 13 classes de transport/média avec leur vtable
+   (`HTTPSession 0x2b1dd4`, `CM3UParser 0x2b2720`, `CMp4DashReader 0x2b3408`,
+   `CSidxParser 0x2b5aa8`…), 12 balises HLS localisées dans un bloc contigu de `.rdata`.
+3. **HLS est observé, DASH est dérivé** : `HLS`, `DASH`, `m3u8`, `MPD`, `SegmentTemplate`
+   n'existent **pas** comme chaînes ; ce sont les balises `#EXT-X-*` et les classes
+   `CM3UParser`/`CMp4DashReader`/`CSidxParser` qui prouvent le support. Deux hypothèses
+   sont ouvertes : `H-12` (RTMP/MMS servent l'enregistrement de flux, pas le grabber) et
+   `H-13` (pas de parseur de manifeste DASH — cohérent avec l'absence de parseur XML/HTML,
+   `Q-B-01`).
+4. **`EX-A-16` n'est pas généralisée** : `Accept-Encoding: identity` vaut pour le moteur de
+   morceaux, `gzip, deflate` existe ailleurs dans le binaire. La nuance devient `Q-C-01`
+   plutôt qu'une affirmation élargie.
+
+**Conséquence.** `A-05` couvre désormais quatre domaines (A, B, C, D), dont **deux
+implémentés** (30 exigences vertes sur 52) et **deux spécifiés seulement** (0/20). Ce qui
+reste à lever est comportemental : `A-09` (VM) pour C et D, `WP-26` pour l'implémentation.
+
 ---
 
 ## Décisions en attente
@@ -1030,7 +1079,7 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-20 | Écrire les tests de spécification du domaine A | porte G1 | ✅ **79 tests verts** : domaine A **clos** (`T-A-01`→`T-A-19`, `T-A-21`, `T-A-25`→`T-A-27`), domaine B partiel (`T-B-02`→`T-B-05`) |
 | A-22 | Client HTTP : `Range`, reprise, redirections, `Accept-Encoding` | `WP-21` | ✅ clos (`D-038`, `D-039`) : 19/19 exigences du domaine A au vert, 73 tests ; la boucle de connexions est livrée dans `src/connection-loop.js` |
 | A-21 | Fusion des morceaux de reprise adjacents (suite de `D-035`) | `WP-22` | ✅ clos (`D-040`) : `mergeResumeChunks` recolle les morceaux incomplets adjacents, jamais un morceau clos ; `T-A-27` vert |
-| A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | 🟡 **2 fiches ouvertes** : A — moteur (`A-moteur-de-telechargement.md`, 19 exigences, **aucune hypothèse**) et B — grabber (`B-grabber.md`, 13 exigences dont **3 bloquées** par `Q-B-01`). Matrice `docs/specs/conformance.md` (v0.1) : 32 exigences, 3 bloquées, 0 test. Reste : domaines C (transports), D (médias), F (persistance) |
+| A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | 🟡 **4 fiches ouvertes** : A — moteur (`A-moteur-de-telechargement.md`, 19 exigences, **aucune hypothèse**) et B — grabber (`B-grabber.md`, 13 exigences dont **3 bloquées** par `Q-B-01`). Matrice `docs/specs/conformance.md` (v0.1) : 32 exigences, 3 bloquées, 0 test. Reste : domaines C (transports), D (médias), F (persistance) |
 | A-11 | Structure logique d'un enregistrement `ChList` | lecture d'un état IDM existant | ✅ fait : `{ID, startPos, nextID}` = **liste de bornes** ; le morceau est un **intervalle** dans un fichier unique (preuve : aucun modèle `%s%d.tmp`, champ `file` partagé), assemblage = promotion du `.tmp` (annexe 14 §5, §7) → `D-030`, `D-031` ; reste l'encodage binaire exact, sans intérêt (D-024) |
 | A-12 | Énumérer les états de `Connection` | spécification de `WP-05` | ✅ fait : 39 états (0..38) en `this+0xa4`, 8 distributeurs, 115 transitions (annexe 14 §4) → `D-027` |
 | A-13 | Seuils et modèle d'E/S | valeurs par défaut de `WP-05` | ✅ levée : défaut **8** connexions (`0x0fbe17`), **128** sockets par session, `select` par session (`0x19503c`, `0x1959bd`) avec `délai = écoulé/10` (échéance atteinte) ou `/2`, **plafonné à 12 000 ms** (`0x2ee0`, `0x1958a7`), attente courte de 2–3 s (`0x19505d`) ; **timeout d'inactivité = 30 s** (`0x1e`), **300 s** pour `[conn+0x13c] == 2` (annexe 14 §4.4, §4.5) → `D-028` ; tentatives bornées par le réglage `mAttempts` (défaut non établi) |

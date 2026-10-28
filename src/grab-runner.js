@@ -24,7 +24,9 @@ import { dirname } from 'node:path';
 
 import { download } from './connection-loop.js';
 import { saveProject } from './project.js';
-import { saveQueue, stats, startNext, beginVerification, completeTask, failTask } from './task-queue.js';
+import {
+  saveQueue, stats, startNext, beginVerification, completeTask, failTask, transition,
+} from './task-queue.js';
 
 /** Nombre maximal de tâches actives par défaut (`EX-A-07`, défaut 8). */
 export const DEFAULT_CONCURRENCY = 8;
@@ -42,6 +44,29 @@ export async function downloadTask(task, { downloadOptions = {}, download: run =
   await mkdir(dirname(task.target), { recursive: true });
   const result = await run(task.url, task.target, { promote: true, ...downloadOptions });
   return { target: result.target, size: result.size, requests: result.requests };
+}
+
+/**
+ * Remet les tâches en échec dans la file, pour une reprise explicite.
+ *
+ * Une reprise ne doit pas rejouer les tâches `DONE` (le fichier est déjà promu) : seules
+ * les tâches `FAILED` redeviennent `PENDING`, leur message d'erreur effacé. `FAILED →
+ * PENDING` est la seule transition arrière autorisée par la machine à états (`D-036`).
+ *
+ * @param {object} queue
+ * @param {number} [now]
+ * @returns {object} une **nouvelle** file (les transitions de `task-queue.js` sont pures)
+ */
+export function retryFailed(queue, now = Date.now()) {
+  let current = queue;
+  for (const task of queue.tasks) {
+    if (task.state === 'FAILED') {
+      current = transition(current, task.id, 'PENDING', (entry) => ({
+        ...entry, error: null, updatedAt: now,
+      }));
+    }
+  }
+  return current;
 }
 
 /**

@@ -88,7 +88,7 @@ une hypothèse de planification.
 | **WP-04** | ✅ **Ancrage des classes RTTI → méthodes** : 422 classes, 427 vtables, **13 760 méthodes**, 45 chaînes attribuées. Outil maison (`D-019`, `D-020`) | pefile | `analysis/idman/10-vtables-et-classes.md` + `classes.json` |
 | **WP-05** | 🟡 **Moteur de téléchargement** — `CDownload` est un **dialogue de suivi**, le moteur est `SessionManager` + `Session`/`Connection` + `ChunksList` (annexe 14 §2). v0.7 : architecture en anneaux, noms→adresses (246/323 confirmés), machine à états (39 états en `this+0xa4`, 8 switch, 115 transitions → `D-027`), modèle de morceaux (`A-11` : le morceau est un **intervalle** dans un fichier unique, carte = liste de bornes `{id, startPos, nextID}` → `D-030`), persistance, rollback par troncature (`0x15ff52`), anti-corruption, assemblage = promotion du `.tmp`, multi-connexion progressive, HTTP/FTP. Modèle d'E/S et seuils (`A-13`) : `select` par session plafonné à 12 s, inactivité 30 s/300 s ⇒ reconnexion → `D-028`. Taille de morceau 1–10 MiB → `D-029`. États 17..27 nommés (`A-15`) ; `MNSP` identifié (`A-14`). Reste hors WP-05 : A-10 (corps du filtre du grabber), A-09 (`.gsd` réels) | capstone, `classes.json`, `symbols.json`, `methods.json`, `states.json`, `chunks.json`, `io-model.json` | `analysis/idman/14-moteur-de-telechargement.md` (v0.7) |
 | **WP-06** | 🟡 **Grabber** : stockage du projet **résolu** (fichier `.gsd` + miroir registre, annexe 11) (registre `GrabberSts\Projects\%ld\%ld[\ChList]`, valeurs `LocalFileName`/`LocalPath`/`LogFileName`) ; restent exploration, filtres, plan de site | capstone, `classes.json` | `analysis/idman/12-spec-grabber.md` (v0.1) |
-| **WP-07** | **Transports + médias** : HTTP/FTP (en-têtes, redirections, cookies), HLS/DASH (M3U8, SIDX, MP4), RTMP/MMS/TS | Ghidra, marqueurs | `analysis/idman/15-spec-protocoles.md` |
+| **WP-07** | 🟡 **Transports + médias** — **fiches C et D écrites** (`D-045`) : 10 exigences de transport (HTTP/1.1, `If-Range`, cookies, `gzip, deflate`, séquence FTP, proxys HTTP/HTTPS/FTP/SOCKS/PAC) et 10 de médias (12 balises HLS localisées, `CM3UParser`, `CMp4DashReader`, `CSidxParser`), **0/20 implémentées** | Ghidra, marqueurs | `analysis/idman/15-spec-protocoles.md` (v1) |
 
 **État au 2026-10-27** : WP-04 terminé (v1) · WP-03 bloqué · **WP-05 cadré (v0.2,
 annexe 14)** : la couche moteur est identifiée par les RTTI (`Session` → 4 sessions,
@@ -102,20 +102,19 @@ partiellement** : on sait *quelle* classe porte le grabber (`CSpiderSettings`,
 (4 fonctions non virtuelles), mais pas encore *ce que fait* leur code (pas de
 décompilateur).
 
-**Prochaine marche (mise à jour du 2026-10-27)** : `WP-20`→`WP-22` sont **clos**. Le moteur
-télécharge réellement et se reprend après une coupure ; **79 tests verts**, domaine A couvert
-à 19/19. Les actions de recherche de `WP-05` (`A-11` → `A-16`) et celles de `WP-11` (`A-08`,
-`A-10`) sont levées ; les fiches A et B sont écrites et la matrice
-`docs/specs/conformance.md` recense **19 exigences du domaine A toutes vertes** et **4 du
-domaine B**. Deux chantiers restent ouverts, dans cet ordre :
+**Prochaine marche (mise à jour du 2026-10-28)** : `WP-20`→`WP-23` sont **clos** et les
+quatre fiches de spécification sont écrites (`A`, `B`, `C`, `D`). Le banc de tests compte
+**108 cas verts**, la matrice de conformité recense **52 exigences** :
+**30 vertes** (domaines A et B, implémentés) et **20 spécifiées seulement** (domaines C et D).
+L'aspiration s'exécute de bout en bout (`bin/xdm-grab.js`, `D-043`) et se reprend
+(`--reprendre`, `--sortie json`, `D-044`). Trois chantiers restent ouverts :
 
-1. **`A-09` — lever les incertitudes d'exécution** sur VM Windows (sémantique du champ
-   `actif`, `empty.html`, `.gsd` réels, `mAttempts` par défaut), qui ne peuvent pas être
-   tranchées en statique ;
-2. **`A-09` — campagne d'observation en VM** : le protocole est écrit et exécutable
-   (`analysis/idman/16-protocole-observation-vm.md`, 6 phases avec critères d'acceptation).
-   C'est ce qui débloque `WP-07` (fiches C–F) : tout ce qui reste à documenter relève du
-   comportement d'exécution, pas du binaire.
+1. **`A-09` — campagne d'observation en VM Windows** : protocole écrit
+   (`analysis/idman/16-protocole-observation-vm.md`, 6 phases). C'est le seul moyen de
+   trancher `Q-C-01`→`Q-C-05` et `Q-D-01`→`Q-D-03`, donc de valider les fiches C et D.
+2. **`WP-26` — implémentation des médias** (HLS par `EXTINF`/`EXT-X-MAP`, DASH par `sidx`),
+   qui consomme la fiche D et réutilise le moteur de morceaux.
+3. **Un lot « transports »** (non planifié) : cookies, `If-Range`, proxys, FTP — fiche C.
 
 **Porte G1** : pour chaque domaine P0, un document de spécification avec
 (a) entrées/sorties, (b) machine à états, (c) structures de données, (d) cas d'erreur,
@@ -180,7 +179,8 @@ domaine B**. Deux chantiers restent ouverts, dans cet ordre :
 | **M2 — Squelette** | Table `classe → méthode → chaînes` extraite (422 classes / 13 760 méthodes) ✅ ; Ghidra opérationnel ⛔ (bloqué) | A-02, WP-04 | WP-04 atteint ; le volet décompilation reste ouvert |
 | **M3 — Spécifications** | Specs moteur + grabber + protocoles revues | M2 | Porte G1 |
 | **M4 — Prototype** | Parcours complet sur site local | M3 | Porte G3 |
-| **M3.6 — Domaines A+B** | 32 exigences, 30 vertes, 106 tests | D-041, D-042, D-043 | ✅ `npm test` |
+| **M3.6 — Domaines A+B** | 32 exigences, 30 vertes, 108 tests | D-041, D-042, D-043, D-044 | ✅ `npm test` |
+| **M3.7 — Domaines C+D** | 20 exigences, 0 verte, 0 test | D-045 | 🟡 spécifié (annexe 15) |
 | **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |
 

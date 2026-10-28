@@ -1,11 +1,11 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.0 — **Dernière revue** : 2026-10-28
+> **Statut** : ✅ v1.1 — **Dernière revue** : 2026-10-28
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
 > fonde et le **test** qui la vérifiera. Aucune ligne d'implémentation ne référence une
 > exigence absente de ce fichier.
 > **Sources** : `docs/specs/A-moteur-de-telechargement.md` (v0.7),
-> `docs/specs/B-grabber.md` (v0.5), annexes 12 à 16.
+> `docs/specs/B-grabber.md` (v0.5), annexes 12 à 16 ; fiches C et D dans l'annexe 15.
 > **Rappel** : « preuve » ne veut pas dire « comportement validé ». Une exigence
 > **Hypothèse** n'a pas de preuve et ne peut pas être marquée conforme.
 
@@ -41,7 +41,7 @@
 | `EX-A-18` inactivité > 30 s ⇒ reconnexion | Observé | annexe 14 §4.5 (`0x1a139f`, `0x18adad`) ; `D-038` | `T-A-25` | **vert** |
 | `EX-A-19` reprise sans retour à zéro | Observé + Décision | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` | **vert** |
 
-**Couverture** : 19 exigences, **19 vertes** (`npm test`, 106 cas) — domaine A **clos**.
+**Couverture** : 19 exigences, **19 vertes** (`npm test`, 108 cas) — domaine A **clos**.
 La boucle de connexions (`src/connection-loop.js`) exécute les exigences de bout en bout
 contre des serveurs locaux, y compris la coupure, la reprise depuis la carte persistée et la
 promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
@@ -65,7 +65,7 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 | `EX-B-12` `empty.html` | Observé + Décision | annexe 13 §4 (`0xd1ed0`) ; `D-042` | `T-B-12` | **vert** |
 | `EX-B-13` pas de sortie de domaine | **Hypothèse** | — | `T-B-13` | **bloqué** |
 
-**Couverture** : 13 exigences, **13 vertes** (`npm test`, 106 cas) — domaine B **clos**.
+**Couverture** : 13 exigences, **13 vertes** (`npm test`, 108 cas) — domaine B **clos**.
 `Q-B-01` est close comme non instruite dans ce module (annexe 12 §6) : l'exploration et
 l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`,
 `src/grabber.js`, `D-041`/`D-042`).
@@ -79,6 +79,45 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | états `PENDING → ACTIVE → VERIFYING → DONE`, échec isolé | `src/grab-runner.js`, `src/task-queue.js` | `T-A-07`, `T-A-22` |
 | concurrence bornée (8 par défaut) | `src/grab-runner.js` | `T-A-07` |
 | seules les pages sont explorées | `src/crawler.js` (`isPageUrl`) | `T-B-08` |
+
+## 3 bis. Domaine C — transports (`WP-07`)
+
+> Source : [`analysis/idman/15-spec-protocoles.md`](../../analysis/idman/15-spec-protocoles.md) §2.
+
+| Exigence | Niveau | Preuve (annexe / offset) | Test | État |
+|---|---|---|---|---|
+| `EX-C-01` HTTP/1.1 uniquement | Observé | annexe 15 §2.1 | `T-C-01` | à faire |
+| `EX-C-02` en-têtes de requête | Observé | annexe 15 §2.1 | `T-C-02` | à faire |
+| `EX-C-03` `If-Range` + `Content-Range` | Observé | `0x6b8018`, `0x6b1e24` | `T-C-03` | à faire |
+| `EX-C-04` cookies de session | Observé + Dérivé | `0x6b2958` | `T-C-04` | à faire |
+| `EX-C-05` `gzip, deflate` hors morceaux | Observé | `0x6b26bc` | `T-C-05` | à faire |
+| `EX-C-06` séquence FTP `CWD`→`TYPE I`→`SIZE`→`REST`→`RETR` | Observé | annexe 15 §2.3 | `T-C-06` | à faire |
+| `EX-C-07` refus de `PASV` = échec explicite | Observé | annexe 15 §2.3 | `T-C-07` | à faire |
+| `EX-C-08` RTMP/RTMPT/MMS hors grabber | Observé + `H-12` | annexe 15 §2.4 | `T-C-08` | **bloqué** (`H-12`) |
+| `EX-C-09` proxys HTTP/HTTPS/FTP/SOCKS + PAC | Observé | annexe 15 §2.5 | `T-C-09` | à faire |
+| `EX-C-10` authentification proxy Basic/Digest | Observé | annexe 15 §2.5 | `T-C-10` | à faire |
+
+**Couverture : 0 / 10** — domaine **spécifié, non implémenté**. XDM ne fait aujourd'hui
+qu'HTTP/1.1 sans proxy (`src/http-client.js`) ; `T-C-01`→`T-C-03` sont pourtant à portée.
+
+## 3 ter. Domaine D — médias (`WP-07`)
+
+> Source : [`analysis/idman/15-spec-protocoles.md`](../../analysis/idman/15-spec-protocoles.md) §3.
+
+| Exigence | Niveau | Preuve (annexe / offset) | Test | État |
+|---|---|---|---|---|
+| `EX-D-01` playlist HLS reconnue | Observé | `0x6b2790`, MIME `0x6b2f48` | `T-D-01` | à faire |
+| `EX-D-02` variantes `STREAM-INF` | Observé + Dérivé | `0x6b275c` | `T-D-02` | à faire |
+| `EX-D-03` segments `EXTINF` | Dérivé | annexe 15 §3.1 | `T-D-03` | à faire |
+| `EX-D-04` `EXT-X-MAP` avant les segments | Observé + Dérivé | `0x6b27c8`, `-tmp_dashinit` | `T-D-04` | à faire |
+| `EX-D-05` `EXT-X-BYTERANGE` | Observé | `0x6b27f8` | `T-D-05` | à faire |
+| `EX-D-06` `EXT-X-KEY` sans déchiffrement | Observé + `D-004` | `0x6b2828` | `T-D-06` | à faire |
+| `EX-D-07` direct (`MEDIA-SEQUENCE`) | Observé + Dérivé | `0x6b284c` | `T-D-07` | à faire |
+| `EX-D-08` DASH par `sidx`, pas de `MPD` | Observé + `H-13` | `CMp4DashReader`, `CSidxParser` | `T-D-08` | **bloqué** (`H-13`) |
+| `EX-D-09` `DISCONTINUITY` | Dérivé | `0x6b2798` | `T-D-09` | à faire |
+| `EX-D-10` aucun DRM | Décision `D-004` | — | `T-D-10` | à faire |
+
+**Couverture : 0 / 10** — domaine **spécifié, non implémenté** (`WP-26`).
 
 ## 4. Ce que cette matrice révèle
 
@@ -102,11 +141,14 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | 5 | ~~`T-A-10`, `T-A-25`, `T-A-26`~~ | robustesse — **fait** (`D-039`) |
 | 6 | `T-B-*` (sauf bloqués) | ✅ fait — `D-041` a débloqué le domaine B ; **13/13** |
 | 7 | `T-B-20` | ✅ fait — `D-043` : l'aspiration s'exécute de bout en bout |
+| 8 | `T-C-01`→`T-C-03` | à faire — reprise conditionnelle et en-têtes : à portée de `http-client.js` |
+| 9 | `T-D-*` | après `WP-26` — médias segmentés |
 
 ## 6. Journal des révisions
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v1.1 : domaines C (transports) et D (médias) ajoutés (`WP-07`, annexe 15) — 20 exigences spécifiées, 0 implémentée ; 108 tests sur A+B |
 | 2026-10-28 | v1.0 : exécution (`src/grab-runner.js`, `bin/xdm-grab.js`, `D-043`) — file → téléchargement → promotion, 106 tests ; matrice figée |
 | 2026-10-28 | v0.9 : assemblage (`src/grabber.js`, `D-042`) — arborescence, collisions, `empty.html`, promotion ; **domaine B clos (13/13)**, **97 tests** |
 | 2026-10-28 | v0.8 : parcours implémenté (`src/crawler.js`) — `EX-B-07`→`EX-B-09`, `EX-B-13` vertes ; 8/13 du domaine B, 90 tests |
