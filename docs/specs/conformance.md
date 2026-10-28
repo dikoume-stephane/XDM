@@ -21,15 +21,15 @@
 
 | Exigence | Niveau | Preuve (annexe / offset) | Test | État |
 |---|---|---|---|---|
-| `EX-A-01` fichier unique écrit en place | Observé | annexe 14 §5.2, §7 (`CreateFileW` `0x156d48`) | `T-A-01` | à faire |
-| `EX-A-02` état dans `<cible>.xdm-part.json` | Décision | `D-024` | `T-A-02` | à faire |
-| `EX-A-03` carte = liste de bornes | Observé + Décision | annexe 14 §5.1 ; `D-030` | `T-A-03` | à faire |
-| `EX-A-04` rejet des cartes incohérentes | Dérivé | `D-030` | `T-A-04` | à faire |
-| `EX-A-05` progression dérivée | Dérivé | `D-031` | `T-A-05` | à faire |
-| `EX-A-06` morceau 1–10 MiB, paliers 2/10 MiB | Observé + Décision | annexe 14 §5.4 ; `chunks.json` ; `D-029` | `T-A-06` | à faire |
-| `EX-A-07` 1 → N connexions, plafond 8 par défaut | Observé + Décision | annexe 14 §6 ; `0x0fbe17` | `T-A-07` | à faire |
+| `EX-A-01` fichier unique écrit en place | Observé | annexe 14 §5.2, §7 (`CreateFileW` `0x156d48`) | `T-A-01` | **vert** |
+| `EX-A-02` état dans `<cible>.xdm-part.json` | Décision | `D-024` | `T-A-02` | **vert** |
+| `EX-A-03` carte = liste de bornes | Observé + Décision | annexe 14 §5.1 ; `D-030` | `T-A-03` | **vert** |
+| `EX-A-04` rejet des cartes incohérentes | Dérivé | `D-030` | `T-A-04` | **vert** |
+| `EX-A-05` progression dérivée | Dérivé | `D-031` | `T-A-05` | **vert** |
+| `EX-A-06` morceau 1–10 MiB, paliers 2/10 MiB | Observé + Décision | annexe 14 §5.4 ; `chunks.json` ; `D-029` | `T-A-06` | **vert** |
+| `EX-A-07` 1 → N connexions, plafond 8 par défaut | Observé + Décision | annexe 14 §6 ; `0x0fbe17` | `T-A-07` | **vert** (allocation ; la boucle de connexions reste à écrire) |
 | `EX-A-08` `Range` par morceau, repli 1 connexion sans `206` | Observé | annexe 14 §8 | `T-A-08` | à faire |
-| `EX-A-09` rollback = troncature | Observé | annexe 14 §5.3 (`0x15fee5`, `0x15ff52`, `0x15ff9b`) | `T-A-09` | à faire |
+| `EX-A-09` rollback = troncature + morceau de reprise | Observé + Décision | annexe 14 §5.3 ; `D-035` | `T-A-09` | **vert** |
 | `EX-A-10` divergence → empreinte → repli | Observé + Décision | annexe 14 §5.5 ; `D-025` | `T-A-10` | à faire |
 | `EX-A-11` morceau incomplet jamais finalisé | Observé | annexe 14 §7 (`isCmpleted = 0`) | `T-A-11` | à faire |
 | `EX-A-12` promotion conditionnée à la vérification | Observé + Décision | annexe 14 §7 ; `D-026` | `T-A-12` | à faire |
@@ -39,10 +39,11 @@
 | `EX-A-16` `Accept-Encoding: identity` | Observé | annexe 14 §8 | `T-A-16` | à faire |
 | `EX-A-17` aucune télémétrie | Décision | `D-004`, `D-012` | `T-A-17` | à faire |
 | `EX-A-18` inactivité > 30 s ⇒ reconnexion | Observé | annexe 14 §4.5 (`0x1a139f`, `0x18adad`) | `T-A-25` | à faire |
-| `EX-A-19` reprise sans retour à zéro | Observé + Décision | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` | à faire |
+| `EX-A-19` reprise sans retour à zéro | Observé + Décision | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` | **vert** |
 
-**Couverture** : 19 exigences, **19 sans test écrit**. Aucune exigence `Hypothèse` dans ce
-domaine.
+**Couverture** : 19 exigences, **9 tests verts** (`npm test`, 24 cas), **10 restantes** :
+`EX-A-08`, `EX-A-10`→`EX-A-18` demandent la couche HTTP (lot `WP-21`). Aucune exigence
+`Hypothèse` dans ce domaine.
 
 ## 3. Domaine B — grabber
 
@@ -70,17 +71,18 @@ domaine.
    hypothèse, chaque test peut s'écrire sans réseau réel (serveur local + fichiers).
 2. **Le domaine B ne l'est pas** : 3 exigences sur 13 reposent sur l'algorithme
    d'exploration, qui n'est pas établi (`Q-B-01`, `A-09`).
-3. **Aucun test n'existe encore** : la porte G1 exige une fiche validée ; or `WP-05` peut
-   commencer par les tests de `T-A-01`→`T-A-13` **avant** toute ligne de code produit,
-   sous forme de tests de spécification (serveur factice + fichiers témoins).
+3. **Le socle de données est couvert** : 24 cas verts (`src/chunk-map.js`,
+   `src/chunk-policy.js`, `src/part-file.js`, `src/work-file.js`) écrits *avant* toute
+   couche réseau. Un test a d'ailleurs invalidé une conséquence implicite de `D-030`
+   (voir `D-035`) : c'est exactement ce que la porte G1 cherche à produire.
 
 ## 5. Ordre de mise en œuvre proposé
 
 | Rang | Test | Pourquoi d'abord |
 |---|---|---|
-| 1 | `T-A-03`, `T-A-04` | la carte est le contrat de données ; tout le reste en dépend |
-| 2 | `T-A-01`, `T-A-09` | écriture en place + troncature : cœur du modèle |
-| 3 | `T-A-06`, `T-A-07`, `T-A-13` | valeurs par défaut et plafonds (observés) |
+| 1 | `T-A-03`, `T-A-04` | ✅ fait — la carte est le contrat de données ; tout le reste en dépend |
+| 2 | `T-A-01`, `T-A-09` | ✅ fait — écriture en place + troncature : cœur du modèle |
+| 3 | `T-A-06`, `T-A-07` | ✅ fait — valeurs par défaut et plafonds (observés) ; `T-A-13` reste à faire |
 | 4 | `T-A-08`, `T-A-15`, `T-A-16` | contrat HTTP minimal |
 | 5 | `T-A-10`, `T-A-25`, `T-A-26` | robustesse (divergence, inactivité, reprise) |
 | 6 | `T-B-*` (sauf bloqués) | après `Q-B-01` |
@@ -89,4 +91,5 @@ domaine.
 
 | Date | Changement |
 |---|---|
+| 2026-10-27 | v0.2 : socle `WP-20` livré — 9 tests verts sur le domaine A (24 cas), `D-034` (stack) et `D-035` (rollback) consignées |
 | 2026-10-27 | création v0.1 : 32 exigences recensées (19 domaine A, 13 domaine B), 3 bloquées, 0 test écrit |

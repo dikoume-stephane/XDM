@@ -24,13 +24,13 @@ l'intégrité est vérifiable.
 |---|---|---|---|---|
 | `EX-A-01` | Un téléchargement s'ouvre sur **un seul fichier de travail** préalloué, écrit à l'offset par chaque connexion | **Observé** (aligné sur IDM) | annexe 14 §5.2, §7 ; `CreateFileW` `0x156d48` | `T-A-01` : deux écritures concurrentes à des offsets disjoints produisent le fichier attendu |
 | `EX-A-02` | L'état de reprise est persisté dans `<cible>.xdm-part.json`, jamais dans le registre | **Décision** | `D-024` | `T-A-02` : reprise après `kill -9` |
-| `EX-A-03` | La carte de morceaux est une **liste de bornes** `{id, startOffset, nextId, completed}`, sans champ de fin explicite | **Observé** + **Décision** | annexe 14 §5.1 ; `D-030` | `T-A-03` : la fin d'un morceau = `startOffset` du suivant |
+| `EX-A-03` | La carte de morceaux est une **liste de bornes** `{id, startOffset, nextId, completed}`, sans champ de fin explicite | **Observé** + **Décision** | annexe 14 §5.1 ; `D-030`, `D-035` | `T-A-03` : la fin d'un morceau = `startOffset` du suivant |
 | `EX-A-04` | Une carte non monotone, cyclique, ou dont un `nextId` est orphelin est **rejetée** au chargement | **Dérivé** | `D-030` | `T-A-04` : trois cartes corrompues → rejet explicite |
 | `EX-A-05` | La progression affichée est **recalculée** depuis la carte, jamais persistée | **Dérivé** | `D-031` | `T-A-05` : progression identique avant/après reprise |
 | `EX-A-06` | Taille de morceau = `clamp(1 MiB, 10 MiB, f(taille))`, avec les paliers 2 MiB (≤ 512 Mio) et 10 MiB (au-delà) | **Observé** + **Décision** | annexe 14 §5.4 ; `chunks.json` ; `D-029` | `T-A-06` : encadrement sur 1 Kio, 1 Gio, 100 Gio |
 | `EX-A-07` | Le nombre de connexions démarre à **1** et croît tant qu'un morceau libre reste disponible, plafonné par la configuration (défaut **8**) | **Observé** + **Décision** | annexe 14 §6 ; `0x0fbe17` | `T-A-07` : 3 connexions sur un fichier de 10 morceaux, jamais 8 |
 | `EX-A-08` | Chaque connexion émet `Range: bytes=<début>-<fin>` ; l'absence de `Accept-Ranges` ou une réponse `200` (au lieu de `206`) ⇒ **une seule connexion** | **Observé** | annexe 14 §8 | `T-A-08` : serveur sans plage → 1 connexion |
-| `EX-A-09` | Le rollback tronque le fichier de travail au dernier offset confirmé (`ftruncate`) et rend les octets abandonnés à la carte | **Observé** | annexe 14 §5.3 (`SetFilePointer` `0x15fee5`, `SetEndOfFile` `0x15ff52`, compteur `0x15ff9b`) | `T-A-09` : coupure brutale → fichier tronqué à la borne basse |
+| `EX-A-09` | Le rollback tronque le fichier de travail au dernier offset confirmé (`ftruncate`) et **rouvre la zone perdue en morceau de reprise** | **Observé** (troncature) + **Décision** (réouverture) | annexe 14 §5.3 (`SetFilePointer` `0x15fee5`, `SetEndOfFile` `0x15ff52`, compteur `0x15ff9b`) ; `D-035` | `T-A-09` : coupure brutale → fichier tronqué, morceau de reprise inséré, progression des parties acquises inchangée |
 | `EX-A-10` | Deux contenus divergents entre connexions ⇒ détection (empreinte SHA-256 par bloc de recouvrement) puis **repli à une connexion** | **Observé** (phénomène) + **Décision** (mécanisme) | annexe 14 §5.5 ; `D-025` | `T-A-10` : flux divergents injectés → repli + journal |
 | `EX-A-11` | Un morceau incomplet n'est **jamais** marqué terminé ni copié dans le fichier final | **Observé** | annexe 14 §7 (`isCmpleted = 0`) | `T-A-11` |
 | `EX-A-12` | Le fichier final n'est promu qu'après vérification de la carte et de la taille attendue | **Observé** + **Décision** | annexe 14 §7 ; `D-026` | `T-A-12` : taille incohérente ⇒ pas de promotion |
@@ -79,7 +79,9 @@ l'intégrité est vérifiable.
 3. `chunk[i].start < totalSize` ; `totalSize <= 0` ⇒ carte refusée (taille inconnue =
    pas de découpage) ;
 4. un seul morceau peut porter `completed == false` **par connexion active** ;
-5. aucune écriture hors de `[0, totalSize)`.
+5. aucune écriture hors de `[0, totalSize)` ;
+6. un rollback n'avance jamais le `start` d'un morceau sans insérer de morceau de reprise
+   (sinon le prédécesseur clos annoncerait des octets absents — `D-035`).
 
 ### 3.2 Fichiers sur disque
 
@@ -176,5 +178,6 @@ CONNECT --(socket prêt)--> HEADERS --(206 attendu)--> DATA --(morceau plein)-->
 
 | Date | Auteur | Changement |
 |---|---|---|
+| 2026-10-27 | socle `WP-20` | v0.3 : `EX-A-09` précisée (réouverture de la zone perdue, `D-035`), invariant 6 ajouté ; **24 tests de spécification verts** (`npm test`) sur les exigences `EX-A-01`→`EX-A-07`, `EX-A-09`, `EX-A-19` |
 | 2026-10-27 | analyse statique | v0.2 : `A-13` complétée — `EX-A-18` (inactivité 30 s ⇒ reconnexion), `EX-A-19` (reprise sans perte), `Q-A-02` restreinte à la valeur de `mAttempts` |
 | 2026-10-27 | analyse statique | création (brouillon) : 17 exigences, modèle de données, machine à états, 8 cas d'erreur, 6 écarts, 4 questions ouvertes — dérivée des annexes 13 et 14, sans nouvelle rétro-ingénierie |

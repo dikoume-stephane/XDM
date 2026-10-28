@@ -39,6 +39,8 @@
 | D-031 | Compteur de progression = donnée dérivée de la carte, jamais persistée | ✅ appliquée | WP-05 | annexe 14 §5.3 |
 | D-032 | Filtre = `{id, motif, type, actif}` (projection des 16 octets observés) | ✅ appliquée | WP-11 | annexe 13 §2 bis |
 | D-033 | Les filtres vivent dans le projet, pas dans le registre ; ids à partir de 100 | ✅ appliquée | WP-11 | annexe 13 §4 bis |
+| D-034 | Socle XDM : Node 22 + ES modules + JSDoc, zéro dépendance, `node --test` | ✅ appliquée (ferme D-017) | WP-20+ | `JOURNAL` |
+| D-035 | Rollback : la zone perdue est rouverte en morceau de reprise, jamais absorbée par le prédécesseur | ✅ appliquée | WP-05/20 | `JOURNAL`, fiche A §3.1 |
 
 ## Points de vigilance associés
 

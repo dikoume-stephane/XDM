@@ -2,7 +2,7 @@
   "name": "xdm",
   "private": true,
   "version": "0.1.0",
-  "description": "XDM workspace — analyses de rétro-ingénierie assistées par REA (morluto/rea)",
+  "description": "XDM — aspirateur de site et gestionnaire de téléchargements (clone fonctionnel du Site Grabber d'IDM) ; analyse de la cible assistée par REA",
   "scripts": {
     "rea": "rea",
     "doctor": "rea doctor",
@@ -20,12 +20,15 @@
     "states:idm": "python3 tools/idman_states.py",
     "io:idm": "python3 tools/idman_io.py",
     "chunks:idm": "python3 tools/idman_chunks.py",
-    "filters:idm": "python3 tools/idman_filters.py"
+    "filters:idm": "python3 tools/idman_filters.py",
+    "test": "node --test test/",
+    "test:watch": "node --test --watch test/"
   },
   "devDependencies": {
     "rea-agents": "6.8.0"
   },
   "engines": {
     "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
-  }
+  },
+  "type": "module"
 }

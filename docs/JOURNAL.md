@@ -691,6 +691,68 @@ aucun `.gsd` n'est requis pour les filtres.
 
 ---
 
+---
+
+### D-034 — Socle XDM en Node 22 + ES modules + JSDoc, **zéro dépendance**, `node --test`
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-20`+ (ferme `D-017`, `A-07`)
+
+**Contexte.** `D-017` laissait ouvert le choix de stack (Java/Kotlin, Rust, TypeScript/Node) et
+bloquait `WP-20`. Le dépôt est déjà un espace Node (REA 6.8.0, `package.json`, Node 22.22.3
+présent dans la sandbox), mais sans aucun code applicatif.
+
+**Options.** (a) Rust (moteur performant, mais compilation et outillage absents ici) ;
+(b) TypeScript + build (`tsc`/`esbuild`) ; (c) Node 22 + ES modules + JSDoc, sans build ;
+(d) Java/Kotlin.
+
+**Décision.** **(c)**. Le socle s'écrit en `.js` ES modules typés par JSDoc, sans aucune
+dépendance d'exécution ni de développement ; les tests utilisent le lanceur intégré
+(`node --test`).
+
+**Justification.** (a) impose une chaîne de compilation que la sandbox n'a pas et ajoute un
+risque de planning sur la partie déjà la plus incertaine ; (b) ajoute un build dont aucun
+besoin n'est démontré et deux dépendances (compilateur, résolveur) ; (d) est hors de
+l'écosystème du dépôt. (c) permet d'écrire **et d'exécuter** les tests de spécification
+immédiatement, sans réseau ni installation, ce qui est exactement ce que la porte G1
+demande. Les types JSDoc gardent l'essentiel de la sécurité de TypeScript, et un passage
+ultérieur à TypeScript reste possible fichier par fichier (même syntaxe de modules).
+
+**Conséquence.** `package.json` déclare `"type": "module"` et `npm test` → `node --test` ;
+aucun `node_modules` n'est nécessaire au socle. La contrainte « 128 sockets / un `select`
+par session » (`D-028`) reste à réévaluer sur la boucle d'E/S de Node : ce point est
+explicitement reporté à `WP-21` et devra être mesuré, pas supposé.
+
+---
+
+### D-035 — Rollback : la zone perdue est **rouverte en morceau de reprise**
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-05`/`WP-20` (`EX-A-09`)
+
+**Contexte.** `D-030` supprime le champ `end` : la fin d'un morceau est le `start` du
+maillon suivant. Un test de spécification (`T-A-09`) a montré la conséquence non prévue :
+*avancer le `start` d'un morceau en cours de rollback étend artificiellement le morceau
+précédent, déjà clos*, qui annonce alors des octets qu'il ne possède pas.
+
+**Options.** (a) réintroduire un champ `end` explicite ; (b) laisser le morceau précédent
+« hériter » de la zone perdue et rouvrir les deux ; (c) insérer un **nouveau morceau**
+couvrant la zone perdue, devant celui qu'on reprend.
+
+**Décision.** **(c)** : `P [0,40) clos → R [40,55) à refaire → N [55,100) en cours`.
+Le morceau `R` reçoit l'identifiant maximal + 1 et devient le prédécesseur de `N` dans la
+chaîne ; un rollback sans octet acquis (offset = borne basse) ne crée rien.
+
+**Justification.** (a) contredit la preuve binaire (`ChList` ne stocke que `ID`,
+`startPos`, `nextID`) et `D-030` ; (b) ferait mentir l'indicateur `completed`, donc la
+progression dérivée (`D-031`). (c) préserve les trois invariants d'un coup : chaîne
+strictement croissante, aucun morceau clos n'annonce d'octets absents, progression
+inchangée pour les parties réellement acquises. Le coût est un morceau de plus par
+incident, borné par le nombre de reconnexions.
+
+**Conséquence.** `applyRollback()` renvoie une **nouvelle** carte (jamais de mutation) ;
+`T-A-09` vérifie la forme de la chaîne, et `WP-22` doit fusionner les morceaux de reprise
+adjacents (`R` clos + `N`…) pour éviter l'accumulation après de nombreuses coupures —
+tâche ajoutée au lot, test `T-A-27` à écrire.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
@@ -718,7 +780,9 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-08 | Format d'un filtre | WP-11 | ✅ levée : corps = `IDM_SPIDERFILTER` (16 o : nom, motif, id, actif), persisté en `REG_SZ` sous `IncludeFilters`/`ExcludeFilters` (annexe 13 §2 bis, §4 bis) → `D-032`, `D-033` |
 | A-09 | Récupérer un vrai `.gsd` sur VM Windows et le dumper | WP-11, WP-30 | ⏳ phase 6 |
 | A-10 | Lire le producteur du corps de filtre et `CArray<IDM_SPIDERFILTER>` | WP-11 | ✅ fait : `0xc2e00` n'est **pas** le producteur (remplissage + templates `CArray` fusionnés) ; structure prouvée par `SetAtGrow` `0xc2bc0` (16 o), saisie `0xc2c10`, sérialisation `0x137f00`, chargement `0x1385f0` ; premier id = **100** (annexe 13 v0.2, `tools/idman_filters.py`) |
-| A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ⏳ |
+| A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ✅ fait : `D-034` — Node 22, ES modules, JSDoc, zéro dépendance, `node --test` |
+| A-20 | Écrire les tests de spécification du domaine A | porte G1 | ✅ 24 tests verts : `T-A-01`, `02`, `03`, `04`, `05`, `06`, `07`, `09`, `26` (`npm test`) |
+| A-21 | Fusion des morceaux de reprise adjacents (suite de `D-035`) | `WP-22` | ⏳ ouvert, non bloquant (`T-A-27` à écrire) |
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | 🟡 **2 fiches ouvertes** : A — moteur (`A-moteur-de-telechargement.md`, 19 exigences, **aucune hypothèse**) et B — grabber (`B-grabber.md`, 13 exigences dont **3 bloquées** par `Q-B-01`). Matrice `docs/specs/conformance.md` (v0.1) : 32 exigences, 3 bloquées, 0 test. Reste : domaines C (transports), D (médias), F (persistance) |
 | A-11 | Structure logique d'un enregistrement `ChList` | lecture d'un état IDM existant | ✅ fait : `{ID, startPos, nextID}` = **liste de bornes** ; le morceau est un **intervalle** dans un fichier unique (preuve : aucun modèle `%s%d.tmp`, champ `file` partagé), assemblage = promotion du `.tmp` (annexe 14 §5, §7) → `D-030`, `D-031` ; reste l'encodage binaire exact, sans intérêt (D-024) |
 | A-12 | Énumérer les états de `Connection` | spécification de `WP-05` | ✅ fait : 39 états (0..38) en `this+0xa4`, 8 distributeurs, 115 transitions (annexe 14 §4) → `D-027` |

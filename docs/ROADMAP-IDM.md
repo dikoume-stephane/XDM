@@ -102,7 +102,10 @@ partiellement** : on sait *quelle* classe porte le grabber (`CSpiderSettings`,
 (4 fonctions non virtuelles), mais pas encore *ce que fait* leur code (pas de
 décompilateur).
 
-**Prochaine marche** : les actions de recherche de WP-05 (`A-11` → `A-16`) **et** celles
+**Prochaine marche (mise à jour du 2026-10-27)** : le socle `WP-20` est amorcé (couche de
+données testée, `D-034`/`D-035`) ; la suite est `WP-21` (client HTTP : `Range`, reprise,
+multi-connexions) puis `WP-22` (boucle de connexions + fusion des morceaux de reprise,
+`A-21`). Les actions de recherche de WP-05 (`A-11` → `A-16`) **et** celles
 de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet ordre :
 
 1. **`A-05` — fiches de spécification** : domaine A (moteur, 19 exigences, testable
@@ -133,7 +136,7 @@ de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet
 
 | Lot | Contenu | Ordre |
 |---|---|---|
-| WP-20 | Socle : modèle de projet, persistance, file de tâches reprenable | 1 |
+| WP-20 | 🟡 **Socle** : stack tranchée (`D-034` : Node 22, ESM, JSDoc, zéro dépendance, `node --test`) ; carte de morceaux (`src/chunk-map.js`, `D-030`/`D-035`), politique de taille (`chunk-policy.js`, `D-029`), persistance atomique (`part-file.js`, `D-024`), fichier de travail (`work-file.js`, `D-026`) ; **24 tests verts**. Reste : modèle de projet, file de tâches, promotion du fichier final | 1 |
 | WP-21 | Client HTTP/FTP : Range, reprise, multi-connexions, proxy, cookies | 2 |
 | WP-22 | Machine à états du téléchargement + intégrité + reprise après crash | 3 |
 | WP-23 | Grabber : exploration, extraction de liens (HTML/CSS/JS/robots/sitemap), filtres, plan de site | 4 |
@@ -176,6 +179,7 @@ de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet
 | **M2 — Squelette** | Table `classe → méthode → chaînes` extraite (422 classes / 13 760 méthodes) ✅ ; Ghidra opérationnel ⛔ (bloqué) | A-02, WP-04 | WP-04 atteint ; le volet décompilation reste ouvert |
 | **M3 — Spécifications** | Specs moteur + grabber + protocoles revues | M2 | Porte G1 |
 | **M4 — Prototype** | Parcours complet sur site local | M3 | Porte G3 |
+| **M3.5 — Socle** | Couche de données du moteur écrite et testée (24 cas verts) | D-034 | ✅ `npm test` |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |
 
 ---

@@ -11,6 +11,10 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
+npm test                           # socle XDM : 24 tests, sans dépendance (node --test)
+```
+
+```bash
 npm install                        # rea-agents épinglé (6.8.0)
 npm run doctor                     # état de l'environnement et des providers
 bash tools/collect-idman-evidence.sh   # preuves REA sur la cible  -> analysis/raw/idman/
@@ -28,6 +32,19 @@ python3 tools/idman_class_profile.py --pattern 'HTTPConnection'   # fiche par cl
 ```
 
 Dépendances Python : `pefile`, `capstone` (`python3 -m pip install --break-system-packages pefile capstone`).
+Dépendances du socle : **aucune** — Node 22, ES modules, types JSDoc (`D-034`).
+
+## Le logiciel (socle `WP-20`)
+
+| Module | Rôle | Décision |
+|---|---|---|
+| `src/chunk-map.js` | carte de morceaux : liste de bornes `{id, start, next, completed}`, validation des 6 invariants, progression dérivée, rollback | `D-030`, `D-031`, `D-035` |
+| `src/chunk-policy.js` | taille de morceau adaptative bornée 1–10 MiB, trois profils observés | `D-029` |
+| `src/part-file.js` | persistance atomique de `<cible>.xdm-part.json` | `D-024` |
+| `src/work-file.js` | fichier de travail unique, écriture positionnée, rollback par troncature | `D-026` |
+
+État : couche de données testée (24 cas verts) ; la couche réseau (`WP-21`) n'est pas
+commencée.
 
 ## Où lire quoi
 
@@ -56,6 +73,8 @@ Dépendances Python : `pefile`, `capstone` (`python3 -m pip install --break-syst
 ## Structure
 
 ```text
+src/                       socle XDM (ESM, zéro dépendance)
+test/                      tests de spécification (node --test)
 cible/IDMan.exe            cible d'analyse (fournie sur main)
 docs/                      journal, roadmap, index mémoire, specs, doc REA
 analysis/idman/            annexes de mémoire (00 → 14) + triage.json + classes.json
