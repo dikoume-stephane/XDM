@@ -13,6 +13,9 @@
 
 import http from 'node:http';
 import https from 'node:https';
+import zlib from 'node:zlib';
+
+import { DEFAULT_ACCEPT, DEFAULT_USER_AGENT, PAGE_ENCODINGS, lowercaseKeys } from './headers.js';
 
 /** Limite de redirections suivies (`0x27ff` compare sur la taille d'URL, `EX-A-15`). */
 export const MAX_REDIRECTS = 10;
@@ -23,8 +26,14 @@ export const MAX_URL_LENGTH = 10239;
 /** Inactivité tolérée sur une connexion avant redémarrage (`cmp eax, 0x1e`, `EX-A-18`). */
 export const IDLE_TIMEOUT_MS = 30_000;
 
-/** Compression refusée : un `Range` sur un corps compressé ne serait pas aligné (`EX-A-16`). */
-export const BASE_HEADERS = Object.freeze({ 'accept-encoding': 'identity' });
+/**
+ * En-têtes de base d'une requête de morceaux : compression refusée (un `Range` sur un corps
+ * compressé ne serait pas aligné, `EX-A-16`), agent annoncé (`EX-C-02`).
+ */
+export const BASE_HEADERS = Object.freeze({
+  'accept-encoding': 'identity',
+  'user-agent': 'XDM/1.0 (+grabber)',
+});
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
@@ -384,6 +393,29 @@ export async function readWithIdleTimeout(stream, {
 }
 
 /**
+ * Décompresse un corps annoncé `gzip`, `deflate` ou `br` (`Q-C-01`).
+ *
+ * Un corps dont l'en-tête ment (compressé annoncé, octets bruts) n'est **pas** deviné :
+ * on tente la décompression et, en cas d'échec, on rend les octets tels quels. Mieux vaut
+ * un texte bizarre qu'une exception sur un serveur mal configuré.
+ *
+ * @param {Buffer} body
+ * @param {string | undefined} encoding
+ * @returns {Buffer}
+ */
+export function decodeBody(body, encoding) {
+  const kind = String(encoding ?? '').toLowerCase().trim();
+  try {
+    if (kind === 'gzip' || kind === 'x-gzip') return zlib.gunzipSync(body);
+    if (kind === 'deflate') return zlib.inflateSync(body);
+    if (kind === 'br') return zlib.brotliDecompressSync(body);
+  } catch {
+    return body;
+  }
+  return body;
+}
+
+/**
  * Récupère une ressource textuelle (page HTML, `robots.txt`) en suivant les redirections.
  *
  * Même politique que la sonde : `Accept-Encoding: identity`, 10 sauts, URL bornée. Le
@@ -391,7 +423,8 @@ export async function readWithIdleTimeout(stream, {
  *
  * @param {string} url
  * @param {{transport?: typeof defaultTransport, headers?: Record<string, string>,
- *   maxBytes?: number, maxRedirects?: number}} [options]
+ *   maxBytes?: number, maxRedirects?: number, compression?: boolean,
+ *   referer?: string | null}} [options]
  * @returns {Promise<{url: string, finalUrl: string, status: number,
  *   headers: Record<string, string>, body: string, truncated: boolean, redirects: number}>}
  */
@@ -400,13 +433,30 @@ export async function fetchText(url, {
   headers = {},
   maxBytes = 4 * 1024 * 1024,
   maxRedirects = MAX_REDIRECTS,
+  compression = true,
+  referer = null,
 } = {}) {
   let current = assertUrlLength(url);
   let redirects = 0;
+  // `Q-C-01` : une page, une playlist ou une API accepte la compression (`gzip, deflate`) ;
+  // seules les requêtes de **morceaux** imposent `identity` (`EX-A-16`), parce qu'un `Range`
+  // sur un corps compressé ne serait pas aligné sur les octets du fichier.
+  const base = {
+    ...BASE_HEADERS,
+    'accept-encoding': compression ? PAGE_ENCODINGS : BASE_HEADERS['accept-encoding'],
+    // `EX-C-02` : une requête de page s'annonce (agent, types acceptés).
+    'user-agent': DEFAULT_USER_AGENT,
+    accept: DEFAULT_ACCEPT,
+    connection: 'keep-alive',
+  };
   for (;;) {
     const response = await transport(current, {
       method: 'GET',
-      headers: { ...BASE_HEADERS, ...headers },
+      headers: {
+        ...base,
+        ...(referer ? { referer } : {}),
+        ...lowercaseKeys(headers),
+      },
     });
     const responseHeaders = normalizeHeaders(response.headers);
 
@@ -433,13 +483,15 @@ export async function fetchText(url, {
       total += buffer.byteLength;
       if (total >= maxBytes) break;
     }
-    const body = Buffer.concat(chunks).subarray(0, maxBytes).toString('utf8');
+    const raw = Buffer.concat(chunks).subarray(0, maxBytes);
+    const decoded = decodeBody(raw, responseHeaders['content-encoding']);
     return {
       url,
       finalUrl: current,
       status: response.status,
       headers: responseHeaders,
-      body,
+      body: decoded.toString('utf8'),
+      encoding: responseHeaders['content-encoding'] ?? null,
       truncated: total > maxBytes,
       redirects,
     };

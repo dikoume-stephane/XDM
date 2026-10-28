@@ -1117,6 +1117,68 @@ ne s'en servait.
 **Conséquence.** Domaine D **10/10**. `bin/xdm-media.js --dash [--init URL]` rend le mode
 utilisable ; **140 tests**.
 
+### D-049 — En-têtes et compression : **deux politiques**, jamais une seule
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-27` (fiche C)
+
+**Contexte.** Le binaire d'IDM porte à la fois `identity` (`0x6b2699`) et
+`gzip, deflate` (`0x6b26bc`) : `Q-C-01` demandait de trancher.
+
+**Décision.**
+1. **Deux jeux d'en-têtes, pas un compromis** : `buildChunkHeaders` impose `identity`
+   (`EX-A-16` : un `Range` sur un corps compressé ne serait pas aligné sur les octets du
+   fichier) ; `buildPageHeaders` annonce `gzip, deflate` (`EX-C-05`).
+2. **`fetchText` décompresse** (`decodeBody` : gzip, deflate, brotli) et retourne
+   `encoding`. En cas d'en-tête menteur, il rend les octets tels quels : mieux vaut un texte
+   bizarre qu'une exception sur un serveur mal configuré.
+3. **L'agent s'annonce** : `XDM/1.0 (+grabber)`, jamais « IDM ». Usurper l'agent d'IDM
+   serait une contrefaçon d'identité (`D-004`), et ce n'est pas ce qu'on clone.
+
+**Conséquence.** `EX-C-02` et `EX-C-05` au vert ; `Q-C-01` est close —
+non pas « l'un ou l'autre », mais **selon la nature de la requête**.
+
+### D-050 — FTP : la séquence **observée**, mode passif obligatoire
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-27` (fiche C)
+
+**Contexte.** L'annexe 15 §2.3 a lu le dialogue instrumental d'IDM : `CWD` → `TYPE I` →
+`SIZE` → (`REST`) → `RETR`, `PASV` obligatoire, pas d'`EPSV` ni d'`AUTH TLS`.
+
+**Décision.**
+1. **On implémente exactement cette séquence**, dans cet ordre, avec des tests qui
+   l'affirment ligne par ligne (`T-C-06`).
+2. **Pas de mode actif** : il ferait entrer le serveur chez le client, et la cible ne
+   l'utilise pas.
+3. **Refus de `PASV` = échec explicite** (`PASV_UNSUPPORTED`, `EX-C-07`) : aucun repli
+   silencieux vers un autre mode.
+4. **Reprise par `REST`** sur la taille du fichier local, et **contrôle final** de taille :
+   un transfert tronqué est signalé (`INCOMPLETE`), jamais promu.
+
+**Conséquence.** `EX-C-06` et `EX-C-07` au vert. Le FTP passe par proxy reste à faire
+(`CFTPProxyConnection` dans IDM, `EX-C-09` partielle pour cette famille).
+
+### D-051 — Proxys : **tunnel d'abord**, SOCKS5 avec DNS distant, Digest différé
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-27` (fiche C)
+
+**Contexte.** IDM déclare HTTP/HTTPS/FTP/SOCKS4/SOCKS5, `Proxy-Authorization: Basic` et
+`Digest`, et une configuration PAC système. XDM n'a aucun de ces mécanismes.
+
+**Décision.**
+1. **Un proxy se compose comme un transport** (`createProxyTransport`) : la forme est celle
+   de `http-client.js`, donc `probe`, `openSegment`, `fetchText` et `withCookies`
+   fonctionnent sans modification. Aucune couche réseau parallèle.
+2. **`CONNECT` pour HTTP/HTTPS** : pour une cible `https:`, TLS est établi **au-dessus** du
+   tunnel (`tls.connect` sur la socket du proxy) — le tunnel ne voit que du chiffré.
+3. **SOCKS5 avec résolution côté proxy** (`ATYP=3`, nom d'hôte) : c'est ce que fait IDM avec
+   `Socks5ProxyDNS`. Envoyer l'IP gaspillerait la propriété (le proxy est souvent le seul à
+   pouvoir résoudre le nom).
+4. **Basic seulement** ; Digest est explicitement différé (`Q-C-06`) : il demande un
+   aller-retour `407` et un nonce, donc un état par proxy.
+5. **SOCKS4 non implémenté, refusé net** (`PROXY_UNSUPPORTED`) : approximer un protocole
+   qu'on ne teste pas serait pire que de ne pas le proposer.
+
+**Conséquence.** `EX-C-09` et `EX-C-10` au vert (hors FTP-proxy et PAC). `EX-C-08`
+(RTMP/MMS) reste le seul point ouvert du domaine C, et il est **hors périmètre**
+(`H-18` : ces transports servent l'enregistrement de flux).
+
 ---
 
 ## Décisions en attente

@@ -45,6 +45,9 @@
 | D-037 | Nom final = dernière composante assainie de l'URL, ≤ 200 octets, noms réservés neutralisés | ✅ appliquée | WP-20 | `JOURNAL`, `src/promote.js` |
 | D-038 | Client HTTP sans état, transport injectable : sonde `bytes=0-0`, `identity`, 10 redirections, `IDLE_TIMEOUT` 30 s avec offset de reprise | ✅ appliquée | WP-21 | `JOURNAL`, `src/http-client.js` |
 | D-039 | Divergence détectée par hachage des fenêtres de recouvrement (1 024 o), repli à une connexion et reprise entière | ✅ appliquée | WP-21/22 | `JOURNAL`, `src/divergence.js`, `src/connection-loop.js` |
+| D-051 | Proxys : composition en transport, `CONNECT` pour HTTP/HTTPS (TLS de bout en bout), SOCKS5 avec DNS côté proxy, Basic seul (Digest différé), SOCKS4 refusé | ✅ appliquée | WP-27 | `JOURNAL`, `src/proxy.js` |
+| D-050 | FTP : séquence observée `CWD`→`TYPE I`→`SIZE`→`REST`→`RETR`, passif obligatoire, échec explicite sans `PASV`, contrôle de taille final | ✅ appliquée | WP-27 | `JOURNAL`, `src/ftp.js` |
+| D-049 | En-têtes : deux politiques de compression (`identity` pour les morceaux, `gzip, deflate` pour les pages), agent XDM explicite | ✅ appliquée | WP-27 | `JOURNAL`, `src/headers.js`, `src/http-client.js` |
 | D-048 | DASH par `sidx` seul : entrée = fichier, init = préfixe avant l'index ou URL séparée, aucune fusion, refus explicite sans index | ✅ appliquée | WP-26 | `JOURNAL`, `src/dash.js`, `bin/xdm-media.js` |
 | D-047 | Cookies RFC 6265 en mémoire (hôte ≠ domaine, `Secure`, expiration) et `If-Range` sur le validateur **de la carte**, redémarrage si périmé | ✅ appliquée | WP-27 | `JOURNAL`, `src/cookies.js`, `src/connection-loop.js` |
 | D-046 | Médias : playlist HLS = liste de fichiers ; segments par le moteur, `BYTERANGE` par `openSegment`, variante la plus haute, aucun déchiffrement, assemblage explicite, DASH = index `sidx` seul | ✅ appliquée | WP-26 | `JOURNAL`, `src/hls.js`, `src/sidx.js`, `src/media.js`, `bin/xdm-media.js` |

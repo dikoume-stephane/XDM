@@ -188,3 +188,31 @@ export {
   withCookies,
 } from './cookies.js';
 export { INDEX_WINDOW_BYTES, downloadDash } from './dash.js';
+
+export {
+  DEFAULT_ACCEPT,
+  DEFAULT_USER_AGENT,
+  PAGE_ENCODINGS,
+  CHUNK_ENCODINGS,
+  buildChunkHeaders,
+  buildHeaders,
+  buildPageHeaders,
+  lowercaseKeys,
+} from './headers.js';
+export {
+  FtpError,
+  downloadFtp,
+  openFtpSession,
+  parseFtpUrl,
+  parsePasvReply,
+} from './ftp.js';
+export {
+  PROXY_TIMEOUT_MS,
+  ProxyError,
+  basicProxyAuth,
+  createProxyTransport,
+  httpConnectTunnel,
+  openThroughProxy,
+  parseProxyUrl,
+  socks5Handshake,
+} from './proxy.js';
