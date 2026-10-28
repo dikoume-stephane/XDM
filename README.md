@@ -11,7 +11,7 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 159 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 172 tests, sans dépendance (node --test)
 node bin/xdm.js <url> [dossier]    # téléchargement réel : plages, reprise, promotion
 node bin/xdm-grab.js <url> [dir]   # aspiration de site : parcours, arborescence, file
 node bin/xdm-grab.js <url> [dir] --reprendre --sortie json   # reprise + résumé machine
@@ -60,6 +60,7 @@ Dépendances du socle : **aucune** — Node 22, ES modules, types JSDoc (`D-034`
 | `src/hls.js` | playlist HLS : variantes, segments, plages d'octets, init, clé | `D-046` |
 | `src/sidx.js` | boîtes MP4 et index `sidx` des flux DASH | `D-046` |
 | `src/media.js` | téléchargement d'un flux HLS segment par segment, assemblage facultatif | `D-046` |
+| `src/pac.js` | PAC : sous-ensemble explicite du langage, directives ordonnées | `D-052` |
 | `bin/xdm.js` | CLI : `xdm <url> [dossier] [--connexions N] [--morceau T]`, nom déduit de l'URL, promotion finale | `D-037`, `D-040` |
 
 État : **domaines A et B clos** — 97 cas verts, 30 exigences sur 32 couvertes

@@ -1,6 +1,6 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.4 — **Dernière revue** : 2026-10-28
+> **Statut** : ✅ v1.5 — **Dernière revue** : 2026-10-28
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
 > fonde et le **test** qui la vérifiera. Aucune ligne d'implémentation ne référence une
 > exigence absente de ce fichier.
@@ -41,7 +41,7 @@
 | `EX-A-18` inactivité > 30 s ⇒ reconnexion | Observé | annexe 14 §4.5 (`0x1a139f`, `0x18adad`) ; `D-038` | `T-A-25` | **vert** |
 | `EX-A-19` reprise sans retour à zéro | Observé + Décision | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` | **vert** |
 
-**Couverture** : 19 exigences, **19 vertes** (`npm test`, 159 cas) — domaine A **clos**.
+**Couverture** : 19 exigences, **19 vertes** (`npm test`, 172 cas) — domaine A **clos**.
 La boucle de connexions (`src/connection-loop.js`) exécute les exigences de bout en bout
 contre des serveurs locaux, y compris la coupure, la reprise depuis la carte persistée et la
 promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
@@ -65,7 +65,7 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 | `EX-B-12` `empty.html` | Observé + Décision | annexe 13 §4 (`0xd1ed0`) ; `D-042` | `T-B-12` | **vert** |
 | `EX-B-13` pas de sortie de domaine | **Hypothèse** | — | `T-B-13` | **bloqué** |
 
-**Couverture** : 13 exigences, **13 vertes** (`npm test`, 159 cas) — domaine B **clos**.
+**Couverture** : 13 exigences, **13 vertes** (`npm test`, 172 cas) — domaine B **clos**.
 `Q-B-01` est close comme non instruite dans ce module (annexe 12 §6) : l'exploration et
 l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`,
 `src/grabber.js`, `D-041`/`D-042`).
@@ -94,15 +94,15 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | `EX-C-06` séquence FTP `CWD`→`TYPE I`→`SIZE`→`REST`→`RETR` | Observé | annexe 15 §2.3 | `T-C-06` | **vert** (`src/ftp.js`) |
 | `EX-C-07` refus de `PASV` = échec explicite | Observé | annexe 15 §2.3 | `T-C-07` | **vert** (`PASV_UNSUPPORTED`) |
 | `EX-C-08` RTMP/RTMPT/MMS hors grabber | Observé + `H-18` | annexe 15 §2.4 | `T-C-08` | ⛔ **hors périmètre** (`H-18` : enregistrement de flux) |
-| `EX-C-09` proxys HTTP/HTTPS/FTP/SOCKS + PAC | Observé | annexe 15 §2.5 | `T-C-09` | 🟡 **partiel** (HTTP/HTTPS `CONNECT`, SOCKS5 ; FTP-proxy et PAC à faire) |
-| `EX-C-10` authentification proxy Basic/Digest | Observé | annexe 15 §2.5 | `T-C-10` | 🟡 **partiel** (Basic ; Digest différé, `Q-C-06`) |
+| `EX-C-09` proxys HTTP/HTTPS/FTP/SOCKS + PAC | Observé | annexe 15 §2.5 | `T-C-09` | **vert** (`src/proxy.js`, `src/pac.js` ; FTP par tunnel) |
+| `EX-C-10` authentification proxy Basic/Digest | Observé | annexe 15 §2.5 | `T-C-10` | **vert** (Basic + Digest `qop=auth`) |
 
-**Couverture : 6 vertes / 10, 2 partielles, 1 hors périmètre, 1 bloquée** (`D-047`→`D-051`) :
+**Couverture : 9 vertes / 10, 1 hors périmètre** (`D-047`→`D-052`) :
 - **vertes** : `EX-C-01` (HTTP/1.1 seul), `EX-C-02` (en-têtes), `EX-C-03` (`If-Range` de la
   carte), `EX-C-04` (`src/cookies.js`), `EX-C-05` (`src/headers.js` + `decodeBody`),
   `EX-C-06`/`EX-C-07` (`src/ftp.js`) ;
-- **partielles** : `EX-C-09` (HTTP/HTTPS/SOCKS5 via `src/proxy.js` ; FTP-proxy et PAC
-  manquants), `EX-C-10` (Basic ; Digest différé, `Q-C-06`) ;
+- **vertes (fin)** : `EX-C-09` (HTTP/HTTPS `CONNECT`, SOCKS5, FTP par tunnel, PAC à
+  sous-ensemble explicite) et `EX-C-10` (Basic **et** Digest, `D-052`) ;
 - **hors périmètre** : `EX-C-08` (RTMP/MMS servent l'enregistrement de flux, `H-18`).
 
 ## 3 ter. Domaine D — médias (`WP-07`)
@@ -151,12 +151,14 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 | 9 | `T-D-*` | ✅ fait — `D-046`/`D-048` : HLS et DASH de bout en bout |
 | 10 | `T-C-04`, `T-C-03`, `T-C-01` | ✅ fait — `D-047` : cookies, reprise conditionnelle, HTTP/1.1 unique |
 | 11 | `T-C-02`, `T-C-05`→`T-C-07`, `T-C-09`, `T-C-10` | ✅ fait — `D-049`→`D-051` : en-têtes, compression, FTP, proxys |
-| 12 | `T-C-08` | ⛔ hors périmètre (`H-18`) |
+| 12 | `T-C-09`, `T-C-10` | ✅ fait — `D-052` : Digest, FTP par tunnel, PAC |
+| 13 | `T-C-08` | ⛔ hors périmètre (`H-18`) |
 
 ## 6. Journal des révisions
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v1.5 : `D-052` — Digest, FTP par tunnel, PAC ; domaine C **9/10** (1 hors périmètre) ; 172 tests, total **51 vertes / 52** |
 | 2026-10-28 | v1.4 : `D-049`→`D-051` — en-têtes et compression, FTP passif, proxys `CONNECT`/SOCKS5 ; domaine C **6 vertes / 10**, 159 tests, total **49 vertes / 52** |
 | 2026-10-28 | v1.3 : `D-047` (cookies, `If-Range`) et `D-048` (DASH par `sidx`) — domaine D **clos 10/10**, domaine C 3/10 ; 140 tests, total **45 vertes / 52** |
 | 2026-10-28 | v1.2 : fiche D implémentée (`D-046`) — HLS segmenté de bout en bout, `sidx` lu ; **9/10** du domaine D, 128 tests, total **39 vertes / 52** |

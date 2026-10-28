@@ -45,6 +45,7 @@
 | D-037 | Nom final = dernière composante assainie de l'URL, ≤ 200 octets, noms réservés neutralisés | ✅ appliquée | WP-20 | `JOURNAL`, `src/promote.js` |
 | D-038 | Client HTTP sans état, transport injectable : sonde `bytes=0-0`, `identity`, 10 redirections, `IDLE_TIMEOUT` 30 s avec offset de reprise | ✅ appliquée | WP-21 | `JOURNAL`, `src/http-client.js` |
 | D-039 | Divergence détectée par hachage des fenêtres de recouvrement (1 024 o), repli à une connexion et reprise entière | ✅ appliquée | WP-21/22 | `JOURNAL`, `src/divergence.js`, `src/connection-loop.js` |
+| D-052 | Fin du domaine C : Digest en un aller-retour, FTP par tunnel (contrôle proxifié, données directes), PAC en sous-ensemble explicite refusant le reste | ✅ appliquée | WP-27 | `JOURNAL`, `src/pac.js`, `src/proxy.js`, `src/ftp.js` |
 | D-051 | Proxys : composition en transport, `CONNECT` pour HTTP/HTTPS (TLS de bout en bout), SOCKS5 avec DNS côté proxy, Basic seul (Digest différé), SOCKS4 refusé | ✅ appliquée | WP-27 | `JOURNAL`, `src/proxy.js` |
 | D-050 | FTP : séquence observée `CWD`→`TYPE I`→`SIZE`→`REST`→`RETR`, passif obligatoire, échec explicite sans `PASV`, contrôle de taille final | ✅ appliquée | WP-27 | `JOURNAL`, `src/ftp.js` |
 | D-049 | En-têtes : deux politiques de compression (`identity` pour les morceaux, `gzip, deflate` pour les pages), agent XDM explicite | ✅ appliquée | WP-27 | `JOURNAL`, `src/headers.js`, `src/http-client.js` |

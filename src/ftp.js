@@ -146,14 +146,20 @@ export async function openFtpSession({
   user = 'anonymous',
   password = '',
   timeout = 30_000,
+  socket: existing = null,
 }) {
-  const socket = net.createConnection({ host, port });
-  socket.setTimeout(timeout);
-  await new Promise((resolve, reject) => {
-    socket.once('connect', resolve);
-    socket.once('error', reject);
-    socket.once('timeout', () => reject(new FtpError(`délai dépassé : ${host}:${port}`, 'TIMEOUT')));
-  });
+  // `CFTPProxyConnection` d'IDM : la session peut partir d'un socket déjà ouvert, obtenu
+  // par un tunnel HTTP `CONNECT` ou par SOCKS (voir `src/proxy.js`).
+  let socket = existing;
+  if (!socket) {
+    socket = net.createConnection({ host, port });
+    socket.setTimeout(timeout);
+    await new Promise((resolve, reject) => {
+      socket.once('connect', resolve);
+      socket.once('error', reject);
+      socket.once('timeout', () => reject(new FtpError(`délai dépassé : ${host}:${port}`, 'TIMEOUT')));
+    });
+  }
   const readReply = createReplyReader(socket);
 
   /** Envoie une commande et rend sa réponse. */
@@ -236,9 +242,31 @@ export async function openFtpSession({
  * @returns {Promise<{target: string, size: number | null, bytes: number, resumed: boolean,
  *   restartAt: number}>}
  */
-export async function downloadFtp(url, target, { resume = true, timeout, onEvent = () => {} } = {}) {
+export async function downloadFtp(url, target, {
+  resume = true,
+  timeout,
+  proxy = null,
+  onEvent = () => {},
+} = {}) {
   const parsed = parseFtpUrl(url);
-  const session = await openFtpSession({ ...parsed, ...(timeout ? { timeout } : {}) });
+  let socket = null;
+  if (proxy) {
+    // Le canal de contrôle passe par le proxy ; le canal de données reste direct, comme
+    // dans IDM (le `PASV` renvoie l'adresse du serveur, que le proxy ne peut pas relayer).
+    const { parseProxyUrl, openThroughProxy } = await import('./proxy.js');
+    const proxyConfig = typeof proxy === 'string' ? parseProxyUrl(proxy) : proxy;
+    socket = await openThroughProxy(
+      proxyConfig,
+      { host: parsed.host, port: parsed.port },
+      { ...(timeout ? { timeout } : {}) },
+    );
+    onEvent({ type: 'proxy', host: proxyConfig.host, port: proxyConfig.port });
+  }
+  const session = await openFtpSession({
+    ...parsed,
+    ...(timeout ? { timeout } : {}),
+    ...(socket ? { socket } : {}),
+  });
   try {
     await session.login();
     // `CWD` puis `TYPE I` : des octets, jamais du texte retraité (annexe 15 §2.3).

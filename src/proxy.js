@@ -18,6 +18,7 @@
  * @module proxy
  */
 
+import crypto from 'node:crypto';
 import http from 'node:http';
 import https from 'node:https';
 import net from 'node:net';
@@ -79,6 +80,78 @@ export function parseProxyUrl(url) {
  */
 export function basicProxyAuth({ user, password }) {
   return `Basic ${Buffer.from(`${user}:${password}`, 'utf8').toString('base64')}`;
+}
+
+/**
+ * Lit un en-tête `Proxy-Authenticate` (Basic ou Digest).
+ *
+ * @param {string} header
+ * @returns {{scheme: 'basic' | 'digest', params: Record<string, string>}}
+ */
+export function parseProxyChallenge(header) {
+  const text = String(header ?? '').trim();
+  const scheme = text.split(/\s+/)[0]?.toLowerCase() ?? '';
+  if (scheme === 'basic') return { scheme: 'basic', params: {} };
+  if (scheme !== 'digest') {
+    throw new ProxyError(`schéma d'authentification non géré : ${text}`, 'AUTH_UNSUPPORTED', { header });
+  }
+  /** @type {Record<string, string>} */
+  const params = {};
+  for (const match of text.slice(6).matchAll(/([a-z-]+)=(?:"([^"]*)"|([^,]+))/gi)) {
+    params[match[1].toLowerCase()] = (match[2] ?? match[3] ?? '').trim();
+  }
+  if (!params.realm || !params.nonce) {
+    throw new ProxyError(`défi Digest incomplet : ${header}`, 'AUTH_MALFORMED', { header });
+  }
+  return { scheme: 'digest', params };
+}
+
+/** MD5 en hexadécimal, la seule fonction utilisée par le défi `algorithm=MD5`. */
+const md5 = (value) => crypto.createHash('md5').update(value, 'utf8').digest('hex');
+
+/**
+ * Construit l'en-tête `Proxy-Authorization: Digest …` (RFC 7616, `qop=auth`).
+ *
+ * Le nonce vient du proxy ; le `cnonce` et le compteur `nc` sont fournis par l'appelant
+ * pour que deux requêtes parallèles n'utilisent pas le même couple.
+ *
+ * @param {{user: string, password: string}} auth
+ * @param {Record<string, string>} challenge paramètres du défi
+ * @param {{method: string, uri: string, cnonce?: string, nonceCount?: number}} request
+ * @returns {string}
+ */
+export function digestProxyAuth(auth, challenge, { method, uri, cnonce, nonceCount = 1 }) {
+  const algorithm = (challenge.algorithm ?? 'MD5').toUpperCase();
+  if (!['MD5', 'MD5-SESS'].includes(algorithm)) {
+    throw new ProxyError(`algorithme Digest non géré : ${algorithm}`, 'AUTH_UNSUPPORTED', { algorithm });
+  }
+  const qop = (challenge.qop ?? '').split(',').map((value) => value.trim()).filter(Boolean);
+  const useQop = qop.includes('auth');
+  if (qop.length > 0 && !useQop) {
+    throw new ProxyError(`qop Digest non géré : ${challenge.qop}`, 'AUTH_UNSUPPORTED', { qop: challenge.qop });
+  }
+  const clientNonce = cnonce ?? crypto.randomBytes(8).toString('hex');
+  const nc = nonceCount.toString(16).padStart(8, '0');
+  const realm = challenge.realm;
+
+  let ha1 = md5(`${auth.user}:${realm}:${auth.password}`);
+  if (algorithm === 'MD5-SESS') ha1 = md5(`${ha1}:${challenge.nonce}:${clientNonce}`);
+  const ha2 = md5(`${method}:${uri}`);
+  const response = useQop
+    ? md5(`${ha1}:${challenge.nonce}:${nc}:${clientNonce}:auth:${ha2}`)
+    : md5(`${ha1}:${challenge.nonce}:${ha2}`);
+
+  const parts = [
+    `username="${auth.user}"`,
+    `realm="${realm}"`,
+    `nonce="${challenge.nonce}"`,
+    `uri="${uri}"`,
+    `response="${response}"`,
+  ];
+  if (useQop) parts.push('qop=auth', `nc=${nc}`, `cnonce="${clientNonce}"`);
+  if (challenge.opaque) parts.push(`opaque="${challenge.opaque}"`);
+  if (challenge.algorithm) parts.push(`algorithm=${challenge.algorithm}`);
+  return `Digest ${parts.join(', ')}`;
 }
 
 /**
@@ -177,10 +250,11 @@ export async function socks5Handshake(socket, target, { auth = null } = {}) {
  * @returns {Promise<import('node:net').Socket>}
  */
 export function httpConnectTunnel(proxy, target, { timeout = PROXY_TIMEOUT_MS } = {}) {
-  return new Promise((resolve, reject) => {
-    const authority = `${target.host}:${target.port}`;
+  const authority = `${target.host}:${target.port}`;
+
+  const attempt = (authorization, retried) => new Promise((resolve, reject) => {
     const headers = {};
-    if (proxy.auth) headers['Proxy-Authorization'] = basicProxyAuth(proxy.auth);
+    if (authorization) headers['Proxy-Authorization'] = authorization;
     const request = http.request({
       host: proxy.host,
       port: proxy.port,
@@ -190,18 +264,36 @@ export function httpConnectTunnel(proxy, target, { timeout = PROXY_TIMEOUT_MS } 
       agent: false,
       timeout,
     });
-    request.once('connect', (response, socket) => {
-      if (response.statusCode !== 200) {
-        socket.destroy();
-        reject(new ProxyError(
-          `tunnel refusé par le proxy : ${response.statusCode}`,
-          'CONNECT_REFUSED',
-          { status: response.statusCode, authority },
-        ));
+    request.once('connect', (response, socket, head) => {
+      if (response.statusCode === 200) {
+        // Des octets de la cible peuvent arriver **avec** la réponse `200` (le serveur FTP
+        // envoie son `220` immédiatement). Les ignorer perdrait le début du dialogue.
+        if (head && head.length > 0) socket.unshift(head);
+        socket.setTimeout(0);
+        resolve(socket);
         return;
       }
-      socket.setTimeout(0);
-      resolve(socket);
+      socket.destroy();
+      // `Q-C-06` : Digest demande un aller-retour `407`. On le fait **une fois**, et
+      // seulement si le proxy a fourni un défi exploitable.
+      const challenge = response.headers['proxy-authenticate'];
+      if (response.statusCode === 407 && proxy.auth && !retried && challenge) {
+        try {
+          const parsed = parseProxyChallenge(Array.isArray(challenge) ? challenge[0] : String(challenge));
+          const header = parsed.scheme === 'digest'
+            ? digestProxyAuth(proxy.auth, parsed.params, { method: 'CONNECT', uri: authority })
+            : basicProxyAuth(proxy.auth);
+          resolve(attempt(header, true));
+        } catch (error) {
+          reject(error);
+        }
+        return;
+      }
+      reject(new ProxyError(
+        `tunnel refusé par le proxy : ${response.statusCode}`,
+        'CONNECT_REFUSED',
+        { status: response.statusCode, authority },
+      ));
     });
     request.once('timeout', () => {
       request.destroy();
@@ -212,6 +304,10 @@ export function httpConnectTunnel(proxy, target, { timeout = PROXY_TIMEOUT_MS } 
     )));
     request.end();
   });
+
+  // Première tentative : Basic si l'URL du proxy porte un couple utilisateur/mot de passe.
+  // (Digest ne peut pas être calculé avant d'avoir vu le défi.)
+  return attempt(proxy.auth ? basicProxyAuth(proxy.auth) : null, false);
 }
 
 /**
@@ -242,6 +338,9 @@ export async function openThroughProxy(proxy, target, { timeout = PROXY_TIMEOUT_
   socket.setTimeout(0);
   try {
     await socks5Handshake(socket, target, { auth: proxy.auth ?? null });
+    // La négociation a laissé le socket en pause (`readExactly`) : sans cette reprise,
+    // un consommateur qui lit le socket brut (FTP, par exemple) attendrait indéfiniment.
+    socket.resume();
     return socket;
   } catch (error) {
     socket.destroy();

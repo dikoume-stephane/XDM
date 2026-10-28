@@ -104,18 +104,17 @@ décompilateur).
 
 **Prochaine marche (mise à jour du 2026-10-28)** : `WP-20`→`WP-23` sont **clos** et les
 quatre fiches de spécification sont écrites (`A`, `B`, `C`, `D`). Le banc de tests compte
-**159 cas verts**, la matrice de conformité recense **52 exigences** :
-**49 vertes** (domaines A, B et D clos ; 6 du domaine C), **2 partielles** (FTP-proxy/PAC,
-Digest) et **1 hors périmètre** (RTMP/MMS, `H-18`).
+**172 cas verts**, la matrice de conformité recense **52 exigences** :
+**51 vertes** (domaines A, B, C et D clos) et **1 hors périmètre** (RTMP/MMS, `H-18`).
 L'aspiration s'exécute de bout en bout (`bin/xdm-grab.js`, `D-043`) et se reprend
 (`--reprendre`, `--sortie json`, `D-044`). Trois chantiers restent ouverts :
 
 1. **`A-09` — campagne d'observation en VM Windows** : protocole écrit
    (`analysis/idman/16-protocole-observation-vm.md`, 6 phases). C'est le seul moyen de
    trancher `Q-C-01`→`Q-C-05` et `Q-D-01`→`Q-D-03`, donc de valider les fiches C et D.
-2. **`WP-27` — reste des transports** : FTP derrière proxy (`CFTPProxyConnection`), PAC
-   système (`WinHttpGetProxyForUrl`), authentification Digest (`Q-C-06`). `EX-C-08`
-   (RTMP/MMS) est **hors périmètre** (`H-18`).
+2. **`A-09` — seule réserve de fidélité** : les fiches C et D sont implémentées et testées,
+   mais la conformité porte sur *notre* lecture des preuves. Le protocole VM
+   (`analysis/idman/16-…md`) reste le seul moyen de les confronter au comportement réel.
 3. **`A-09` reste seul verrou de fidélité** : sans VM Windows, les fiches C et D sont
    conformes à *notre* lecture des preuves, pas à un comportement observé.
 
@@ -145,7 +144,7 @@ L'aspiration s'exécute de bout en bout (`bin/xdm-grab.js`, `D-043`) et se repre
 | WP-23 | ✅ **Clos** (`D-041`→`D-043`) — grabber : exploration et extraction de liens (`src/crawler.js`), filtres, arborescence locale (`src/grabber.js`), **exécution** (`src/grab-runner.js`) et CLI `bin/xdm-grab.js` | 4 |
 | WP-24 | Téléchargement d'arborescence : mapping URL→chemin, réécriture optionnelle des liens, déduplication | 5 |
 | WP-25 | Planification, statistiques, export de rapport | 6 |
-| WP-27 | 🟡 **Transports** (`D-047`→`D-051`) — cookies, `If-Range`, en-têtes/compression, FTP passif, proxys HTTP/SOCKS5 ; restent FTP-proxy, PAC, Digest (et RTMP hors périmètre) | 7 bis |
+| WP-27 | ✅ **Clos** (`D-047`→`D-052`) — cookies, `If-Range`, en-têtes et compression, FTP passif, proxys HTTP/HTTPS/SOCKS5/FTP, Digest, PAC. `EX-C-08` (RTMP/MMS) hors périmètre (`H-18`) | 7 bis |
 | WP-26 | ✅ **Clos** (`D-046`, `D-048`) — HLS (`src/hls.js`, `src/media.js`) et DASH par `sidx` (`src/sidx.js`, `src/dash.js`), CLI `bin/xdm-media.js` (`--dash`) : **domaine D 10/10** | 7 |
 
 **Porte G3** : parcours complet sur un site local (≥ 200 pages, fichiers de 1 Ko à
@@ -184,7 +183,7 @@ L'aspiration s'exécute de bout en bout (`bin/xdm-grab.js`, `D-043`) et se repre
 | **M3 — Spécifications** | Specs moteur + grabber + protocoles revues | M2 | Porte G1 |
 | **M4 — Prototype** | Parcours complet sur site local | M3 | Porte G3 |
 | **M3.6 — Domaines A+B** | 32 exigences, 30 vertes, 108 tests | D-041, D-042, D-043, D-044 | ✅ `npm test` |
-| **M3.7 — Domaines C+D** | 20 exigences, 19 vertes, 159 tests | D-045→D-051 | 🟡 D clos (10/10), C 6/10 + 2 partielles |
+| **M3.7 — Domaines C+D** | 20 exigences, 19 vertes, 172 tests | D-045→D-052 | ✅ D 10/10, C 9/10 (1 hors périmètre) |
 | **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |
 

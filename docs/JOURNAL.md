@@ -1179,6 +1179,40 @@ non pas « l'un ou l'autre », mais **selon la nature de la requête**.
 (RTMP/MMS) reste le seul point ouvert du domaine C, et il est **hors périmètre**
 (`H-18` : ces transports servent l'enregistrement de flux).
 
+### D-052 — Le domaine C se ferme : **Digest**, **FTP derrière proxy**, **PAC**
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-27` (fin)
+
+**Contexte.** Trois points restaient ouverts : l'authentification `Digest` (`Q-C-06`), le
+FTP derrière proxy (`CFTPProxyConnection`) et le PAC système (`WinHttpGetProxyForUrl`).
+
+**Décision.**
+1. **Digest en un seul aller-retour** : `CONNECT` part en Basic ; si le proxy répond `407`
+   avec un défi exploitable, on recalcule (`MD5`, `qop=auth`, `nc=00000001`, `cnonce`
+   aléatoire) et on **rejoue une fois**. Jamais de boucle : un second `407` est un échec.
+2. **FTP derrière proxy** : le canal de **contrôle** passe par le tunnel (`CONNECT` ou
+   SOCKS5), le canal de **données** reste direct — le `PASV` renvoie l'adresse du serveur
+   FTP, qu'un proxy `CONNECT` ne peut pas relayer. C'est la limite du protocole, pas un
+   raccourci : IDM a la même (`CFTPProxyConnection` ne change que le contrôle).
+3. **PAC : un sous-ensemble explicite**, pas un interpréteur JavaScript. Sont acceptés
+   `if`/`else if`/`else`/`return`, `&&`, `||`, `!`, `==`, `!=`, `<`, `>`, `<=`, `>=`,
+   `host`, `url`, `dnsDomain` et cinq fonctions (`isPlainHostName`, `dnsDomainIs`,
+   `localHostOrDomainIs`, `shExpMatch`, `dnsDomainLevels`). Tout le reste
+   (`isResolvable`, `myIpAddress`, `new Date()`, expressions régulières…) lève
+   `UNSUPPORTED`. Deviner un PAC vaut moins qu'échouer bruyamment : une mauvaise route
+   proxy est indiscernable d'une panne réseau.
+4. **Les directives PAC sont ordonnées et essayées** (`PROXY a; PROXY b; DIRECT`) ; un
+   proxy muet ne condamne pas la requête, et `DIRECT` n'est utilisé que si le PAC le dit.
+
+**Bug réel trouvé par les tests** (non déterministe, donc précieux) : `httpConnectTunnel`
+ignorait le troisième argument `head` de l'événement `connect`. Quand le serveur FTP
+envoyait son `220` **dans le même paquet** que la réponse `200` du proxy, la salutation
+était perdue et le client attendait indéfiniment. Corrigé par `socket.unshift(head)` ;
+trois exécutions consécutives du fichier de test confirment la stabilité.
+
+**Conséquence.** `EX-C-09` et `EX-C-10` passent au vert, `Q-C-06` est close. Domaine C :
+**9 exigences vertes sur 10**, la dixième (`EX-C-08`, RTMP/MMS) étant **hors périmètre**
+(`H-18`). Total : **51 vertes / 52**.
+
 ---
 
 ## Décisions en attente

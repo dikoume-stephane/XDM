@@ -216,3 +216,19 @@ export {
   parseProxyUrl,
   socks5Handshake,
 } from './proxy.js';
+
+export {
+  DIRECTIVE_TYPES,
+  PacError,
+  createPacTransport,
+  createProxyResolver,
+  dnsDomainIs,
+  dnsDomainLevels,
+  isPlainHostName,
+  localHostOrDomainIs,
+  parsePac,
+  parseProxyResult,
+  resolveProxy,
+  shExpMatch,
+} from './pac.js';
+export { digestProxyAuth, parseProxyChallenge } from './proxy.js';

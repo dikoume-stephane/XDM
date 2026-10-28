@@ -1,6 +1,6 @@
 # Annexe 15 — Transports (fiche C) et médias (fiche D)
 
-> **Statut** : 🟢 v4 — **Dernière revue** : 2026-10-28 (domaine D clos, domaine C à 6/10 : `D-046`→`D-051`)
+> **Statut** : ✅ v5 — **Dernière revue** : 2026-10-28 (domaines C et D clos : `D-046`→`D-052`)
 > **Lot** : `WP-07` (`A-05`, fiches C et D) · **Décisions liées** : `D-004`, `D-041`, `D-045`
 > **Preuves** : `cible/IDMan.exe` (SHA-256 `5f78da5a…2f11c9`), `analysis/idman/classes.json`,
 > chaînes extraites (`tools/` → `analysis/raw/idman/strings-*.txt`, non versionnées),
@@ -229,7 +229,7 @@ aucune fusion de fragments, refus explicite sans index.
 | `Q-C-03` | `If-Range` est-il envoyé systématiquement en reprise ? | VM : serveur qui renvoie un `ETag` modifié (annexe 16, P5) |
 | `Q-C-04` | Gestion de l'authentification serveur (`WWW-Authenticate`) ? | VM + capture |
 | `Q-C-05` | `REST` est-il précédé de `SIZE` dans tous les cas ? | VM : serveur FTP instrumenté |
-| `Q-C-06` | Authentification proxy **Digest** : IDM le fait (`Digest username="%s", realm=…`) ; XDM ne fait que Basic | VM : proxy à nonce, capture de l'aller-retour `407` |
+| `Q-C-06` | ~~Digest~~ — **close** (`D-052`) : `MD5`/`qop=auth` implémenté et testé contre un proxy à nonce ; `MD5-sess` accepté, `SHA-256` refusé explicitement. | — |
 | `Q-D-01` | `#EXT-X-KEY` : la clé est-elle téléchargée ? rangée où ? | VM : flux chiffré AES-128, observation du disque |
 | `Q-D-02` | Le direct (`MEDIA-SEQUENCE`) est-il suivi en continu ? | VM : playlist glissante |
 | `Q-D-03` | `H-19` est-elle juste (pas de parseur MPD) ? | VM : URL `.mpd` directe vs capture navigateur |
@@ -240,6 +240,7 @@ aucune fusion de fragments, refus explicite sans index.
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v5 : `D-052` — Digest en un aller-retour, FTP par tunnel, PAC explicite ; `Q-C-06` close, domaine C clos (hors RTMP/MMS) |
 | 2026-10-28 | v4 : `D-049`→`D-051` — en-têtes et compression, FTP passif, proxys `CONNECT`/SOCKS5 ; `Q-C-01` close (deux politiques), `Q-C-06` ouverte (Digest) |
 | 2026-10-28 | v3 : fiche C entamée (`D-047` : cookies RFC 6265, `If-Range`, HTTP/1.1 seul) et fiche D **close** (`D-048` : DASH par `sidx`) ; 141 tests |
 | 2026-10-28 | v2 : fiche D implémentée (`D-046`) — `src/hls.js`, `src/sidx.js`, `src/media.js`, `bin/xdm-media.js` ; 9 exigences sur 10 vertes, 128 tests au total |
