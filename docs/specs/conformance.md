@@ -51,24 +51,24 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 
 | Exigence | Niveau | Preuve (annexe / offset) | Test | État |
 |---|---|---|---|---|
-| `EX-B-01` projet = un artefact | Observé + Décision | annexe 11 §1 (`%sproject%s.gsd`) | `T-B-01` | à faire |
+| `EX-B-01` projet = un artefact | Observé + Décision | annexe 11 §1 (`%sproject%s.gsd`) ; `D-042` | `T-B-01` | **vert** |
 | `EX-B-02` contenu du projet | Dérivé | annexe 11 §4 | `T-B-02` | **vert** |
 | `EX-B-03` filtre sans portée propre | Observé + Décision | annexe 13 §2 bis ; `D-032` | `T-B-03` | **vert** |
 | `EX-B-04` identifiants à partir de 100 | Observé + Décision | annexe 13 §2 ter ; `D-033` | `T-B-04` | **vert** |
 | `EX-B-05` motif = masque glob | Observé | annexe 13 §4 bis | `T-B-05` | **vert** |
-| `EX-B-06` champs d'une entrée | Observé | annexe 12 §2 | `T-B-06` | à faire |
+| `EX-B-06` champs d'une entrée | Observé | annexe 12 §2 | `T-B-06` | **vert** |
 | `EX-B-07` profondeur paramétrable (`nLevels`) | Observé / Hypothèse | annexe 13 §4 bis | `T-B-07` | à faire |
 | `EX-B-08` exploration HTML → liens → classement | **Hypothèse** | — (`H-05`) | `T-B-08` | **bloqué** (`Q-B-01`) |
 | `EX-B-09` dédoublonnage des URL | **Hypothèse** | — | `T-B-09` | **bloqué** |
-| `EX-B-10` entrée = tâche de téléchargement | Observé | annexe 12 §1 | `T-B-10` | à faire |
-| `EX-B-11` arborescence locale | Observé / Dérivé | annexe 12 §2 | `T-B-11` | à faire |
-| `EX-B-12` `empty.html` | Observé | annexe 13 §4 (`0xd1ed0`) | `T-B-12` | à faire |
+| `EX-B-10` entrée = tâche de téléchargement | Observé | annexe 12 §1 ; `D-042` | `T-B-10` | **vert** |
+| `EX-B-11` arborescence locale | Observé + Décision | annexe 12 §2 ; `D-042` | `T-B-11` | **vert** |
+| `EX-B-12` `empty.html` | Observé + Décision | annexe 13 §4 (`0xd1ed0`) ; `D-042` | `T-B-12` | **vert** |
 | `EX-B-13` pas de sortie de domaine | **Hypothèse** | — | `T-B-13` | **bloqué** |
 
-**Couverture** : 13 exigences, **8 vertes** (`npm test`, 90 cas), 5 restantes au lot
-`WP-11` (écriture disque, promotion des entrées, `empty.html`). **Aucune exigence bloquée** :
-`Q-B-01` est close comme non instruite dans ce module (annexe 12 §6), et l'exploration est un
-**choix XDM** désormais implémenté et testé (`src/crawler.js`, `D-041`).
+**Couverture** : 13 exigences, **13 vertes** (`npm test`, 97 cas) — domaine B **clos**.
+`Q-B-01` est close comme non instruite dans ce module (annexe 12 §6) : l'exploration et
+l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`,
+`src/grabber.js`, `D-041`/`D-042`).
 
 ## 4. Ce que cette matrice révèle
 
@@ -96,6 +96,7 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v0.9 : assemblage (`src/grabber.js`, `D-042`) — arborescence, collisions, `empty.html`, promotion ; **domaine B clos (13/13)**, **97 tests** |
 | 2026-10-28 | v0.8 : parcours implémenté (`src/crawler.js`) — `EX-B-07`→`EX-B-09`, `EX-B-13` vertes ; 8/13 du domaine B, 90 tests |
 | 2026-10-28 | v0.7 : `D-041` — le moteur d'exploration n'est pas dans `IDMan.exe` (mesure `grabber.json`) ; domaine B **débloqué** par décision de périmètre, plus aucune exigence en `Hypothèse` |
 | 2026-10-27 | v0.6 : assemblage (`D-040`) — carte persistée, fusion des morceaux de reprise (`A-21`), promotion, CLI ; **79 tests verts** |

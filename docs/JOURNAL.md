@@ -943,6 +943,34 @@ résultat. Si `IDMGrHlp.exe` (ou un autre binaire de la suite) devient disponibl
 sera réévaluée : la mesure de `grabber.json` est reproductible et dira immédiatement si le
 moteur y est.
 
+### D-042 — Arborescence locale : chemin **relatif à la racine du site**, segments assainis, collisions suffixées
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-11`
+
+**Contexte.** `EX-B-11` (« l'arborescence locale reproduit celle du site ») et `EX-B-12`
+(`empty.html`) restaient à trancher : deux URL peuvent désigner le même chemin local
+(`/a` et `/a?x=1`, `/docs/` et `/docs/index.html`), et un segment d'URL peut contenir de
+quoi sortir du dossier cible (`..`, `%2F`).
+
+**Décision.**
+1. Le chemin local est le **chemin relatif à la racine du projet** : sous `http://h/site/`,
+   `http://h/site/a/b.zip` donne `a/b.zip`. Hors du préfixe de la racine, on retombe sur le
+   chemin absolu de l'URL, élagué de son `/` initial.
+2. Une URL de **répertoire** (`…/docs/`) donne `docs/index.html` ; la racine donne
+   `index.html`.
+3. Chaque segment est décodé puis **assaini** par `sanitizeFileName` (mêmes règles que le nom
+   final, `D-037`) : un `..` ne peut pas remonter. Vérifié par test (`../../etc/passwd`).
+4. La requête (`?…`) ne fait pas partie du chemin : **collision** détectée, le premier arrivé
+   garde le chemin, les suivants reçoivent `-2`, `-3`… avant l'extension. Aucun écrasement
+   silencieux.
+5. `empty.html` est écrit **sans écraser** (`flag: 'wx'`), contenu exact
+   `<HTML><BODY> </BODY></HTML>`. Un fichier existant appartient à l'utilisateur.
+6. Une entrée retenue devient une **tâche ordinaire** de la file (`EX-B-10`) : même schéma,
+   mêmes états, mêmes exigences `EX-A-*` que les tâches créées à la main. Aucun chemin
+   parallèle de téléchargement n'existe.
+
+**Conséquence.** `EX-B-01`, `EX-B-06`, `EX-B-10`, `EX-B-11`, `EX-B-12` passent au vert ;
+**domaine B clos (13/13)**, **97 tests**.
+
 ---
 
 ## Décisions en attente

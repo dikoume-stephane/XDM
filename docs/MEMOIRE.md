@@ -7,7 +7,7 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-27 (annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`, `D-032`/`D-033` ; **domaine A clos (`WP-20`→`WP-22`), domaine B débloqué par `D-041` et parcours livré : 90 tests verts, `D-034`→`D-041`**).
+- **Dernière revue** : 2026-10-27 (annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`, `D-032`/`D-033` ; **domaines A et B clos : 32 exigences, 30 vertes, 97 tests, `D-034`→`D-042`**).
 
 ---
 
@@ -60,8 +60,9 @@
 | `src/divergence.js` | fenêtres de recouvrement hachées en SHA-256, garde de divergence | `D-039` | `T-A-10` |
 | `src/connection-loop.js` | boucle de connexions : distribution, reprise, repli, 128 sockets | `D-039` | `T-A-01`, `T-A-08`, `T-A-10`, `T-A-13`, `T-A-25` |
 | `src/crawler.js` | aspiration : BFS par niveau, URL canonique, `robots.txt`, filtres | `D-041` | `T-B-07`→`T-B-09`, `T-B-13` |
+| `src/grabber.js` | aspiration : arborescence locale, collisions, `empty.html`, promotion en tâches ordinaires | `D-042` | `T-B-01`, `T-B-06`, `T-B-10`→`T-B-12` |
 | `bin/xdm.js` | CLI : `xdm <url> [dossier]`, nom déduit de l'URL, promotion finale | `D-037`, `D-040` | `T-A-14` |
-| `src/index.js` | barillet (120 exports) | `D-034` | — |
+| `src/index.js` | barillet (130 exports) | `D-034` | — |
 
 **Règle** : une exigence ne passe au vert que si un test de `test/` la couvre ; le tableau de
 `docs/specs/conformance.md` fait foi.

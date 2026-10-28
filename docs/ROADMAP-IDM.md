@@ -112,10 +112,9 @@ domaine B**. Deux chantiers restent ouverts, dans cet ordre :
 1. **`A-09` — lever les incertitudes d'exécution** sur VM Windows (sémantique du champ
    `actif`, `empty.html`, `.gsd` réels, `mAttempts` par défaut), qui ne peuvent pas être
    tranchées en statique ;
-2. **`WP-11` — grabber** : **débloqué** par `D-041`. Le moteur d'exploration d'IDM n'étant
-   pas dans `IDMan.exe` (mesure reproductible : `tools/idman_grabber.py`), XDM définit son
-   parcours (BFS par niveau, `nLevels` = 2, `robots.txt`, une connexion de crawl) et
-   l'implémente comme **produit** ; `Q-B-01` est close, non par lecture mais par décision.
+2. **`WP-07` — fiches C–F** (protocoles, médias, intégrations) : les domaines A **et B** sont
+   désormais clos et couverts par des tests (32 exigences, 30 vertes ; 97 tests). Les fiches
+   restantes demandent `A-09` (VM) pour tout ce qui relève du comportement d'exécution.
 
 **Porte G1** : pour chaque domaine P0, un document de spécification avec
 (a) entrées/sorties, (b) machine à états, (c) structures de données, (d) cas d'erreur,
@@ -128,7 +127,7 @@ domaine B**. Deux chantiers restent ouverts, dans cet ordre :
 | Lot | Contenu | Sortie |
 |---|---|---|
 | WP-10 | Fiches de spécification par domaine (format imposé : but, entrées, états, erreurs, preuves, questions ouvertes) — **2 fiches ouvertes** : domaine A (moteur) et domaine B (grabber), `A-05` | `docs/specs/` (`A-moteur-de-telechargement.md`, `B-grabber.md`) |
-| WP-11 | 🟡 **Parcours livré** (`D-041`) — persistance résolue (`.gsd` + registre), **filtres entièrement décrits** (`A-10` → `D-032`/`D-033`), page de remplacement `empty.html`, **carte des réglages** (`grabber.json` : 10 champs, `nLevels` en `+0xb8`). Le **moteur d'exploration n'est pas dans `IDMan.exe`** (0 référence code aux conteneurs) ⇒ l'exploration est un **choix XDM** (BFS par niveau, défaut 2, `robots.txt` respecté) **implémenté et testé** (`src/crawler.js`, `T-B-07`→`T-B-09`, `T-B-13`) ; reste l'écriture disque et la promotion des entrées retenues | `analysis/idman/11-…` + `12-…` §6 + `grabber.json` |
+| WP-11 | ✅ **Clos** (`D-041`) — persistance résolue (`.gsd` + registre), **filtres entièrement décrits** (`A-10` → `D-032`/`D-033`), page de remplacement `empty.html`, **carte des réglages** (`grabber.json` : 10 champs, `nLevels` en `+0xb8`). Le **moteur d'exploration n'est pas dans `IDMan.exe`** (0 référence code aux conteneurs) ⇒ l'exploration est un **choix XDM** (BFS par niveau, défaut 2, `robots.txt` respecté) **implémenté et testé** (`src/crawler.js`, `T-B-07`→`T-B-09`, `T-B-13`) ; arborescence locale, `empty.html` et promotion en tâches ordinaires livrés (`src/grabber.js`, `D-042`) — **13/13 exigences vertes** | `analysis/idman/11-…` + `12-…` §6 + `grabber.json` |
 | WP-12 | 🟡 Matrice de conformité : comportement observé → exigence → test (32 exigences recensées, 3 bloquées, 0 test écrit) | `docs/specs/conformance.md` (v0.1) |
 
 ---
@@ -180,6 +179,7 @@ domaine B**. Deux chantiers restent ouverts, dans cet ordre :
 | **M2 — Squelette** | Table `classe → méthode → chaînes` extraite (422 classes / 13 760 méthodes) ✅ ; Ghidra opérationnel ⛔ (bloqué) | A-02, WP-04 | WP-04 atteint ; le volet décompilation reste ouvert |
 | **M3 — Spécifications** | Specs moteur + grabber + protocoles revues | M2 | Porte G1 |
 | **M4 — Prototype** | Parcours complet sur site local | M3 | Porte G3 |
+| **M3.6 — Domaines A+B** | 32 exigences, 30 vertes, 97 tests | D-041, D-042 | ✅ `npm test` |
 | **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |
 
