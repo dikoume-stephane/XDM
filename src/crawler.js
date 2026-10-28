@@ -36,6 +36,11 @@ export const USER_AGENT = 'XDM/0.1 (+aspirateur de site)';
 
 const SKIPPED_SCHEMES = /^(mailto|javascript|data|tel|ftp|file):/i;
 
+/** Extensions considérées comme des pages (le reste est un fichier à télécharger). */
+export const PAGE_EXTENSIONS = new Set([
+  'html', 'htm', 'xhtml', 'shtml', 'php', 'asp', 'aspx', 'jsp', 'cgi', '',
+]);
+
 /**
  * Normalise une URL pour le dédoublonnage (`EX-B-09`).
  * @param {string} raw
@@ -73,6 +78,29 @@ export function sameOrigin(a, b) {
   } catch {
     return false;
   }
+}
+
+/**
+ * Une URL désigne-t-elle une page à explorer (et non un fichier à télécharger) ?
+ *
+ * Sans cette distinction, l'aspirateur « visiterait » chaque `.zip` comme s'il contenait
+ * des liens : une requête gaspillée par fichier, et un compteur de pages faux.
+ *
+ * @param {string} url
+ * @returns {boolean}
+ */
+export function isPageUrl(url) {
+  let pathname;
+  try {
+    pathname = new URL(url).pathname;
+  } catch {
+    return false;
+  }
+  if (pathname.endsWith('/')) return true;
+  const name = pathname.split('/').at(-1) ?? '';
+  const dot = name.lastIndexOf('.');
+  if (dot < 0) return true;
+  return PAGE_EXTENSIONS.has(name.slice(dot + 1).toLowerCase());
 }
 
 /**
@@ -285,7 +313,7 @@ export async function crawl(startUrl, {
       } else {
         skipped.push({ url: link, depth: node.depth + 1, reason: verdict.reason });
       }
-      if (node.depth < depth && !visited.has(link)) {
+      if (node.depth < depth && isPageUrl(link) && !visited.has(link)) {
         queue.push({ url: link, depth: node.depth + 1 });
       }
     }

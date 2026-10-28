@@ -971,6 +971,31 @@ quoi sortir du dossier cible (`..`, `%2F`).
 **Conséquence.** `EX-B-01`, `EX-B-06`, `EX-B-10`, `EX-B-11`, `EX-B-12` passent au vert ;
 **domaine B clos (13/13)**, **97 tests**.
 
+### D-043 — L'aspiration s'exécute **par la file**, avec les mêmes états que le moteur
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-23`
+
+**Contexte.** Après `WP-11`, le grabber produisait un plan (projet + file) mais rien ne
+l'exécutait : il manquait le lien entre « tâche `PENDING` » et « fichier sur disque ».
+
+**Décision.** `src/grab-runner.js` exécute une file sans dupliquer de logique :
+1. **respect strict des états** : `PENDING → ACTIVE → VERIFYING → DONE`; une tâche ne passe
+   jamais directement de `ACTIVE` à `DONE` (leçon de `T-A-05`, `D-036`) ;
+2. **une tâche en échec n'arrête pas les autres** : `ACTIVE → FAILED` avec le message, la
+   file continue ; `FAILED → PENDING` reste possible pour une reprise manuelle ;
+3. **concurrence bornée** par `maxActive` (défaut 8, `EX-A-07`) : le runner n'ouvre jamais
+   plus de tâches actives que la file ne l'autorise ;
+4. **le dossier cible est créé** avant la promotion : l'arborescence d'un site est profonde
+   (`rootDir/a/b/c.zip`) et `rename` échoue dans un dossier absent ;
+5. **seules les pages sont explorées** : `isPageUrl` distingue une page (extension HTML, ou
+   pas d'extension, ou barre finale) d'un fichier à télécharger — sinon chaque `.zip` serait
+   « visité » comme une page, une requête gaspillée par fichier ;
+6. **persistance en fin d'exécution** : projet (`<hôte>.xdmspider.json`) et file (`queue.json`)
+   sont réécrits une fois, par les écritures atomiques existantes ; une interruption laisse
+   l'état précédent intact.
+
+**Conséquence.** `bin/xdm-grab.js` rend le domaine B utilisable : parcours → arborescence →
+file → téléchargements → promotion, en une commande. **106 tests.**
+
 ---
 
 ## Décisions en attente
@@ -998,7 +1023,8 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-04 | Préparer la VM Windows isolée + Frida pour la phase 6 | WP-11 | ⏳ |
 | A-06 | Lire en capstone les helpers de persistance du projet | WP-06/WP-11 | ✅ fait → annexes 11 & 12 |
 | A-08 | Format d'un filtre | WP-11 | ✅ levée : corps = `IDM_SPIDERFILTER` (16 o : nom, motif, id, actif), persisté en `REG_SZ` sous `IncludeFilters`/`ExcludeFilters` (annexe 13 §2 bis, §4 bis) → `D-032`, `D-033` |
-| A-09 | Récupérer un vrai `.gsd` sur VM Windows et le dumper | WP-11, WP-30 | ⏳ phase 6 |
+| A-09 | Lever les incertitudes d'exécution en VM Windows (protocole écrit : annexe 16, 6 phases) | WP-07 | 🟡 **protocole prêt**, exécution impossible ici (pas de VM) |
+| A-09-bis | Récupérer un vrai `.gsd` sur VM Windows et le dumper | WP-11, WP-30 | ⏳ phase 6 (P4 de l'annexe 16) |
 | A-10 | Lire le producteur du corps de filtre et `CArray<IDM_SPIDERFILTER>` | WP-11 | ✅ fait : `0xc2e00` n'est **pas** le producteur (remplissage + templates `CArray` fusionnés) ; structure prouvée par `SetAtGrow` `0xc2bc0` (16 o), saisie `0xc2c10`, sérialisation `0x137f00`, chargement `0x1385f0` ; premier id = **100** (annexe 13 v0.2, `tools/idman_filters.py`) |
 | A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ✅ fait : `D-034` — Node 22, ES modules, JSDoc, zéro dépendance, `node --test` |
 | A-20 | Écrire les tests de spécification du domaine A | porte G1 | ✅ **79 tests verts** : domaine A **clos** (`T-A-01`→`T-A-19`, `T-A-21`, `T-A-25`→`T-A-27`), domaine B partiel (`T-B-02`→`T-B-05`) |

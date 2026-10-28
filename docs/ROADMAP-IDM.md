@@ -112,9 +112,10 @@ domaine B**. Deux chantiers restent ouverts, dans cet ordre :
 1. **`A-09` — lever les incertitudes d'exécution** sur VM Windows (sémantique du champ
    `actif`, `empty.html`, `.gsd` réels, `mAttempts` par défaut), qui ne peuvent pas être
    tranchées en statique ;
-2. **`WP-07` — fiches C–F** (protocoles, médias, intégrations) : les domaines A **et B** sont
-   désormais clos et couverts par des tests (32 exigences, 30 vertes ; 97 tests). Les fiches
-   restantes demandent `A-09` (VM) pour tout ce qui relève du comportement d'exécution.
+2. **`A-09` — campagne d'observation en VM** : le protocole est écrit et exécutable
+   (`analysis/idman/16-protocole-observation-vm.md`, 6 phases avec critères d'acceptation).
+   C'est ce qui débloque `WP-07` (fiches C–F) : tout ce qui reste à documenter relève du
+   comportement d'exécution, pas du binaire.
 
 **Porte G1** : pour chaque domaine P0, un document de spécification avec
 (a) entrées/sorties, (b) machine à états, (c) structures de données, (d) cas d'erreur,
@@ -128,7 +129,7 @@ domaine B**. Deux chantiers restent ouverts, dans cet ordre :
 |---|---|---|
 | WP-10 | Fiches de spécification par domaine (format imposé : but, entrées, états, erreurs, preuves, questions ouvertes) — **2 fiches ouvertes** : domaine A (moteur) et domaine B (grabber), `A-05` | `docs/specs/` (`A-moteur-de-telechargement.md`, `B-grabber.md`) |
 | WP-11 | ✅ **Clos** (`D-041`) — persistance résolue (`.gsd` + registre), **filtres entièrement décrits** (`A-10` → `D-032`/`D-033`), page de remplacement `empty.html`, **carte des réglages** (`grabber.json` : 10 champs, `nLevels` en `+0xb8`). Le **moteur d'exploration n'est pas dans `IDMan.exe`** (0 référence code aux conteneurs) ⇒ l'exploration est un **choix XDM** (BFS par niveau, défaut 2, `robots.txt` respecté) **implémenté et testé** (`src/crawler.js`, `T-B-07`→`T-B-09`, `T-B-13`) ; arborescence locale, `empty.html` et promotion en tâches ordinaires livrés (`src/grabber.js`, `D-042`) — **13/13 exigences vertes** | `analysis/idman/11-…` + `12-…` §6 + `grabber.json` |
-| WP-12 | 🟡 Matrice de conformité : comportement observé → exigence → test (32 exigences recensées, 3 bloquées, 0 test écrit) | `docs/specs/conformance.md` (v0.1) |
+| WP-12 | ✅ **Clos** — matrice de conformité : 32 exigences, **30 vertes**, 2 bloquées (`A-05` fiches C–F, `A-09` VM) | `docs/specs/conformance.md` (v1.0) |
 
 ---
 
@@ -139,7 +140,7 @@ domaine B**. Deux chantiers restent ouverts, dans cet ordre :
 | WP-20 | ✅ **Socle terminé** : stack tranchée (`D-034` : Node 22, ESM, JSDoc, **zéro dépendance**, `node --test`) ; carte de morceaux (`chunk-map.js`, `D-030`/`D-035`), taille de morceau (`chunk-policy.js`, `D-029`), persistance atomique de la carte (`part-file.js`, `D-024`), fichier de travail (`work-file.js`, `D-026`), modèle de projet et filtres (`project.js`, `D-032`/`D-033`), file de tâches reprenable (`task-queue.js`, `D-036`), nom final et promotion (`promote.js`, `D-037`). **50 tests verts, 17 exigences couvertes** | 1 |
 | WP-21 | ✅ **Clos** — client HTTP écrit et testé (`src/http-client.js`, `D-038`) : sonde `bytes=0-0`, repli à une connexion sans `206`, redirections ≤ 10 et URL ≤ 10 239 o, `Accept-Encoding: identity`, `If-Range`, inactivité 30 s ⇒ `IDLE_TIMEOUT` + offset de reprise ; boucle de connexions et détection de divergence (`D-039`). **19/19 exigences du domaine A au vert** | 2 |
 | WP-22 | ✅ **Clos** — assemblage (`D-040`) : carte persistée à chaque morceau clos, reprise `mergeResumeChunks` (`A-21`), promotion explicite vérifiée, CLI `bin/xdm.js` | 3 |
-| WP-23 | Grabber : exploration, extraction de liens (HTML/CSS/JS/robots/sitemap), filtres, plan de site | 4 |
+| WP-23 | ✅ **Clos** (`D-041`→`D-043`) — grabber : exploration et extraction de liens (`src/crawler.js`), filtres, arborescence locale (`src/grabber.js`), **exécution** (`src/grab-runner.js`) et CLI `bin/xdm-grab.js` | 4 |
 | WP-24 | Téléchargement d'arborescence : mapping URL→chemin, réécriture optionnelle des liens, déduplication | 5 |
 | WP-25 | Planification, statistiques, export de rapport | 6 |
 | WP-26 | Médias (HLS/DASH segmenté) — réutilise WP-21/22 | 7 |
@@ -179,7 +180,7 @@ domaine B**. Deux chantiers restent ouverts, dans cet ordre :
 | **M2 — Squelette** | Table `classe → méthode → chaînes` extraite (422 classes / 13 760 méthodes) ✅ ; Ghidra opérationnel ⛔ (bloqué) | A-02, WP-04 | WP-04 atteint ; le volet décompilation reste ouvert |
 | **M3 — Spécifications** | Specs moteur + grabber + protocoles revues | M2 | Porte G1 |
 | **M4 — Prototype** | Parcours complet sur site local | M3 | Porte G3 |
-| **M3.6 — Domaines A+B** | 32 exigences, 30 vertes, 97 tests | D-041, D-042 | ✅ `npm test` |
+| **M3.6 — Domaines A+B** | 32 exigences, 30 vertes, 106 tests | D-041, D-042, D-043 | ✅ `npm test` |
 | **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |
 
@@ -211,7 +212,8 @@ domaine B**. Deux chantiers restent ouverts, dans cet ordre :
 | P4 | 4-6 j | comparaisons, résilience |
 | P5 | 3-5 j | sous réserve de la VM |
 
-**Chemin critique** : A-02 (Ghidra) → WP-04 (vtables) → WP-06 (grabber) → WP-23.
+**Chemin critique (après clôture de la P3)** : `A-09` (VM Windows) → `WP-07` (fiches C–F,
+`A-05`) → P5 (comparaison témoin). Le code du grabber ne bloque plus rien : `WP-23` est clos.
 
 ---
 

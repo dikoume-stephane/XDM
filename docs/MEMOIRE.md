@@ -7,7 +7,7 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-27 (annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`, `D-032`/`D-033` ; **domaines A et B clos : 32 exigences, 30 vertes, 97 tests, `D-034`→`D-042`**).
+- **Dernière revue** : 2026-10-28 (annexe 16 v1 : protocole VM ;annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`, `D-032`/`D-033` ; **domaines A et B clos, aspiration exécutable : 32 exigences, 30 vertes, 106 tests, `D-034`→`D-043`**).
 
 ---
 
@@ -41,7 +41,7 @@
 | [`analysis/idman/12-spec-grabber.md`](../analysis/idman/12-spec-grabber.md) | Spécification du grabber : stockage du projet, schéma de valeurs, **mesures « où vit le grabber »** (réglages `+0xb8`/`+0x124`/`+0x138`, conteneurs `SPL`/`RL`/`LI2` sans référence code, imports WinINet non transférants) | 🟡 v0.2 (WP-06/WP-11) | `classes.json` + `grabber.json` + capstone |
 | [`analysis/idman/13-filtres-et-artefacts.md`](../analysis/idman/13-filtres-et-artefacts.md) | Filtres du grabber : `IDM_SPIDERFILTER` (16 o), identifiants (`nextFilterID`, premier = 100), persistance `REG_SZ` sous `IncludeFilters`/`ExcludeFilters`, défauts, `empty.html` | 🟢 v0.2 (A-08/A-10) | `filters.json` |
 | [`analysis/idman/14-moteur-de-telechargement.md`](../analysis/idman/14-moteur-de-telechargement.md) | Moteur : architecture en anneaux, noms→adresses, machine à états (39 états nommés), E/S et seuils, taille de morceau 1–10 MiB, `MNSP`, **modèle de morceau = intervalle dans un fichier unique**, carte = liste de bornes, assemblage = promotion du `.tmp`, rollback par troncature, délai `select` et inactivité 30 s/300 s, multi-connexion, HTTP/FTP | 🟡 v0.7 (WP-05) | `methods.json` + `states.json` + `chunks.json` + `io-model.json` + capstone |
-| `analysis/idman/15-spec-protocoles.md` | Spécification des transports et médias | ⛔ à venir (WP-07) | Ghidra + REA |
+| [`analysis/idman/16-protocole-observation-vm.md`](../analysis/idman/16-protocole-observation-vm.md) | Protocole d'observation en VM (6 phases, critères d'acceptation) : défauts d'installation, ordre d'exploration, `robots.txt`, format `.gsd`, *native messaging*, inactivité/reprises | ✅ v1 (non exécuté) | preuves `analysis/raw/idman/vm-*` |
 
 ---
 
@@ -61,8 +61,10 @@
 | `src/connection-loop.js` | boucle de connexions : distribution, reprise, repli, 128 sockets | `D-039` | `T-A-01`, `T-A-08`, `T-A-10`, `T-A-13`, `T-A-25` |
 | `src/crawler.js` | aspiration : BFS par niveau, URL canonique, `robots.txt`, filtres | `D-041` | `T-B-07`→`T-B-09`, `T-B-13` |
 | `src/grabber.js` | aspiration : arborescence locale, collisions, `empty.html`, promotion en tâches ordinaires | `D-042` | `T-B-01`, `T-B-06`, `T-B-10`→`T-B-12` |
+| `src/grab-runner.js` | exécution d'une file : états, échec isolé, concurrence, persistance | `D-043` | `T-A-07`, `T-A-22`, `T-B-01` |
+| `bin/xdm-grab.js` | CLI d'aspiration : parcours → arborescence → file → téléchargements | `D-043` | `T-B-10`, `T-B-20` |
 | `bin/xdm.js` | CLI : `xdm <url> [dossier]`, nom déduit de l'URL, promotion finale | `D-037`, `D-040` | `T-A-14` |
-| `src/index.js` | barillet (130 exports) | `D-034` | — |
+| `src/index.js` | barillet (131 exports) | `D-034` | — |
 
 **Règle** : une exigence ne passe au vert que si un test de `test/` la couvre ; le tableau de
 `docs/specs/conformance.md` fait foi.

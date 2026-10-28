@@ -1,11 +1,11 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : 🟡 v0.1 — **Dernière revue** : 2026-10-27
+> **Statut** : ✅ v1.0 — **Dernière revue** : 2026-10-28
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
 > fonde et le **test** qui la vérifiera. Aucune ligne d'implémentation ne référence une
 > exigence absente de ce fichier.
-> **Sources** : `docs/specs/A-moteur-de-telechargement.md` (v0.2),
-> `docs/specs/B-grabber.md` (v0.1), annexes 13 et 14.
+> **Sources** : `docs/specs/A-moteur-de-telechargement.md` (v0.7),
+> `docs/specs/B-grabber.md` (v0.5), annexes 12 à 16.
 > **Rappel** : « preuve » ne veut pas dire « comportement validé ». Une exigence
 > **Hypothèse** n'a pas de preuve et ne peut pas être marquée conforme.
 
@@ -27,7 +27,7 @@
 | `EX-A-04` rejet des cartes incohérentes | Dérivé | `D-030` | `T-A-04` | **vert** |
 | `EX-A-05` progression dérivée | Dérivé | `D-031` | `T-A-05` | **vert** |
 | `EX-A-06` morceau 1–10 MiB, paliers 2/10 MiB | Observé + Décision | annexe 14 §5.4 ; `chunks.json` ; `D-029` | `T-A-06` | **vert** |
-| `EX-A-07` 1 → N connexions, plafond 8 par défaut | Observé + Décision | annexe 14 §6 ; `0x0fbe17` ; `D-036` | `T-A-07` | **vert** (allocation + file ; la boucle réseau reste à écrire) |
+| `EX-A-07` 1 → N connexions, plafond 8 par défaut | Observé + Décision | annexe 14 §6 ; `0x0fbe17` ; `D-036`, `D-043` | `T-A-07` | **vert** (allocation, file, boucle et **runner** ; la boucle réseau reste à écrire) |
 | `EX-A-08` `Range` par morceau, repli 1 connexion sans `206` | Observé | annexe 14 §8 ; `D-038` | `T-A-08` | **vert** (planification ; la boucle reste à écrire) |
 | `EX-A-09` rollback = troncature + morceau de reprise | Observé + Décision | annexe 14 §5.3 ; `D-035` | `T-A-09` | **vert** |
 | `EX-A-10` divergence → empreinte → repli | Observé + Décision | annexe 14 §5.5 ; `D-025`, `D-039` | `T-A-10` | **vert** |
@@ -41,7 +41,7 @@
 | `EX-A-18` inactivité > 30 s ⇒ reconnexion | Observé | annexe 14 §4.5 (`0x1a139f`, `0x18adad`) ; `D-038` | `T-A-25` | **vert** |
 | `EX-A-19` reprise sans retour à zéro | Observé + Décision | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` | **vert** |
 
-**Couverture** : 19 exigences, **19 vertes** (`npm test`, 79 cas) — domaine A **clos**.
+**Couverture** : 19 exigences, **19 vertes** (`npm test`, 106 cas) — domaine A **clos**.
 La boucle de connexions (`src/connection-loop.js`) exécute les exigences de bout en bout
 contre des serveurs locaux, y compris la coupure, la reprise depuis la carte persistée et la
 promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
@@ -60,15 +60,25 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 | `EX-B-07` profondeur paramétrable (`nLevels`) | Observé / Hypothèse | annexe 13 §4 bis | `T-B-07` | à faire |
 | `EX-B-08` exploration HTML → liens → classement | **Hypothèse** | — (`H-05`) | `T-B-08` | **bloqué** (`Q-B-01`) |
 | `EX-B-09` dédoublonnage des URL | **Hypothèse** | — | `T-B-09` | **bloqué** |
-| `EX-B-10` entrée = tâche de téléchargement | Observé | annexe 12 §1 ; `D-042` | `T-B-10` | **vert** |
+| `EX-B-10` entrée = tâche de téléchargement | Observé | annexe 12 §1 ; `D-042`, `D-043` | `T-B-10` | **vert** |
 | `EX-B-11` arborescence locale | Observé + Décision | annexe 12 §2 ; `D-042` | `T-B-11` | **vert** |
 | `EX-B-12` `empty.html` | Observé + Décision | annexe 13 §4 (`0xd1ed0`) ; `D-042` | `T-B-12` | **vert** |
 | `EX-B-13` pas de sortie de domaine | **Hypothèse** | — | `T-B-13` | **bloqué** |
 
-**Couverture** : 13 exigences, **13 vertes** (`npm test`, 97 cas) — domaine B **clos**.
+**Couverture** : 13 exigences, **13 vertes** (`npm test`, 106 cas) — domaine B **clos**.
 `Q-B-01` est close comme non instruite dans ce module (annexe 12 §6) : l'exploration et
 l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`,
 `src/grabber.js`, `D-041`/`D-042`).
+
+**Exécution de bout en bout (`D-043`)** — ces exigences ne dépendent plus d'un plan :
+
+| Ce qui est exécuté | Code | Tests |
+|---|---|---|
+| parcours → arborescence → file | `src/crawler.js`, `src/grabber.js` | `T-B-20` (`test/grab-cli.test.js`) |
+| file → téléchargement → promotion | `src/grab-runner.js` | `T-B-01`, `T-B-10` (`test/grab-runner.test.js`) |
+| états `PENDING → ACTIVE → VERIFYING → DONE`, échec isolé | `src/grab-runner.js`, `src/task-queue.js` | `T-A-07`, `T-A-22` |
+| concurrence bornée (8 par défaut) | `src/grab-runner.js` | `T-A-07` |
+| seules les pages sont explorées | `src/crawler.js` (`isPageUrl`) | `T-B-08` |
 
 ## 4. Ce que cette matrice révèle
 
@@ -90,12 +100,14 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | 3 | `T-A-06`, `T-A-07` | ✅ fait — valeurs par défaut et plafonds (observés) ; `T-A-13` reste à faire |
 | 4 | ~~`T-A-08`, `T-A-15`, `T-A-16`~~ | contrat HTTP minimal — **fait** (`D-038`) |
 | 5 | ~~`T-A-10`, `T-A-25`, `T-A-26`~~ | robustesse — **fait** (`D-039`) |
-| 6 | `T-B-*` (sauf bloqués) | après `Q-B-01` |
+| 6 | `T-B-*` (sauf bloqués) | ✅ fait — `D-041` a débloqué le domaine B ; **13/13** |
+| 7 | `T-B-20` | ✅ fait — `D-043` : l'aspiration s'exécute de bout en bout |
 
 ## 6. Journal des révisions
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v1.0 : exécution (`src/grab-runner.js`, `bin/xdm-grab.js`, `D-043`) — file → téléchargement → promotion, 106 tests ; matrice figée |
 | 2026-10-28 | v0.9 : assemblage (`src/grabber.js`, `D-042`) — arborescence, collisions, `empty.html`, promotion ; **domaine B clos (13/13)**, **97 tests** |
 | 2026-10-28 | v0.8 : parcours implémenté (`src/crawler.js`) — `EX-B-07`→`EX-B-09`, `EX-B-13` vertes ; 8/13 du domaine B, 90 tests |
 | 2026-10-28 | v0.7 : `D-041` — le moteur d'exploration n'est pas dans `IDMan.exe` (mesure `grabber.json`) ; domaine B **débloqué** par décision de périmètre, plus aucune exigence en `Hypothèse` |

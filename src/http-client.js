@@ -382,3 +382,66 @@ export async function readWithIdleTimeout(stream, {
   }
   return { received, resumeAt: startOffset + received };
 }
+
+/**
+ * Récupère une ressource textuelle (page HTML, `robots.txt`) en suivant les redirections.
+ *
+ * Même politique que la sonde : `Accept-Encoding: identity`, 10 sauts, URL bornée. Le
+ * corps est plafonné (`maxBytes`) : une page d'un gigaoctet n'est pas une page.
+ *
+ * @param {string} url
+ * @param {{transport?: typeof defaultTransport, headers?: Record<string, string>,
+ *   maxBytes?: number, maxRedirects?: number}} [options]
+ * @returns {Promise<{url: string, finalUrl: string, status: number,
+ *   headers: Record<string, string>, body: string, truncated: boolean, redirects: number}>}
+ */
+export async function fetchText(url, {
+  transport = defaultTransport,
+  headers = {},
+  maxBytes = 4 * 1024 * 1024,
+  maxRedirects = MAX_REDIRECTS,
+} = {}) {
+  let current = assertUrlLength(url);
+  let redirects = 0;
+  for (;;) {
+    const response = await transport(current, {
+      method: 'GET',
+      headers: { ...BASE_HEADERS, ...headers },
+    });
+    const responseHeaders = normalizeHeaders(response.headers);
+
+    if (isRedirect(response.status)) {
+      if (typeof response.stream?.destroy === 'function') response.stream.destroy();
+      if (redirects >= maxRedirects) {
+        throw new HttpError(
+          `${redirects + 1}ᵉ redirection refusée (limite ${maxRedirects})`,
+          'TOO_MANY_REDIRECTS',
+          { url: current },
+        );
+      }
+      current = assertUrlLength(resolveLocation(current, responseHeaders.location));
+      redirects += 1;
+      continue;
+    }
+
+    /** @type {Buffer[]} */
+    const chunks = [];
+    let total = 0;
+    for await (const chunk of response.stream) {
+      const buffer = Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+      chunks.push(buffer);
+      total += buffer.byteLength;
+      if (total >= maxBytes) break;
+    }
+    const body = Buffer.concat(chunks).subarray(0, maxBytes).toString('utf8');
+    return {
+      url,
+      finalUrl: current,
+      status: response.status,
+      headers: responseHeaders,
+      body,
+      truncated: total > maxBytes,
+      redirects,
+    };
+  }
+}

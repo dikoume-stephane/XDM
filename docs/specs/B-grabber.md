@@ -1,10 +1,10 @@
 # Fiche B — Grabber (aspiration de site)
 
-> **Domaine** : B (grabber) · **Lot** : `WP-11` (`A-05`, deuxième fiche) · **Statut** : `brouillon`
+> **Domaine** : B (grabber) · **Lot** : `WP-11`/`WP-23` (`A-05`, deuxième fiche) · **Statut** : ✅ `clos`
 > (les 13 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
 > **exploration** : choix XDM documentés depuis `D-041`, l'algorithme d'IDM n'étant pas dans
 > `IDMan.exe`)
-> **Dernière revue** : 2026-10-27
+> **Dernière revue** : 2026-10-28 (v0.5 : exécution de bout en bout, `D-043`)
 > **Preuves** : annexes 11 (modèle de projet), 12 (grabber), 13 (filtres et artefacts) ;
 > `filters.json` ; décisions `D-032`, `D-033`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9`.
