@@ -11,7 +11,7 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 79 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 90 tests, sans dépendance (node --test)
 node bin/xdm.js <url> [dossier]    # téléchargement réel : plages, reprise, promotion
 ```
 
@@ -50,10 +50,11 @@ Dépendances du socle : **aucune** — Node 22, ES modules, types JSDoc (`D-034`
 | `src/http-client.js` | sonde de ressource, `Range`/`If-Range`, redirections ≤ 10, `identity`, inactivité 30 s | `D-038` |
 | `src/divergence.js` | hachage des fenêtres de recouvrement, détection de divergence entre connexions | `D-039` |
 | `src/connection-loop.js` | boucle de connexions : distribution des morceaux, reprise depuis la carte, repli, plafond 128 sockets, promotion optionnelle | `D-039`, `D-040` |
+| `src/crawler.js` | aspiration : BFS par niveau, URL canonique, `robots.txt`, filtres du projet | `D-041` |
 | `bin/xdm.js` | CLI : `xdm <url> [dossier] [--connexions N] [--morceau T]`, nom déduit de l'URL, promotion finale | `D-037`, `D-040` |
 
-État : **domaine A clos et assemblé** (`WP-20`→`WP-22`) — 79 cas verts, 21 exigences sur 25
-couvertes (`docs/specs/conformance.md`). La chaîne fonctionne de bout en bout : sonde,
+État : **domaine A clos et assemblé** (`WP-20`→`WP-22`), **domaine B débloqué** (`D-041`) —
+90 cas verts, 29 exigences sur 32 couvertes (`docs/specs/conformance.md`). La chaîne fonctionne de bout en bout : sonde,
 découpage, connexions parallèles, reprise après coupure **depuis la carte persistée**,
 détection de divergence, promotion atomique — pilotée par la CLI. Reste le grabber
 (`WP-11`, bloqué par l'exploration de `CIDMSpider`, cf. `Q-B-01`).

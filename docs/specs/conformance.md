@@ -65,9 +65,10 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 | `EX-B-12` `empty.html` | Observé | annexe 13 §4 (`0xd1ed0`) | `T-B-12` | à faire |
 | `EX-B-13` pas de sortie de domaine | **Hypothèse** | — | `T-B-13` | **bloqué** |
 
-**Couverture** : 13 exigences, **4 vertes**, **4 spécifiées par décision** (`EX-B-07`→
-`EX-B-09`, `EX-B-13`, `D-041`), 5 testables au lot `WP-11`. **Aucune exigence bloquée** :
-`Q-B-01` est close comme non instruite dans ce module (annexe 12 §6).
+**Couverture** : 13 exigences, **8 vertes** (`npm test`, 90 cas), 5 restantes au lot
+`WP-11` (écriture disque, promotion des entrées, `empty.html`). **Aucune exigence bloquée** :
+`Q-B-01` est close comme non instruite dans ce module (annexe 12 §6), et l'exploration est un
+**choix XDM** désormais implémenté et testé (`src/crawler.js`, `D-041`).
 
 ## 4. Ce que cette matrice révèle
 
@@ -95,6 +96,7 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v0.8 : parcours implémenté (`src/crawler.js`) — `EX-B-07`→`EX-B-09`, `EX-B-13` vertes ; 8/13 du domaine B, 90 tests |
 | 2026-10-28 | v0.7 : `D-041` — le moteur d'exploration n'est pas dans `IDMan.exe` (mesure `grabber.json`) ; domaine B **débloqué** par décision de périmètre, plus aucune exigence en `Hypothèse` |
 | 2026-10-27 | v0.6 : assemblage (`D-040`) — carte persistée, fusion des morceaux de reprise (`A-21`), promotion, CLI ; **79 tests verts** |
 | 2026-10-27 | v0.5 : boucle de connexions (`D-039`) — domaine A **clos**, 19/19 ; repli sur divergence et plafond de 128 sockets vérifiés ; 73 tests verts |

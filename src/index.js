@@ -125,3 +125,16 @@ export {
   download,
   planWorkers,
 } from './connection-loop.js';
+export {
+  DEFAULT_DEPTH,
+  DEFAULT_MAX_PAGES,
+  USER_AGENT,
+  canonicalUrl,
+  classifyLink,
+  crawl,
+  extractLinks,
+  isAllowed,
+  parseRobots,
+  robotsUrl,
+  sameOrigin,
+} from './crawler.js';
