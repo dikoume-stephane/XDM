@@ -11,7 +11,7 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 50 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 61 tests, sans dépendance (node --test)
 ```
 
 ```bash
@@ -45,9 +45,11 @@ Dépendances du socle : **aucune** — Node 22, ES modules, types JSDoc (`D-034`
 | `src/project.js` | projet d'aspiration, filtres (masques glob), compteur d'ids à partir de 100 | `D-032`, `D-033` |
 | `src/task-queue.js` | file de tâches reprenable, 8 actifs par défaut, transitions explicites | `D-036` |
 | `src/promote.js` | assainissement du nom final, promotion atomique après vérification | `D-037`, `D-026` |
+| `src/http-client.js` | sonde de ressource, `Range`/`If-Range`, redirections ≤ 10, `identity`, inactivité 30 s | `D-038` |
 
-État : **socle `WP-20` clos** — 50 cas verts, 17 exigences de spécification couvertes
-(`docs/specs/conformance.md`). La couche réseau (`WP-21`) n'est pas commencée.
+État : **socle `WP-20` clos** et **couche HTTP de `WP-21` livrée** — 61 cas verts, 21 exigences
+de spécification couvertes (`docs/specs/conformance.md`). Restent la boucle de connexions
+et la détection de divergence.
 
 ## Où lire quoi
 

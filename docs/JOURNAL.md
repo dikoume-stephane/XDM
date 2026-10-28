@@ -811,6 +811,41 @@ par table de cas.
 plus sur une validation à l'écriture mais sur la **construction** du nom. `T-A-14` couvre
 huit formes d'attaque ou de cas limite.
 
+### D-038 — Le client HTTP est **une couche sans état, à transport injectable**
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-21`
+
+**Contexte.** `EX-A-08`, `EX-A-15`→`EX-A-18` décrivent le comportement réseau face aux
+serveurs réels. Les tester contre Internet serait non déterministe ; ne pas les tester
+laisserait la promotion au vert sur du code jamais exécuté.
+
+**Décision.** `src/http-client.js` sépare strictement :
+1. les **fonctions pures** du protocole — `rangeHeader`, `resumeRangeHeader`,
+   `parseContentRange`, `resolveLocation`, `acceptsRanges`, `announcedSize`,
+   `planConnections` — testables sans réseau ;
+2. un **transport** `(url, {method, headers}) => {status, headers, stream}` dont le défaut
+   est `defaultTransport` (`node:http`/`node:https`) ; les tests l'injectent pour simuler
+   des `206`, `200`, chaînes de `302` et flux divergents ;
+3. deux **opérations** : `probe()` (sonder la ressource en suivant les redirections) et
+   `openSegment()` (`Range` + `If-Range` sur un morceau).
+
+**Règles attachées.**
+- Sonder se fait avec `Range: bytes=0-0` : un `206` + `Content-Range` prouve le support,
+  un `200` le nie ⇒ une seule connexion (`EX-A-08`).
+- `Accept-Encoding: identity` est **toujours** envoyé (`EX-A-16`) : un corps compressé ne
+  respecte pas les offsets de la carte.
+- Redirections : `Location` résolue par `new URL(location, base)`, 10 sauts au plus,
+  `Location` non `http(s)` refusée, URL > 10 239 octets refusée **avant** tout appel
+  réseau (`EX-A-15`).
+- Inactivité : `readWithIdleTimeout` borne chaque attente à 30 s et lève `IDLE_TIMEOUT`
+  avec `resumeAt` = dernier offset confirmé ; l'appelant rouvre une `Range` à cet offset
+  (`EX-A-18`), jamais depuis zéro (`EX-A-19`).
+- Aucun appel réseau n'est émis en dehors de la ressource demandée : pas de télémétrie,
+  pas de résolution annexe (`EX-A-17`, cohérent avec `D-004`/`D-012`).
+
+**Conséquence.** `T-A-08`, `T-A-15`, `T-A-16`, `T-A-17`, `T-A-25` passent au vert
+(61 tests au total). `WP-21` reste ouvert sur la **boucle de connexions** (allocation
+dynamique des morceaux aux sockets, `EX-A-13`) et sur `T-A-10` (divergence de contenus).
+
 ---
 
 ## Décisions en attente
@@ -842,7 +877,7 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-10 | Lire le producteur du corps de filtre et `CArray<IDM_SPIDERFILTER>` | WP-11 | ✅ fait : `0xc2e00` n'est **pas** le producteur (remplissage + templates `CArray` fusionnés) ; structure prouvée par `SetAtGrow` `0xc2bc0` (16 o), saisie `0xc2c10`, sérialisation `0x137f00`, chargement `0x1385f0` ; premier id = **100** (annexe 13 v0.2, `tools/idman_filters.py`) |
 | A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ✅ fait : `D-034` — Node 22, ES modules, JSDoc, zéro dépendance, `node --test` |
 | A-20 | Écrire les tests de spécification du domaine A | porte G1 | ✅ **50 tests verts** : `T-A-01`→`T-A-07`, `T-A-09`, `T-A-11`, `T-A-12`, `T-A-14`, `T-A-19`, `T-A-26`, `T-A-27` + domaine B (`T-B-02`→`T-B-05`) |
-| A-22 | Client HTTP : `Range`, reprise, redirections, `Accept-Encoding` | `WP-21` | ⏳ prochain lot (exigences `EX-A-08`, `EX-A-10`, `EX-A-15`→`EX-A-18`) |
+| A-22 | Client HTTP : `Range`, reprise, redirections, `Accept-Encoding` | `WP-21` | 🟡 couche écrite et testée (`D-038`, `T-A-08`/`15`/`16`/`17`/`25` verts) ; reste la boucle de connexions et `T-A-10` (divergence) |
 | A-21 | Fusion des morceaux de reprise adjacents (suite de `D-035`) | `WP-22` | ⏳ ouvert, non bloquant (test à écrire) |
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | 🟡 **2 fiches ouvertes** : A — moteur (`A-moteur-de-telechargement.md`, 19 exigences, **aucune hypothèse**) et B — grabber (`B-grabber.md`, 13 exigences dont **3 bloquées** par `Q-B-01`). Matrice `docs/specs/conformance.md` (v0.1) : 32 exigences, 3 bloquées, 0 test. Reste : domaines C (transports), D (médias), F (persistance) |
 | A-11 | Structure logique d'un enregistrement `ChList` | lecture d'un état IDM existant | ✅ fait : `{ID, startPos, nextID}` = **liste de bornes** ; le morceau est un **intervalle** dans un fichier unique (preuve : aucun modèle `%s%d.tmp`, champ `file` partagé), assemblage = promotion du `.tmp` (annexe 14 §5, §7) → `D-030`, `D-031` ; reste l'encodage binaire exact, sans intérêt (D-024) |

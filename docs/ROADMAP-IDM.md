@@ -102,11 +102,12 @@ partiellement** : on sait *quelle* classe porte le grabber (`CSpiderSettings`,
 (4 fonctions non virtuelles), mais pas encore *ce que fait* leur code (pas de
 décompilateur).
 
-**Prochaine marche (mise à jour du 2026-10-27)** : `WP-20` est **clos** (50 tests verts,
-17 exigences au vert). La suite est `WP-21` — client HTTP : `Range` par morceau, reprise,
-redirections bornées, `Accept-Encoding: identity`, repli à une connexion quand le serveur
-ignore les plages, inactivité 30 s ⇒ reconnexion (`EX-A-08`, `EX-A-10`, `EX-A-15`→`EX-A-19`) —
-puis `WP-22` (boucle de connexions + fusion des morceaux de reprise, `A-21`). Les actions de recherche de WP-05 (`A-11` → `A-16`) **et** celles
+**Prochaine marche (mise à jour du 2026-10-27)** : `WP-20` est **clos** ; `WP-21` est amorcé
+— la couche HTTP est écrite et testée (`D-038`, **61 tests verts**, 17 exigences du domaine A
+sur 19). Il reste dans `WP-21` la **boucle de connexions** (`EX-A-13` : allocation des
+morceaux aux sockets, plafond 128, redémarrage sur inactivité) et la **détection de
+divergence** entre connexions (`EX-A-10`, `T-A-10`). Ensuite `WP-22` (assemblage et fusion
+des morceaux de reprise, `A-21`). Les actions de recherche de WP-05 (`A-11` → `A-16`) **et** celles
 de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet ordre :
 
 1. **`A-05` — fiches de spécification** : domaine A (moteur, 19 exigences, testable
@@ -138,7 +139,7 @@ de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet
 | Lot | Contenu | Ordre |
 |---|---|---|
 | WP-20 | ✅ **Socle terminé** : stack tranchée (`D-034` : Node 22, ESM, JSDoc, **zéro dépendance**, `node --test`) ; carte de morceaux (`chunk-map.js`, `D-030`/`D-035`), taille de morceau (`chunk-policy.js`, `D-029`), persistance atomique de la carte (`part-file.js`, `D-024`), fichier de travail (`work-file.js`, `D-026`), modèle de projet et filtres (`project.js`, `D-032`/`D-033`), file de tâches reprenable (`task-queue.js`, `D-036`), nom final et promotion (`promote.js`, `D-037`). **50 tests verts, 17 exigences couvertes** | 1 |
-| WP-21 | ⏳ **Prochain** — Client HTTP : `Range` par morceau, reprise (`If-Range`), redirections ≤ 10, `Accept-Encoding: identity`, repli à une connexion sans `206`, inactivité 30 s ⇒ reconnexion | 2 |
+| WP-21 | 🟡 **En cours** — client HTTP écrit et testé (`src/http-client.js`, `D-038`) : sonde `bytes=0-0`, repli à une connexion sans `206`, redirections ≤ 10 et URL ≤ 10 239 o, `Accept-Encoding: identity`, `If-Range`, inactivité 30 s ⇒ `IDLE_TIMEOUT` + offset de reprise. **Reste** : boucle de connexions (allocation dynamique + plafond 128 sockets, `EX-A-13`) et détection de divergence (`EX-A-10`, `T-A-10`) | 2 |
 | WP-22 | Machine à états du téléchargement + intégrité + reprise après crash | 3 |
 | WP-23 | Grabber : exploration, extraction de liens (HTML/CSS/JS/robots/sitemap), filtres, plan de site | 4 |
 | WP-24 | Téléchargement d'arborescence : mapping URL→chemin, réécriture optionnelle des liens, déduplication | 5 |
@@ -180,7 +181,7 @@ de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet
 | **M2 — Squelette** | Table `classe → méthode → chaînes` extraite (422 classes / 13 760 méthodes) ✅ ; Ghidra opérationnel ⛔ (bloqué) | A-02, WP-04 | WP-04 atteint ; le volet décompilation reste ouvert |
 | **M3 — Spécifications** | Specs moteur + grabber + protocoles revues | M2 | Porte G1 |
 | **M4 — Prototype** | Parcours complet sur site local | M3 | Porte G3 |
-| **M3.5 — Socle** | Socle complet : données, projet, file, promotion — 50 cas verts | D-034 | ✅ `npm test` |
+| **M3.5 — Socle** | Socle complet : données, projet, file, promotion, couche HTTP — 61 cas verts | D-034, D-038 | ✅ `npm test` |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |
 
 ---

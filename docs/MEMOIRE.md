@@ -7,7 +7,7 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-27 (annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`, `D-032`/`D-033` ; **socle `WP-20` clos : 50 tests verts, `D-034`→`D-037`**).
+- **Dernière revue** : 2026-10-27 (annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`, `D-032`/`D-033` ; **socle `WP-20` clos et couche HTTP de `WP-21` livrée : 61 tests verts, `D-034`→`D-038`**).
 
 ---
 
@@ -45,7 +45,7 @@
 
 ---
 
-## 2 bis. Code produit (socle `WP-20`, clos)
+## 2 bis. Code produit (`WP-20` clos, `WP-21` amorcé)
 
 | Fichier | Rôle | Décisions | Tests |
 |---|---|---|---|
@@ -56,7 +56,8 @@
 | `src/project.js` | projet d'aspiration, filtres glob, compteur d'ids dès 100 | `D-032`, `D-033` | `T-B-02`→`T-B-05` |
 | `src/task-queue.js` | file reprenable, 8 actifs, transitions explicites | `D-036` | `T-A-07` |
 | `src/promote.js` | nom final assaini, promotion atomique après vérification | `D-037`, `D-026` | `T-A-11`, `T-A-12`, `T-A-14` |
-| `src/index.js` | barillet (74 exports) | `D-034` | — |
+| `src/http-client.js` | sonde et segments HTTP : `Range`, `If-Range`, redirections bornées, `identity`, inactivité 30 s | `D-038` | `T-A-08`, `T-A-15`→`T-A-17`, `T-A-25` |
+| `src/index.js` | barillet (94 exports) | `D-034` | — |
 
 **Règle** : une exigence ne passe au vert que si un test de `test/` la couvre ; le tableau de
 `docs/specs/conformance.md` fait foi.

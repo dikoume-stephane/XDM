@@ -43,6 +43,7 @@
 | D-035 | Rollback : la zone perdue est rouverte en morceau de reprise, jamais absorbée par le prédécesseur | ✅ appliquée | WP-05/20 | `JOURNAL`, fiche A §3.1 |
 | D-036 | File de tâches : fichier `queue.json` unique, FIFO, transitions explicites, 8 actifs, reprise après coupure | ✅ appliquée | WP-20 | `JOURNAL`, `src/task-queue.js` |
 | D-037 | Nom final = dernière composante assainie de l'URL, ≤ 200 octets, noms réservés neutralisés | ✅ appliquée | WP-20 | `JOURNAL`, `src/promote.js` |
+| D-038 | Client HTTP sans état, transport injectable : sonde `bytes=0-0`, `identity`, 10 redirections, `IDLE_TIMEOUT` 30 s avec offset de reprise | ✅ appliquée | WP-21 | `JOURNAL`, `src/http-client.js` |
 
 ## Points de vigilance associés
 
