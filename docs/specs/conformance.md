@@ -1,6 +1,6 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.2 — **Dernière revue** : 2026-10-28
+> **Statut** : ✅ v1.3 — **Dernière revue** : 2026-10-28
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
 > fonde et le **test** qui la vérifiera. Aucune ligne d'implémentation ne référence une
 > exigence absente de ce fichier.
@@ -41,7 +41,7 @@
 | `EX-A-18` inactivité > 30 s ⇒ reconnexion | Observé | annexe 14 §4.5 (`0x1a139f`, `0x18adad`) ; `D-038` | `T-A-25` | **vert** |
 | `EX-A-19` reprise sans retour à zéro | Observé + Décision | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` | **vert** |
 
-**Couverture** : 19 exigences, **19 vertes** (`npm test`, 128 cas) — domaine A **clos**.
+**Couverture** : 19 exigences, **19 vertes** (`npm test`, 141 cas) — domaine A **clos**.
 La boucle de connexions (`src/connection-loop.js`) exécute les exigences de bout en bout
 contre des serveurs locaux, y compris la coupure, la reprise depuis la carte persistée et la
 promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
@@ -65,7 +65,7 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 | `EX-B-12` `empty.html` | Observé + Décision | annexe 13 §4 (`0xd1ed0`) ; `D-042` | `T-B-12` | **vert** |
 | `EX-B-13` pas de sortie de domaine | **Hypothèse** | — | `T-B-13` | **bloqué** |
 
-**Couverture** : 13 exigences, **13 vertes** (`npm test`, 128 cas) — domaine B **clos**.
+**Couverture** : 13 exigences, **13 vertes** (`npm test`, 141 cas) — domaine B **clos**.
 `Q-B-01` est close comme non instruite dans ce module (annexe 12 §6) : l'exploration et
 l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`,
 `src/grabber.js`, `D-041`/`D-042`).
@@ -86,10 +86,10 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 
 | Exigence | Niveau | Preuve (annexe / offset) | Test | État |
 |---|---|---|---|---|
-| `EX-C-01` HTTP/1.1 uniquement | Observé | annexe 15 §2.1 | `T-C-01` | à faire |
-| `EX-C-02` en-têtes de requête | Observé | annexe 15 §2.1 | `T-C-02` | à faire |
-| `EX-C-03` `If-Range` + `Content-Range` | Observé | `0x6b8018`, `0x6b1e24` | `T-C-03` | à faire |
-| `EX-C-04` cookies de session | Observé + Dérivé | `0x6b2958` | `T-C-04` | à faire |
+| `EX-C-01` HTTP/1.1 uniquement | Observé | annexe 15 §2.1 | `T-C-01` | **vert** (aucun `node:http2`) |
+| `EX-C-02` en-têtes de requête | Observé | annexe 15 §2.1 | `T-C-02` | 🟡 partiel (`Cookie` seul ; `User-Agent`/`Accept`/`Referer` à faire) |
+| `EX-C-03` `If-Range` + `Content-Range` | Observé | `0x6b8018`, `0x6b1e24` | `T-C-03` | **vert** (validateur de la carte, redémarrage si périmé) |
+| `EX-C-04` cookies de session | Observé + Dérivé | `0x6b2958` | `T-C-04` | **vert** (RFC 6265, hôte ≠ domaine) |
 | `EX-C-05` `gzip, deflate` hors morceaux | Observé | `0x6b26bc` | `T-C-05` | à faire |
 | `EX-C-06` séquence FTP `CWD`→`TYPE I`→`SIZE`→`REST`→`RETR` | Observé | annexe 15 §2.3 | `T-C-06` | à faire |
 | `EX-C-07` refus de `PASV` = échec explicite | Observé | annexe 15 §2.3 | `T-C-07` | à faire |
@@ -97,8 +97,10 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | `EX-C-09` proxys HTTP/HTTPS/FTP/SOCKS + PAC | Observé | annexe 15 §2.5 | `T-C-09` | à faire |
 | `EX-C-10` authentification proxy Basic/Digest | Observé | annexe 15 §2.5 | `T-C-10` | à faire |
 
-**Couverture : 0 / 10** — domaine **spécifié, non implémenté**. XDM ne fait aujourd'hui
-qu'HTTP/1.1 sans proxy (`src/http-client.js`) ; `T-C-01`→`T-C-03` sont pourtant à portée.
+**Couverture : 3 / 10** (et 1 partielle) — `src/cookies.js` (RFC 6265, `EX-C-04`),
+`If-Range` sur le validateur de la carte (`EX-C-03`, `D-047`), absence d'HTTP/2 vérifiée
+(`EX-C-01`). Restent : `User-Agent`/`Accept`/`Referer` (`EX-C-02`), compression (`EX-C-05`),
+FTP (`EX-C-06`/`EX-C-07`), proxys (`EX-C-09`/`EX-C-10`), RTMP/MMS (`EX-C-08`).
 
 ## 3 ter. Domaine D — médias (`WP-07`)
 
@@ -113,12 +115,12 @@ qu'HTTP/1.1 sans proxy (`src/http-client.js`) ; `T-C-01`→`T-C-03` sont pourtan
 | `EX-D-05` `EXT-X-BYTERANGE` | Observé | `0x6b27f8` | `T-D-05` | **vert** (plages explicites et implicites) |
 | `EX-D-06` `EXT-X-KEY` sans déchiffrement | Observé + `D-004` | `0x6b2828` | `T-D-06` | **vert** (`encrypted: true`, octets intacts) |
 | `EX-D-07` direct (`MEDIA-SEQUENCE`) | Observé + Dérivé | `0x6b284c` | `T-D-07` | **vert** (analyse ; suivi continu non implémenté) |
-| `EX-D-08` DASH par `sidx`, pas de `MPD` | Observé + `H-19` | `CMp4DashReader`, `CSidxParser` | `T-D-08` | 🟡 partiel (`src/sidx.js` lit l'index ; téléchargement DASH non câblé) |
+| `EX-D-08` DASH par `sidx`, pas de `MPD` | Observé + `H-19` | `CMp4DashReader`, `CSidxParser` | `T-D-08` | **vert** (`src/dash.js` : plages de l'index, init, refus sans index) |
 | `EX-D-09` `DISCONTINUITY` | Dérivé | `0x6b2798` | `T-D-09` | **vert** (frontière signalée) |
 | `EX-D-10` aucun DRM | Décision `D-004` | — | `T-D-10` | **vert** (décision écrite et testée) |
 
-**Couverture : 9 / 10** — implémenté par `src/hls.js`, `src/sidx.js`, `src/media.js` et
-`bin/xdm-media.js` (`D-046`) ; seul `EX-D-08` reste partiel (index lu, flux DASH non câblé).
+**Couverture : 10 / 10** — `src/hls.js`, `src/media.js` et `bin/xdm-media.js` (`D-046`)
+pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**.
 
 ## 4. Ce que cette matrice révèle
 
@@ -143,12 +145,15 @@ qu'HTTP/1.1 sans proxy (`src/http-client.js`) ; `T-C-01`→`T-C-03` sont pourtan
 | 6 | `T-B-*` (sauf bloqués) | ✅ fait — `D-041` a débloqué le domaine B ; **13/13** |
 | 7 | `T-B-20` | ✅ fait — `D-043` : l'aspiration s'exécute de bout en bout |
 | 8 | `T-C-01`→`T-C-03` | à faire — reprise conditionnelle et en-têtes : à portée de `http-client.js` |
-| 9 | `T-D-*` | ✅ fait — `D-046` : HLS de bout en bout, index `sidx` lu |
+| 9 | `T-D-*` | ✅ fait — `D-046`/`D-048` : HLS et DASH de bout en bout |
+| 10 | `T-C-04`, `T-C-03`, `T-C-01` | ✅ fait — `D-047` : cookies, reprise conditionnelle, HTTP/1.1 unique |
+| 11 | `T-C-02`, `T-C-05`→`T-C-10` | à faire — en-têtes, compression, FTP, proxys |
 
 ## 6. Journal des révisions
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v1.3 : `D-047` (cookies, `If-Range`) et `D-048` (DASH par `sidx`) — domaine D **clos 10/10**, domaine C 3/10 ; 140 tests, total **45 vertes / 52** |
 | 2026-10-28 | v1.2 : fiche D implémentée (`D-046`) — HLS segmenté de bout en bout, `sidx` lu ; **9/10** du domaine D, 128 tests, total **39 vertes / 52** |
 | 2026-10-28 | v1.1 : domaines C (transports) et D (médias) ajoutés (`WP-07`, annexe 15) — 20 exigences spécifiées, 0 implémentée ; 108 tests sur A+B |
 | 2026-10-28 | v1.0 : exécution (`src/grab-runner.js`, `bin/xdm-grab.js`, `D-043`) — file → téléchargement → promotion, 106 tests ; matrice figée |

@@ -66,6 +66,8 @@ test('T-D-03 : arguments de la CLI de flux', () => {
     maxSegments: undefined,
     assemble: null,
     output: 'texte',
+    dash: false,
+    initUrl: null,
   });
   assert.deepEqual(
     parseArgs(['http://h/live.m3u8', 'dl', '--qualite', '1200000', '--segments', '5', '--assembler', 'out.ts', '--sortie', 'json']),
@@ -76,6 +78,8 @@ test('T-D-03 : arguments de la CLI de flux', () => {
       maxSegments: 5,
       assemble: 'out.ts',
       output: 'json',
+      dash: false,
+      initUrl: null,
     },
   );
   assert.throws(() => parseArgs([]), /usage/);
@@ -83,6 +87,12 @@ test('T-D-03 : arguments de la CLI de flux', () => {
   assert.throws(() => parseArgs(['http://h/a.m3u8', '--segments', '0']), /valeur invalide/);
   assert.throws(() => parseArgs(['http://h/a.m3u8', '--assembler']), /--assembler attend un fichier/);
   assert.throws(() => parseArgs(['http://h/a.m3u8', '--sortie', 'xml']), /format de sortie inconnu/);
+  assert.deepEqual(
+    { dash: parseArgs(['http://h/v.mp4', 'd', '--dash', '--init', 'http://h/i.mp4']).dash,
+      initUrl: parseArgs(['http://h/v.mp4', 'd', '--dash', '--init', 'http://h/i.mp4']).initUrl },
+    { dash: true, initUrl: 'http://h/i.mp4' },
+  );
+  assert.throws(() => parseArgs(['http://h/v.mp4', '--init', 'http://h/i.mp4']), /qu'avec --dash/);
   assert.match(USAGE, /xdm-media/);
 });
 
@@ -116,6 +126,69 @@ test('T-D-03 : téléchargement d’un flux depuis la CLI, assemblage facultatif
       assert.equal((await readdir(join(root, 'sec'))).length, 3);
     } finally {
       await stream.close();
+    }
+  });
+});
+
+test('T-D-08 : mode --dash de la CLI (index sidx)', async () => {
+  // Média MP4 minimal : init, index `sidx` de deux sous-segments, données.
+  const box = (type, payload) => {
+    const buffer = Buffer.alloc(8 + payload.length);
+    buffer.writeUInt32BE(8 + payload.length, 0);
+    buffer.write(type, 4, 'latin1');
+    payload.copy(buffer, 8);
+    return buffer;
+  };
+  const init = box('ftyp', Buffer.alloc(8, 1));
+  const header = Buffer.alloc(16);
+  header.writeUInt32BE(1, 0);
+  header.writeUInt32BE(1000, 4);
+  const count = Buffer.alloc(4);
+  count.writeUInt16BE(2, 2);
+  const entries = Buffer.alloc(24);
+  entries.writeUInt32BE(10, 0);
+  entries.writeUInt32BE(500, 4);
+  entries.writeUInt32BE(10, 12);
+  entries.writeUInt32BE(500, 16);
+  const index = box('sidx', Buffer.concat([Buffer.alloc(4), header, count, entries]));
+  const data = Buffer.from('0123456789ABCDEFGHIJ');
+  const media = Buffer.concat([init, index, data]);
+
+  const server = http.createServer((req, res) => {
+    const match = /^bytes=(\d+)-(\d+)$/.exec(req.headers.range || '');
+    if (!match) {
+      res.writeHead(200, { 'content-length': String(media.length), 'accept-ranges': 'bytes' });
+      res.end(media);
+      return;
+    }
+    const start = Number(match[1]);
+    const end = Math.min(Number(match[2]), media.length - 1);
+    res.writeHead(206, {
+      'content-range': `bytes ${start}-${end}/${media.length}`,
+      'content-length': String(end - start + 1),
+      'accept-ranges': 'bytes',
+    });
+    res.end(media.subarray(start, end + 1));
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = /** @type {import('node:net').AddressInfo} */ (server.address());
+
+  await withTempDir(async (root) => {
+    try {
+      const summary = await main(
+        [`http://127.0.0.1:${port}/video.mp4`, join(root, 'dash'), '--dash'],
+        { log: () => {} },
+      );
+      assert.equal(summary.segments, 2);
+      assert.equal(summary.bytes, init.length + data.length);
+      assert.deepEqual(
+        (await readdir(join(root, 'dash'))).sort(),
+        ['init.mp4', 'segment-00001.m4s', 'segment-00002.m4s'],
+      );
+      assert.equal(await readFile(join(root, 'dash', 'segment-00002.m4s'), 'utf8'), 'ABCDEFGHIJ');
+    } finally {
+      server.closeAllConnections?.();
+      await new Promise((resolve) => server.close(resolve));
     }
   });
 });

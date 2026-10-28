@@ -45,6 +45,8 @@
 | D-037 | Nom final = dernière composante assainie de l'URL, ≤ 200 octets, noms réservés neutralisés | ✅ appliquée | WP-20 | `JOURNAL`, `src/promote.js` |
 | D-038 | Client HTTP sans état, transport injectable : sonde `bytes=0-0`, `identity`, 10 redirections, `IDLE_TIMEOUT` 30 s avec offset de reprise | ✅ appliquée | WP-21 | `JOURNAL`, `src/http-client.js` |
 | D-039 | Divergence détectée par hachage des fenêtres de recouvrement (1 024 o), repli à une connexion et reprise entière | ✅ appliquée | WP-21/22 | `JOURNAL`, `src/divergence.js`, `src/connection-loop.js` |
+| D-048 | DASH par `sidx` seul : entrée = fichier, init = préfixe avant l'index ou URL séparée, aucune fusion, refus explicite sans index | ✅ appliquée | WP-26 | `JOURNAL`, `src/dash.js`, `bin/xdm-media.js` |
+| D-047 | Cookies RFC 6265 en mémoire (hôte ≠ domaine, `Secure`, expiration) et `If-Range` sur le validateur **de la carte**, redémarrage si périmé | ✅ appliquée | WP-27 | `JOURNAL`, `src/cookies.js`, `src/connection-loop.js` |
 | D-046 | Médias : playlist HLS = liste de fichiers ; segments par le moteur, `BYTERANGE` par `openSegment`, variante la plus haute, aucun déchiffrement, assemblage explicite, DASH = index `sidx` seul | ✅ appliquée | WP-26 | `JOURNAL`, `src/hls.js`, `src/sidx.js`, `src/media.js`, `bin/xdm-media.js` |
 | D-045 | Fiches C (transports) et D (médias) : un document, deux domaines ; HLS observé, DASH dérivé (`H-18`, `H-19`) ; `EX-A-16` non généralisée | ✅ appliquée | WP-07 | `JOURNAL`, annexe 15, `conformance` v1.1 |
 | D-044 | Aspiration reprenable et scriptable : `--reprendre` (file sur disque, échecs rejoués) et `--sortie json` (stdout pur) | ✅ appliquée | WP-23 | `JOURNAL`, `bin/xdm-grab.js`, `D-043` |

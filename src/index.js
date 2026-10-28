@@ -178,3 +178,13 @@ export {
   planMedia,
   segmentName,
 } from './media.js';
+
+export {
+  createCookieJar,
+  defaultPath,
+  domainMatches,
+  parseSetCookie,
+  pathMatches,
+  withCookies,
+} from './cookies.js';
+export { INDEX_WINDOW_BYTES, downloadDash } from './dash.js';

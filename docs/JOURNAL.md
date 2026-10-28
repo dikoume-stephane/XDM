@@ -1071,6 +1071,52 @@ reste à lever est comportemental : `A-09` (VM) pour C et D, `WP-26` pour l'impl
 `bin/xdm-media.js` télécharge un flux HLS complet, playlists conservées, segments nommés
 `segment-00001.ts`. **128 tests.**
 
+### D-047 — Fiche C, première moitié : **cookies de session** et **reprise conditionnelle**
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-27` (fiche C)
+
+**Contexte.** La fiche C décrivait dix exigences de transport sans qu'aucune ne soit
+implémentée. Deux d'entre elles sont utilisables **sans** toucher au moteur : les cookies
+(`EX-C-04`) et `If-Range` (`EX-C-03`).
+
+**Décision.**
+1. **Cookies RFC 6265, en mémoire** (`src/cookies.js`) : domaine, chemin, `Max-Age`/`Expires`,
+   `Secure`. Pas de persistance — une aspiration est une session, et `D-004` interdit de
+   stocker des secrets.
+2. **Cookie d'hôte vs cookie de domaine** : sans attribut `Domain`, le cookie n'est **jamais**
+   envoyé à un sous-domaine (RFC 6265 §5.3). Bug réel trouvé par le test : la première
+   version fuyait `sid` vers `autre.example.com`.
+3. **`withCookies(transport, jar)`** : enveloppe un transport, enregistre `Set-Cookie` et
+   injecte `Cookie`. Le moteur n'en sait rien — aucune signature modifiée.
+4. **`If-Range` porte le validateur enregistré dans la carte**, pas celui de la sonde : la
+   sonde voit déjà le nouveau fichier et ne pourrait donc rien détecter. Si le validateur de
+   la carte diffère de celui du serveur, la carte est **périmée** et le téléchargement repart
+   à zéro (`stats.restarts`), sans mélanger deux versions.
+5. **Filet de sécurité** : un serveur qui répond `200` à une plage demandée au milieu du
+   fichier déclenche un `RESTART` explicite (`EX-C-03`), même sans `ETag`.
+
+**Conséquence.** `EX-C-01`, `EX-C-03`, `EX-C-04` passent au vert ; `EX-C-02` reste partielle
+(cookie envoyé, mais `User-Agent`/`Accept`/`Referer` ne sont pas encore paramétrables).
+
+### D-048 — Fiche D, dernier point : **DASH par `sidx`**, sans manifeste
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-26` (fin)
+
+**Contexte.** `EX-D-08` était partielle : l'index `sidx` se lisait (`src/sidx.js`) mais rien
+ne s'en servait.
+
+**Décision.**
+1. **L'entrée est un fichier, pas un `MPD`** (`H-19`, `D-046`) : on lit les 64 Kio d'en-tête,
+   on y trouve `ftyp`/`moov`/`sidx`, et l'index donne les plages exactes.
+2. **Init = tout ce qui précède le `sidx`**, sauf si une URL d'initialisation est fournie
+   (profil *live* où les deux sont séparés).
+3. **Aucune fusion** : init et segments restent côte à côte. Un `moov` fragmenté ne se
+   concatène pas comme des MPEG-TS — l'assemblage de `media.js` ne s'applique pas ici.
+4. **Refus explicite** : sans `sidx` dans la fenêtre, sans support des plages, ou si un
+   segment est incomplet, l'outil **lève** ; il ne produit jamais un fichier d'apparence
+   valide.
+
+**Conséquence.** Domaine D **10/10**. `bin/xdm-media.js --dash [--init URL]` rend le mode
+utilisable ; **140 tests**.
+
 ---
 
 ## Décisions en attente

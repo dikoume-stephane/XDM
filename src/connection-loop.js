@@ -242,18 +242,37 @@ export async function download(url, target, {
       resumedMap = null;
     }
   }
+  // `EX-C-03` : en reprise, on renvoie le validateur **enregistré dans la carte**, pas
+  // celui de la sonde — la sonde voit déjà le nouveau fichier, elle ne peut donc pas
+  // détecter un changement survenu entre deux exécutions.
+  const storedValidator = resumedMap
+    ? (resumedMap.etag ?? resumedMap.lastModified ?? null)
+    : null;
+  const remoteValidator = capabilities.etag ?? capabilities.lastModified ?? null;
+  let discarded = false;
+  if (storedValidator && remoteValidator && storedValidator !== remoteValidator) {
+    // Le fichier a changé pendant l'interruption : la carte acquise est périmée.
+    resumedMap = null;
+    discarded = true;
+  }
+  const validator = ifRange ?? (resumedMap !== null ? storedValidator : null);
   const work = await openWorkFile(workPath, size, { fresh: resumedMap === null });
-  const stats = { requests: 0, restarts: 0, divergence: false, attempts: 0 };
+  const stats = { requests: 0, restarts: discarded ? 1 : 0, divergence: false, attempts: 0 };
   const guard = new DivergenceGuard({ overlap });
 
   try {
-    let map = resumedMap ?? buildChunkMap({
-      url,
-      target,
-      totalSize: size,
-      chunkSize: effectiveChunkSize,
-      created: new Date(0).toISOString(),
+    const freshMap = (chunkSize) => ({
+      ...buildChunkMap({
+        url,
+        target,
+        totalSize: size,
+        chunkSize,
+        created: new Date(0).toISOString(),
+      }),
+      // Le validateur est la mémoire de la reprise (`EX-C-03`).
+      ...(remoteValidator ? { etag: capabilities.etag ?? undefined, lastModified: capabilities.lastModified ?? undefined } : {}),
     });
+    let map = resumedMap ?? freshMap(effectiveChunkSize);
     // Les écritures de carte sont sérialisées : une seule écriture atomique à la
     // fois, et la dernière écrite reflète l'état le plus récent.
     let saving = Promise.resolve();
@@ -272,9 +291,19 @@ export async function download(url, target, {
         const segment = await openSegment(
           capabilities.finalUrl,
           { start: requestFrom, size: interval.end - requestFrom },
-          { ...(transport ? { transport } : {}), ifRange },
+          { ...(transport ? { transport } : {}), ifRange: validator },
         );
         stats.requests += 1;
+
+        // Une reprise qui reçoit `200` alors qu'elle demandait une plage au milieu du
+        // fichier est une reprise invalide : mieux vaut tout reprendre que tout mélanger.
+        if (segment.ranged !== true && resumedMap !== null && cursor > 0) {
+          throw new DownloadError('ressource modifiée : redémarrage complet', 'RESTART', {
+            url: capabilities.finalUrl,
+            cursor,
+            etag: capabilities.etag,
+          });
+        }
 
         if (segment.ranged !== true || single) {
           // Pas de plage : le flux couvre tout le fichier depuis 0.
@@ -390,17 +419,36 @@ export async function download(url, target, {
       );
     };
 
-    try {
-      await runPool(planWorkers(effectiveConnections, map.chunks.length, maxSockets));
-    } catch (error) {
-      if (!(error instanceof DownloadError) || error.code !== 'DIVERGENT') throw error;
-      // Repli à une connexion (`EX-A-10`, `D-025`) : on repart d'un morceau unique.
-      stats.divergence = true;
-      guard.divergent = false;
-      guard.windows.clear();
-      map = buildChunkMap({ url, target, totalSize: size, chunkSize: size });
-      await persist(map);
-      await runPool(1);
+    let restarted = false;
+    for (;;) {
+      try {
+        await runPool(planWorkers(effectiveConnections, map.chunks.length, maxSockets));
+        break;
+      } catch (error) {
+        if (!(error instanceof DownloadError)) throw error;
+        if (error.code === 'DIVERGENT' && !stats.divergence) {
+          // Repli à une connexion (`EX-A-10`, `D-025`) : on repart d'un morceau unique.
+          stats.divergence = true;
+          guard.divergent = false;
+          guard.windows.clear();
+          map = freshMap(size);
+          await persist(map);
+          continue;
+        }
+        if (error.code === 'RESTART' && !restarted) {
+          // `EX-C-03` : la ressource a changé sous la reprise. On repart d'une carte
+          // neuve ; toutes les plages seront réécrites, aucune ligne n'est mélangée.
+          restarted = true;
+          stats.restarts += 1;
+          resumedMap = null;
+          guard.divergent = false;
+          guard.windows.clear();
+          map = freshMap(effectiveChunkSize);
+          await persist(map);
+          continue;
+        }
+        throw error;
+      }
     }
 
     const finalProgress = progress(map);
