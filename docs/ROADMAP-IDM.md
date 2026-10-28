@@ -104,19 +104,17 @@ décompilateur).
 
 **Prochaine marche (mise à jour du 2026-10-27)** : `WP-20`→`WP-22` sont **clos**. Le moteur
 télécharge réellement et se reprend après une coupure ; **79 tests verts**, domaine A couvert
-à 19/19. Deux chantiers restent ouverts : (a) **grabber** (`WP-11`) — bloqué tant que
-l'exploration de `CIDMSpider` n'est pas faite (`Q-B-01`, fiche B incomplète) ; (b) **médias**
-(`WP-26`, HLS/DASH) qui réutilise la boucle. La prochaine action utile est donc `A-09`
-(protocole d'observation en VM) ou la reprise de l'annexe 15 (`WP-07`). Les actions de recherche de WP-05 (`A-11` → `A-16`) **et** celles
-de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet ordre :
+à 19/19. Les actions de recherche de `WP-05` (`A-11` → `A-16`) et celles de `WP-11` (`A-08`,
+`A-10`) sont levées ; les fiches A et B sont écrites et la matrice
+`docs/specs/conformance.md` recense **19 exigences du domaine A toutes vertes** et **4 du
+domaine B**. Deux chantiers restent ouverts, dans cet ordre :
 
-1. **`A-05` — fiches de spécification** : domaine A (moteur, 19 exigences, testable
-   immédiatement) et domaine B (grabber, 13 exigences dont **3 bloquées** par
-   l'algorithme d'exploration) sont ouvertes ; la matrice `docs/specs/conformance.md`
-   recense 32 exigences et 0 test. Prochaine marche concrète : écrire les tests de
-   spécification du domaine A (`T-A-03`, `T-A-04`, `T-A-01`, `T-A-09`) **avant** le code ;
-2. **`A-09` — lever les incertitudes d'exécution** sur VM Windows (sémantique du champ
-   `actif`, `empty.html`, `.gsd` réels), qui ne peuvent pas être tranchées en statique.
+1. **`A-09` — lever les incertitudes d'exécution** sur VM Windows (sémantique du champ
+   `actif`, `empty.html`, `.gsd` réels, `mAttempts` par défaut), qui ne peuvent pas être
+   tranchées en statique ;
+2. **`A-05` (reste) — exploration de `CIDMSpider`** : sans décompilateur, l'algorithme
+   d'exploration du grabber n'est pas établi (`Q-B-01`) ; les fiches C–F et le lot `WP-11`
+   en dépendent. À défaut, `WP-26` (médias HLS/DASH) réutilise la boucle déjà écrite.
 
 **Porte G1** : pour chaque domaine P0, un document de spécification avec
 (a) entrées/sorties, (b) machine à états, (c) structures de données, (d) cas d'erreur,
