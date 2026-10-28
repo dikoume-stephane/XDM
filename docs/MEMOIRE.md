@@ -7,7 +7,7 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-27 (annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`, `D-032`/`D-033` ; 2 fiches de spécification + matrice de conformité).
+- **Dernière revue** : 2026-10-27 (annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`, `D-032`/`D-033` ; **socle `WP-20` clos : 50 tests verts, `D-034`→`D-037`**).
 
 ---
 
@@ -42,6 +42,24 @@
 | [`analysis/idman/13-filtres-et-artefacts.md`](../analysis/idman/13-filtres-et-artefacts.md) | Filtres du grabber : `IDM_SPIDERFILTER` (16 o), identifiants (`nextFilterID`, premier = 100), persistance `REG_SZ` sous `IncludeFilters`/`ExcludeFilters`, défauts, `empty.html` | 🟢 v0.2 (A-08/A-10) | `filters.json` |
 | [`analysis/idman/14-moteur-de-telechargement.md`](../analysis/idman/14-moteur-de-telechargement.md) | Moteur : architecture en anneaux, noms→adresses, machine à états (39 états nommés), E/S et seuils, taille de morceau 1–10 MiB, `MNSP`, **modèle de morceau = intervalle dans un fichier unique**, carte = liste de bornes, assemblage = promotion du `.tmp`, rollback par troncature, délai `select` et inactivité 30 s/300 s, multi-connexion, HTTP/FTP | 🟡 v0.7 (WP-05) | `methods.json` + `states.json` + `chunks.json` + `io-model.json` + capstone |
 | `analysis/idman/15-spec-protocoles.md` | Spécification des transports et médias | ⛔ à venir (WP-07) | Ghidra + REA |
+
+---
+
+## 2 bis. Code produit (socle `WP-20`, clos)
+
+| Fichier | Rôle | Décisions | Tests |
+|---|---|---|---|
+| `src/chunk-map.js` | carte de morceaux `{id,start,next,completed}`, 6 invariants, progression dérivée, rollback | `D-030`, `D-031`, `D-035` | `T-A-01`→`T-A-06` |
+| `src/chunk-policy.js` | taille de morceau par profil (`default`/`fine`/`coarse`), bornes 1–10 MiB | `D-029` | `T-A-19`, `T-A-26` |
+| `src/part-file.js` | persistance atomique de la carte (`<fichier>.xdm-part.json`) | `D-024` | `T-A-27` |
+| `src/work-file.js` | fichier de travail unique, écriture positionnée, rollback par troncature | `D-026` | `T-A-09` |
+| `src/project.js` | projet d'aspiration, filtres glob, compteur d'ids dès 100 | `D-032`, `D-033` | `T-B-02`→`T-B-05` |
+| `src/task-queue.js` | file reprenable, 8 actifs, transitions explicites | `D-036` | `T-A-07` |
+| `src/promote.js` | nom final assaini, promotion atomique après vérification | `D-037`, `D-026` | `T-A-11`, `T-A-12`, `T-A-14` |
+| `src/index.js` | barillet (74 exports) | `D-034` | — |
+
+**Règle** : une exigence ne passe au vert que si un test de `test/` la couvre ; le tableau de
+`docs/specs/conformance.md` fait foi.
 
 ---
 

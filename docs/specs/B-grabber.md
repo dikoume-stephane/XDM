@@ -1,6 +1,7 @@
 # Fiche B — Grabber (aspiration de site)
 
 > **Domaine** : B (grabber) · **Lot** : `WP-11` (`A-05`, deuxième fiche) · **Statut** : `brouillon`
+> (modèle de projet et filtres **implémentés et testés** : `EX-B-02`→`EX-B-05` vertes)
 > **Dernière revue** : 2026-10-27
 > **Preuves** : annexes 11 (modèle de projet), 12 (grabber), 13 (filtres et artefacts) ;
 > `filters.json` ; décisions `D-032`, `D-033`.
@@ -23,10 +24,10 @@ pouvoir reprendre une aspiration interrompue.
 | ID | Exigence | Niveau | Preuve | Test prévu |
 |---|---|---|---|---|
 | `EX-B-01` | Un projet d'aspiration est **un seul artefact** (fichier), pas un état éclaté dans le registre | **Observé** (IDM : `.gsd`) + **Décision** (XDM : JSON) | annexe 11 §1 (`%sproject%s.gsd`, `0x68c948`) | `T-B-01` : projet copié sur une autre machine = reprise possible |
-| `EX-B-02` | Le projet contient : identifiant, nom, URL racine, filtres, plan de site, entrées retenues, planification optionnelle | **Dérivé** | annexe 11 §4 | `T-B-02` : schéma validé par un test de sérialisation |
-| `EX-B-03` | Un filtre = `{id, motif, actif}` ; l'appartenance à la liste **inclusion** ou **exclusion** est portée par la collection, pas par le filtre | **Observé** + **Décision** | annexe 13 §2 bis ; `D-032` | `T-B-03` : un filtre déplacé d'une liste à l'autre change de comportement sans changer de forme |
-| `EX-B-04` | Les identifiants de filtres sont attribués par un compteur persistant qui démarre à **100** | **Observé** + **Décision** | annexe 13 §2 ter ; `D-033` | `T-B-04` : deux créations successives → 100 puis 101 |
-| `EX-B-05` | Un motif est un **masque** (`*.png`), éventuellement une liste séparée par des virgules | **Observé** (forme des défauts) | annexe 13 §4 bis (défaut `*.html,*.htm,…`) | `T-B-05` : `*.png` et `*.jpg,*.jpeg` filtrent correctement |
+| `EX-B-02` | Le projet contient : identifiant, nom, URL racine, filtres, plan de site, entrées retenues, planification optionnelle | **Dérivé** | annexe 11 §4 | `T-B-02` ✅ : 5 invariants vérifiés, écriture atomique, projet incohérent rejeté |
+| `EX-B-03` | Un filtre = `{id, motif, actif}` ; l'appartenance à la liste **inclusion** ou **exclusion** est portée par la collection, pas par le filtre | **Observé** + **Décision** | annexe 13 §2 bis ; `D-032` | `T-B-03` ✅ : déplacement à forme constante ; un `scope` résiduel invalide le projet |
+| `EX-B-04` | Les identifiants de filtres sont attribués par un compteur persistant qui démarre à **100**, jamais recyclé | **Observé** + **Décision** | annexe 13 §2 ter ; `D-033` | `T-B-04` ✅ : 100 puis 101, et après suppression le compteur continue |
+| `EX-B-05` | Un motif est un **masque glob ancré** (`*.png`), éventuellement une liste séparée par des virgules ; l'exclusion l'emporte sur l'inclusion | **Observé** + **Décision** | annexe 13 §4 bis (défaut `*.html,*.htm,…`) | `T-B-05` ✅ : ancrage strict, liste, priorité de l'exclusion, désactivation d'un filtre |
 | `EX-B-06` | Une entrée retenue porte au minimum : URL, chemin local, nom de fichier local, taille attendue, état, journal | **Observé** (noms de valeurs) | annexe 12 §2 (`LocalFileName`, `LocalPath`, `LogFileName`, `nExpectedSize`) | `T-B-06` |
 | `EX-B-07` | La profondeur d'exploration est un paramètre du projet (réglage voisin observé : `nLevels`) | **Observé** (existence) / **Hypothèse** (sémantique) | annexe 13 §4 bis (`nLevels`, `0x2a9f40`) | `T-B-07` : profondeur 1 = page de départ seulement |
 | `EX-B-08` | Une page HTML est lue, ses liens extraits, puis chaque lien est classé (retenu / exclu / hors périmètre) — **l'algorithme exact n'est pas établi** | **Hypothèse** | annexe 12 §4 (`H-05`) | `T-B-08` : jeu de 20 liens, verdicts attendus |
@@ -164,4 +165,5 @@ DISCOVERED --(GET)--> FETCHED --(parse)--> PARSED --(filtre)--> RETENU | EXCLU
 
 | Date | Auteur | Changement |
 |---|---|---|
+| 2026-10-27 | socle `WP-20` | v0.2 : modèle de projet et filtres implémentés (`src/project.js`), `EX-B-02`→`EX-B-05` **vertes** ; reste bloqué par `Q-B-01` (exploration) |
 | 2026-10-27 | analyse statique | création (brouillon) : 13 exigences, modèle de projet, machine à états, 7 cas d'erreur, 5 écarts, 6 questions ouvertes. **6 exigences sur 13 sont des hypothèses** : la fiche ne peut pas passer en revue avant `Q-B-01` |

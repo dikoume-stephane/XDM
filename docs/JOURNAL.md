@@ -753,6 +753,66 @@ tâche ajoutée au lot, test `T-A-27` à écrire.
 
 ---
 
+---
+
+### D-036 — La file de tâches est **un fichier unique**, FIFO, à transitions explicites
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-20`
+
+**Contexte.** IDM répartit l'état des téléchargements entre la liste en mémoire, la clé
+`Software\DownloadManager\<id>` et le registre `ChList` (annexe 14 §5.1). XDM a déjà
+choisi de mettre l'état **d'un** téléchargement dans `<cible>.xdm-part.json` (`D-024`) ;
+il manquait l'état de **la file**.
+
+**Options.** (a) un fichier par tâche ; (b) un fichier `queue.json` unique à la racine de
+travail ; (c) une base SQLite.
+
+**Décision.** **(b)**, avec : ordre d'exécution **FIFO** sur l'ordre d'insertion, table de
+transitions **explicite** (`PENDING → ACTIVE → VERIFYING → DONE`, `ACTIVE ↔ PAUSED`,
+`FAILED → PENDING` seulement sur action manuelle), plafond de téléchargements actifs
+**8** par défaut (valeur observée, `0x0fbe17`), et récupération au démarrage : toute tâche
+restée `ACTIVE` repasse en `PENDING` en conservant son compteur de tentatives.
+
+**Justification.** (a) impose de lister le dossier et rend l'ordre dépendant du système de
+fichiers ; (c) ajoute une dépendance native (`D-034`) pour un besoin qui reste sous
+quelques milliers de lignes. (b) s'écrit atomiquement avec le même motif que la carte, se
+lit à l'œil, et un fichier `queue.json` corrompu est **refusé** sans faire perdre les
+cartes de morceaux, qui restent valides à côté.
+
+**Conséquence.** Un test vérifie qu'une transition illégale (`ACTIVE → DONE`) **lève** au
+lieu d'être absorbée : les bugs d'appelant deviennent visibles. La récupération après
+coupure est testée (`recoverAfterCrash`), et `WP-22` doit appeler cette fonction avant
+toute reprise.
+
+---
+
+### D-037 — Assainissement du nom final : **dernière composante**, jamais un chemin
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-20` (`EX-A-14`)
+
+**Contexte.** Le nom du fichier final est déduit de l'URL (`SessionManager::GetDefaultlocalName`
+côté IDM). Une URL forgée peut contenir `../`, un séparateur, un caractère interdit
+Windows, un nom réservé (`CON`, `LPT1`) ou une longueur excessive.
+
+**Options.** (a) remplacer les séparateurs par `_` en conservant tout le reste ; (b) ne
+garder que la **dernière composante** de chemin, puis nettoyer ; (c) rejeter l'URL.
+
+**Décision.** **(b)** : décodage défensif (`%2e%2e`), découpage sur `/` et `\`, conservation
+du dernier segment non vide, suppression des caractères de contrôle, remplacement des
+caractères interdits (`<>:"|?*`), compression des suites de points, retrait des points et
+espaces finaux, préfixe `_` pour les noms réservés DOS, troncature à **200 octets** en
+conservant l'extension, repli `download` si le résultat est vide. Une URL terminée par `/`
+retombe sur le nom d'hôte.
+
+**Justification.** (a) produisait des noms illisibles (`.../etc/passwd` → `._._etc_passwd`)
+et laissait la porte ouverte à des collisions ; (c) priverait l'utilisateur d'un
+téléchargement légitime à cause d'un caractère. (b) est la règle des navigateurs, testable
+par table de cas.
+
+**Conséquence.** Aucun nom produit ne peut sortir du dossier cible : la garantie ne repose
+plus sur une validation à l'écriture mais sur la **construction** du nom. `T-A-14` couvre
+huit formes d'attaque ou de cas limite.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
@@ -781,8 +841,9 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-09 | Récupérer un vrai `.gsd` sur VM Windows et le dumper | WP-11, WP-30 | ⏳ phase 6 |
 | A-10 | Lire le producteur du corps de filtre et `CArray<IDM_SPIDERFILTER>` | WP-11 | ✅ fait : `0xc2e00` n'est **pas** le producteur (remplissage + templates `CArray` fusionnés) ; structure prouvée par `SetAtGrow` `0xc2bc0` (16 o), saisie `0xc2c10`, sérialisation `0x137f00`, chargement `0x1385f0` ; premier id = **100** (annexe 13 v0.2, `tools/idman_filters.py`) |
 | A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ✅ fait : `D-034` — Node 22, ES modules, JSDoc, zéro dépendance, `node --test` |
-| A-20 | Écrire les tests de spécification du domaine A | porte G1 | ✅ 24 tests verts : `T-A-01`, `02`, `03`, `04`, `05`, `06`, `07`, `09`, `26` (`npm test`) |
-| A-21 | Fusion des morceaux de reprise adjacents (suite de `D-035`) | `WP-22` | ⏳ ouvert, non bloquant (`T-A-27` à écrire) |
+| A-20 | Écrire les tests de spécification du domaine A | porte G1 | ✅ **50 tests verts** : `T-A-01`→`T-A-07`, `T-A-09`, `T-A-11`, `T-A-12`, `T-A-14`, `T-A-19`, `T-A-26`, `T-A-27` + domaine B (`T-B-02`→`T-B-05`) |
+| A-22 | Client HTTP : `Range`, reprise, redirections, `Accept-Encoding` | `WP-21` | ⏳ prochain lot (exigences `EX-A-08`, `EX-A-10`, `EX-A-15`→`EX-A-18`) |
+| A-21 | Fusion des morceaux de reprise adjacents (suite de `D-035`) | `WP-22` | ⏳ ouvert, non bloquant (test à écrire) |
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | 🟡 **2 fiches ouvertes** : A — moteur (`A-moteur-de-telechargement.md`, 19 exigences, **aucune hypothèse**) et B — grabber (`B-grabber.md`, 13 exigences dont **3 bloquées** par `Q-B-01`). Matrice `docs/specs/conformance.md` (v0.1) : 32 exigences, 3 bloquées, 0 test. Reste : domaines C (transports), D (médias), F (persistance) |
 | A-11 | Structure logique d'un enregistrement `ChList` | lecture d'un état IDM existant | ✅ fait : `{ID, startPos, nextID}` = **liste de bornes** ; le morceau est un **intervalle** dans un fichier unique (preuve : aucun modèle `%s%d.tmp`, champ `file` partagé), assemblage = promotion du `.tmp` (annexe 14 §5, §7) → `D-030`, `D-031` ; reste l'encodage binaire exact, sans intérêt (D-024) |
 | A-12 | Énumérer les états de `Connection` | spécification de `WP-05` | ✅ fait : 39 états (0..38) en `this+0xa4`, 8 distributeurs, 115 transitions (annexe 14 §4) → `D-027` |

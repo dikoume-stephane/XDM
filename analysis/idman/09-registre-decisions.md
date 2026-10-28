@@ -41,6 +41,8 @@
 | D-033 | Les filtres vivent dans le projet, pas dans le registre ; ids à partir de 100 | ✅ appliquée | WP-11 | annexe 13 §4 bis |
 | D-034 | Socle XDM : Node 22 + ES modules + JSDoc, zéro dépendance, `node --test` | ✅ appliquée (ferme D-017) | WP-20+ | `JOURNAL` |
 | D-035 | Rollback : la zone perdue est rouverte en morceau de reprise, jamais absorbée par le prédécesseur | ✅ appliquée | WP-05/20 | `JOURNAL`, fiche A §3.1 |
+| D-036 | File de tâches : fichier `queue.json` unique, FIFO, transitions explicites, 8 actifs, reprise après coupure | ✅ appliquée | WP-20 | `JOURNAL`, `src/task-queue.js` |
+| D-037 | Nom final = dernière composante assainie de l'URL, ≤ 200 octets, noms réservés neutralisés | ✅ appliquée | WP-20 | `JOURNAL`, `src/promote.js` |
 
 ## Points de vigilance associés
 

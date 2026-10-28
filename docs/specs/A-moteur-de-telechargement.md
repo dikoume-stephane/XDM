@@ -1,9 +1,10 @@
 # Fiche A — Moteur de téléchargement
 
-> **Domaine** : A (moteur) · **Lot** : `WP-05` (`A-05`, première fiche) · **Statut** : `brouillon`
+> **Domaine** : A (moteur) · **Lot** : `WP-05` (`A-05`, première fiche) · **Statut** : `brouillon` avancé
+> (13 exigences sur 19 au **vert**, socle `WP-20` livré)
 > **Dernière revue** : 2026-10-27
 > **Preuves** : annexe 14 v0.5 (moteur), annexe 13 v0.2 (filtres, hors périmètre ici),
-> `chunks.json`, `io-model.json`, `states.json` ; décisions `D-024`→`D-031`.
+> `chunks.json`, `io-model.json`, `states.json` ; décisions `D-024`→`D-031`, `D-034`→`D-037`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9` — les offsets cités ne valent que
 > pour cette version.
 > **Règle** : une exigence sans preuve est **Hypothèse** ; une exigence **Observé** cite un
@@ -28,16 +29,16 @@ l'intégrité est vérifiable.
 | `EX-A-04` | Une carte non monotone, cyclique, ou dont un `nextId` est orphelin est **rejetée** au chargement | **Dérivé** | `D-030` | `T-A-04` : trois cartes corrompues → rejet explicite |
 | `EX-A-05` | La progression affichée est **recalculée** depuis la carte, jamais persistée | **Dérivé** | `D-031` | `T-A-05` : progression identique avant/après reprise |
 | `EX-A-06` | Taille de morceau = `clamp(1 MiB, 10 MiB, f(taille))`, avec les paliers 2 MiB (≤ 512 Mio) et 10 MiB (au-delà) | **Observé** + **Décision** | annexe 14 §5.4 ; `chunks.json` ; `D-029` | `T-A-06` : encadrement sur 1 Kio, 1 Gio, 100 Gio |
-| `EX-A-07` | Le nombre de connexions démarre à **1** et croît tant qu'un morceau libre reste disponible, plafonné par la configuration (défaut **8**) | **Observé** + **Décision** | annexe 14 §6 ; `0x0fbe17` | `T-A-07` : 3 connexions sur un fichier de 10 morceaux, jamais 8 |
+| `EX-A-07` | Le nombre de téléchargements actifs est plafonné par la configuration (défaut **8**) et la file suit l'ordre d'arrivée ; une place ne s'ouvre qu'après libération | **Observé** + **Décision** | annexe 14 §6 ; `0x0fbe17` ; `D-036` | `T-A-07` ✅ : 12 tâches → 8 actives, la 9ᵉ au premier `DONE` |
 | `EX-A-08` | Chaque connexion émet `Range: bytes=<début>-<fin>` ; l'absence de `Accept-Ranges` ou une réponse `200` (au lieu de `206`) ⇒ **une seule connexion** | **Observé** | annexe 14 §8 | `T-A-08` : serveur sans plage → 1 connexion |
 | `EX-A-09` | Le rollback tronque le fichier de travail au dernier offset confirmé (`ftruncate`) et **rouvre la zone perdue en morceau de reprise** | **Observé** (troncature) + **Décision** (réouverture) | annexe 14 §5.3 (`SetFilePointer` `0x15fee5`, `SetEndOfFile` `0x15ff52`, compteur `0x15ff9b`) ; `D-035` | `T-A-09` : coupure brutale → fichier tronqué, morceau de reprise inséré, progression des parties acquises inchangée |
 | `EX-A-10` | Deux contenus divergents entre connexions ⇒ détection (empreinte SHA-256 par bloc de recouvrement) puis **repli à une connexion** | **Observé** (phénomène) + **Décision** (mécanisme) | annexe 14 §5.5 ; `D-025` | `T-A-10` : flux divergents injectés → repli + journal |
-| `EX-A-11` | Un morceau incomplet n'est **jamais** marqué terminé ni copié dans le fichier final | **Observé** | annexe 14 §7 (`isCmpleted = 0`) | `T-A-11` |
-| `EX-A-12` | Le fichier final n'est promu qu'après vérification de la carte et de la taille attendue | **Observé** + **Décision** | annexe 14 §7 ; `D-026` | `T-A-12` : taille incohérente ⇒ pas de promotion |
+| `EX-A-11` | Un morceau incomplet n'est **jamais** marqué terminé ni copié dans le fichier final | **Observé** | annexe 14 §7 (`isCmpleted = 0`) | `T-A-11` ✅ |
+| `EX-A-12` | Le fichier final n'est promu qu'après vérification de la carte et de la taille attendue ; la promotion est un `rename` atomique et supprime la carte | **Observé** + **Décision** | annexe 14 §7 ; `D-026`, `D-036` | `T-A-12` ✅ : carte incomplète ou taille incohérente ⇒ rien n'est livré ni supprimé |
 | `EX-A-13` | Un seul réacteur d'E/S par session, plafond de **128 sockets**, délai `select` ≤ **12 000 ms** | **Observé** + **Décision** | annexe 14 §4.4 ; `io-model.json` ; `D-028` | `T-A-13` : 130 morceaux demandés → 128 sockets au plus |
 | `EX-A-18` | Inactivité d'une connexion **> 30 s** ⇒ la connexion est redémarrée (nouvelle `Range` au dernier offset confirmé), pas le téléchargement | **Observé** | annexe 14 §4.5 (`cmp eax, 0x1e` en `0x1a139f`, `0x18adad`) | `T-A-25` : serveur muet 35 s → reconnexion unique, données conservées |
 | `EX-A-19` | Une tentative de reprise ne repart **jamais** de zéro tant que la carte est valide | **Observé** + **Décision** | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` : 3 redémarrages successifs, progression strictement croissante |
-| `EX-A-14` | Le nom final est déduit de l'URL (`Content-Disposition` prioritaire), assaini (pas de `..`, pas de séparateur de chemin) | **Observé** (déduction du nom) + **Dérivé** (assainissement) | annexe 14 §3 (`GetDefaultlocalName`) | `T-A-14` : `?a=../../etc/passwd` → nom inoffensif |
+| `EX-A-14` | Le nom final est déduit de l'URL, et seule la **dernière composante** assainie est conservée (≤ 200 octets, noms réservés neutralisés) | **Observé** (déduction du nom) + **Décision** | annexe 14 §3 (`GetDefaultlocalName`) ; `D-037` | `T-A-14` ✅ : `../../etc/passwd` → `passwd`, `CON.txt` → `_CON.txt` |
 | `EX-A-15` | Toute redirection (`Location:`) est résolue en URL absolue (RFC 3986), avec limite de 10 redirections et URL ≤ 10 239 octets | **Observé** | annexe 14 §8.1 (`InternetCombineUrlA`, `cmp ecx, 0x27ff`) | `T-A-15` : chaîne de 11 redirections → abandon explicite |
 | `EX-A-16` | Compression désactivée pour les transferts par morceaux (`Accept-Encoding: identity`) | **Observé** | annexe 14 §8 | `T-A-16` |
 | `EX-A-17` | Aucune télémétrie, aucun appel réseau hors du téléchargement demandé | **Décision** | `D-004`, `D-012` | `T-A-17` : inspection des sockets ouvertes |
@@ -178,6 +179,7 @@ CONNECT --(socket prêt)--> HEADERS --(206 attendu)--> DATA --(morceau plein)-->
 
 | Date | Auteur | Changement |
 |---|---|---|
+| 2026-10-27 | socle `WP-20` | v0.4 : file de tâches (`D-036`) et assainissement du nom (`D-037`) écrits et testés ; `EX-A-07`, `EX-A-11`, `EX-A-12`, `EX-A-14` passent **vert** — **50 tests** au total |
 | 2026-10-27 | socle `WP-20` | v0.3 : `EX-A-09` précisée (réouverture de la zone perdue, `D-035`), invariant 6 ajouté ; **24 tests de spécification verts** (`npm test`) sur les exigences `EX-A-01`→`EX-A-07`, `EX-A-09`, `EX-A-19` |
 | 2026-10-27 | analyse statique | v0.2 : `A-13` complétée — `EX-A-18` (inactivité 30 s ⇒ reconnexion), `EX-A-19` (reprise sans perte), `Q-A-02` restreinte à la valeur de `mAttempts` |
 | 2026-10-27 | analyse statique | création (brouillon) : 17 exigences, modèle de données, machine à états, 8 cas d'erreur, 6 écarts, 4 questions ouvertes — dérivée des annexes 13 et 14, sans nouvelle rétro-ingénierie |

@@ -11,7 +11,7 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 24 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 50 tests, sans dépendance (node --test)
 ```
 
 ```bash
@@ -42,9 +42,12 @@ Dépendances du socle : **aucune** — Node 22, ES modules, types JSDoc (`D-034`
 | `src/chunk-policy.js` | taille de morceau adaptative bornée 1–10 MiB, trois profils observés | `D-029` |
 | `src/part-file.js` | persistance atomique de `<cible>.xdm-part.json` | `D-024` |
 | `src/work-file.js` | fichier de travail unique, écriture positionnée, rollback par troncature | `D-026` |
+| `src/project.js` | projet d'aspiration, filtres (masques glob), compteur d'ids à partir de 100 | `D-032`, `D-033` |
+| `src/task-queue.js` | file de tâches reprenable, 8 actifs par défaut, transitions explicites | `D-036` |
+| `src/promote.js` | assainissement du nom final, promotion atomique après vérification | `D-037`, `D-026` |
 
-État : couche de données testée (24 cas verts) ; la couche réseau (`WP-21`) n'est pas
-commencée.
+État : **socle `WP-20` clos** — 50 cas verts, 17 exigences de spécification couvertes
+(`docs/specs/conformance.md`). La couche réseau (`WP-21`) n'est pas commencée.
 
 ## Où lire quoi
 
