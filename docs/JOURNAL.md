@@ -1297,7 +1297,12 @@ bug au mauvais endroit.
    `retryable` et `retryAfterMs`. Un `404` reste un `404`, un `429` reste un `429`.
 2. **Aucune nouvelle tentative dans le client HTTP.** Rejouer est une décision de la **file**
    (`attempts`, `D-036`), seule à savoir combien de fois elle a déjà échoué. Un client qui
-   attendrait 30 s en silence ferait passer un serveur saturé pour un réseau lent.
+   attendrait 30 s en silence ferait passer un serveur saturé pour un réseau lent. La file
+   rejoue donc elle-même (`runQueue({maxAttempts, sleep})`, `--tentatives N`), en repartant
+   de la **sonde** — pas d'un morceau, dont la carte serait périmée par un fichier changé
+   entre-temps. L'attente n'a lieu que si `delayMs ≤ maxDelayMs` (30 s) : au-delà, on échoue
+   plutôt que d'immobiliser une place de connexion. Une erreur **sans statut** (DNS, coupure)
+   n'est pas rejouée automatiquement : elle relève de `retryFailed`, à la demande.
 3. `src/retry.js` fournit les faits nécessaires : `isRetryableStatus` (`429`, `408`, `500`,
    `502`, `503`, `504`), `parseRetryAfter` (secondes **ou** date HTTP, plafonné à une heure,
    jamais négatif), `retryDelay` (recul exponentiel plafonné, **sans aléa** pour rester
@@ -1305,9 +1310,13 @@ bug au mauvais endroit.
 4. Une redirection en boucle s'arrête à 10 (`TOO_MANY_REDIRECTS`), une plage hors fichier
    reste un `416` (`ranged: false`), une page `gzip` reste lisible.
 
-**Conséquence.** `EX-C-11` est verte (`src/retry.js`, `test/resilience.test.js`, 9 cas).
-Le branchement d'une attente réelle dans la boucle de connexions reste **à faire** : le
-module est prêt, la file ne l'utilise pas encore, et la documentation le dit.
+**Mesure.** 11 cas dans `test/resilience.test.js`, dont deux de bout en bout : un `503` puis
+`200` ⇒ **2 tentatives**, attente respectant `Retry-After: 1` (1 000 ms, `sleep` injecté donc
+instantané en test), fichier final correct ; un `404` ⇒ **une seule** requête, échec franc ;
+un `503` permanent avec `maxAttempts: 2` ⇒ exactement 2 requêtes.
+
+**Conséquence.** `EX-C-11` est verte et **branchée** (`src/retry.js`, `src/grab-runner.js`,
+`bin/xdm-grab.js --tentatives`).
 
 ---
 

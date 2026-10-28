@@ -4,7 +4,7 @@
  *
  * `xdm-grab <url> [dossier] [--profondeur N] [--pages N] [--connexions N] [--sans-robots]
  *   [--reprendre] [--inclure MOTIF] [--sans-exclusions] [--reecrire] [--rapport F]
- *   [--planifier « lun-ven 01:00-06:00 »]
+ *   [--planifier « lun-ven 01:00-06:00 »] [--tentatives N]
  *   [--quota-octets N | --quota-taches N] [--sortie texte|json]`
  *
  * Enchaîne, sans état caché : parcours du site (`crawler.js`) → arborescence locale et
@@ -31,7 +31,7 @@ import { createQueue, loadQueue, saveQueue } from '../src/task-queue.js';
 export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages N] [--connexions N] [--sans-robots]
                    [--reprendre] [--inclure MOTIF] [--sans-exclusions] [--reecrire]
                    [--rapport F] [--planifier FENÊTRE]
-                   [--quota-octets N | --quota-taches N] [--sortie texte|json]
+                   [--quota-octets N | --quota-taches N] [--tentatives N] [--sortie texte|json]
   --profondeur     niveaux visités (défaut 2)
   --pages          nombre maximal de pages visitées (défaut 2000)
   --connexions     téléchargements simultanés (défaut 4)
@@ -45,6 +45,8 @@ export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages
   --planifier      n'exécuter que dans la fenêtre donnée, ex. « lun-ven 01:00-06:00 »
   --quota-octets   budget d'octets pour cette exécution
   --quota-taches   nombre de tâches pour cette exécution
+  --tentatives     essais par tâche sur un statut transitoire (défaut 1 ; 429/503 respectent
+                   l'en-tête Retry-After)
   --sortie         format du résumé : texte (défaut) ou json
 
 code de sortie : 0 terminé, 1 erreur, 2 usage, 3 hors fenêtre de planification`;
@@ -75,6 +77,7 @@ export function parseArgs(argv) {
     window: null,
     quotaBytes: null,
     quotaTasks: null,
+    attempts: 1,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const argument = argv[i];
@@ -109,6 +112,7 @@ export function parseArgs(argv) {
       options.window = argv[i];
     } else if (argument === '--quota-octets') options.quotaBytes = value();
     else if (argument === '--quota-taches') options.quotaTasks = value();
+    else if (argument === '--tentatives') options.attempts = value();
     else if (argument === '--sortie') {
       i += 1;
       const format = argv[i];
@@ -307,6 +311,7 @@ export async function main(argv, {
     queueDir: rootDir,
     concurrency: connections,
     only,
+    maxAttempts: options.attempts,
     ...(effectiveRunTask ? { runTask: effectiveRunTask } : {}),
   });
 

@@ -21,6 +21,9 @@ import {
   HttpError, fetchText, normalizeHeaders, openSegment, probe,
 } from '../src/http-client.js';
 import { download } from '../src/connection-loop.js';
+import { runQueue } from '../src/grab-runner.js';
+import { addTask } from '../src/task-queue.js';
+import { createQueue } from '../src/index.js';
 
 /** Serveur qui répond selon une table `chemin → (req, res) => void`. */
 async function withServer(routes, fn) {
@@ -224,4 +227,77 @@ test('T-C-11 : une page compressée reste lisible après un 200', async () => {
     assert.equal(page.body, '<p>bonjour</p>');
     assert.equal(page.encoding, 'gzip');
   });
+});
+
+test('T-C-11 : la file rejoue un 503 puis réussit — sans attente réelle dans les tests', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'xdm-retry2-'));
+  const body = Buffer.from('contenu après incident');
+  let hits = 0;
+  try {
+    await withServer({
+      '/fichier.bin': (req, res) => {
+        hits += 1;
+        if (hits === 1) {
+          res.writeHead(503, { 'retry-after': '1', 'content-length': '0' });
+          res.end();
+          return;
+        }
+        res.writeHead(200, { 'content-length': String(body.length) });
+        res.end(body);
+      },
+    }, async (origin) => {
+      const target = join(dir, 'fichier.bin');
+      const queue = addTask(createQueue({}), { url: `${origin}/fichier.bin`, target }).queue;
+      const waits = [];
+      const outcome = await runQueue(queue, {
+        maxAttempts: 3,
+        sleep: async (ms) => { waits.push(ms); },
+      });
+
+      // Une sonde par tentative (`503` puis `200`) et la requête du morceau.
+      assert.equal(hits, 3, 'la relance repart de la sonde, pas d’un morceau');
+      assert.equal(outcome.queue.tasks[0].state, 'DONE');
+      assert.equal(outcome.queue.tasks[0].attempts, 2);
+      assert.deepEqual(waits, [1000], 'le Retry-After du serveur est respecté');
+      assert.deepEqual(await readFile(target), body);
+    });
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('T-C-11 : la file ne rejoue pas un 404, ni au-delà du plafond', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'xdm-retry3-'));
+  try {
+    let hits = 0;
+    await withServer({
+      '/absent.bin': (req, res) => {
+        hits += 1;
+        res.writeHead(404, { 'content-length': '0' });
+        res.end();
+      },
+    }, async (origin) => {
+      const queue = addTask(createQueue({}), { url: `${origin}/absent.bin`, target: join(dir, 'x.bin') }).queue;
+      const outcome = await runQueue(queue, { maxAttempts: 5, sleep: async () => {} });
+      assert.equal(hits, 1, 'un verdict ferme ne se rejoue pas');
+      assert.equal(outcome.queue.tasks[0].state, 'FAILED');
+      assert.equal(outcome.queue.tasks[0].attempts, 1);
+    });
+
+    let saturations = 0;
+    await withServer({
+      '/sature.bin': (req, res) => {
+        saturations += 1;
+        res.writeHead(503, { 'content-length': '0' });
+        res.end();
+      },
+    }, async (origin) => {
+      const queue = addTask(createQueue({}), { url: `${origin}/sature.bin`, target: join(dir, 'y.bin') }).queue;
+      const outcome = await runQueue(queue, { maxAttempts: 2, sleep: async () => {} });
+      assert.equal(saturations, 2, 'plafond de tentatives respecté');
+      assert.equal(outcome.queue.tasks[0].state, 'FAILED');
+    });
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

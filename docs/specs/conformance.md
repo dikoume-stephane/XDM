@@ -82,6 +82,7 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | états `PENDING → ACTIVE → VERIFYING → DONE`, échec isolé | `src/grab-runner.js`, `src/task-queue.js` | `T-A-07`, `T-A-22` |
 | concurrence bornée (8 par défaut) | `src/grab-runner.js` | `T-A-07` |
 | seules les pages sont explorées | `src/crawler.js` (`isPageUrl`) | `T-B-08` |
+| reprise bornée des statuts transitoires | `src/retry.js`, `src/grab-runner.js` (`maxAttempts`) | `T-C-11` |
 | réécriture locale des pages et feuilles de style | `src/rewrite.js`, `bin/xdm-grab.js` (`--reecrire`, `--inclure`, `--sans-exclusions`) | `T-B-26` |
 | rapport d'aspiration (texte/JSON/CSV/Markdown) | `src/report.js`, `bin/xdm-grab.js` (`--rapport`) | `T-B-27` |
 | fenêtre de planification, quotas, hors fenêtre ⇒ code 3 | `src/schedule.js`, `src/task-queue.js` (`accept`), `src/grab-runner.js` (`only`) | `T-B-28` |
@@ -102,7 +103,7 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | `EX-C-08` RTMP/RTMPT/MMS hors grabber | Observé + `H-18` | annexe 15 §2.4 | `T-C-08` | ⛔ **hors périmètre** (`H-18` : enregistrement de flux) |
 | `EX-C-09` proxys HTTP/HTTPS/FTP/SOCKS + PAC | Observé | annexe 15 §2.5 | `T-C-09` | **vert** (`src/proxy.js`, `src/pac.js` ; FTP par tunnel) |
 | `EX-C-10` authentification proxy Basic/Digest | Observé | annexe 15 §2.5 | `T-C-10` | **vert** (Basic + Digest `qop=auth`) |
-| `EX-C-11` statuts transitoires : diagnostic explicite (`HTTP_STATUS`, `retryable`, `Retry-After`), pas de reprise silencieuse | **Décision** (`D-055`) | `src/retry.js`, `src/http-client.js` | `T-C-11` | **vert** (attente réelle dans la boucle : à faire) |
+| `EX-C-11` statuts transitoires : diagnostic explicite (`HTTP_STATUS`, `retryable`, `Retry-After`), pas de reprise silencieuse | **Décision** (`D-055`) | `src/retry.js`, `src/http-client.js` | `T-C-11` | **vert** (reprise par la file, `--tentatives`, `Retry-After` respecté) |
 
 **Couverture : 10 vertes / 11, 1 hors périmètre** (`D-047`→`D-052`, `D-055`) :
 - **vertes** : `EX-C-01` (HTTP/1.1 seul), `EX-C-02` (en-têtes), `EX-C-03` (`If-Range` de la
@@ -171,7 +172,7 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 
 | Date | Changement |
 |---|---|
-| 2026-10-28 | v1.7 : `D-055` — `429`/`503` sortent en `HTTP_STATUS` (statut, `retryable`, `Retry-After`) au lieu d'une « taille inconnue » ; `EX-C-11` verte ; 205 tests, total **55 vertes / 56** |
+| 2026-10-28 | v1.7 : `D-055` — `429`/`503` sortent en `HTTP_STATUS` (statut, `retryable`, `Retry-After`) au lieu d'une « taille inconnue » ; `EX-C-11` verte ; 207 tests, total **55 vertes / 56** |
 | 2026-10-28 | v1.6 : `D-053` (réécriture, **sans précédent** dans la cible) et `D-054` (planification sans démon) — `EX-B-14`→`EX-B-16` vertes, domaine B **16/16** ; 196 tests, total **54 vertes / 55** |
 | 2026-10-28 | v1.5 : `D-052` — Digest, FTP par tunnel, PAC ; domaine C **9/10** (1 hors périmètre) ; 172 tests, total **51 vertes / 52** |
 | 2026-10-28 | v1.4 : `D-049`→`D-051` — en-têtes et compression, FTP passif, proxys `CONNECT`/SOCKS5 ; domaine C **6 vertes / 10**, 159 tests, total **49 vertes / 52** |

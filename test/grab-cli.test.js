@@ -93,6 +93,7 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
     window: null,
     quotaBytes: null,
     quotaTasks: null,
+    attempts: 1,
   });
   assert.deepEqual(
     parseArgs(['http://h/', 'dl', '--profondeur', '3', '--pages', '10', '--connexions', '2', '--sans-robots']),
@@ -100,7 +101,7 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
       url: 'http://h/', directory: 'dl', depth: 3, maxPages: 10, connections: 2,
       robots: false, resume: false, output: 'texte',
       rewrite: false, include: [], noExclude: false, report: null, window: null,
-      quotaBytes: null, quotaTasks: null,
+      quotaBytes: null, quotaTasks: null, attempts: 1,
     },
   );
   assert.deepEqual(
@@ -109,7 +110,7 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
       url: 'http://h/', directory: '.', depth: 2, maxPages: 2000, connections: 4,
       robots: true, resume: true, output: 'json',
       rewrite: false, include: [], noExclude: false, report: null, window: null,
-      quotaBytes: null, quotaTasks: null,
+      quotaBytes: null, quotaTasks: null, attempts: 1,
     },
   );
   assert.throws(() => parseArgs(['http://h/', '--sortie', 'yaml']), /format de sortie inconnu/);

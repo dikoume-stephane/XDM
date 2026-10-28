@@ -24,12 +24,19 @@ import { dirname } from 'node:path';
 
 import { download } from './connection-loop.js';
 import { saveProject } from './project.js';
+import { MAX_BACKOFF_MS, planRetry } from './retry.js';
 import {
-  saveQueue, stats, startNext, beginVerification, completeTask, failTask, transition,
+  saveQueue, stats, startNext, beginVerification, completeTask, failTask, resumeTask, transition,
 } from './task-queue.js';
 
 /** Nombre maximal de tâches actives par défaut (`EX-A-07`, défaut 8). */
 export const DEFAULT_CONCURRENCY = 8;
+
+/** Nombre de tentatives par défaut : **une seule**. Rejouer n'est pas gratuit. */
+export const DEFAULT_MAX_ATTEMPTS = 1;
+
+/** Attente par défaut, réelle (le test l'injecte pour rester instantané). */
+const defaultSleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 
 /**
  * Tâche par défaut : télécharger puis promouvoir.
@@ -76,8 +83,14 @@ export function retryFailed(queue, now = Date.now()) {
  * `only` restreint l'exécution à un ensemble d'identifiants (planification, `D-054`) :
  * les autres tâches restent `PENDING` dans la file rendue, donc rejouables demain.
  *
+ * `maxAttempts` > 1 active la reprise des **statuts transitoires** (`D-055`) : le statut
+ * porté par l'erreur est passé à `planRetry`, qui décide s'il faut rejouer et après quel
+ * délai (le `Retry-After` du serveur prime). Une erreur sans statut — DNS, coupure — n'est
+ * **pas** rejouée ici : elle l'est par `retryFailed`, à la demande de l'utilisateur.
+ *
  * @param {{runTask?: (task: object) => Promise<object>, concurrency?: number,
- *   only?: Set<number>|null,
+ *   only?: Set<number>|null, maxAttempts?: number,
+ *   sleep?: (ms: number) => Promise<void>, maxDelayMs?: number,
  *   onEvent?: (event: {type: string, task: object, result?: object, error?: string}) => void}}
  *   [options]
  * @returns {Promise<{queue: object, results: object[], failures: object[], stats: object}>}
@@ -86,12 +99,19 @@ export async function runQueue(queue, {
   runTask = (task) => downloadTask(task),
   concurrency = DEFAULT_CONCURRENCY,
   only = null,
+  maxAttempts = DEFAULT_MAX_ATTEMPTS,
+  sleep = defaultSleep,
+  maxDelayMs = MAX_BACKOFF_MS,
   onEvent = () => {},
 } = {}) {
   if (typeof runTask !== 'function') throw new TypeError('runQueue : `runTask` requis');
   if (only !== null && !(only instanceof Set)) {
     throw new TypeError('runQueue : `only` doit être un Set ou null');
   }
+  if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
+    throw new RangeError('runQueue : `maxAttempts` ≥ 1');
+  }
+  if (typeof sleep !== 'function') throw new TypeError('runQueue : `sleep` doit être une fonction');
   const accept = only === null ? null : (task) => only.has(task.id);
   if (!Number.isInteger(concurrency) || concurrency < 1) {
     throw new RangeError('runQueue : concurrence ≥ 1');
@@ -128,6 +148,22 @@ export async function runQueue(queue, {
           current = failTask(current, started.id, message);
           failures.push({ id: started.id, url: started.url, error: message });
           onEvent({ type: 'failed', task: started, error: message });
+
+          // Reprise bornée des statuts transitoires (`D-055`) : la file décide, pas le client.
+          const status = error?.details?.status;
+          if (maxAttempts > 1 && Number.isInteger(status)) {
+            const plan = planRetry({
+              status,
+              headers: error?.details?.headers ?? {},
+              attempts: started.attempts,
+              maxAttempts,
+            });
+            if (plan.retry && plan.delayMs <= maxDelayMs) {
+              if (plan.delayMs > 0) await sleep(plan.delayMs);
+              current = resumeTask(current, started.id);
+              onEvent({ type: 'retry', task: started, delayMs: plan.delayMs, reason: plan.reason });
+            }
+          }
         } finally {
           inFlight.delete(promise);
         }
@@ -154,7 +190,7 @@ export async function runQueue(queue, {
  *
  * @param {{project: object, queue: object, projectPath: string, queueDir: string,
  *   runTask?: (task: object) => Promise<object>, concurrency?: number,
- *   only?: Set<number>|null, onEvent?: (event: object) => void}} options
+ *   only?: Set<number>|null, maxAttempts?: number, onEvent?: (event: object) => void}} options
  * @returns {Promise<{project: object, queue: object, results: object[], failures: object[],
  *   stats: object, saved: {project: string, queue: string}}>}
  */
@@ -166,12 +202,14 @@ export async function executeGrab({
   runTask,
   concurrency = DEFAULT_CONCURRENCY,
   only = null,
+  maxAttempts = DEFAULT_MAX_ATTEMPTS,
   onEvent,
 }) {
   const outcome = await runQueue(queue, {
     ...(runTask ? { runTask } : {}),
     concurrency,
     only,
+    maxAttempts,
     ...(onEvent ? { onEvent } : {}),
   });
 

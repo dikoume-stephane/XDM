@@ -8,7 +8,7 @@
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
 - **Dernière revue** : 2026-10-28 **v7** (réécriture `D-053`, rapport, planification
-  `D-054`, résilience `D-055` — **4 modules** ajoutés, **205 tests**, **231 exports** ;
+  `D-054`, résilience `D-055` — **4 modules** ajoutés, **207 tests**, **231 exports** ;
   plus ancien : annexe 15 v5 : fiches C et D implémentées ; annexe 16 v1 : protocole VM ;
   annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`,
   `D-032`/`D-033` ; **A, B, C et D clos : 56 exigences, 55 vertes, `D-034`→`D-055`**).
