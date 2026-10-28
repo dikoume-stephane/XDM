@@ -112,9 +112,10 @@ domaine B**. Deux chantiers restent ouverts, dans cet ordre :
 1. **`A-09` — lever les incertitudes d'exécution** sur VM Windows (sémantique du champ
    `actif`, `empty.html`, `.gsd` réels, `mAttempts` par défaut), qui ne peuvent pas être
    tranchées en statique ;
-2. **`A-05` (reste) — exploration de `CIDMSpider`** : sans décompilateur, l'algorithme
-   d'exploration du grabber n'est pas établi (`Q-B-01`) ; les fiches C–F et le lot `WP-11`
-   en dépendent. À défaut, `WP-26` (médias HLS/DASH) réutilise la boucle déjà écrite.
+2. **`WP-11` — grabber** : **débloqué** par `D-041`. Le moteur d'exploration d'IDM n'étant
+   pas dans `IDMan.exe` (mesure reproductible : `tools/idman_grabber.py`), XDM définit son
+   parcours (BFS par niveau, `nLevels` = 2, `robots.txt`, une connexion de crawl) et
+   l'implémente comme **produit** ; `Q-B-01` est close, non par lecture mais par décision.
 
 **Porte G1** : pour chaque domaine P0, un document de spécification avec
 (a) entrées/sorties, (b) machine à états, (c) structures de données, (d) cas d'erreur,
@@ -127,7 +128,7 @@ domaine B**. Deux chantiers restent ouverts, dans cet ordre :
 | Lot | Contenu | Sortie |
 |---|---|---|
 | WP-10 | Fiches de spécification par domaine (format imposé : but, entrées, états, erreurs, preuves, questions ouvertes) — **2 fiches ouvertes** : domaine A (moteur) et domaine B (grabber), `A-05` | `docs/specs/` (`A-moteur-de-telechargement.md`, `B-grabber.md`) |
-| WP-11 | 🟡 Modèle de données : persistance résolue (`.gsd` + registre) ; **filtres entièrement décrits** (`A-10` : `IDM_SPIDERFILTER` 16 o, sérialisation `REG_SZ` sous `IncludeFilters`/`ExcludeFilters`, premier id = 100 → `D-032`/`D-033`) ; page de remplacement `empty.html` | `analysis/idman/11-…` + `13-…` (v0.2) |
+| WP-11 | 🟡 **Débloqué par décision** (`D-041`) — persistance résolue (`.gsd` + registre), **filtres entièrement décrits** (`A-10` → `D-032`/`D-033`), page de remplacement `empty.html`, **carte des réglages** (`grabber.json` : 10 champs, `nLevels` en `+0xb8`). Le **moteur d'exploration n'est pas dans `IDMan.exe`** (0 référence code aux conteneurs) ⇒ l'exploration est spécifiée comme **choix XDM** (BFS par niveau, défaut 2, `robots.txt` respecté), à implémenter et tester | `analysis/idman/11-…` + `12-…` §6 + `grabber.json` |
 | WP-12 | 🟡 Matrice de conformité : comportement observé → exigence → test (32 exigences recensées, 3 bloquées, 0 test écrit) | `docs/specs/conformance.md` (v0.1) |
 
 ---

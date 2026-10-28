@@ -905,6 +905,44 @@ temporaire.
 clos) et la promotion de bout en bout sont couverts ; **79 tests verts**. `WP-22` est clos,
 `A-21` fermée.
 
+### D-041 — Le grabber est **spécifié comme produit**, pas cloné depuis un algorithme non observé
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-11`, fiche B
+
+**Contexte.** `Q-B-01` (algorithme d'exploration) bloquait la fiche B depuis le début : 6 de
+ses 13 exigences étaient des hypothèses. La question posée était « quel outil faut-il pour le
+lire ? ». La mesure (`tools/idman_grabber.py` → `analysis/idman/grabber.json`, annexe 12 §6)
+invalide la prémisse : dans `IDMan.exe`, **aucune méthode des conteneurs du spider n'est
+appelée** (`CArray<IDMSPIDER_STRUCT_SPL|RL|LI2>` : 0 référence code ; `CList<…RELPARSERINFO>` :
+0 ; `CIDMSpider` : 1 seule référence, de type enregistrement de classe d'exécution). Le
+module contient l'interface (6 dialogues), la configuration (`CGrabberSettings`, 10 champs
+cartographiés), la persistance du projet (`.gsd` + `GrabberSts\Projects`) et les filtres —
+**pas** le moteur d'exploration. Un décompilateur montrerait la même absence.
+
+**Décision.** Le grabber est **spécifié comme produit XDM**, pas comme clone :
+1. ce qui est **observé** et déjà écrit reste la référence : modèle de projet, filtres
+   `{id, motif, actif}` avec ids dès 100, promotion d'une entrée en téléchargement ordinaire,
+   `empty.html` (`EX-B-01`→`EX-B-07`, `EX-B-10`→`EX-B-12`) ;
+2. l'**exploration** (ordre de parcours, dédoublonnage, politique `robots.txt`, profondeur
+   par défaut, parallélisme) devient un **choix documenté de XDM** : BFS par niveau, une
+   file, `nLevels` par défaut 2, `robots.txt` respecté, une connexion de crawl (les
+   téléchargements, eux, restent multi-connexions). Ces choix sont marqués **Décision**, plus
+   **Hypothèse** : une hypothèse prétend décrire IDM, une décision décrit XDM ;
+3. `Q-B-01` est **close comme non instruite dans ce module** ; `Q-B-03` (défaut de `nLevels`)
+   reste ouverte mais **sans effet** sur XDM, qui fixe sa propre valeur ;
+4. la fidélité au clone reste revendiquée pour le **moteur de téléchargement** (domaine A,
+   19/19 exigences) et pour **tout ce qui est observé** du grabber ; elle n'est plus
+   revendiquée pour l'algorithme d'exploration.
+
+**Portée de vérification.** Toute exigence de la fiche B passe en **Observé** (preuve citée)
+ou en **Décision** (choix XDM + test) ; aucune ne reste **Hypothèse**. La matrice de
+conformité distingue ces deux statuts.
+
+**Alternative écartée.** Installer un décompilateur *ici* pour « quand même essayer » : sans
+le module qui contient le moteur, il n'y a rien à décompiler — le coût serait payé sans
+résultat. Si `IDMGrHlp.exe` (ou un autre binaire de la suite) devient disponible, `D-041`
+sera réévaluée : la mesure de `grabber.json` est reproductible et dira immédiatement si le
+moteur y est.
+
 ---
 
 ## Décisions en attente

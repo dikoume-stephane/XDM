@@ -29,6 +29,7 @@ python3 tools/idman_io.py             # modèle d'E/S et seuils    -> analysis/i
 python3 tools/idman_io.py --resolve 0x35c0a0   # slot d'import -> DLL!fonction
 python3 tools/idman_chunks.py         # politique de morceaux     -> analysis/idman/chunks.json
 python3 tools/idman_filters.py        # structure des filtres     -> analysis/idman/filters.json
+python3 tools/idman_grabber.py        # où vit le grabber         -> analysis/idman/grabber.json
 python3 tools/idman_class_profile.py --pattern 'HTTPConnection'   # fiche par classe
 ```
 

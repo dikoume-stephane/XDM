@@ -1,0 +1,1153 @@
+{
+  "artifact": {
+    "pe": "cible/IDMan.exe",
+    "sha256": "5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9",
+    "image_base": "0x400000"
+  },
+  "constants": {
+    "settings_loader": "0x1381e0",
+    "settings_ctor": "0x137e20",
+    "step_log": "0x299340"
+  },
+  "settings": [
+    {
+      "name": "nATSTFiles",
+      "offset": 176,
+      "width": 4,
+      "at": "0x138297"
+    },
+    {
+      "name": "nLevels",
+      "offset": 184,
+      "width": 4,
+      "at": "0x138270"
+    },
+    {
+      "name": "bUseTL",
+      "offset": 274,
+      "width": 1,
+      "at": "0x138312"
+    },
+    {
+      "name": "bUseIEC",
+      "offset": 275,
+      "width": 1,
+      "at": "0x13833c"
+    },
+    {
+      "name": "bUseAdvWPP",
+      "offset": 276,
+      "width": 1,
+      "at": "0x138366"
+    },
+    {
+      "name": "nDwnlATSTFiles",
+      "offset": 284,
+      "width": 4,
+      "at": "0x1382be"
+    },
+    {
+      "name": "bAutoAddFOnCl",
+      "offset": 288,
+      "width": 1,
+      "at": "0x138390"
+    },
+    {
+      "name": "bDontShowCnfNameDlg",
+      "offset": 289,
+      "width": 1,
+      "at": "0x1382e8"
+    },
+    {
+      "name": "includeFilter",
+      "offset": 300,
+      "width": 4,
+      "at": "0x1383e0"
+    },
+    {
+      "name": "excludeFilter",
+      "offset": 320,
+      "width": 4,
+      "at": "0x1384e4"
+    }
+  ],
+  "containers": [
+    {
+      "class": "?$CArray@UIDMSPIDER_STRUCT_LI2@@AAU1@",
+      "vtable_rva": "0x28c708",
+      "methods": [
+        "0x202411",
+        "0xd1eb0",
+        "0xd1e10"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "?$CArray@UIDMSPIDER_STRUCT_RL@@AAU1@",
+      "vtable_rva": "0x28c728",
+      "methods": [
+        "0x202411",
+        "0xcea20",
+        "0xcf6c0"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "?$CArray@UIDMSPIDER_STRUCT_SPL@@AAU1@",
+      "vtable_rva": "0x28c738",
+      "methods": [
+        "0x202411",
+        "0xcea40",
+        "0xcf6c0"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "?$CArray@UIDM_SPIDERFILTER@@AAU1@",
+      "vtable_rva": "0x2a88d8",
+      "methods": [
+        "0x202411",
+        "0x137e00",
+        "0x137da0"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "?$CList@UIDMSPIDER_STRUCT_RELPARSERINFO@CParsersReleaseController@@AAU12@",
+      "vtable_rva": "0x2a37c0",
+      "methods": [
+        "0x202411",
+        "0x110930",
+        "0x110be0"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "CIDMSpider",
+      "vtable_rva": "0x28d0c0",
+      "methods": [
+        "0xd98a0"
+      ],
+      "references": {
+        "code": 1,
+        "data": 0
+      }
+    },
+    {
+      "class": "CIDMSpiderDlg",
+      "vtable_rva": "0x28d7e0",
+      "methods": [
+        "0x1f7131",
+        "0xe2d90",
+        "0xac460",
+        "0x20b428",
+        "0x1f838c",
+        "0x20c678",
+        "0x1ffce1",
+        "0x20caba",
+        "0x20caba",
+        "0x1ffc8b",
+        "0xe6470",
+        "0x1ffce6",
+        "0x1ffc99",
+        "0x1ffcdb",
+        "0x1f8624",
+        "0x1ffc9f",
+        "0x2066c5",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x20151c",
+        "0x1f8fd6",
+        "0x1f8f8b",
+        "0x1fc191",
+        "0x1fa51e",
+        "0x1fd421",
+        "0x1f85f3",
+        "0x1f837c",
+        "0x1f8f6e",
+        "0x1f840b",
+        "0x1ffce1",
+        "0x1fccd7",
+        "0x1fcd47",
+        "0x1f9173",
+        "0x1f8a07",
+        "0x1f9fc9",
+        "0x1f8685",
+        "0x1f86a4",
+        "0x1f86b9",
+        "0x1f86ce",
+        "0x1f86f3",
+        "0x1f8718",
+        "0x1f873d",
+        "0x1f8762",
+        "0x1f8787",
+        "0x1f87ac",
+        "0x1f87d1",
+        "0x1f87f9",
+        "0x1f881e",
+        "0x1f8833",
+        "0x1f8848",
+        "0x1f886d",
+        "0x1f8892",
+        "0x1f88c0",
+        "0x1f88e8",
+        "0x1f8903",
+        "0x1f8925",
+        "0x1f8925",
+        "0x1f894a",
+        "0x1fce05",
+        "0xe4930",
+        "0x1fb8a1",
+        "0x1f83e6",
+        "0xe1dd0",
+        "0x1c30",
+        "0x1c40",
+        "0x1f7180",
+        "0x1f6346",
+        "0x1f84dc",
+        "0x1fc2ee",
+        "0x133ff0",
+        "0x20151c",
+        "0x1fcdbc",
+        "0x1f742f",
+        "0x20caba",
+        "0x1f8a2d",
+        "0x1f8a48",
+        "0x1f707e",
+        "0x1f7090",
+        "0x1c50",
+        "0x1f795b",
+        "0x1f79b9",
+        "0x1f7942",
+        "0x1f76cb",
+        "0xe2db0",
+        "0x20433c",
+        "0x1f70fb",
+        "0x1f7116",
+        "0x20151c"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "CSpiderOptionsDlg",
+      "vtable_rva": "0x2a8218",
+      "methods": [
+        "0x1f7131",
+        "0x134260",
+        "0xac460",
+        "0x20b428",
+        "0x1f838c",
+        "0x20c678",
+        "0x1ffce1",
+        "0x20caba",
+        "0x20caba",
+        "0x1ffc8b",
+        "0x1342c0",
+        "0x1ffce6",
+        "0x1ffc99",
+        "0x1ffcdb",
+        "0x1f8624",
+        "0x1ffc9f",
+        "0x2066c5",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x20151c",
+        "0x1f8fd6",
+        "0x1f8f8b",
+        "0x1fc191",
+        "0x1fa51e",
+        "0x1fd421",
+        "0x1f85f3",
+        "0x1f837c",
+        "0x1f8f6e",
+        "0x1f840b",
+        "0x1ffce1",
+        "0x1fccd7",
+        "0x1fcd47",
+        "0x1f9173",
+        "0x1f8a07",
+        "0x1f9fc9",
+        "0x1f8685",
+        "0x1f86a4",
+        "0x1f86b9",
+        "0x1f86ce",
+        "0x1f86f3",
+        "0x1f8718",
+        "0x1f873d",
+        "0x1f8762",
+        "0x1f8787",
+        "0x1f87ac",
+        "0x1f87d1",
+        "0x1f87f9",
+        "0x1f881e",
+        "0x1f8833",
+        "0x1f8848",
+        "0x1f886d",
+        "0x1f8892",
+        "0x1f88c0",
+        "0x1f88e8",
+        "0x1f8903",
+        "0x1f8925",
+        "0x1f8925",
+        "0x1f894a",
+        "0x1fce05",
+        "0x1fb808",
+        "0x1fb8a1",
+        "0x1f83e6",
+        "0x134280",
+        "0x1c30",
+        "0x1c40",
+        "0x1f7180",
+        "0x1f6346",
+        "0x1f84dc",
+        "0x1fc2ee",
+        "0x133ff0",
+        "0x20151c",
+        "0x1fcdbc",
+        "0x1f742f",
+        "0x20caba",
+        "0x1f8a2d",
+        "0x1f8a48",
+        "0x1f707e",
+        "0x1f7090",
+        "0x1c50",
+        "0x1f795b",
+        "0x1f79b9",
+        "0x1f7942",
+        "0x1f76cb",
+        "0x134490",
+        "0x20433c",
+        "0x1342d0",
+        "0x1f7116",
+        "0x20151c",
+        "0x1f750f"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "CSpiderSelectNameDlg",
+      "vtable_rva": "0x2a8410",
+      "methods": [
+        "0x1f7131",
+        "0x134cc0",
+        "0xac460",
+        "0x20b428",
+        "0x1f838c",
+        "0x20c678",
+        "0x1ffce1",
+        "0x20caba",
+        "0x20caba",
+        "0x1ffc8b",
+        "0x136020",
+        "0x1ffce6",
+        "0x1ffc99",
+        "0x1ffcdb",
+        "0x1f8624",
+        "0x1ffc9f",
+        "0x2066c5",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x20151c",
+        "0x1f8fd6",
+        "0x1f8f8b",
+        "0x1fc191",
+        "0x1fa51e",
+        "0x1fd421",
+        "0x1f85f3",
+        "0x1f837c",
+        "0x1f8f6e",
+        "0x1f840b",
+        "0x1ffce1",
+        "0x1fccd7",
+        "0x1fcd47",
+        "0x1f9173",
+        "0x1f8a07",
+        "0x1f9fc9",
+        "0x1f8685",
+        "0x1f86a4",
+        "0x1f86b9",
+        "0x1f86ce",
+        "0x1f86f3",
+        "0x1f8718",
+        "0x1f873d",
+        "0x1f8762",
+        "0x1f8787",
+        "0x1f87ac",
+        "0x1f87d1",
+        "0x1f87f9",
+        "0x1f881e",
+        "0x1f8833",
+        "0x1f8848",
+        "0x1f886d",
+        "0x1f8892",
+        "0x1f88c0",
+        "0x1f88e8",
+        "0x1f8903",
+        "0x1f8925",
+        "0x1f8925",
+        "0x1f894a",
+        "0x1fce05",
+        "0x135aa0",
+        "0x1fb8a1",
+        "0x1f83e6",
+        "0x134730",
+        "0x1c30",
+        "0x1c40",
+        "0x1f7180",
+        "0x1f6346",
+        "0x1f84dc",
+        "0x1fc2ee",
+        "0x1f839d",
+        "0x20151c",
+        "0x1fcdbc",
+        "0x1f742f",
+        "0x20caba",
+        "0x1f8a2d",
+        "0x1f8a48",
+        "0x1f707e",
+        "0x1f7090",
+        "0x1c50",
+        "0x1f795b",
+        "0x1f79b9",
+        "0x1f7942",
+        "0x1f76cb",
+        "0x135b70",
+        "0x20433c",
+        "0x1f70fb",
+        "0x1f7116",
+        "0x20151c",
+        "0x2f3f"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "CSpiderSelectSaveToDlg",
+      "vtable_rva": "0x2a86a0",
+      "methods": [
+        "0x1f7131",
+        "0x136440",
+        "0xac460",
+        "0x20b428",
+        "0x1f838c",
+        "0x20c678",
+        "0x1ffce1",
+        "0x20caba",
+        "0x20caba",
+        "0x1ffc8b",
+        "0x137c30",
+        "0x1ffce6",
+        "0x1ffc99",
+        "0x1ffcdb",
+        "0x1f8624",
+        "0x1ffc9f",
+        "0x2066c5",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x20151c",
+        "0x1f8fd6",
+        "0x1f8f8b",
+        "0x1fc191",
+        "0x1fa51e",
+        "0x1fd421",
+        "0x1f85f3",
+        "0x1f837c",
+        "0x1f8f6e",
+        "0x1f840b",
+        "0x1ffce1",
+        "0x1fccd7",
+        "0x1fcd47",
+        "0x1f9173",
+        "0x1f8a07",
+        "0x1f9fc9",
+        "0x1f8685",
+        "0x1f86a4",
+        "0x1f86b9",
+        "0x1f86ce",
+        "0x1f86f3",
+        "0x1f8718",
+        "0x1f873d",
+        "0x1f8762",
+        "0x1f8787",
+        "0x1f87ac",
+        "0x1f87d1",
+        "0x1f87f9",
+        "0x1f881e",
+        "0x1f8833",
+        "0x1f8848",
+        "0x1f886d",
+        "0x1f8892",
+        "0x1f88c0",
+        "0x1f88e8",
+        "0x1f8903",
+        "0x1f8925",
+        "0x1f8925",
+        "0x1f894a",
+        "0x1fce05",
+        "0x137bd0",
+        "0x1fb8a1",
+        "0x1f83e6",
+        "0x1362f0",
+        "0x1c30",
+        "0x1c40",
+        "0x1f7180",
+        "0x1f6346",
+        "0x1f84dc",
+        "0x1fc2ee",
+        "0x1f839d",
+        "0x20151c",
+        "0x1fcdbc",
+        "0x1f742f",
+        "0x20caba",
+        "0x1f8a2d",
+        "0x1f8a48",
+        "0x1f707e",
+        "0x1f7090",
+        "0x1c50",
+        "0x1f795b",
+        "0x1f79b9",
+        "0x1f7942",
+        "0x1f76cb",
+        "0x136e30",
+        "0x20433c",
+        "0x1f70fb",
+        "0x1f7116",
+        "0x20151c",
+        "0x1f750f"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "CSpiderSettings",
+      "vtable_rva": "0x2a88e8",
+      "methods": [
+        "0x1381c0"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "CSpiderSettingsDlg",
+      "vtable_rva": "0x2a8ae8",
+      "methods": [
+        "0x1f7131",
+        "0x139140",
+        "0xac460",
+        "0x20b428",
+        "0x1f838c",
+        "0x20c678",
+        "0x1ffce1",
+        "0x20caba",
+        "0x20caba",
+        "0x1ffc8b",
+        "0x13aaf0",
+        "0x1ffce6",
+        "0x1ffc99",
+        "0x1ffcdb",
+        "0x1f8624",
+        "0x1ffc9f",
+        "0x2066c5",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x20151c",
+        "0x1f8fd6",
+        "0x1f8f8b",
+        "0x1fc191",
+        "0x1fa51e",
+        "0x1fd421",
+        "0x1f85f3",
+        "0x1f837c",
+        "0x1f8f6e",
+        "0x1f840b",
+        "0x1ffce1",
+        "0x1fccd7",
+        "0x1fcd47",
+        "0x1f9173",
+        "0x1f8a07",
+        "0x1f9fc9",
+        "0x1f8685",
+        "0x1f86a4",
+        "0x1f86b9",
+        "0x1f86ce",
+        "0x1f86f3",
+        "0x1f8718",
+        "0x1f873d",
+        "0x1f8762",
+        "0x1f8787",
+        "0x1f87ac",
+        "0x1f87d1",
+        "0x1f87f9",
+        "0x1f881e",
+        "0x1f8833",
+        "0x1f8848",
+        "0x1f886d",
+        "0x1f8892",
+        "0x1f88c0",
+        "0x1f88e8",
+        "0x1f8903",
+        "0x1f8925",
+        "0x1f8925",
+        "0x1f894a",
+        "0x1fce05",
+        "0xa5480",
+        "0x1fb8a1",
+        "0x1f83e6",
+        "0x139160",
+        "0x1c30",
+        "0x1c40",
+        "0x1f7180",
+        "0x1f6346",
+        "0x1f84dc",
+        "0x1fc2ee",
+        "0x1f839d",
+        "0x20151c",
+        "0x1fcdbc",
+        "0x1f742f",
+        "0x20caba",
+        "0x1f8a2d",
+        "0x1f8a48",
+        "0x1f707e",
+        "0x1f7090",
+        "0x1c50",
+        "0x1f795b",
+        "0x1f79b9",
+        "0x1f7942",
+        "0x1f76cb",
+        "0x139560",
+        "0x20433c",
+        "0x1f70fb",
+        "0x1f7116",
+        "0x20151c"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "CSpiderSiteMapDlg",
+      "vtable_rva": "0x2a8ed0",
+      "methods": [
+        "0x1f7131",
+        "0x13cc70",
+        "0xac460",
+        "0x20b428",
+        "0x1f838c",
+        "0x20c678",
+        "0x1ffce1",
+        "0x20caba",
+        "0x20caba",
+        "0x1ffc8b",
+        "0x144880",
+        "0x1ffce6",
+        "0x1ffc99",
+        "0x1ffcdb",
+        "0x1f8624",
+        "0x1ffc9f",
+        "0x2066c5",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x20151c",
+        "0x1f8fd6",
+        "0x1f8f8b",
+        "0x1fc191",
+        "0x1fa51e",
+        "0x1fd421",
+        "0x1f85f3",
+        "0x1f837c",
+        "0x1f8f6e",
+        "0x1f840b",
+        "0x1ffce1",
+        "0x1fccd7",
+        "0x1fcd47",
+        "0x1f9173",
+        "0x1f8a07",
+        "0x1f9fc9",
+        "0x1f8685",
+        "0x1f86a4",
+        "0x1f86b9",
+        "0x1f86ce",
+        "0x1f86f3",
+        "0x1f8718",
+        "0x1f873d",
+        "0x1f8762",
+        "0x1f8787",
+        "0x1f87ac",
+        "0x1f87d1",
+        "0x1f87f9",
+        "0x1f881e",
+        "0x1f8833",
+        "0x1f8848",
+        "0x1f886d",
+        "0x1f8892",
+        "0x1f88c0",
+        "0x1f88e8",
+        "0x1f8903",
+        "0x1f8925",
+        "0x1f8925",
+        "0x1f894a",
+        "0x1fce05",
+        "0x143500",
+        "0x1fb8a1",
+        "0x1f83e6",
+        "0x13b0e0",
+        "0x1c30",
+        "0x1c40",
+        "0x1f7180",
+        "0x1f6346",
+        "0x1f84dc",
+        "0x1fc2ee",
+        "0x133ff0",
+        "0x20151c",
+        "0x1fcdbc",
+        "0x1f742f",
+        "0x20caba",
+        "0x1f8a2d",
+        "0x1f8a48",
+        "0x1f707e",
+        "0x1f7090",
+        "0x1c50",
+        "0x1f795b",
+        "0x1f79b9",
+        "0x1f7942",
+        "0x1f76cb",
+        "0x142090",
+        "0x20433c",
+        "0x1f70fb",
+        "0x1f7116",
+        "0x20151c"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "CSpiderWhereToSearchDlg",
+      "vtable_rva": "0x2a98f8",
+      "methods": [
+        "0x1f7131",
+        "0x144db0",
+        "0xac460",
+        "0x20b428",
+        "0x1f838c",
+        "0x20c678",
+        "0x1ffce1",
+        "0x20caba",
+        "0x20caba",
+        "0x1ffc8b",
+        "0x1459b0",
+        "0x1ffce6",
+        "0x1ffc99",
+        "0x1ffcdb",
+        "0x1f8624",
+        "0x1ffc9f",
+        "0x2066c5",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x1ffce1",
+        "0x20151c",
+        "0x1f8fd6",
+        "0x1f8f8b",
+        "0x1fc191",
+        "0x1fa51e",
+        "0x1fd421",
+        "0x1f85f3",
+        "0x1f837c",
+        "0x1f8f6e",
+        "0x1f840b",
+        "0x1ffce1",
+        "0x1fccd7",
+        "0x1fcd47",
+        "0x1f9173",
+        "0x1f8a07",
+        "0x1f9fc9",
+        "0x1f8685",
+        "0x1f86a4",
+        "0x1f86b9",
+        "0x1f86ce",
+        "0x1f86f3",
+        "0x1f8718",
+        "0x1f873d",
+        "0x1f8762",
+        "0x1f8787",
+        "0x1f87ac",
+        "0x1f87d1",
+        "0x1f87f9",
+        "0x1f881e",
+        "0x1f8833",
+        "0x1f8848",
+        "0x1f886d",
+        "0x1f8892",
+        "0x1f88c0",
+        "0x1f88e8",
+        "0x1f8903",
+        "0x1f8925",
+        "0x1f8925",
+        "0x1f894a",
+        "0x1fce05",
+        "0xa5480",
+        "0x1fb8a1",
+        "0x1f83e6",
+        "0x144dd0",
+        "0x1c30",
+        "0x1c40",
+        "0x1f7180",
+        "0x1f6346",
+        "0x1f84dc",
+        "0x1fc2ee",
+        "0x1f839d",
+        "0x20151c",
+        "0x1fcdbc",
+        "0x1f742f",
+        "0x20caba",
+        "0x1f8a2d",
+        "0x1f8a48",
+        "0x1f707e",
+        "0x1f7090",
+        "0x1c50",
+        "0x1f795b",
+        "0x1f79b9",
+        "0x1f7942",
+        "0x1f76cb",
+        "0x145160",
+        "0x20433c",
+        "0x1f70fb",
+        "0x1f7116",
+        "0x20151c",
+        "0x1f750f"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    },
+    {
+      "class": "IDMSPIDER_STRUCT_LINK_INFO",
+      "vtable_rva": "0x2844f8",
+      "methods": [
+        "0x61750"
+      ],
+      "references": {
+        "code": 0,
+        "data": 0
+      }
+    }
+  ],
+  "reference_counts": {
+    "0xcea20": {
+      "code": 0,
+      "data": 1
+    },
+    "0xcea40": {
+      "code": 0,
+      "data": 1
+    },
+    "0xcf6c0": {
+      "code": 0,
+      "data": 2
+    },
+    "0xd1e10": {
+      "code": 0,
+      "data": 1
+    },
+    "0xd1eb0": {
+      "code": 0,
+      "data": 1
+    },
+    "0x110930": {
+      "code": 0,
+      "data": 1
+    },
+    "0x110be0": {
+      "code": 0,
+      "data": 1
+    },
+    "0x202411": {
+      "code": 0,
+      "data": 52
+    },
+    "0x28c708": {
+      "code": 0,
+      "data": 0
+    },
+    "0x28c728": {
+      "code": 0,
+      "data": 0
+    },
+    "0x28c738": {
+      "code": 0,
+      "data": 0
+    },
+    "0x28d0c0": {
+      "code": 1,
+      "data": 0
+    },
+    "0x2a37c0": {
+      "code": 0,
+      "data": 0
+    }
+  },
+  "symbols": [
+    {
+      "rva": "0x2814a8",
+      "text": "%sGrabber\\"
+    },
+    {
+      "rva": "0x28b978",
+      "text": "robots"
+    },
+    {
+      "rva": "0x28c868",
+      "text": "Software\\DownloadManager\\GrabberSts"
+    },
+    {
+      "rva": "0x28c948",
+      "text": "%sproject%s.gsd"
+    },
+    {
+      "rva": "0x28c96c",
+      "text": "%sGrabber\\Projects\\"
+    },
+    {
+      "rva": "0x28c994",
+      "text": "%s*.gsd"
+    },
+    {
+      "rva": "0x28d09c",
+      "text": "grabber.chm"
+    },
+    {
+      "rva": "0x28e4d0",
+      "text": "Software\\DownloadManager\\GrabberSts\\Projects"
+    },
+    {
+      "rva": "0x28e5e8",
+      "text": "Software\\DownloadManager\\GrabberSts\\Projects\\%ld\\%ld\\"
+    },
+    {
+      "rva": "0x28eb68",
+      "text": "ptrSpider"
+    },
+    {
+      "rva": "0x28ebc0",
+      "text": "IDM Grabber Hidden Window"
+    },
+    {
+      "rva": "0x28ec08",
+      "text": "IDM Grabber class"
+    },
+    {
+      "rva": "0x28ec1c",
+      "text": "IDM Grabber Hidden Window2"
+    },
+    {
+      "rva": "0x28ec38",
+      "text": "IDM GrabberHlp class2"
+    },
+    {
+      "rva": "0x28f6e8",
+      "text": "grabberhelp"
+    },
+    {
+      "rva": "0x2917b8",
+      "text": "Internet Download Manager has finished processing of grabber project. According to project scheduler settings your compu"
+    },
+    {
+      "rva": "0x291950",
+      "text": "Internet Download Manager has finished processing of grabber project. According to project scheduler settings your compu"
+    },
+    {
+      "rva": "0x2988b3",
+      "text": "t be deleted. The grabber will parse all web pages on the site again, and it may take a while."
+    },
+    {
+      "rva": "0x298b60",
+      "text": "need to press \"Update all\" toolbar button on the Grabber Action dialog."
+    },
+    {
+      "rva": "0x298ba8",
+      "text": "The scheduled grabber project could not be started at %d:%02d because the project settings were being edited at this tim"
+    },
+    {
+      "rva": "0x298c28",
+      "text": "The scheduled grabber project could not be started at %d:%02d because the project was running at this time."
+    },
+    {
+      "rva": "0x298c98",
+      "text": "Internet Download Manager has finished processing of grabber project. According to project scheduler settings your compu"
+    },
+    {
+      "rva": "0x298f28",
+      "text": "There is not enough free space on drive %s to open the grabber project. Please free some space and try again."
+    },
+    {
+      "rva": "0x298f98",
+      "text": "There is not enough free space on drive %s to process the grabber project. Please free some space and try again."
+    },
+    {
+      "rva": "0x29900c",
+      "text": "Loading Grabber project"
+    },
+    {
+      "rva": "0x299038",
+      "text": "Deleting Grabber project"
+    },
+    {
+      "rva": "0x299054",
+      "text": "Saving Grabber project"
+    },
+    {
+      "rva": "0x299340",
+      "text": "IDM Site Grabber. Step %d --- %s"
+    },
+    {
+      "rva": "0x299364",
+      "text": "Loading grabber project"
+    },
+    {
+      "rva": "0x29937c",
+      "text": "Saving grabber project"
+    },
+    {
+      "rva": "0x299394",
+      "text": "Saving grabber template"
+    },
+    {
+      "rva": "0x2993ac",
+      "text": "Loading grabber template"
+    },
+    {
+      "rva": "0x299438",
+      "text": "The file of grabber project is corrupt. Several files have not been loaded"
+    },
+    {
+      "rva": "0x2994a2",
+      "text": "The file of grabber project is corrupt or its version is not acceptable."
+    },
+    {
+      "rva": "0x299520",
+      "text": "Would you like to download and install IDM Grabber help file (about 100 KB) from IDM home site ?"
+    },
+    {
+      "rva": "0x299650",
+      "text": "Do you want to delete the \"%s\" grabber project?"
+    },
+    {
+      "rva": "0x2996a0",
+      "text": "There are no saved projects of IDM grabber"
+    },
+    {
+      "rva": "0x299780",
+      "text": "Schedule the grabber project"
+    },
+    {
+      "rva": "0x2997a0",
+      "text": "Please close the running grabber project at first."
+    },
+    {
+      "rva": "0x299808",
+      "text": "Save the grabber project?"
+    },
+    {
+      "rva": "0x299af0",
+      "text": "IDM Grabber"
+    },
+    {
+      "rva": "0x299afc",
+      "text": "Grabber projects"
+    },
+    {
+      "rva": "0x29a2b8",
+      "text": "Grabber"
+    },
+    {
+      "rva": "0x29a484",
+      "text": "Site Map"
+    },
+    {
+      "rva": "0x2a5f98",
+      "text": "Software\\DownloadManager\\GrabberSts\\RecentProjects"
+    },
+    {
+      "rva": "0x2a9f48",
+      "text": "Software\\DownloadManager\\GrabberSts\\ExcludeFilters"
+    },
+    {
+      "rva": "0x2a9f7c",
+      "text": "Software\\DownloadManager\\GrabberSts\\IncludeFilters"
+    },
+    {
+      "rva": "0x2aa708",
+      "text": "GrabberWindowPlacementV6"
+    },
+    {
+      "rva": "0x2aa740",
+      "text": "Software\\DownloadManager\\GrabberDlgLS"
+    },
+    {
+      "rva": "0x2acf04",
+      "text": "Software\\DownloadManager\\GrabberSts\\Projects\\%ld\\%ld\\ChList"
+    },
+    {
+      "rva": "0x2b65ac",
+      "text": "Software\\DownloadManager\\GrabberSts\\Projects\\%ld\\%ld"
+    },
+    {
+      "rva": "0x2b6d58",
+      "text": "Software\\DownloadManager\\GrabberSts\\Projects\\%ld\\"
+    },
+    {
+      "rva": "0x2b6d8c",
+      "text": "Software\\DownloadManager\\GrabberSts\\Projects\\"
+    },
+    {
+      "rva": "0x2ff988",
+      "text": "robots\" content=\"<div id=\"footer\">the United States<img src=\"http://.jpg|right|thumb|.js\"></script>"
+    },
+    {
+      "rva": "0x302ff7",
+      "text": "body, tr, input, textmeta name=\"robots\" conmethod=\"post\" action=\">"
+    }
+  ],
+  "verdict": {
+    "settings_fields": 10,
+    "spider_classes": 15,
+    "crawl_container_code_references": 1,
+    "spider_vtable_code_references": 1
+  }
+}

@@ -23,7 +23,8 @@
     "filters:idm": "python3 tools/idman_filters.py",
     "test": "node --test",
     "test:watch": "node --test --watch",
-    "dl": "node bin/xdm.js"
+    "dl": "node bin/xdm.js",
+    "grabber:idm": "python3 tools/idman_grabber.py"
   },
   "devDependencies": {
     "rea-agents": "6.8.0"
