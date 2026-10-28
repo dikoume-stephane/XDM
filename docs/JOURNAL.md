@@ -1284,6 +1284,33 @@ fiche ne prétend pas la reproduire.
 
 ---
 
+### D-055 — Statuts transitoires : diagnostic, pas de reprise silencieuse
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-31` (début)
+
+**Contexte.** Une sonde qui reçoit `429` ou `503` ne reçoit **aucune taille** : jusqu'ici
+l'échec ressortait comme `UNKNOWN_SIZE`, c'est-à-dire « taille inconnue ». C'est un message
+faux — le fichier a une taille, le serveur refuse de le servir — et il envoie chercher le
+bug au mauvais endroit.
+
+**Décision.**
+1. `probe` refuse tout statut autre que `200`/`206` avec `HTTP_STATUS`, en portant le statut,
+   `retryable` et `retryAfterMs`. Un `404` reste un `404`, un `429` reste un `429`.
+2. **Aucune nouvelle tentative dans le client HTTP.** Rejouer est une décision de la **file**
+   (`attempts`, `D-036`), seule à savoir combien de fois elle a déjà échoué. Un client qui
+   attendrait 30 s en silence ferait passer un serveur saturé pour un réseau lent.
+3. `src/retry.js` fournit les faits nécessaires : `isRetryableStatus` (`429`, `408`, `500`,
+   `502`, `503`, `504`), `parseRetryAfter` (secondes **ou** date HTTP, plafonné à une heure,
+   jamais négatif), `retryDelay` (recul exponentiel plafonné, **sans aléa** pour rester
+   testable) et `planRetry` (le `Retry-After` du serveur prime sur notre calcul).
+4. Une redirection en boucle s'arrête à 10 (`TOO_MANY_REDIRECTS`), une plage hors fichier
+   reste un `416` (`ranged: false`), une page `gzip` reste lisible.
+
+**Conséquence.** `EX-C-11` est verte (`src/retry.js`, `test/resilience.test.js`, 9 cas).
+Le branchement d'une attente réelle dans la boucle de connexions reste **à faire** : le
+module est prêt, la file ne l'utilise pas encore, et la documentation le dit.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation

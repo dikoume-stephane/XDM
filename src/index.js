@@ -267,3 +267,15 @@ export {
   parseWindow,
   planRun,
 } from './schedule.js';
+
+export {
+  DEFAULT_BACKOFF_MS,
+  MAX_BACKOFF_MS,
+  MAX_RETRY_AFTER_MS,
+  RETRYABLE_STATUSES,
+  RetryError,
+  isRetryableStatus,
+  parseRetryAfter,
+  planRetry,
+  retryDelay,
+} from './retry.js';

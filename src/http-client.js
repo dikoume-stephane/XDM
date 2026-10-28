@@ -16,6 +16,7 @@ import https from 'node:https';
 import zlib from 'node:zlib';
 
 import { DEFAULT_ACCEPT, DEFAULT_USER_AGENT, PAGE_ENCODINGS, lowercaseKeys } from './headers.js';
+import { isRetryableStatus, parseRetryAfter } from './retry.js';
 
 /** Limite de redirections suivies (`0x27ff` compare sur la taille d'URL, `EX-A-15`). */
 export const MAX_REDIRECTS = 10;
@@ -282,6 +283,22 @@ export async function probe(url, {
       current = assertUrlLength(resolveLocation(current, responseHeaders.location));
       redirects += 1;
       continue;
+    }
+
+    // Un statut autre que `200`/`206` n'est pas une réponse exploitable : le dire ici, avec
+    // son statut et l'attente demandée, évite qu'un `429` ressorte plus tard comme une
+    // « taille inconnue » — un message faux qui enverrait chercher le bug au mauvais endroit.
+    if (response.status !== 200 && response.status !== 206) {
+      throw new HttpError(
+        `statut ${response.status} pour ${current}`,
+        'HTTP_STATUS',
+        {
+          url: current,
+          status: response.status,
+          retryable: isRetryableStatus(response.status),
+          retryAfterMs: parseRetryAfter(responseHeaders['retry-after']),
+        },
+      );
     }
 
     const acceptRanges = acceptsRanges(response.status, responseHeaders);

@@ -1,6 +1,6 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.6 — **Dernière revue** : 2026-10-28
+> **Statut** : ✅ v1.7 — **Dernière revue** : 2026-10-28
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
 > fonde et le **test** qui la vérifiera. Aucune ligne d'implémentation ne référence une
 > exigence absente de ce fichier.
@@ -102,8 +102,9 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | `EX-C-08` RTMP/RTMPT/MMS hors grabber | Observé + `H-18` | annexe 15 §2.4 | `T-C-08` | ⛔ **hors périmètre** (`H-18` : enregistrement de flux) |
 | `EX-C-09` proxys HTTP/HTTPS/FTP/SOCKS + PAC | Observé | annexe 15 §2.5 | `T-C-09` | **vert** (`src/proxy.js`, `src/pac.js` ; FTP par tunnel) |
 | `EX-C-10` authentification proxy Basic/Digest | Observé | annexe 15 §2.5 | `T-C-10` | **vert** (Basic + Digest `qop=auth`) |
+| `EX-C-11` statuts transitoires : diagnostic explicite (`HTTP_STATUS`, `retryable`, `Retry-After`), pas de reprise silencieuse | **Décision** (`D-055`) | `src/retry.js`, `src/http-client.js` | `T-C-11` | **vert** (attente réelle dans la boucle : à faire) |
 
-**Couverture : 9 vertes / 10, 1 hors périmètre** (`D-047`→`D-052`) :
+**Couverture : 10 vertes / 11, 1 hors périmètre** (`D-047`→`D-052`, `D-055`) :
 - **vertes** : `EX-C-01` (HTTP/1.1 seul), `EX-C-02` (en-têtes), `EX-C-03` (`If-Range` de la
   carte), `EX-C-04` (`src/cookies.js`), `EX-C-05` (`src/headers.js` + `decodeBody`),
   `EX-C-06`/`EX-C-07` (`src/ftp.js`) ;
@@ -164,11 +165,13 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 | 12 | `T-C-09`, `T-C-10` | ✅ fait — `D-052` : Digest, FTP par tunnel, PAC |
 | 13 | `T-C-08` | ⛔ hors périmètre (`H-18`) |
 | 14 | `T-B-26`→`T-B-28` | ✅ fait — `D-053`/`D-054` : réécriture, rapport, planification (ajouts XDM) |
+| 15 | `T-C-11` | ✅ fait — `D-055` : `429`/`503`/`416` diagnostiqués, aucune reprise silencieuse |
 
 ## 6. Journal des révisions
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v1.7 : `D-055` — `429`/`503` sortent en `HTTP_STATUS` (statut, `retryable`, `Retry-After`) au lieu d'une « taille inconnue » ; `EX-C-11` verte ; 205 tests, total **55 vertes / 56** |
 | 2026-10-28 | v1.6 : `D-053` (réécriture, **sans précédent** dans la cible) et `D-054` (planification sans démon) — `EX-B-14`→`EX-B-16` vertes, domaine B **16/16** ; 196 tests, total **54 vertes / 55** |
 | 2026-10-28 | v1.5 : `D-052` — Digest, FTP par tunnel, PAC ; domaine C **9/10** (1 hors périmètre) ; 172 tests, total **51 vertes / 52** |
 | 2026-10-28 | v1.4 : `D-049`→`D-051` — en-têtes et compression, FTP passif, proxys `CONNECT`/SOCKS5 ; domaine C **6 vertes / 10**, 159 tests, total **49 vertes / 52** |
