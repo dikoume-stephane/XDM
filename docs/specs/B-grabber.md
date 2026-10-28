@@ -4,7 +4,7 @@
 > (les 13 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
 > **exploration** : choix XDM documentés depuis `D-041`, l'algorithme d'IDM n'étant pas dans
 > `IDMan.exe`)
-> **Dernière revue** : 2026-10-28 (v0.5 : exécution de bout en bout, `D-043`)
+> **Dernière revue** : 2026-10-28 (v0.6 : réécriture `D-053`, rapport, planification `D-054` — 16 exigences)
 > **Preuves** : annexes 11 (modèle de projet), 12 (grabber), 13 (filtres et artefacts) ;
 > `filters.json` ; décisions `D-032`, `D-033`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9`.
@@ -38,7 +38,10 @@ pouvoir reprendre une aspiration interrompue.
 | `EX-B-10` | Chaque fichier retenu devient une tâche de téléchargement ordinaire (mêmes exigences `EX-A-*`) | **Observé** | annexe 12 §1 (promotion vers la file principale) ; `D-042` | `T-B-10` ✅ : tâche `PENDING` par entrée, cible `rootDir/<chemin local>`, reprise héritée du moteur |
 | `EX-B-11` | L'arborescence locale reproduit celle du site, le nom de fichier venant de l'URL ; collisions suffixées, `..` neutralisé | **Observé** (chemin local) + **Décision** (règles) | annexe 12 §2 ; `D-042` | `T-B-11` ✅ : `/a/b/c.zip` → `a/b/c.zip`, `/docs/` → `docs/index.html`, `../../etc/passwd` neutralisé |
 | `EX-B-12` | Un fichier `empty.html` (`<HTML><BODY> </BODY></HTML>`) est écrit dans le dossier cible, **jamais écrasé** | **Observé** + **Décision** (non-écrasement) | annexe 13 §4 (`0xd1ed0`) ; `D-042` | `T-B-12` ✅ : contenu exact, fichier utilisateur préservé |
-| `EX-B-13` | Aucune requête hors du site de départ sans action explicite de l'utilisateur ; `robots.txt` respecté (la chaîne `robots` existe dans la cible, `0xb2410`, sémantique non établie) | **Décision** (XDM) | `D-041` ; `grabber.json` §symbols ; `src/crawler.js` | `T-B-13` ✅ : lien externe signalé et non suivi, `robots.txt` appliqué |nt mais non suivi |
+| `EX-B-13` | Aucune requête hors du site de départ sans action explicite de l'utilisateur ; `robots.txt` respecté (la chaîne `robots` existe dans la cible, `0xb2410`, sémantique non établie) | **Décision** (XDM) | `D-041` ; `grabber.json` §symbols ; `src/crawler.js` | `T-B-13` ✅ : lien externe signalé et non suivi, `robots.txt` appliqué |
+| `EX-B-14` | Les pages et feuilles de style aspirées peuvent être **réécrites** vers les chemins locaux : attributs d'URL (`href`, `src`, `srcset`, …), `url()` et `@import` ; chemins relatifs ; `<script>`, `<style>`, `<pre>`, commentaires et références inconnues **intacts** | **Décision** (XDM, **sans précédent** dans la cible : aucun parseur HTML) | `Q-B-01` (annexe 12 §6) ; `D-053` ; `src/rewrite.js` | `T-B-26` ✅ : `./` pour soi-même, ancre et requête conservées, `srcset`, CSS, extension non réécrite ; mesure de bout en bout (site local) : 4 fichiers, **5 liens réécrits**, externe et cible 404 intacts. Pré-requis CLI : `--sans-exclusions --inclure '*'` (les pages sont exclues par défaut, `D-032`) |
+| `EX-B-15` | Un **rapport** d'aspiration est produit à la demande (texte, JSON, CSV, Markdown) : compteurs, tailles, durées, échecs et tentatives — **aucune valeur inventée** (progression inconnue ⇒ `n/a`, pas 0 %) | **Décision** (XDM ; IDM affiche des statistiques, format non observé) | `D-053` ; `src/report.js` | `T-B-27` ✅ : file vide, reprises, CSV exact, format refusé |
+| `EX-B-16` | La planification est un **recalcul à chaque exécution** : fenêtres locales (`lun-ven 01:00-06:00`, `ven-lun`, nuit `22:00-02:00`), quotas d'octets et de tâches ; hors fenêtre, rien n'est téléchargé (code 3) ; les tâches non retenues restent `PENDING` ; une taille inconnue est **reportée**, jamais budgétée à zéro | **Décision** (XDM : ni démon ni cron) | `D-054` ; `src/schedule.js` | `T-B-28` ✅ : `ven-lun`, traversée de minuit, ordre des candidates, quotas, `only` du runner |
 
 ## 3. Modèle de données
 
@@ -142,6 +145,10 @@ DISCOVERED --(GET)--> FETCHED --(parse)--> PARSED --(filtre)--> RETENU | EXCLU
 | lien vers un autre domaine | ignoré par défaut | **Décision** (`D-041`) | `T-B-13` |
 | encodage de page non UTF-8 | décodage selon `Content-Type`, repli latin-1 | **Décision** (`D-041`) | `T-B-23` |
 | reprise après arrêt | aucun nœud déjà `PARSED` n'est refetché | **Décision** (cohérent avec `EX-B-01`) | `T-B-24` |
+| page réécrite en local (`--reecrire`) | liens relatifs corrects, `<script>` intact, cible absente inchangée | **Décision** (`D-053`) | `T-B-26` |
+| fichier absent au moment de la réécriture | page laissée telle quelle, comptée comme non réécrite | **Décision** (`D-053`) | `T-B-26` |
+| exécution hors fenêtre | 0 téléchargement, code de sortie 3, ouverture suivante annoncée | **Décision** (`D-054`) | `T-B-28` |
+| quota d'octets dépassé par la tâche suivante | tâche reportée, quota respecté | **Décision** (`D-054`) | `T-B-28` |
 
 ## 7. Écarts assumés avec IDM
 
@@ -163,11 +170,13 @@ DISCOVERED --(GET)--> FETCHED --(parse)--> PARSED --(filtre)--> RETENU | EXCLU
 | `Q-B-04` | Rôle exact de `empty.html` (remplacement de lien mort ou marqueur) | comportement observable | VM (`A-09`), `D-023` |
 | `Q-B-05` | Parallélisme du crawl (1 connexion ou N) | performance | `states.json` : plusieurs états de « réception » simultanés ? |
 | `Q-B-06` | Format du `.gsd` | aucun (écart assumé) | VM, dump hexadécimal |
+| `Q-B-07` | Sémantique exacte de la planification d'IDM (« Start download at », limites horaires) | aucun : `EX-B-16` est une **décision XDM** | VM (`A-09`), dialogues 268-271 |
 
 ## 9. Journal des révisions
 
 | Date | Auteur | Changement |
 |---|---|---|
+| 2026-10-28 | lots `WP-24`/`WP-25` | v0.6 : `src/rewrite.js` (`D-053`), `src/report.js`, `src/schedule.js` (`D-054`) — `EX-B-14`→`EX-B-16` vertes, **16/16** ; réécriture **sans précédent** dans la cible, planification **sans démon** ; 196 tests |
 | 2026-10-28 | assemblage `WP-11` | v0.5 : `src/grabber.js` (`D-042`) — arborescence locale, collisions, `empty.html` non écrasé, promotion en tâches ordinaires ; `EX-B-01`/`06`/`10`/`11`/`12` vertes ⇒ **13/13**, **97 tests** |
 | 2026-10-28 | parcours `WP-11` | v0.4 : `src/crawler.js` — BFS par niveau, URL canonique, `robots.txt`, filtres ; `EX-B-07`→`EX-B-09` et `EX-B-13` **vertes** (`T-B-07`→`T-B-09`, `T-B-13`) ; **90 tests** |
 | 2026-10-28 | mesures `WP-11` | v0.3 : `D-041` — le moteur d'exploration n'est pas dans `IDMan.exe` (0 référence code aux conteneurs, annexe 12 §6) ; l'exploration devient un **choix XDM** documenté (`EX-B-07`→`EX-B-09`, `EX-B-13`) ; plus aucune exigence en `Hypothèse` |

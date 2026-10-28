@@ -131,13 +131,22 @@ export const isIdle = (queue) =>
 /**
  * Passe à `ACTIVE` la prochaine tâche en attente, tant que la limite n'est pas
  * atteinte. Renvoie aussi la tâche démarrée (ou `null`).
+ *
+ * `accept` restreint les candidates : c'est ainsi que la **planification** (`D-054`)
+ * n'exécute que les tâches qu'un budget autorise, sans retirer les autres de la file
+ * (elles restent `PENDING` pour l'exécution suivante). Le prédicat filtre, il ne trie pas.
+ *
  * @param {Queue} queue
  * @param {number} [now]
+ * @param {((task: Task) => boolean)|null} [accept]
  * @returns {{queue: Queue, started: Task|null}}
  */
-export function startNext(queue, now = Date.now()) {
+export function startNext(queue, now = Date.now(), accept = null) {
   if (activeCount(queue) >= queue.maxActive) return { queue, started: null };
-  const candidate = queue.tasks.find((t) => t.state === "PENDING");
+  if (accept !== null && typeof accept !== "function") {
+    throw new TypeError("startNext : `accept` doit être une fonction ou null");
+  }
+  const candidate = queue.tasks.find((t) => t.state === "PENDING" && (accept === null || accept(t)));
   if (!candidate) return { queue, started: null };
 
   const next = transition(queue, candidate.id, "ACTIVE", (task) => ({
@@ -179,8 +188,15 @@ export const beginVerification = (queue, taskId, now = Date.now()) =>
   transition(queue, taskId, "VERIFYING", (task) => ({ ...task, updatedAt: now }));
 
 /** @param {Queue} queue @param {number} taskId @param {number} [now] */
-export const completeTask = (queue, taskId, now = Date.now()) =>
-  transition(queue, taskId, "DONE", (task) => ({ ...task, updatedAt: now }));
+/**
+ * @param {Queue} queue
+ * @param {number} taskId
+ * @param {number} [now]
+ * @param {object} [patch] champs mesurés pendant le transfert (ex. `totalSize`)
+ * @returns {Queue}
+ */
+export const completeTask = (queue, taskId, now = Date.now(), patch = {}) =>
+  transition(queue, taskId, "DONE", (task) => ({ ...task, ...patch, updatedAt: now }));
 
 /**
  * Échec : la tâche reste en `FAILED` et peut être remise en attente à la main

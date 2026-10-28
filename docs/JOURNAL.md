@@ -1215,6 +1215,75 @@ trois exécutions consécutives du fichier de test confirment la stabilité.
 
 ---
 
+### D-053 — La réécriture des liens est un **ajout XDM**, pas un clone
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-24`
+
+**Contexte.** Un site aspiré reste lisible seulement si ses pages pointent vers les fichiers
+locaux. IDM, lui, ne le fait pas : `Q-B-01` a établi qu'**aucun parseur HTML** n'est présent
+dans `IDMan.exe` (0 référence code aux conteneurs `SPL`/`RL`/`LI2`, annexe 12 §6) — l'outil
+livre une arborescence de fichiers, pas un miroir navigable.
+
+**Décision.** La réécriture est implémentée **et optionnelle** (`--reecrire`, `D-053`) :
+1. **Ce qui est réécrit** : les attributs d'URL d'un document HTML (`href`, `src`, `action`,
+   `poster`, `data`, `srcset`, …) et les `url(...)`/`@import` d'une feuille de style.
+2. **Ce qui ne l'est pas** : `<script>`, `<style>`, `<pre>`, `<textarea>` et les commentaires,
+   ainsi que toute référence **inconnue** du plan de site — elle est laissée **intacte**.
+   Une page ne doit pas devenir fausse sous prétexte de devenir locale.
+3. **Forme du lien** : chemin **relatif** entre la page et la cible (`../img/a.png`), `./`
+   quand la cible est la page elle-même ; jamais d'URL `file://` (non portable, et un site
+   copié sur un serveur resterait faux).
+4. **Aucun parseur HTML externe** : la transformation est un balayage de balises, les
+   attributs inconnus étant conservés tels quels. Conséquence assumée : un document
+   malformé (balise jamais fermée) reste tel quel plutôt que d'être « réparé ».
+5. **La page de départ n'est aspirée que si les filtres la retiennent**, et seulement
+   lorsqu'une **inclusion** est déclarée : la racine (`/`) n'a pas d'extension, donc les
+   exclusions par défaut (`*.html`, …) ne la visent pas — la retenir sans condition
+   aspirerait l'accueil d'un site dont l'utilisateur a exclu toutes les pages. Le CLI expose
+   donc `--inclure MOTIF` (répétable) et `--sans-exclusions` (vider le masque par défaut),
+   les deux nécessaires : l'exclusion l'emporte (`D-032`).
+
+**Mesure de bout en bout** (site local de 3 pages/fichiers, `--sans-exclusions --inclure '*'`) :
+4 fichiers aspirés, **5 liens réécrits** — `index.html` pointe vers `style.css`,
+`page2.html`, `img/a.png` ; `page2.html` revient à `index.html` ; `style.css` réécrit son
+`url()` ; le lien externe et le lien vers une cible **404 non retenue** restent **intacts**.
+
+**Conséquence.** `EX-B-14` est verte (`src/rewrite.js`, `T-B-24`). Cette exigence est marquée
+**Décision XDM** : elle n'a **aucun précédent** dans la cible, et la documentation le dit.
+
+---
+
+### D-054 — Planification sans démon : fenêtres recalculées, quotas explicites
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-25`
+
+**Contexte.** IDM planifie (« Start download at », limites horaires). Un démon ou une tâche
+planifiée du système serait une dépendance d'exploitation : le programme tournerait même
+quand personne ne l'attend.
+
+**Décision.**
+1. **Pas de démon, pas de cron, aucun état de veille.** À chaque exécution, la fenêtre est
+   recalculée à partir de l'heure **locale** ; hors fenêtre, rien n'est téléchargé, et
+   `xdm-grab` sort avec le code **3** (`--planifier « lun-ven 01:00-06:00 »`).
+2. **Fenêtres** : `jours heures-heures`, jours = `*`, `lun-ven`, `sam,dim`, `ven-lun`
+   (la plage traverse le week-end), heures `00:00`–`23:59`. Une fenêtre qui traverse
+   minuit (`22:00-02:00`) appartient au **jour de son début** : lundi 23:00 et mardi 01:30
+   sont tous deux « lundi soir ».
+3. **Quotas** : octets et/ou nombre de tâches, valables **pour une exécution**. Les tâches
+   non retenues ne sont **pas** retirées de la file : elles restent `PENDING` et repartent
+   à la prochaine occasion (`startNext(queue, now, accept)`).
+4. **Une tâche de taille inconnue n'est jamais budgétée à zéro** : dès qu'un quota d'octets
+   est actif, elle est **reportée** avec la raison « taille inconnue ». La deviner à zéro
+   reviendrait à dépasser le quota en silence — exactement ce qu'un quota doit empêcher.
+5. **Ordre des candidates** : reprise (`PAUSED`) d'abord, puis priorités, puis petite taille
+   d'abord ; `DONE` en fin. Un quota serré sert donc le plus grand nombre de fichiers.
+6. **Hors fenêtre, le plan est persisté** (projet + file) avant la sortie : l'aspiration est
+   *planifiée*, pas perdue ; une exécution ultérieure la reprend sans re-parcourir le site.
+
+**Conséquence.** `EX-B-16` est verte (`src/schedule.js`, `T-B-25`). La planification est un
+**choix XDM** : la sémantique exacte des dialogues d'IDM n'a pas été instruite, et cette
+fiche ne prétend pas la reproduire.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation

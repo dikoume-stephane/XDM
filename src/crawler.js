@@ -286,6 +286,15 @@ export async function crawl(startUrl, {
       continue;
     }
 
+    // La page de départ est retenue **si les filtres la retiennent** — mais seulement quand
+    // une inclusion est déclarée : sans inclusion, le comportement historique (une page de
+    // départ n'est aspirée que si une autre page la lie) est conservé, car la racine n'a pas
+    // d'extension et échapperait aux exclusions par défaut (`*.html`).
+    if (node.depth === 1 && isPageUrl(node.url) && (filters.include ?? []).length > 0) {
+      const verdict = classifyLink(node.url, filters);
+      if (verdict.retained) retained.set(node.url, { url: node.url, depth: 0 });
+    }
+
     let response;
     try {
       response = await fetchPage(node.url);

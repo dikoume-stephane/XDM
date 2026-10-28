@@ -74,6 +74,22 @@ test("T-A-27 : une place ne s'ouvre qu'après libération, jamais par dépasseme
   assert.equal(activeCount(big), 20);
 });
 
+test("T-B-28 : `accept` filtre les candidates sans réordonner la file", () => {
+  const queue = queueOf(3, 8);
+  const second = queue.tasks[1].id;
+  const { queue: next, started } = startNext(queue, NOW, (task) => task.id === second);
+  assert.equal(started.id, second, "la première candidate acceptée démarre");
+  assert.deepEqual(next.tasks.map((t) => t.state), ["PENDING", "ACTIVE", "PENDING"]);
+  assert.deepEqual(queue.tasks.map((t) => t.state), ["PENDING", "PENDING", "PENDING"], "la file d'origine est intacte");
+
+  // Aucune candidate acceptée : rien ne démarre, la file est rendue telle quelle.
+  const none = startNext(queue, NOW, () => false);
+  assert.equal(none.started, null);
+  assert.equal(none.queue, queue);
+
+  assert.throws(() => startNext(queue, NOW, /** @type {any} */ (42)), TypeError);
+});
+
 test("T-A-19 : les transitions illégales sont refusées, pas absorbées", () => {
   let queue = queueOf(1);
   assert.throws(() => completeTask(queue, 1), /transition interdite/);

@@ -73,7 +73,11 @@ export function retryFailed(queue, now = Date.now()) {
  * Exécute une file jusqu'à épuisement des tâches `PENDING`.
  *
  * @param {object} queue
+ * `only` restreint l'exécution à un ensemble d'identifiants (planification, `D-054`) :
+ * les autres tâches restent `PENDING` dans la file rendue, donc rejouables demain.
+ *
  * @param {{runTask?: (task: object) => Promise<object>, concurrency?: number,
+ *   only?: Set<number>|null,
  *   onEvent?: (event: {type: string, task: object, result?: object, error?: string}) => void}}
  *   [options]
  * @returns {Promise<{queue: object, results: object[], failures: object[], stats: object}>}
@@ -81,9 +85,14 @@ export function retryFailed(queue, now = Date.now()) {
 export async function runQueue(queue, {
   runTask = (task) => downloadTask(task),
   concurrency = DEFAULT_CONCURRENCY,
+  only = null,
   onEvent = () => {},
 } = {}) {
   if (typeof runTask !== 'function') throw new TypeError('runQueue : `runTask` requis');
+  if (only !== null && !(only instanceof Set)) {
+    throw new TypeError('runQueue : `only` doit être un Set ou null');
+  }
+  const accept = only === null ? null : (task) => only.has(task.id);
   if (!Number.isInteger(concurrency) || concurrency < 1) {
     throw new RangeError('runQueue : concurrence ≥ 1');
   }
@@ -98,15 +107,20 @@ export async function runQueue(queue, {
 
   const launch = () => {
     while (inFlight.size < concurrency) {
-      const { queue: next, started } = startNext(current);
+      const { queue: next, started } = startNext(current, Date.now(), accept);
       if (!started) return;
       current = next;
       onEvent({ type: 'start', task: started });
       const promise = (async () => {
         try {
           const result = await runTask(started);
+          // La taille réelle remplace « inconnue » : un rapport ne doit pas afficher 0 o
+          // pour un fichier dont la taille vient d'être mesurée (`EX-B-15`).
+          const measured = Number.isSafeInteger(result?.size) && result.size > 0
+            ? { totalSize: result.size }
+            : {};
           current = beginVerification(current, started.id);
-          current = completeTask(current, started.id);
+          current = completeTask(current, started.id, Date.now(), measured);
           results.push({ id: started.id, url: started.url, ...result });
           onEvent({ type: 'done', task: started, result });
         } catch (error) {
@@ -140,7 +154,7 @@ export async function runQueue(queue, {
  *
  * @param {{project: object, queue: object, projectPath: string, queueDir: string,
  *   runTask?: (task: object) => Promise<object>, concurrency?: number,
- *   onEvent?: (event: object) => void}} options
+ *   only?: Set<number>|null, onEvent?: (event: object) => void}} options
  * @returns {Promise<{project: object, queue: object, results: object[], failures: object[],
  *   stats: object, saved: {project: string, queue: string}}>}
  */
@@ -151,11 +165,13 @@ export async function executeGrab({
   queueDir,
   runTask,
   concurrency = DEFAULT_CONCURRENCY,
+  only = null,
   onEvent,
 }) {
   const outcome = await runQueue(queue, {
     ...(runTask ? { runTask } : {}),
     concurrency,
+    only,
     ...(onEvent ? { onEvent } : {}),
   });
 

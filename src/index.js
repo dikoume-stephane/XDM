@@ -232,3 +232,38 @@ export {
   shExpMatch,
 } from './pac.js';
 export { digestProxyAuth, parseProxyChallenge } from './proxy.js';
+
+export {
+  LIST_ATTRIBUTES,
+  URL_ATTRIBUTES,
+  absoluteReference,
+  isRewritable,
+  relativeLink,
+  rewriteCss,
+  rewriteDocument,
+  rewriteHtml,
+  rewriteReference,
+  siteMapFromEntries,
+} from './rewrite.js';
+export {
+  buildReport,
+  csvField,
+  formatReport,
+  humanBytes,
+  humanDuration,
+  toCsv,
+  toMarkdown,
+} from './report.js';
+export {
+  DAY_NAMES,
+  ScheduleError,
+  createSchedule,
+  isOpen,
+  minutesOf,
+  nextOpening,
+  orderTasks,
+  parseDays,
+  parseTime,
+  parseWindow,
+  planRun,
+} from './schedule.js';

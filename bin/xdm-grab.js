@@ -3,7 +3,9 @@
  * CLI d'aspiration de site — lot `WP-23`.
  *
  * `xdm-grab <url> [dossier] [--profondeur N] [--pages N] [--connexions N] [--sans-robots]
- *   [--reprendre] [--sortie texte|json]`
+ *   [--reprendre] [--inclure MOTIF] [--sans-exclusions] [--reecrire] [--rapport F]
+ *   [--planifier « lun-ven 01:00-06:00 »]
+ *   [--quota-octets N | --quota-taches N] [--sortie texte|json]`
  *
  * Enchaîne, sans état caché : parcours du site (`crawler.js`) → arborescence locale et
  * `empty.html` (`grabber.js`) → file de tâches (`task-queue.js`) → téléchargements et
@@ -11,25 +13,41 @@
  * (`queue.json`) sont écrits dans le dossier cible : une interruption se reprend.
  */
 
-import { mkdir } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 
 import { crawl } from '../src/crawler.js';
 import { prepareGrab } from '../src/grabber.js';
 import { downloadTask, executeGrab, retryFailed } from '../src/grab-runner.js';
 import { fetchText } from '../src/http-client.js';
-import { createProject, loadProject, projectPath, splitMotif } from '../src/project.js';
-import { createQueue, loadQueue } from '../src/task-queue.js';
+import {
+  addFilter, createProject, loadProject, projectPath, saveProject, splitMotif,
+} from '../src/project.js';
+import { buildReport, formatReport } from '../src/report.js';
+import { rewriteDocument, siteMapFromEntries } from '../src/rewrite.js';
+import { createSchedule, planRun } from '../src/schedule.js';
+import { createQueue, loadQueue, saveQueue } from '../src/task-queue.js';
 
 export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages N] [--connexions N] [--sans-robots]
-                   [--reprendre] [--sortie texte|json]
-  --profondeur  niveaux visités (défaut 2)
-  --pages       nombre maximal de pages visitées (défaut 2000)
-  --connexions  téléchargements simultanés (défaut 4)
-  --sans-robots ignorer robots.txt (déconseillé)
-  --reprendre   reprendre le projet et la file déjà présents dans <dossier>, sans re-parcourir
-  --sortie      format du résumé : texte (défaut) ou json
-`;
+                   [--reprendre] [--inclure MOTIF] [--sans-exclusions] [--reecrire]
+                   [--rapport F] [--planifier FENÊTRE]
+                   [--quota-octets N | --quota-taches N] [--sortie texte|json]
+  --profondeur     niveaux visités (défaut 2)
+  --pages          nombre maximal de pages visitées (défaut 2000)
+  --connexions     téléchargements simultanés (défaut 4)
+  --sans-robots    ignorer robots.txt (déconseillé)
+  --reprendre      reprendre le projet et la file déjà présents dans <dossier>, sans re-parcourir
+  --inclure        motif à inclure, répétable (ex. « *.html »)
+  --sans-exclusions  vider les exclusions par défaut (D-032 : l'exclusion l'emporte sur
+                   l'inclusion, donc --inclure « *.html » seul ne retient aucune page)
+  --reecrire       réécrire les liens HTML/CSS vers les chemins locaux (choix XDM, D-053)
+  --rapport        écrire un rapport (extension .json, .csv ou .md ; Markdown par défaut)
+  --planifier      n'exécuter que dans la fenêtre donnée, ex. « lun-ven 01:00-06:00 »
+  --quota-octets   budget d'octets pour cette exécution
+  --quota-taches   nombre de tâches pour cette exécution
+  --sortie         format du résumé : texte (défaut) ou json
+
+code de sortie : 0 terminé, 1 erreur, 2 usage, 3 hors fenêtre de planification`;
 
 export const OUTPUT_FORMATS = /** @type {const} */ (['texte', 'json']);
 
@@ -44,7 +62,19 @@ export function parseArgs(argv) {
   /** @type {string[]} */
   const positional = [];
   const options = {
-    depth: 2, maxPages: 2000, connections: 4, robots: true, resume: false, output: 'texte',
+    depth: 2,
+    maxPages: 2000,
+    connections: 4,
+    robots: true,
+    resume: false,
+    output: 'texte',
+    rewrite: false,
+    include: [],
+    noExclude: false,
+    report: null,
+    window: null,
+    quotaBytes: null,
+    quotaTasks: null,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const argument = argv[i];
@@ -62,6 +92,23 @@ export function parseArgs(argv) {
     else if (argument === '--connexions') options.connections = value();
     else if (argument === '--sans-robots') options.robots = false;
     else if (argument === '--reprendre') options.resume = true;
+    else if (argument === '--reecrire') options.rewrite = true;
+    else if (argument === '--sans-exclusions') options.noExclude = true;
+    else if (argument === '--inclure') {
+      i += 1;
+      if (!argv[i]) throw new Error(`--inclure attend un motif\n${USAGE}`);
+      options.include.push(argv[i]);
+    }
+    else if (argument === '--rapport') {
+      i += 1;
+      if (!argv[i]) throw new Error(`--rapport attend un fichier\n${USAGE}`);
+      options.report = argv[i];
+    } else if (argument === '--planifier') {
+      i += 1;
+      if (!argv[i]) throw new Error(`--planifier attend une fenêtre\n${USAGE}`);
+      options.window = argv[i];
+    } else if (argument === '--quota-octets') options.quotaBytes = value();
+    else if (argument === '--quota-taches') options.quotaTasks = value();
     else if (argument === '--sortie') {
       i += 1;
       const format = argv[i];
@@ -98,6 +145,16 @@ export function filtersOf(project) {
   return { include: active('include'), exclude: active('exclude') };
 }
 
+/** Le fichier existe-t-il ? (sans lever) */
+async function exists(path) {
+  try {
+    await stat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Résumé machine d'une exécution : ce qu'un script peut consommer (pas de file entière).
  * @param {{pages: number, retained: number, done: number, failed: number, directory: string,
@@ -114,6 +171,9 @@ export function summarize(result) {
     done: result.done,
     failed: result.failed,
     tasks: result.queue.tasks.length,
+    started: result.started ?? true,
+    rewritten: result.rewritten ?? 0,
+    report: result.report ?? null,
   };
 }
 
@@ -141,7 +201,8 @@ export async function main(argv, {
   downloadOptions = {},
   runTask,
 } = {}) {
-  const { url, directory, depth, maxPages, connections, robots, resume } = parseArgs(argv);
+  const options = parseArgs(argv);
+  const { url, directory, depth, maxPages, connections, robots, resume } = options;
   const rootDir = resolve(directory);
   await mkdir(rootDir, { recursive: true });
 
@@ -164,6 +225,10 @@ export async function main(argv, {
     });
     // La profondeur du projet suit l'option : deux sources de vérité seraient un piège.
     project = { ...project, depth };
+    // L'exclusion l'emporte (D-032) : pour aspirer réellement des pages, il faut vider les
+    // exclusions par défaut *avant* d'ajouter les inclusions.
+    if (options.noExclude) project = { ...project, filters: { ...project.filters, exclude: [] } };
+    for (const motif of options.include) project = addFilter(project, 'include', motif);
 
     log(`parcours de ${url} (profondeur ${depth}, ${maxPages} pages au plus)`);
     const found = await crawl(url, {
@@ -188,6 +253,43 @@ export async function main(argv, {
   // Reprise : une tâche laissée en échec (coupure, 404 passager) redevient candidate.
   if (resume) plan.queue = retryFailed(plan.queue);
 
+  // Planification (`WP-25`) : hors fenêtre, on ne télécharge rien et on le dit.
+  // Une fenêtre **ou** un quota suffit à planifier : sans fenêtre, tout est ouvert.
+  const scheduled = options.window !== null
+    || options.quotaBytes !== null
+    || options.quotaTasks !== null;
+  const schedule = scheduled
+    ? createSchedule({
+      windows: options.window ? [options.window] : [],
+      quota: {
+        ...(options.quotaBytes !== null ? { bytes: options.quotaBytes } : {}),
+        ...(options.quotaTasks !== null ? { tasks: options.quotaTasks } : {}),
+      },
+    })
+    : null;
+  const start = new Date();
+  /** @type {ReturnType<typeof planRun> | null} */
+  const planRunOutcome = schedule ? planRun({ queue: plan.queue, schedule, now: start }) : null;
+  if (planRunOutcome && !planRunOutcome.open) {
+    // Le plan est **persisté** même hors fenêtre : l'aspiration est planifiée, pas perdue.
+    await saveProject(projectPath(rootDir, plan.project.name), plan.project);
+    await saveQueue(rootDir, plan.queue);
+    log(`hors fenêtre (${options.window}) — prochaine ouverture : ${planRunOutcome.waitUntil?.toISOString() ?? 'jamais'}`);
+    return {
+      project: plan.project,
+      queue: plan.queue,
+      pages: plan.pages,
+      retained: plan.retained,
+      done: 0,
+      failed: 0,
+      directory: rootDir,
+      started: false,
+      waitUntil: planRunOutcome.waitUntil ? planRunOutcome.waitUntil.toISOString() : null,
+      report: null,
+      rewritten: 0,
+    };
+  }
+
   // Tâche d'exécution : celle du test si elle existe, sinon le téléchargement réel avec
   // les options demandées, sinon le comportement par défaut du runner.
   const effectiveRunTask = runTask
@@ -195,16 +297,60 @@ export async function main(argv, {
       ? (task) => downloadTask(task, { downloadOptions })
       : undefined);
 
+  // Le quota ne retire aucune tâche : les non retenues restent `PENDING`.
+  const only = planRunOutcome ? new Set(planRunOutcome.selected.map((task) => task.id)) : null;
+
   const outcome = await executeGrab({
     project: plan.project,
     queue: plan.queue,
     projectPath: projectPath(rootDir, plan.project.name),
     queueDir: rootDir,
     concurrency: connections,
+    only,
     ...(effectiveRunTask ? { runTask: effectiveRunTask } : {}),
   });
 
   log(`téléchargés : ${outcome.stats.counts.DONE} / ${outcome.stats.total}`);
+
+  // Réécriture des liens (`WP-24`) : seulement pour les documents HTML/CSS réellement
+  // présents sur disque. Un fichier absent n'est pas réécrit, il est compté.
+  let rewritten = 0;
+  if (options.rewrite) {
+    const map = siteMapFromEntries(plan.entries ?? []);
+    for (const entry of plan.entries ?? []) {
+      if (!/\.(html?|css)$/i.test(entry.localPath)) continue;
+      const file = join(rootDir, entry.localPath);
+      if (!(await exists(file))) continue;
+      const source = await readFile(file, 'utf8');
+      const result = rewriteDocument(source, {
+        pageUrl: entry.url,
+        pageLocalPath: entry.localPath,
+        siteMap: map,
+      });
+      if (result.rewritten > 0) {
+        await writeFile(file, result.text, 'utf8');
+        rewritten += result.rewritten;
+      }
+    }
+    log(`liens réécrits : ${rewritten}`);
+  }
+
+  // Rapport (`WP-25`) : écrit sur disque, format déduit de l'extension.
+  let reportPath = null;
+  if (options.report) {
+    const report = buildReport({
+      project: outcome.project,
+      queue: outcome.queue,
+      startedAt: start.getTime(),
+      finishedAt: Date.now(),
+      siteMap: siteMapFromEntries(plan.entries ?? []),
+    });
+    reportPath = resolve(options.report);
+    const format = reportPath.endsWith('.json') ? 'json'
+      : reportPath.endsWith('.csv') ? 'csv' : 'markdown';
+    await writeFile(reportPath, formatReport(report, format), 'utf8');
+    log(`rapport  : ${reportPath}`);
+  }
   if (outcome.failures.length > 0) {
     for (const failure of outcome.failures) log(`  échec ${failure.url} : ${failure.error}`);
   }
@@ -219,6 +365,10 @@ export async function main(argv, {
     done: outcome.stats.counts.DONE,
     failed: outcome.stats.counts.FAILED,
     directory: rootDir,
+    started: true,
+    waitUntil: null,
+    report: reportPath,
+    rewritten,
   };
 }
 
@@ -231,6 +381,7 @@ if (invokedDirectly) {
   main(argv, { log })
     .then((result) => {
       if (json) console.log(JSON.stringify(summarize(result)));
+      if (result.started === false) process.exitCode = 3;
     })
     .catch((error) => {
       const message = String(error?.message ?? error).trimEnd();

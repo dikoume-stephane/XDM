@@ -86,12 +86,21 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
     robots: true,
     resume: false,
     output: 'texte',
+    rewrite: false,
+    include: [],
+    noExclude: false,
+    report: null,
+    window: null,
+    quotaBytes: null,
+    quotaTasks: null,
   });
   assert.deepEqual(
     parseArgs(['http://h/', 'dl', '--profondeur', '3', '--pages', '10', '--connexions', '2', '--sans-robots']),
     {
       url: 'http://h/', directory: 'dl', depth: 3, maxPages: 10, connections: 2,
       robots: false, resume: false, output: 'texte',
+      rewrite: false, include: [], noExclude: false, report: null, window: null,
+      quotaBytes: null, quotaTasks: null,
     },
   );
   assert.deepEqual(
@@ -99,10 +108,24 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
     {
       url: 'http://h/', directory: '.', depth: 2, maxPages: 2000, connections: 4,
       robots: true, resume: true, output: 'json',
+      rewrite: false, include: [], noExclude: false, report: null, window: null,
+      quotaBytes: null, quotaTasks: null,
     },
   );
   assert.throws(() => parseArgs(['http://h/', '--sortie', 'yaml']), /format de sortie inconnu/);
   assert.match(USAGE, /--reprendre/);
+  assert.deepEqual(
+    {
+      rewrite: parseArgs(['http://h/', '--reecrire', '--rapport', 'r.md', '--planifier', 'lun-ven 01:00-06:00', '--quota-octets', '1000']).rewrite,
+      report: parseArgs(['http://h/', '--rapport', 'r.md']).report,
+      window: parseArgs(['http://h/', '--planifier', 'lun-ven 01:00-06:00']).window,
+      quotaBytes: parseArgs(['http://h/', '--quota-octets', '1000']).quotaBytes,
+      quotaTasks: parseArgs(['http://h/', '--quota-taches', '3']).quotaTasks,
+    },
+    { rewrite: true, report: 'r.md', window: 'lun-ven 01:00-06:00', quotaBytes: 1000, quotaTasks: 3 },
+  );
+  assert.throws(() => parseArgs(['http://h/', '--rapport']), /--rapport attend un fichier/);
+  assert.throws(() => parseArgs(['http://h/', '--planifier']), /--planifier attend une fenêtre/);
   assert.throws(() => parseArgs([]), /usage/);
   assert.throws(() => parseArgs(['pas-une-url']), /URL invalide/);
   assert.throws(() => parseArgs(['http://h/', '--profondeur', '0']), /valeur invalide/);
@@ -185,7 +208,8 @@ test('T-B-22 : sortie machine — le résumé JSON est le seul contenu de stdout
       );
       const summary = JSON.parse(stdout);
       assert.deepEqual(Object.keys(summary).sort(), [
-        'directory', 'done', 'failed', 'pages', 'retained', 'tasks', 'url',
+        'directory', 'done', 'failed', 'pages', 'report', 'retained', 'rewritten',
+        'started', 'tasks', 'url',
       ]);
       assert.equal(summary.done, 2);
       assert.equal(summary.tasks, 2);
@@ -196,7 +220,16 @@ test('T-B-22 : sortie machine — le résumé JSON est le seul contenu de stdout
         queue: { tasks: [1, 2] },
         pages: 1, retained: 2, done: 1, failed: 1, directory: '/tmp',
       }), {
-        url: 'http://h/', directory: '/tmp', pages: 1, retained: 2, done: 1, failed: 1, tasks: 2,
+        url: 'http://h/',
+        directory: '/tmp',
+        pages: 1,
+        retained: 2,
+        done: 1,
+        failed: 1,
+        tasks: 2,
+        started: true,
+        rewritten: 0,
+        report: null,
       });
     } finally {
       await site.close();
@@ -247,6 +280,90 @@ test('T-B-21 : reprise explicite — la file sur disque fait foi, les échecs so
         /ENOENT|n'existe pas|introuvable/,
       );
       await rm(empty, { recursive: true, force: true });
+    } finally {
+      await site.close();
+    }
+  });
+});
+
+test('T-B-26 : `--reecrire` rend le site aspiré navigable, `--rapport` le résume', async () => {
+  const site = await startSite();
+  await withTempDir(async (dir) => {
+    try {
+      const result = await main(
+        [
+          `${site.origin}/`, dir, '--profondeur', '1',
+          '--sans-exclusions', '--inclure', '*',
+          '--reecrire', '--rapport', join(dir, 'rapport.json'),
+        ],
+        { log: () => {} },
+      );
+      assert.equal(result.failed, 0);
+
+      // La page de départ est retenue (inclusion explicite), les liens deviennent relatifs.
+      const index = await readFile(join(dir, 'index.html'), 'utf8');
+      assert.match(index, /href="fichiers\/a\.txt"/);
+      assert.match(index, /href="fichiers\/b\.bin"/);
+      assert.match(index, /href="page2\.html"/);
+      assert.ok(!index.includes('href="/fichiers/'), 'plus aucun lien absolu interne');
+      assert.ok(result.rewritten >= 3, `liens réécrits : ${result.rewritten}`);
+
+      // Le rapport est un JSON lisible, avec des tailles désormais mesurées.
+      const report = JSON.parse(await readFile(join(dir, 'rapport.json'), 'utf8'));
+      // Racine (inclusion explicite) + page liée + deux fichiers.
+      assert.equal(report.total, 4);
+      assert.equal(report.done, 4);
+      assert.equal(report.progress, 100);
+      assert.ok(report.bytes.known > 0, 'les tailles mesurées remplacent « inconnue »');
+      assert.equal(report.bytes.unknown, 0);
+
+      // Un fichier absent n'est jamais réécrit : `page2.html` ne cite que des cibles connues.
+      const page2 = await readFile(join(dir, 'page2.html'), 'utf8');
+      assert.match(page2, /href="fichiers\/a\.txt"/);
+      assert.ok(!page2.includes('href="/fichiers/'));
+    } finally {
+      await site.close();
+    }
+  });
+});
+
+test('T-B-28 : hors fenêtre de planification, aucun téléchargement (sortie 3)', async () => {
+  const site = await startSite();
+  const names = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
+  // Un jour qui n'est pas aujourd'hui : la fenêtre est fermée quel que soit le moment.
+  const otherDay = names[(new Date().getDay() + 3) % 7];
+  await withTempDir(async (dir) => {
+    try {
+      let called = 0;
+      const result = await main(
+        [`${site.origin}/`, dir, '--profondeur', '1', '--planifier', `${otherDay} 00:00-23:59`],
+        {
+          log: () => {},
+          runTask: async () => {
+            called += 1;
+            throw new Error('aucune tâche ne doit être lancée hors fenêtre');
+          },
+        },
+      );
+      assert.equal(result.started, false);
+      assert.equal(called, 0);
+      assert.equal(result.done, 0);
+      assert.equal(result.rewritten, 0);
+      assert.ok(result.waitUntil, 'la prochaine ouverture est annoncée');
+
+      // Fenêtre ouverte : le quota de tâches borne l'exécution, les autres restent PENDING.
+      const limited = await main(
+        [`${site.origin}/`, dir, '--reprendre', '--quota-taches', '1'],
+        { log: () => {}, runTask: async (task) => ({ target: task.target, size: 0, requests: 0 }) },
+      );
+      assert.equal(limited.started, true);
+      assert.equal(limited.done, 1);
+      assert.equal(limited.failed, 0);
+      assert.deepEqual(
+        (await loadQueue(dir)).tasks.map((t) => t.state),
+        ['DONE', 'PENDING'],
+        'les tâches non budgétées restent candidates',
+      );
     } finally {
       await site.close();
     }

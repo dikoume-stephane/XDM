@@ -1,11 +1,11 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.5 — **Dernière revue** : 2026-10-28
+> **Statut** : ✅ v1.6 — **Dernière revue** : 2026-10-28
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
 > fonde et le **test** qui la vérifiera. Aucune ligne d'implémentation ne référence une
 > exigence absente de ce fichier.
 > **Sources** : `docs/specs/A-moteur-de-telechargement.md` (v0.7),
-> `docs/specs/B-grabber.md` (v0.5), annexes 12 à 16 ; fiches C et D dans l'annexe 15.
+> `docs/specs/B-grabber.md` (v0.6), annexes 12 à 16 ; fiches C et D dans l'annexe 15.
 > **Rappel** : « preuve » ne veut pas dire « comportement validé ». Une exigence
 > **Hypothèse** n'a pas de preuve et ne peut pas être marquée conforme.
 
@@ -41,7 +41,7 @@
 | `EX-A-18` inactivité > 30 s ⇒ reconnexion | Observé | annexe 14 §4.5 (`0x1a139f`, `0x18adad`) ; `D-038` | `T-A-25` | **vert** |
 | `EX-A-19` reprise sans retour à zéro | Observé + Décision | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` | **vert** |
 
-**Couverture** : 19 exigences, **19 vertes** (`npm test`, 172 cas) — domaine A **clos**.
+**Couverture** : 19 exigences, **19 vertes** (`npm test`, 196 cas) — domaine A **clos**.
 La boucle de connexions (`src/connection-loop.js`) exécute les exigences de bout en bout
 contre des serveurs locaux, y compris la coupure, la reprise depuis la carte persistée et la
 promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
@@ -64,8 +64,11 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 | `EX-B-11` arborescence locale | Observé + Décision | annexe 12 §2 ; `D-042` | `T-B-11` | **vert** |
 | `EX-B-12` `empty.html` | Observé + Décision | annexe 13 §4 (`0xd1ed0`) ; `D-042` | `T-B-12` | **vert** |
 | `EX-B-13` pas de sortie de domaine | **Hypothèse** | — | `T-B-13` | **bloqué** |
+| `EX-B-14` réécriture des liens vers les chemins locaux | **Décision** (`D-053`, sans précédent) | `Q-B-01` ; `src/rewrite.js` | `T-B-26` | **vert** |
+| `EX-B-15` rapport texte/JSON/CSV/Markdown, sans valeur inventée | **Décision** (`D-053`) | `src/report.js` | `T-B-27` | **vert** |
+| `EX-B-16` planification recalculée : fenêtres, quotas, ni démon ni cron | **Décision** (`D-054`) | `src/schedule.js` | `T-B-28` | **vert** |
 
-**Couverture** : 13 exigences, **13 vertes** (`npm test`, 172 cas) — domaine B **clos**.
+**Couverture** : 16 exigences, **16 vertes** (`npm test`, 196 cas) — domaine B **clos**.
 `Q-B-01` est close comme non instruite dans ce module (annexe 12 §6) : l'exploration et
 l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`,
 `src/grabber.js`, `D-041`/`D-042`).
@@ -79,6 +82,9 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | états `PENDING → ACTIVE → VERIFYING → DONE`, échec isolé | `src/grab-runner.js`, `src/task-queue.js` | `T-A-07`, `T-A-22` |
 | concurrence bornée (8 par défaut) | `src/grab-runner.js` | `T-A-07` |
 | seules les pages sont explorées | `src/crawler.js` (`isPageUrl`) | `T-B-08` |
+| réécriture locale des pages et feuilles de style | `src/rewrite.js`, `bin/xdm-grab.js` (`--reecrire`, `--inclure`, `--sans-exclusions`) | `T-B-26` |
+| rapport d'aspiration (texte/JSON/CSV/Markdown) | `src/report.js`, `bin/xdm-grab.js` (`--rapport`) | `T-B-27` |
+| fenêtre de planification, quotas, hors fenêtre ⇒ code 3 | `src/schedule.js`, `src/task-queue.js` (`accept`), `src/grab-runner.js` (`only`) | `T-B-28` |
 
 ## 3 bis. Domaine C — transports (`WP-07`)
 
@@ -131,7 +137,11 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
    hypothèse, chaque test peut s'écrire sans réseau réel (serveur local + fichiers).
 2. **Le domaine B ne l'est pas** : 3 exigences sur 13 reposent sur l'algorithme
    d'exploration, qui n'est pas établi (`Q-B-01`, `A-09`).
-3. **Le socle est complet et couvert** : 50 cas verts sur six modules (`chunk-map`,
+3. **Trois exigences du domaine B sont des ajouts XDM assumés** : réécriture des liens
+   (`EX-B-14`), rapport (`EX-B-15`), planification (`EX-B-16`). Elles ne figurent pas dans
+   la cible — `Q-B-01` a établi qu'`IDMan.exe` n'embarque aucun parseur HTML — et la fiche B
+   les marque **Décision**, jamais **Observé**.
+4. **Le socle est complet et couvert** : 50 cas verts sur six modules (`chunk-map`,
    `chunk-policy`, `part-file`, `work-file`, `project`, `task-queue`, `promote`) écrits
    *avant* toute couche réseau. Un test a d'ailleurs invalidé une conséquence implicite de
    `D-030` (`D-035`) : c'est exactement ce que la porte G1 cherche à produire.
@@ -153,11 +163,13 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 | 11 | `T-C-02`, `T-C-05`→`T-C-07`, `T-C-09`, `T-C-10` | ✅ fait — `D-049`→`D-051` : en-têtes, compression, FTP, proxys |
 | 12 | `T-C-09`, `T-C-10` | ✅ fait — `D-052` : Digest, FTP par tunnel, PAC |
 | 13 | `T-C-08` | ⛔ hors périmètre (`H-18`) |
+| 14 | `T-B-26`→`T-B-28` | ✅ fait — `D-053`/`D-054` : réécriture, rapport, planification (ajouts XDM) |
 
 ## 6. Journal des révisions
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v1.6 : `D-053` (réécriture, **sans précédent** dans la cible) et `D-054` (planification sans démon) — `EX-B-14`→`EX-B-16` vertes, domaine B **16/16** ; 196 tests, total **54 vertes / 55** |
 | 2026-10-28 | v1.5 : `D-052` — Digest, FTP par tunnel, PAC ; domaine C **9/10** (1 hors périmètre) ; 172 tests, total **51 vertes / 52** |
 | 2026-10-28 | v1.4 : `D-049`→`D-051` — en-têtes et compression, FTP passif, proxys `CONNECT`/SOCKS5 ; domaine C **6 vertes / 10**, 159 tests, total **49 vertes / 52** |
 | 2026-10-28 | v1.3 : `D-047` (cookies, `If-Range`) et `D-048` (DASH par `sidx`) — domaine D **clos 10/10**, domaine C 3/10 ; 140 tests, total **45 vertes / 52** |

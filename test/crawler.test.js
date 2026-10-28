@@ -131,6 +131,32 @@ test('T-B-08 (suite) : profondeur 1 = page de départ seule', async () => {
   assert.equal(DEFAULT_DEPTH, 2);
 });
 
+test('T-B-08 (suite) : la page de départ est retenue seulement si une inclusion la retient', async () => {
+  const routes = {
+    'http://r.example/': '<a href="/a.html">a</a>',
+    'http://r.example/a.html': '<a href="/">retour</a>',
+  };
+  const { fetchPage } = site(routes);
+
+  // Sans inclusion : comportement historique, la racine n'est pas aspirée (elle n'a pas
+  // d'extension, donc les exclusions `*.html` ne la viseraient pas par accident).
+  const plain = await crawl('http://r.example/', { fetchPage, depth: 1, robots: false });
+  assert.deepEqual(plain.retained.map((r) => r.url), ['http://r.example/a.html']);
+
+  // Avec une inclusion qui la retient : elle fait partie du plan, en profondeur 0.
+  const included = await crawl('http://r.example/', {
+    fetchPage, depth: 1, robots: false, filters: { include: ['*'] },
+  });
+  assert.deepEqual(included.retained.map((r) => r.url), ['http://r.example/', 'http://r.example/a.html']);
+  assert.equal(included.retained[0].depth, 0);
+
+  // Une exclusion explicite de la racine reste souveraine (D-032).
+  const excluded = await crawl('http://r.example/', {
+    fetchPage, depth: 1, robots: false, filters: { include: ['*'], exclude: ['http://r.example/'] },
+  });
+  assert.deepEqual(excluded.retained.map((r) => r.url), ['http://r.example/a.html']);
+});
+
 test('T-B-09 (suite) : une boucle de liens ne provoque qu’une requête par page', async () => {
   const routes = {
     'http://loop.example/': '<a href="/a">a</a><a href="/">racine</a>',

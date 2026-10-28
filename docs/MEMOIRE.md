@@ -7,7 +7,7 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-28 (annexe 15 v5 : fiches C et D implémentées ; annexe 16 v1 : protocole VM ; annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`, `D-032`/`D-033` ; **A, B, C et D clos : 52 exigences, 51 vertes, 172 tests, `D-034`→`D-052`**).
+- **Dernière revue** : 2026-10-28 v6 (réécriture, rapport, planification : `D-053`/`D-054`, **3 modules**, **196 tests**, **222 exports** ; plus ancien : annexe 15 v5 : fiches C et D implémentées ; annexe 16 v1 : protocole VM ; annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`, `D-032`/`D-033` ; **A, B, C et D clos : 55 exigences, 54 vertes, 194 tests, `D-034`→`D-054`**).
 
 ---
 
@@ -72,10 +72,13 @@
 | `src/sidx.js` | boîtes MP4 et index `sidx` : plages exactes des sous-segments | `D-046` | `T-D-08` |
 | `src/media.js` | plan et téléchargement d'un flux HLS, assemblage facultatif | `D-046` | `T-D-02`→`T-D-06`, `T-D-10` |
 | `bin/xdm-media.js` | CLI de flux : playlist → segments → dossier assemblé | `D-046` | `T-D-03` |
-| `src/grab-runner.js` | exécution d'une file : états, échec isolé, concurrence, persistance | `D-043` | `T-A-07`, `T-A-22`, `T-B-01` |
-| `bin/xdm-grab.js` | CLI d'aspiration : parcours → arborescence → file → téléchargements ; `--reprendre`, `--sortie json` | `D-043`, `D-044` | `T-B-10`, `T-B-20`→`T-B-22` |
+| `src/grab-runner.js` | exécution d'une file : états, échec isolé, concurrence, persistance, `only` (quota) | `D-043`, `D-054` | `T-A-07`, `T-A-22`, `T-B-01`, `T-B-28` |
+| `src/rewrite.js` | réécriture locale des liens HTML/CSS ; `<script>`, `<style>`, `<pre>` intacts | `D-053` | `T-B-26` |
+| `src/report.js` | rapport d'aspiration : texte, JSON, CSV (`;`), Markdown | `D-053` | `T-B-27` |
+| `src/schedule.js` | fenêtres locales, traversée de minuit, quotas, plan d'exécution | `D-054` | `T-B-28` |
+| `bin/xdm-grab.js` | CLI d'aspiration : parcours → arborescence → file → téléchargements ; `--reprendre`, `--reecrire`, `--rapport`, `--planifier`, `--sortie json` | `D-043`, `D-044`, `D-053`, `D-054` | `T-B-10`, `T-B-20`→`T-B-22`, `T-B-26`→`T-B-28` |
 | `bin/xdm.js` | CLI : `xdm <url> [dossier]`, nom déduit de l'URL, promotion finale | `D-037`, `D-040` | `T-A-14` |
-| `src/index.js` | barillet (194 exports) | `D-034` | — |
+| `src/index.js` | barillet (222 exports) | `D-034` | — |
 
 **Règle** : une exigence ne passe au vert que si un test de `test/` la couvre ; le tableau de
 `docs/specs/conformance.md` fait foi.

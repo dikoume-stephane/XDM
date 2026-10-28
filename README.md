@@ -11,10 +11,12 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 172 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 196 tests, sans dépendance (node --test)
 node bin/xdm.js <url> [dossier]    # téléchargement réel : plages, reprise, promotion
 node bin/xdm-grab.js <url> [dir]   # aspiration de site : parcours, arborescence, file
 node bin/xdm-grab.js <url> [dir] --reprendre --sortie json   # reprise + résumé machine
+node bin/xdm-grab.js <url> [dir] --reecrire --rapport r.md   # liens locaux + rapport d'aspiration
+node bin/xdm-grab.js <url> [dir] --planifier 'lun-ven 01:00-06:00' --quota-octets 50000000
 node bin/xdm-media.js <playlist.m3u8> [dir]   # flux HLS : segments, init, assemblage facultatif
 node bin/xdm-media.js <media.mp4> [dir] --dash   # MP4 segmenté : plages lues dans l'index sidx
 ```
@@ -128,8 +130,12 @@ tools/                     collecte de preuves, triage, extractions
   défaut (A-13, `D-028`).
 - 🟢 WP-05 v0.4 : taille de morceau **1–10 MiB** par classe de taille (`D-029`), états
   17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
-- ✅ WP-20 → WP-23 terminés : moteur de morceaux, boucle de connexions, aspiration de site
-  et CLI (`bin/xdm.js`, `bin/xdm-grab.js`) ; **108 tests**, domaines A et B clos (30/32 exigences).
+- ✅ WP-20 → WP-27 terminés : moteur de morceaux, boucle de connexions, aspiration de site
+  et CLI (`bin/xdm.js`, `bin/xdm-grab.js`), transports (proxys, FTP, PAC), médias (HLS,
+  DASH) ; **196 tests**, domaines A, B, C et D clos (**54 exigences vertes sur 55**).
+- ✅ WP-24/WP-25 : réécriture des liens (`--reecrire`, `D-053`, ajout XDM assumé), rapport
+  d'aspiration (texte/JSON/CSV/Markdown, `--rapport`) et planification sans démon
+  (`--planifier`, `--quota-octets`, `--quota-taches`, `D-054`).
 - 🟡 WP-07 (annexe 15) : **fiches C (transports) et D (médias)** écrites, 20 exigences
   spécifiées, 0 implémentée — HLS est observé (12 balises), DASH est dérivé (`H-13`).
 - ⛔ WP-03 (décompilation Ghidra) **bloqué** dans ce sandbox : ni JVM ni accès au CDN des

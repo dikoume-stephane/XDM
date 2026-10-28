@@ -94,6 +94,41 @@ test('T-A-22 : une tâche en échec n’arrête pas les autres', async () => {
   assert.deepEqual(outcome.queue.tasks.map((t) => t.state), ['DONE', 'FAILED', 'DONE']);
 });
 
+test('T-B-28 : `only` n’exécute que les tâches budgétées, les autres restent PENDING', async () => {
+  const queue = queueOf([
+    { url: 'http://h/1', target: '/tmp/1' },
+    { url: 'http://h/2', target: '/tmp/2' },
+    { url: 'http://h/3', target: '/tmp/3' },
+  ]);
+  /** @type {string[]} */
+  const seen = [];
+  const outcome = await runQueue(queue, {
+    only: new Set([queue.tasks[1].id]),
+    runTask: async (task) => {
+      seen.push(task.url);
+      return { target: task.target, size: 1, requests: 1 };
+    },
+  });
+  assert.deepEqual(seen, ['http://h/2']);
+  const states = Object.fromEntries(outcome.queue.tasks.map((task) => [task.url, task.state]));
+  assert.deepEqual(states, {
+    'http://h/1': 'PENDING', 'http://h/2': 'DONE', 'http://h/3': 'PENDING',
+  });
+  assert.equal(outcome.stats.counts.DONE, 1);
+
+  await assert.rejects(() => runQueue(queue, { only: [1] }), /`only` doit être un Set/);
+
+  // La taille mesurée pendant le transfert remplace « inconnue » (rapport, `EX-B-15`).
+  const sized = await runQueue(queueOf([{ url: 'http://h/s', target: '/tmp/s', totalSize: -1 }]), {
+    runTask: async (task) => ({ target: task.target, size: 4096, requests: 1 }),
+  });
+  assert.equal(sized.queue.tasks[0].totalSize, 4096);
+  const unsized = await runQueue(queueOf([{ url: 'http://h/u', target: '/tmp/u', totalSize: -1 }]), {
+    runTask: async (task) => ({ target: task.target }),
+  });
+  assert.equal(unsized.queue.tasks[0].totalSize, -1, 'aucune taille inventée');
+});
+
 test('T-A-22 (suite) : arguments invalides refusés', async () => {
   const queue = createQueue({});
   await assert.rejects(() => runQueue(queue, { runTask: null }), /runTask/);
