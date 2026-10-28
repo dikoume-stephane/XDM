@@ -102,7 +102,7 @@ pour passer par un proxy : un `FTPConnection` et un `CFTPProxyConnection` par se
 **Observé.** `rtmp://`, `rtmpt://` (RTMP sur HTTP), `rtmpe://`, `mms://` ; journaux
 `send rtmp header`, `send rtmp packet`, `Sending RTMPT ident`, `RTMPT_Ident_s2`. Les
 classes `RTMPPacket`, `RTMPConnection`, `RTMPSession`, `MMSConnection`, `MMSSession`
-existent. **Hypothèse `H-12`** : ces transports servent l'enregistrement de flux, pas le
+existent. **Hypothèse `H-18`** : ces transports servent l'enregistrement de flux, pas le
 Site Grabber ; rien dans les chaînes ne les relie au grabber.
 
 ### 2.5 Proxys
@@ -126,7 +126,7 @@ PAC auto-configuré.
 | `EX-C-05` | compression acceptée (`gzip, deflate`) sur les requêtes non-morceau | Observé | §2.1, `0x6b26bc` | `T-C-05` |
 | `EX-C-06` | FTP : `CWD` → `TYPE I` → `SIZE` → `REST` → `RETR`, mode passif | Observé | §2.3 | `T-C-06` |
 | `EX-C-07` | FTP : échec explicite si le serveur refuse `PASV` | Observé | §2.3 | `T-C-07` |
-| `EX-C-08` | RTMP/RTMPT/MMS : transports présents, hors grabber | Observé + Hypothèse `H-12` | §2.4 | `T-C-08` |
+| `EX-C-08` | RTMP/RTMPT/MMS : transports présents, hors grabber | Observé + Hypothèse `H-18` | §2.4 | `T-C-08` |
 | `EX-C-09` | proxys HTTP/HTTPS/FTP/SOCKS4/SOCKS5, PAC système | Observé | §2.5 | `T-C-09` |
 | `EX-C-10` | authentification proxy Basic ou Digest | Observé | §2.5 | `T-C-10` |
 
@@ -173,7 +173,7 @@ index de segments) et l'écriture d'un fichier d'initialisation temporaire. En r
 **aucune chaîne `MPD`, `SegmentTemplate`, `Representation` ou `BaseURL`**. `sidx` n'existe
 que comme fragment de chaîne (`=sidxub`), non concluant.
 
-**Hypothèse `H-13`** : IDM ne parse pas le manifeste DASH ; il reçoit du navigateur les URL
+**Hypothèse `H-19`** : IDM ne parse pas le manifeste DASH ; il reçoit du navigateur les URL
 de segments (comme pour les flux `mpdatoidm://`), puis utilise `CMp4DashReader`/`CSidxParser`
 pour lire les index et écrire l'init segment. C'est cohérent avec l'absence de parseur XML
 de manifeste dans tout le binaire (`Q-B-01` : aucun parseur HTML non plus).
@@ -196,7 +196,7 @@ reconnus**, pas des filtres du grabber (`D-041`).
 | `EX-D-05` | `#EXT-X-BYTERANGE` : segments extraits d'un même fichier par plages | Observé | `0x6b27f8` | `T-D-05` |
 | `EX-D-06` | `#EXT-X-KEY` : clé annoncée, téléchargement sans déchiffrement | Observé + Décision `D-004` | `0x6b2828` | `T-D-06` |
 | `EX-D-07` | `#EXT-X-MEDIA-SEQUENCE` : direct suivi par fenêtre glissante | Observé + Dérivé | `0x6b284c` | `T-D-07` |
-| `EX-D-08` | DASH : index `sidx` lu, init segment écrit ; manifeste `MPD` non parsé | Observé + Hypothèse `H-13` | `CMp4DashReader`, `CSidxParser` | `T-D-08` |
+| `EX-D-08` | DASH : index `sidx` lu, init segment écrit ; manifeste `MPD` non parsé | Observé + Hypothèse `H-19` | `CMp4DashReader`, `CSidxParser` | `T-D-08` |
 | `EX-D-09` | `#EXT-X-DISCONTINUITY` : frontière de concaténation conservée | Dérivé | `0x6b2798` | `T-D-09` |
 | `EX-D-10` | aucun déchiffrement DRM ; limite écrite | Décision `D-004` | — | `T-D-10` |
 
@@ -228,7 +228,7 @@ reconnus**, pas des filtres du grabber (`D-041`).
 | `Q-C-05` | `REST` est-il précédé de `SIZE` dans tous les cas ? | VM : serveur FTP instrumenté |
 | `Q-D-01` | `#EXT-X-KEY` : la clé est-elle téléchargée ? rangée où ? | VM : flux chiffré AES-128, observation du disque |
 | `Q-D-02` | Le direct (`MEDIA-SEQUENCE`) est-il suivi en continu ? | VM : playlist glissante |
-| `Q-D-03` | `H-13` est-elle juste (pas de parseur MPD) ? | VM : URL `.mpd` directe vs capture navigateur |
+| `Q-D-03` | `H-19` est-elle juste (pas de parseur MPD) ? | VM : URL `.mpd` directe vs capture navigateur |
 
 ---
 
@@ -236,4 +236,4 @@ reconnus**, pas des filtres du grabber (`D-041`).
 
 | Date | Changement |
 |---|---|
-| 2026-10-28 | v1 : création. Fiche C (10 exigences, 9 observées), fiche D (10 exigences, 5 observées) ; 13 classes de transport/média avec vtables ; 12 balises HLS localisées ; `H-12` (RTMP hors grabber), `H-13` (DASH sans parseur de manifeste) ; 8 questions ouvertes |
+| 2026-10-28 | v1 : création. Fiche C (10 exigences, 9 observées), fiche D (10 exigences, 5 observées) ; 13 classes de transport/média avec vtables ; 12 balises HLS localisées ; `H-18` (RTMP hors grabber), `H-19` (DASH sans parseur de manifeste) ; 8 questions ouvertes |

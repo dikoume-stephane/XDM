@@ -1034,8 +1034,8 @@ RTMP, MMS, proxys) et les médias (HLS, DASH, conteneurs).
 3. **HLS est observé, DASH est dérivé** : `HLS`, `DASH`, `m3u8`, `MPD`, `SegmentTemplate`
    n'existent **pas** comme chaînes ; ce sont les balises `#EXT-X-*` et les classes
    `CM3UParser`/`CMp4DashReader`/`CSidxParser` qui prouvent le support. Deux hypothèses
-   sont ouvertes : `H-12` (RTMP/MMS servent l'enregistrement de flux, pas le grabber) et
-   `H-13` (pas de parseur de manifeste DASH — cohérent avec l'absence de parseur XML/HTML,
+   sont ouvertes : `H-18` (RTMP/MMS servent l'enregistrement de flux, pas le grabber) et
+   `H-19` (pas de parseur de manifeste DASH — cohérent avec l'absence de parseur XML/HTML,
    `Q-B-01`).
 4. **`EX-A-16` n'est pas généralisée** : `Accept-Encoding: identity` vaut pour le moteur de
    morceaux, `gzip, deflate` existe ailleurs dans le binaire. La nuance devient `Q-C-01`

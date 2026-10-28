@@ -45,7 +45,7 @@
 | D-037 | Nom final = dernière composante assainie de l'URL, ≤ 200 octets, noms réservés neutralisés | ✅ appliquée | WP-20 | `JOURNAL`, `src/promote.js` |
 | D-038 | Client HTTP sans état, transport injectable : sonde `bytes=0-0`, `identity`, 10 redirections, `IDLE_TIMEOUT` 30 s avec offset de reprise | ✅ appliquée | WP-21 | `JOURNAL`, `src/http-client.js` |
 | D-039 | Divergence détectée par hachage des fenêtres de recouvrement (1 024 o), repli à une connexion et reprise entière | ✅ appliquée | WP-21/22 | `JOURNAL`, `src/divergence.js`, `src/connection-loop.js` |
-| D-045 | Fiches C (transports) et D (médias) : un document, deux domaines ; HLS observé, DASH dérivé (`H-12`, `H-13`) ; `EX-A-16` non généralisée | ✅ appliquée | WP-07 | `JOURNAL`, annexe 15, `conformance` v1.1 |
+| D-045 | Fiches C (transports) et D (médias) : un document, deux domaines ; HLS observé, DASH dérivé (`H-18`, `H-19`) ; `EX-A-16` non généralisée | ✅ appliquée | WP-07 | `JOURNAL`, annexe 15, `conformance` v1.1 |
 | D-044 | Aspiration reprenable et scriptable : `--reprendre` (file sur disque, échecs rejoués) et `--sortie json` (stdout pur) | ✅ appliquée | WP-23 | `JOURNAL`, `bin/xdm-grab.js`, `D-043` |
 | D-043 | Exécution d'aspiration par la file : états respectés, échec isolé, concurrence bornée, dossier cible créé, seules les pages sont explorées | ✅ appliquée | WP-23 | `JOURNAL`, `src/grab-runner.js` |
 | D-042 | Arborescence locale = chemin relatif à la racine, segments assainis, collisions `-2`, `index.html` pour un répertoire, `empty.html` jamais écrasé | ✅ appliquée | WP-11 | `JOURNAL`, `src/grabber.js` |

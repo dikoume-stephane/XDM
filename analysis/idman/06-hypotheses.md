@@ -23,6 +23,8 @@
 | **H-13** | `Content-Type: application/x-fcs` correspond à un serveur de streaming Flash (`fcs` = Flash Communication Server) et n'a plus d'usage | 3 occurrences isolées | Ghidra : contexte d'utilisation | 🔎 ouverte |
 | **H-14** | `idmmkb.dll`, `idmmbc.dll`, `idmfsa.dll` = raccourcis clavier, « browser communication », « file system access » | noms seulement | pas prioritaire ; ignorer tant que rien ne bloque | 🔎 ouverte (basse) |
 | **H-16** | `Duration`, `nAggrV`, `TPswitch` (noms de valeurs contigus à `ChList`) décrivent des métadonnées multimédia d'un élément | contiguïté en `.rdata` (annexe 12 §2) | décompiler le producteur de ces valeurs | 🔎 ouverte |
+| **H-18** | RTMP/RTMPT/RTMPE/MMS servent l'**enregistrement de flux** (vidéo/audio), pas le grabber : rien ne relie ces transports aux classes du grabber | `RTMPConn`/`MMSConn` dans les journaux ; aucune chaîne mêlant RTMP et *spider* ; `H-05` | annexe 15 §2.4 | annexe 16 (P5 : capture d'une session grabber) | moyenne |
+| **H-19** | IDM **ne parse pas** de manifeste DASH (`MPD`) : il reçoit les URL de segments (navigateur) et lit les index MP4 (`sidx`) | `CMp4DashReader`, `CSidxParser` présents ; aucune chaîne `MPD`, `SegmentTemplate`, `Representation`, `BaseURL` ; aucun parseur XML détecté | annexe 15 §3.2 | annexe 16 (P5 : URL `.mpd` directe vs capture) | moyenne |
 | **H-15** | `IDMGrHlp.exe` est le **worker d'exploration** du grabber | nom « Gr » = Grabber ? | **affaiblie** : ses 5 sites de référence pointent vers `CBrowsersIntegrator`/`CDownloaderDlg`, pas vers les classes du grabber (annexe 10 §4). Reste à lire les arguments `CreateProcess` | 🟡 **affaiblie** |
 
 ## Protocole général de vérification
@@ -44,9 +46,10 @@ RTTI) et `capstone` (désassemblage guidé par RVA, tables de saut MSVC, constan
 immédiates) — sans décompilateur et **sans jamais exécuter la cible** — les **19 exigences du
 domaine A** de la fiche A ont toutes été établies, ainsi que 422 classes sur 439, 427 vtables
 et 13 760 méthodes (annexe 10) ; `H-01`, `H-02`, `H-03`, `H-04`, `H-08`, `H-17` sont
-tranchées. Sur les 17 hypothèses du registre, **10 restent ouvertes ou affaiblies**, dont
-**6 relèvent du comportement externe** ou d'un choix de périmètre (`H-06`, `H-10`, `H-11`,
-`H-14`, `H-15`, `H-16`).
+tranchées. Sur les 19 hypothèses du registre, **12 restent ouvertes ou affaiblies**, dont
+**8 relèvent du comportement externe** ou d'un choix de périmètre (`H-06`, `H-10`, `H-11`,
+`H-14`, `H-15`, `H-16`, et depuis les fiches C et D : `H-18` RTMP hors grabber,
+`H-19` DASH sans parseur de manifeste).
 
 | Famille de question | Ce que l'outillage donne | Verdict | Exemple dans ce dépôt |
 |---|---|---|---|

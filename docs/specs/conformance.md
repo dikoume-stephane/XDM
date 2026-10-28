@@ -93,7 +93,7 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | `EX-C-05` `gzip, deflate` hors morceaux | Observé | `0x6b26bc` | `T-C-05` | à faire |
 | `EX-C-06` séquence FTP `CWD`→`TYPE I`→`SIZE`→`REST`→`RETR` | Observé | annexe 15 §2.3 | `T-C-06` | à faire |
 | `EX-C-07` refus de `PASV` = échec explicite | Observé | annexe 15 §2.3 | `T-C-07` | à faire |
-| `EX-C-08` RTMP/RTMPT/MMS hors grabber | Observé + `H-12` | annexe 15 §2.4 | `T-C-08` | **bloqué** (`H-12`) |
+| `EX-C-08` RTMP/RTMPT/MMS hors grabber | Observé + `H-18` | annexe 15 §2.4 | `T-C-08` | **bloqué** (`H-18`) |
 | `EX-C-09` proxys HTTP/HTTPS/FTP/SOCKS + PAC | Observé | annexe 15 §2.5 | `T-C-09` | à faire |
 | `EX-C-10` authentification proxy Basic/Digest | Observé | annexe 15 §2.5 | `T-C-10` | à faire |
 
@@ -113,7 +113,7 @@ qu'HTTP/1.1 sans proxy (`src/http-client.js`) ; `T-C-01`→`T-C-03` sont pourtan
 | `EX-D-05` `EXT-X-BYTERANGE` | Observé | `0x6b27f8` | `T-D-05` | à faire |
 | `EX-D-06` `EXT-X-KEY` sans déchiffrement | Observé + `D-004` | `0x6b2828` | `T-D-06` | à faire |
 | `EX-D-07` direct (`MEDIA-SEQUENCE`) | Observé + Dérivé | `0x6b284c` | `T-D-07` | à faire |
-| `EX-D-08` DASH par `sidx`, pas de `MPD` | Observé + `H-13` | `CMp4DashReader`, `CSidxParser` | `T-D-08` | **bloqué** (`H-13`) |
+| `EX-D-08` DASH par `sidx`, pas de `MPD` | Observé + `H-19` | `CMp4DashReader`, `CSidxParser` | `T-D-08` | **bloqué** (`H-19`) |
 | `EX-D-09` `DISCONTINUITY` | Dérivé | `0x6b2798` | `T-D-09` | à faire |
 | `EX-D-10` aucun DRM | Décision `D-004` | — | `T-D-10` | à faire |
 
