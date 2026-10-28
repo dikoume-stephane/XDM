@@ -297,6 +297,8 @@ export async function probe(url, {
  * @param {{start: number, size: number}} chunk
  * @param {{transport?: typeof defaultTransport, ifRange?: string | null,
  *   headers?: Record<string, string>}} [options]
+ * @returns une réponse dont le corps reste lisible : `ranged: false` signale que
+ *   le serveur a ignoré la plage et que le flux repart de l'octet 0.
  * @returns {Promise<{status: number, headers: Record<string, string>, stream: import('node:stream').Readable,
  *   ranged: boolean, range: string}>}
  */
@@ -311,7 +313,9 @@ export async function openSegment(url, chunk, {
   const response = await transport(assertUrlLength(url), { method: 'GET', headers: sent });
   const responseHeaders = normalizeHeaders(response.headers);
   const ranged = response.status === 206 && parseContentRange(responseHeaders['content-range']) !== null;
-  if (!ranged) drain(response.stream);
+  // Le corps n'est **pas** drainé ici : un `200` en réponse à une plage est le
+  // repli « fichier entier » (EX-A-08), et c'est l'appelant qui décide de le lire
+  // ou de le fermer.
   return {
     status: response.status,
     headers: responseHeaders,

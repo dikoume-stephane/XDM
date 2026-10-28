@@ -30,10 +30,10 @@
 | `EX-A-07` 1 → N connexions, plafond 8 par défaut | Observé + Décision | annexe 14 §6 ; `0x0fbe17` ; `D-036` | `T-A-07` | **vert** (allocation + file ; la boucle réseau reste à écrire) |
 | `EX-A-08` `Range` par morceau, repli 1 connexion sans `206` | Observé | annexe 14 §8 ; `D-038` | `T-A-08` | **vert** (planification ; la boucle reste à écrire) |
 | `EX-A-09` rollback = troncature + morceau de reprise | Observé + Décision | annexe 14 §5.3 ; `D-035` | `T-A-09` | **vert** |
-| `EX-A-10` divergence → empreinte → repli | Observé + Décision | annexe 14 §5.5 ; `D-025` | `T-A-10` | à faire |
+| `EX-A-10` divergence → empreinte → repli | Observé + Décision | annexe 14 §5.5 ; `D-025`, `D-039` | `T-A-10` | **vert** |
 | `EX-A-11` morceau incomplet jamais finalisé | Observé | annexe 14 §7 (`isCmpleted = 0`) | `T-A-11` | **vert** |
 | `EX-A-12` promotion conditionnée à la vérification | Observé + Décision | annexe 14 §7 ; `D-026` | `T-A-12` | **vert** |
-| `EX-A-13` réacteur unique, 128 sockets, délai ≤ 12 s | Observé + Décision | annexe 14 §4.4 ; `io-model.json` ; `D-028` | `T-A-13` | à faire |
+| `EX-A-13` réacteur unique, 128 sockets, délai ≤ 12 s | Observé + Décision | annexe 14 §4.4 ; `io-model.json` ; `D-028`, `D-039` | `T-A-13` | **vert** (plafond 128 ; le réacteur unique est celui de Node) |
 | `EX-A-14` nom final assaini | Observé + Décision | annexe 14 §3 ; `D-037` | `T-A-14` | **vert** |
 | `EX-A-15` URL relative résolue, ≤ 10 redirections, ≤ 10 239 o | Observé | annexe 14 §8.1 (`0x17dc90`) ; `D-038` | `T-A-15` | **vert** |
 | `EX-A-16` `Accept-Encoding: identity` | Observé | annexe 14 §8 ; `D-038` | `T-A-16` | **vert** |
@@ -41,9 +41,9 @@
 | `EX-A-18` inactivité > 30 s ⇒ reconnexion | Observé | annexe 14 §4.5 (`0x1a139f`, `0x18adad`) ; `D-038` | `T-A-25` | **vert** |
 | `EX-A-19` reprise sans retour à zéro | Observé + Décision | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` | **vert** |
 
-**Couverture** : 19 exigences, **17 vertes** (`npm test`, 61 cas), **2 restantes** :
-`EX-A-10` (divergence de contenus entre connexions) et `EX-A-13` (boucle de connexions,
-plafond de 128 sockets) — les deux prochaines marches de `WP-21`. Aucune exigence
+**Couverture** : 19 exigences, **19 vertes** (`npm test`, 73 cas) — domaine A **clos**.
+La boucle de connexions (`src/connection-loop.js`) exécute les exigences de bout en bout
+contre des serveurs locaux, y compris la coupure et la reprise (`T-A-25`). Aucune exigence
 `Hypothèse` dans ce domaine.
 
 ## 3. Domaine B — grabber
@@ -86,13 +86,14 @@ plafond de 128 sockets) — les deux prochaines marches de `WP-21`. Aucune exige
 | 2 | `T-A-01`, `T-A-09` | ✅ fait — écriture en place + troncature : cœur du modèle |
 | 3 | `T-A-06`, `T-A-07` | ✅ fait — valeurs par défaut et plafonds (observés) ; `T-A-13` reste à faire |
 | 4 | ~~`T-A-08`, `T-A-15`, `T-A-16`~~ | contrat HTTP minimal — **fait** (`D-038`) |
-| 5 | `T-A-10`, `T-A-25`, `T-A-26` | robustesse — `T-A-25` ✅ ; reste `T-A-10` |
+| 5 | ~~`T-A-10`, `T-A-25`, `T-A-26`~~ | robustesse — **fait** (`D-039`) |
 | 6 | `T-B-*` (sauf bloqués) | après `Q-B-01` |
 
 ## 6. Journal des révisions
 
 | Date | Changement |
 |---|---|
+| 2026-10-27 | v0.5 : boucle de connexions (`D-039`) — domaine A **clos**, 19/19 ; repli sur divergence et plafond de 128 sockets vérifiés ; 73 tests verts |
 | 2026-10-27 | v0.4 : couche HTTP écrite (`D-038`) — `EX-A-08`, `EX-A-15`→`EX-A-18` vertes, 17/19 du domaine A ; 61 tests verts au total |
 | 2026-10-27 | v0.3 : `WP-20` clos — 50 tests verts, 13 exigences du domaine A et 4 du domaine B au vert ; `D-036` (file) et `D-037` (nom) consignées |
 | 2026-10-27 | v0.2 : socle `WP-20` livré — 9 tests verts sur le domaine A (24 cas), `D-034` (stack) et `D-035` (rollback) consignées |

@@ -846,6 +846,34 @@ laisserait la promotion au vert sur du code jamais exécuté.
 (61 tests au total). `WP-21` reste ouvert sur la **boucle de connexions** (allocation
 dynamique des morceaux aux sockets, `EX-A-13`) et sur `T-A-10` (divergence de contenus).
 
+### D-039 — Divergence : comparaison des **fenêtres de recouvrement**, repli à une connexion
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-21`/`WP-22`
+
+**Contexte.** `EX-A-10` : deux connexions peuvent recevoir des contenus différents du même
+URL (CDN mal synchronisé, ressource remplacée en cours de route). Écrire les deux flux dans
+le même fichier produirait un fichier cohérent en apparence et corrompu en fait.
+
+**Décision.** Chaque connexion demande `overlap` octets **avant** son morceau
+(`Range: bytes=<début-overlap>-<fin>`, 1 024 octets par défaut, plancher 64). La fenêtre
+`[début-overlap, début)` est déjà écrite par le morceau précédent : les deux vues sont
+hachées en SHA-256 et comparées **à la même clé absolue** (`DivergenceGuard`). Une
+contradiction lève `DIVERGENT` ; la boucle abandonne le multi-connexion, reconstruit un
+morceau unique et **reprend le fichier entier à une seule connexion** — la vue unique devient
+alors la référence.
+
+**Règles attachées.**
+- Les octets de recouvrement ne sont **jamais réécrits** : `pumpSegment` les saute (`skip`).
+  Les ignorer décalerait tout le morceau d'un `overlap` (défaut trouvé par un test).
+- Seules les fenêtres **pleines** sont comparées : une fenêtre courte a deux clés
+  différentes de part et d'autre, donc rien à confronter (faux positifs sinon, cf. le cas
+  `chunkSize = 1` de `T-A-13`).
+- L'inactivité (`EX-A-18`) n'annule pas la garde : la reprise réutilise le même registre.
+- Après repli, `connections = 1` et `chunkSize = totalSize` sont **rapportés** dans le
+  résultat : la décision est visible, pas silencieuse.
+
+**Conséquence.** `EX-A-10` et `EX-A-13` passent au vert ; `EX-A-09`/`EX-A-19` sont couverts
+de bout en bout par la boucle (`T-A-25`). **73 tests verts.**
+
 ---
 
 ## Décisions en attente
@@ -877,8 +905,8 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-10 | Lire le producteur du corps de filtre et `CArray<IDM_SPIDERFILTER>` | WP-11 | ✅ fait : `0xc2e00` n'est **pas** le producteur (remplissage + templates `CArray` fusionnés) ; structure prouvée par `SetAtGrow` `0xc2bc0` (16 o), saisie `0xc2c10`, sérialisation `0x137f00`, chargement `0x1385f0` ; premier id = **100** (annexe 13 v0.2, `tools/idman_filters.py`) |
 | A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ✅ fait : `D-034` — Node 22, ES modules, JSDoc, zéro dépendance, `node --test` |
 | A-20 | Écrire les tests de spécification du domaine A | porte G1 | ✅ **50 tests verts** : `T-A-01`→`T-A-07`, `T-A-09`, `T-A-11`, `T-A-12`, `T-A-14`, `T-A-19`, `T-A-26`, `T-A-27` + domaine B (`T-B-02`→`T-B-05`) |
-| A-22 | Client HTTP : `Range`, reprise, redirections, `Accept-Encoding` | `WP-21` | 🟡 couche écrite et testée (`D-038`, `T-A-08`/`15`/`16`/`17`/`25` verts) ; reste la boucle de connexions et `T-A-10` (divergence) |
-| A-21 | Fusion des morceaux de reprise adjacents (suite de `D-035`) | `WP-22` | ⏳ ouvert, non bloquant (test à écrire) |
+| A-22 | Client HTTP : `Range`, reprise, redirections, `Accept-Encoding` | `WP-21` | ✅ clos (`D-038`, `D-039`) : 19/19 exigences du domaine A au vert, 73 tests ; la boucle de connexions est livrée dans `src/connection-loop.js` |
+| A-21 | Fusion des morceaux de reprise adjacents (suite de `D-035`) | `WP-22` | ⏳ **prochaine tâche** : `applyRollback` insère un morceau par coupure ; la boucle en crée un par reprise. Fusion à écrire + test `T-A-27` |
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | 🟡 **2 fiches ouvertes** : A — moteur (`A-moteur-de-telechargement.md`, 19 exigences, **aucune hypothèse**) et B — grabber (`B-grabber.md`, 13 exigences dont **3 bloquées** par `Q-B-01`). Matrice `docs/specs/conformance.md` (v0.1) : 32 exigences, 3 bloquées, 0 test. Reste : domaines C (transports), D (médias), F (persistance) |
 | A-11 | Structure logique d'un enregistrement `ChList` | lecture d'un état IDM existant | ✅ fait : `{ID, startPos, nextID}` = **liste de bornes** ; le morceau est un **intervalle** dans un fichier unique (preuve : aucun modèle `%s%d.tmp`, champ `file` partagé), assemblage = promotion du `.tmp` (annexe 14 §5, §7) → `D-030`, `D-031` ; reste l'encodage binaire exact, sans intérêt (D-024) |
 | A-12 | Énumérer les états de `Connection` | spécification de `WP-05` | ✅ fait : 39 états (0..38) en `this+0xa4`, 8 distributeurs, 115 transitions (annexe 14 §4) → `D-027` |

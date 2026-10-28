@@ -106,3 +106,21 @@ export {
   resolveLocation,
   resumeRangeHeader,
 } from './http-client.js';
+export {
+  DEFAULT_OVERLAP,
+  DivergenceGuard,
+  MIN_OVERLAP,
+  WindowHashes,
+  digest,
+  overlapBefore,
+  overlapKey,
+  requestStart,
+} from './divergence.js';
+export {
+  DownloadError,
+  MAX_ATTEMPTS,
+  MAX_SOCKETS,
+  buildChunkMap,
+  download,
+  planWorkers,
+} from './connection-loop.js';

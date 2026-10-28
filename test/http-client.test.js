@@ -166,15 +166,19 @@ test('T-A-16 : `Accept-Encoding: identity` part sur chaque segment', async () =>
   assert.equal(BASE_HEADERS['accept-encoding'], 'identity');
 });
 
-test('T-A-16 (suite) : un `206` inattendu se replie proprement (flux drainé)', async () => {
+test('T-A-08 (suite) : un `200` en réponse à une plage reste lisible (repli fichier entier)', async () => {
   let destroyed = false;
-  const stream = { destroy: () => { destroyed = true; } };
+  const stream = async function* full() {
+    yield Buffer.from('0123456789');
+  };
+  stream.destroy = () => { destroyed = true; };
   const { transport } = fakeTransport({
-    'http://h/f': { status: 200, headers: { 'content-length': '10' }, stream },
+    'http://h/f': { status: 200, headers: { 'content-length': '10' }, stream: stream() },
   });
   const segment = await openSegment('http://h/f', { start: 0, size: 10 }, { transport });
   assert.equal(segment.ranged, false);
-  assert.equal(destroyed, true);
+  assert.equal(destroyed, false);
+  assert.equal(segment.range, 'bytes=0-9');
 });
 
 test('T-A-17 : la sonde n’ouvre qu’une seule connexion à la fois', async () => {
