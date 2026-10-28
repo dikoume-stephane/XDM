@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -13,6 +13,7 @@ import {
   planWorkers,
 } from '../src/connection-loop.js';
 import { intervals, progress, validateChunkMap } from '../src/chunk-map.js';
+import { savePartFile } from '../src/part-file.js';
 import { normalizeHeaders } from '../src/http-client.js';
 
 /** Contenu déterministe : l'octet d'offset `i` vaut `i % 251`. */
@@ -282,6 +283,89 @@ test('T-A-12 : le téléchargement ne promeut pas le fichier', async () => {
       await assert.rejects(() => readFile(target), /ENOENT/);
       assert.deepEqual(await readFile(result.workPath), body);
       assert.equal(progress({ totalSize: 64, chunks: [{ id: 1, start: 0, next: 0, completed: true }] }).downloaded, 64);
+    } finally {
+      await server.close();
+    }
+  });
+});
+
+test('T-A-19/T-A-21 : reprise depuis la carte persistée — aucun morceau clos redemandé', async () => {
+  const body = expectedContent(2048);
+  const requested = [];
+  const server = await startServer((req, res) => {
+    const match = /^bytes=(\d+)-(\d+)$/.exec(req.headers.range || '');
+    if (!match) {
+      res.writeHead(416);
+      res.end();
+      return;
+    }
+    const start = Number(match[1]);
+    const end = Math.min(Number(match[2]), body.length - 1);
+    requested.push(start);
+    res.writeHead(206, {
+      'content-range': `bytes ${start}-${end}/${body.length}`,
+      'content-length': String(end - start + 1),
+    });
+    res.end(Buffer.from(body.subarray(start, end + 1)));
+  });
+
+  await withTempDir(async (dir) => {
+    const target = join(dir, 'reprise.bin');
+    const url = server.url('/f');
+    try {
+      // État d'une exécution interrompue : morceau 1 clos, 2 et 3 à faire.
+      const map = buildChunkMap({ url, target, totalSize: 2048, chunkSize: 512 });
+      map.chunks[0].completed = true;
+      const workPath = `${target}.xdm-part`;
+      const partial = Buffer.alloc(2048);
+      Buffer.from(body.subarray(0, 512)).copy(partial);
+      await writeFile(workPath, partial);
+      await savePartFile(target, map);
+
+      const result = await download(url, target, { chunkSize: 512, connections: 2, overlap: 64 });
+      assert.equal(result.resumed, true);
+      // La première requête est la sonde `bytes=0-0` ; ensuite, aucune plage ne
+      // doit repasser sous la borne du morceau 2 (448 = 512 - recouvrement 64).
+      assert.equal(requested[0], 0);
+      assert.ok(!requested.slice(1).some((start) => start < 448), `reprises : ${requested.join(',')}`);
+      assert.ok(requested.includes(448), `recouvrement attendu : ${requested.join(',')}`);
+      assert.deepEqual(await readFile(workPath), body);
+      assert.equal(result.promoted, null);
+    } finally {
+      await server.close();
+    }
+  });
+});
+
+test('T-A-12 : promotion explicite après vérification', async () => {
+  const body = expectedContent(700);
+  const server = await startServer((req, res) => {
+    const match = /^bytes=(\d+)-(\d+)$/.exec(req.headers.range || '');
+    if (!match) {
+      res.writeHead(416);
+      res.end();
+      return;
+    }
+    const start = Number(match[1]);
+    const end = Math.min(Number(match[2]), body.length - 1);
+    res.writeHead(206, {
+      'content-range': `bytes ${start}-${end}/${body.length}`,
+      'content-length': String(end - start + 1),
+    });
+    res.end(Buffer.from(body.subarray(start, end + 1)));
+  });
+  await withTempDir(async (dir) => {
+    const target = join(dir, 'promu.bin');
+    try {
+      const result = await download(server.url('/f'), target, {
+        chunkSize: 256,
+        connections: 2,
+        promote: true,
+      });
+      assert.equal(result.promoted, target);
+      assert.deepEqual(await readFile(target), body);
+      // La carte a disparu avec la promotion.
+      await assert.rejects(() => readFile(`${target}.xdm-part.json`), /ENOENT/);
     } finally {
       await server.close();
     }

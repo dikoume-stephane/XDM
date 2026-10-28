@@ -874,6 +874,37 @@ alors la référence.
 **Conséquence.** `EX-A-10` et `EX-A-13` passent au vert ; `EX-A-09`/`EX-A-19` sont couverts
 de bout en bout par la boucle (`T-A-25`). **73 tests verts.**
 
+### D-040 — La carte est persistée **à chaque morceau clos**, la CLI promeut explicitement
+**Statut** : appliquée · **Date** : 2026-10-27 · **Portée** : `WP-22`
+
+**Contexte.** `EX-A-02`/`EX-A-19` exigent qu'une coupure ne coûte que le morceau en cours.
+Écrire la carte à la fin du téléchargement rendrait toute interruption totale ; l'écrire à
+chaque morceau, sans ordre, expose à deux écritures concurrentes dans le même fichier
+temporaire.
+
+**Décision.**
+1. La boucle écrit `<cible>.xdm-part.json` après **chaque** morceau clos (`savePartFile`,
+   écriture atomique `tmp` + `fsync` + `rename`). Les écritures sont **sérialisées** par une
+   chaîne de promesses, et le nom du fichier temporaire est unique
+   (`.<pid>.<compteur>.<horodatage>.tmp.part`) — deux travailleurs ne peuvent plus se voler
+   leur fichier (défaut observé par un test avant correction).
+2. La reprise (`resume: true` par défaut) relit la carte ; elle n'est acceptée que si
+   `totalSize` correspond à ce qu'annonce la sonde. La carte est **fusionnée**
+   (`mergeResumeChunks`, `A-21`) avant usage : les morceaux incomplets adjacents ne forment
+   plus qu'un seul morceau, ce qui évite de rouvrir une connexion par coupure passée.
+3. Le fichier de travail est rouvert en `r+` (`fresh: false`) : la reprise **conserve** les
+   octets déjà écrits. Un fichier absent est recréé, une carte refusée est ignorée.
+4. La promotion n'est **jamais implicite** dans la boucle : `promote: true` la demande, et
+   elle passe par `checkReadyToPromote` + `rename` (`EX-A-12`). La CLI `bin/xdm.js` la
+   demande parce que c'est son métier ; un appelant qui veut inspecter le fichier de travail
+   avant de le livrer ne la demande pas.
+5. `npm test` devient `node --test` (sans argument de répertoire) : `node --test test/`
+   échoue en ESM (`MODULE_NOT_FOUND`).
+
+**Conséquence.** `T-A-21`/`T-A-27` (fusion), `T-A-19` (reprise sans redemander un morceau
+clos) et la promotion de bout en bout sont couverts ; **79 tests verts**. `WP-22` est clos,
+`A-21` fermée.
+
 ---
 
 ## Décisions en attente
@@ -904,9 +935,9 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-09 | Récupérer un vrai `.gsd` sur VM Windows et le dumper | WP-11, WP-30 | ⏳ phase 6 |
 | A-10 | Lire le producteur du corps de filtre et `CArray<IDM_SPIDERFILTER>` | WP-11 | ✅ fait : `0xc2e00` n'est **pas** le producteur (remplissage + templates `CArray` fusionnés) ; structure prouvée par `SetAtGrow` `0xc2bc0` (16 o), saisie `0xc2c10`, sérialisation `0x137f00`, chargement `0x1385f0` ; premier id = **100** (annexe 13 v0.2, `tools/idman_filters.py`) |
 | A-07 | Trancher la stack d'implémentation (D-017) avant WP-20 | WP-20+ | ✅ fait : `D-034` — Node 22, ES modules, JSDoc, zéro dépendance, `node --test` |
-| A-20 | Écrire les tests de spécification du domaine A | porte G1 | ✅ **50 tests verts** : `T-A-01`→`T-A-07`, `T-A-09`, `T-A-11`, `T-A-12`, `T-A-14`, `T-A-19`, `T-A-26`, `T-A-27` + domaine B (`T-B-02`→`T-B-05`) |
+| A-20 | Écrire les tests de spécification du domaine A | porte G1 | ✅ **79 tests verts** : domaine A **clos** (`T-A-01`→`T-A-19`, `T-A-21`, `T-A-25`→`T-A-27`), domaine B partiel (`T-B-02`→`T-B-05`) |
 | A-22 | Client HTTP : `Range`, reprise, redirections, `Accept-Encoding` | `WP-21` | ✅ clos (`D-038`, `D-039`) : 19/19 exigences du domaine A au vert, 73 tests ; la boucle de connexions est livrée dans `src/connection-loop.js` |
-| A-21 | Fusion des morceaux de reprise adjacents (suite de `D-035`) | `WP-22` | ⏳ **prochaine tâche** : `applyRollback` insère un morceau par coupure ; la boucle en crée un par reprise. Fusion à écrire + test `T-A-27` |
+| A-21 | Fusion des morceaux de reprise adjacents (suite de `D-035`) | `WP-22` | ✅ clos (`D-040`) : `mergeResumeChunks` recolle les morceaux incomplets adjacents, jamais un morceau clos ; `T-A-27` vert |
 | A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | 🟡 **2 fiches ouvertes** : A — moteur (`A-moteur-de-telechargement.md`, 19 exigences, **aucune hypothèse**) et B — grabber (`B-grabber.md`, 13 exigences dont **3 bloquées** par `Q-B-01`). Matrice `docs/specs/conformance.md` (v0.1) : 32 exigences, 3 bloquées, 0 test. Reste : domaines C (transports), D (médias), F (persistance) |
 | A-11 | Structure logique d'un enregistrement `ChList` | lecture d'un état IDM existant | ✅ fait : `{ID, startPos, nextID}` = **liste de bornes** ; le morceau est un **intervalle** dans un fichier unique (preuve : aucun modèle `%s%d.tmp`, champ `file` partagé), assemblage = promotion du `.tmp` (annexe 14 §5, §7) → `D-030`, `D-031` ; reste l'encodage binaire exact, sans intérêt (D-024) |
 | A-12 | Énumérer les états de `Connection` | spécification de `WP-05` | ✅ fait : 39 états (0..38) en `this+0xa4`, 8 distributeurs, 115 transitions (annexe 14 §4) → `D-027` |

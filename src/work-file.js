@@ -25,18 +25,35 @@ export const MAX_WRITE = 1024 * 1024;
  */
 
 /**
- * Ouvre (ou crée) le fichier de travail et le préalloue à `totalSize`.
+ * Ouvre le fichier de travail et le préalloue à `totalSize`.
+ *
+ * `fresh: false` conserve le contenu déjà écrit : c'est la reprise (`EX-A-19`),
+ * où seuls les morceaux non clos doivent être redemandés.
+ *
  * @param {string} path
  * @param {number} totalSize
+ * @param {{fresh?: boolean}} [options]
  * @returns {Promise<WorkFile>}
  */
-export async function openWorkFile(path, totalSize) {
+export async function openWorkFile(path, totalSize, { fresh = true } = {}) {
   if (!Number.isSafeInteger(totalSize) || totalSize <= 0) {
     throw new TypeError("totalSize doit être un entier strictement positif");
   }
-  const handle = await open(path, "w+");
-  // Préallocation logique : le système peut allouer paresseusement (trous).
-  await handle.truncate(totalSize);
+  let handle;
+  if (fresh) {
+    handle = await open(path, "w+");
+    // Préallocation logique : le système peut allouer paresseusement (trous).
+    await handle.truncate(totalSize);
+  } else {
+    try {
+      handle = await open(path, "r+");
+      const { size } = await handle.stat();
+      if (size < totalSize) await handle.truncate(totalSize);
+    } catch {
+      handle = await open(path, "w+");
+      await handle.truncate(totalSize);
+    }
+  }
 
   return {
     path,

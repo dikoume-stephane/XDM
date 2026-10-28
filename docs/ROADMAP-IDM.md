@@ -102,11 +102,12 @@ partiellement** : on sait *quelle* classe porte le grabber (`CSpiderSettings`,
 (4 fonctions non virtuelles), mais pas encore *ce que fait* leur code (pas de
 décompilateur).
 
-**Prochaine marche (mise à jour du 2026-10-27)** : `WP-20` et `WP-21` sont **clos** — le
-domaine A est couvert à 19/19, **73 tests verts** (`D-038`, `D-039`). La suite est `WP-22` :
-brancher la boucle sur la **persistance de la carte** (`part-file`), **fusionner les morceaux
-de reprise adjacents** (`A-21`, dettes de `D-035`), puis enchaîner sur la **promotion**
-automatique et une CLI minimale (`xdm <url>`), avant d'ouvrir le grabber (`WP-11`). Les actions de recherche de WP-05 (`A-11` → `A-16`) **et** celles
+**Prochaine marche (mise à jour du 2026-10-27)** : `WP-20`→`WP-22` sont **clos**. Le moteur
+télécharge réellement et se reprend après une coupure ; **79 tests verts**, domaine A couvert
+à 19/19. Deux chantiers restent ouverts : (a) **grabber** (`WP-11`) — bloqué tant que
+l'exploration de `CIDMSpider` n'est pas faite (`Q-B-01`, fiche B incomplète) ; (b) **médias**
+(`WP-26`, HLS/DASH) qui réutilise la boucle. La prochaine action utile est donc `A-09`
+(protocole d'observation en VM) ou la reprise de l'annexe 15 (`WP-07`). Les actions de recherche de WP-05 (`A-11` → `A-16`) **et** celles
 de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet ordre :
 
 1. **`A-05` — fiches de spécification** : domaine A (moteur, 19 exigences, testable
@@ -139,7 +140,7 @@ de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet
 |---|---|---|
 | WP-20 | ✅ **Socle terminé** : stack tranchée (`D-034` : Node 22, ESM, JSDoc, **zéro dépendance**, `node --test`) ; carte de morceaux (`chunk-map.js`, `D-030`/`D-035`), taille de morceau (`chunk-policy.js`, `D-029`), persistance atomique de la carte (`part-file.js`, `D-024`), fichier de travail (`work-file.js`, `D-026`), modèle de projet et filtres (`project.js`, `D-032`/`D-033`), file de tâches reprenable (`task-queue.js`, `D-036`), nom final et promotion (`promote.js`, `D-037`). **50 tests verts, 17 exigences couvertes** | 1 |
 | WP-21 | ✅ **Clos** — client HTTP écrit et testé (`src/http-client.js`, `D-038`) : sonde `bytes=0-0`, repli à une connexion sans `206`, redirections ≤ 10 et URL ≤ 10 239 o, `Accept-Encoding: identity`, `If-Range`, inactivité 30 s ⇒ `IDLE_TIMEOUT` + offset de reprise ; boucle de connexions et détection de divergence (`D-039`). **19/19 exigences du domaine A au vert** | 2 |
-| WP-22 | ⏳ **Prochain** — assemblage : carte persistée (`part-file`) branchée sur la boucle, fusion des morceaux de reprise adjacents (`A-21`), promotion automatique après vérification, reprise après crash, CLI minimale | 3 |
+| WP-22 | ✅ **Clos** — assemblage (`D-040`) : carte persistée à chaque morceau clos, reprise `mergeResumeChunks` (`A-21`), promotion explicite vérifiée, CLI `bin/xdm.js` | 3 |
 | WP-23 | Grabber : exploration, extraction de liens (HTML/CSS/JS/robots/sitemap), filtres, plan de site | 4 |
 | WP-24 | Téléchargement d'arborescence : mapping URL→chemin, réécriture optionnelle des liens, déduplication | 5 |
 | WP-25 | Planification, statistiques, export de rapport | 6 |
@@ -180,7 +181,7 @@ de WP-11 (`A-08`, `A-10`) sont levées. Deux chantiers restent ouverts, dans cet
 | **M2 — Squelette** | Table `classe → méthode → chaînes` extraite (422 classes / 13 760 méthodes) ✅ ; Ghidra opérationnel ⛔ (bloqué) | A-02, WP-04 | WP-04 atteint ; le volet décompilation reste ouvert |
 | **M3 — Spécifications** | Specs moteur + grabber + protocoles revues | M2 | Porte G1 |
 | **M4 — Prototype** | Parcours complet sur site local | M3 | Porte G3 |
-| **M3.5 — Socle** | Socle complet : données, projet, file, promotion, HTTP, boucle de connexions — 73 cas verts | D-034, D-038, D-039 | ✅ `npm test` |
+| **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |
 
 ---

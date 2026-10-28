@@ -21,8 +21,9 @@
     "io:idm": "python3 tools/idman_io.py",
     "chunks:idm": "python3 tools/idman_chunks.py",
     "filters:idm": "python3 tools/idman_filters.py",
-    "test": "node --test test/",
-    "test:watch": "node --test --watch test/"
+    "test": "node --test",
+    "test:watch": "node --test --watch",
+    "dl": "node bin/xdm.js"
   },
   "devDependencies": {
     "rea-agents": "6.8.0"
@@ -30,5 +31,8 @@
   "engines": {
     "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
   },
-  "type": "module"
+  "type": "module",
+  "bin": {
+    "xdm": "bin/xdm.js"
+  }
 }

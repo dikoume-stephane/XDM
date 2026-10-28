@@ -13,6 +13,7 @@ export {
   createChunkMap,
   freeChunks,
   intervals,
+  mergeResumeChunks,
   progress,
   validateChunkMap,
 } from "./chunk-map.js";

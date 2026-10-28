@@ -41,9 +41,10 @@
 | `EX-A-18` inactivité > 30 s ⇒ reconnexion | Observé | annexe 14 §4.5 (`0x1a139f`, `0x18adad`) ; `D-038` | `T-A-25` | **vert** |
 | `EX-A-19` reprise sans retour à zéro | Observé + Décision | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` | **vert** |
 
-**Couverture** : 19 exigences, **19 vertes** (`npm test`, 73 cas) — domaine A **clos**.
+**Couverture** : 19 exigences, **19 vertes** (`npm test`, 79 cas) — domaine A **clos**.
 La boucle de connexions (`src/connection-loop.js`) exécute les exigences de bout en bout
-contre des serveurs locaux, y compris la coupure et la reprise (`T-A-25`). Aucune exigence
+contre des serveurs locaux, y compris la coupure, la reprise depuis la carte persistée et la
+promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 `Hypothèse` dans ce domaine.
 
 ## 3. Domaine B — grabber
@@ -93,6 +94,7 @@ contre des serveurs locaux, y compris la coupure et la reprise (`T-A-25`). Aucun
 
 | Date | Changement |
 |---|---|
+| 2026-10-27 | v0.6 : assemblage (`D-040`) — carte persistée, fusion des morceaux de reprise (`A-21`), promotion, CLI ; **79 tests verts** |
 | 2026-10-27 | v0.5 : boucle de connexions (`D-039`) — domaine A **clos**, 19/19 ; repli sur divergence et plafond de 128 sockets vérifiés ; 73 tests verts |
 | 2026-10-27 | v0.4 : couche HTTP écrite (`D-038`) — `EX-A-08`, `EX-A-15`→`EX-A-18` vertes, 17/19 du domaine A ; 61 tests verts au total |
 | 2026-10-27 | v0.3 : `WP-20` clos — 50 tests verts, 13 exigences du domaine A et 4 du domaine B au vert ; `D-036` (file) et `D-037` (nom) consignées |

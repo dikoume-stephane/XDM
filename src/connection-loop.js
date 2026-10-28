@@ -29,12 +29,14 @@ import {
   createChunkMap,
   freeChunks,
   intervals,
+  mergeResumeChunks,
   progress,
   validateChunkMap,
 } from './chunk-map.js';
 import { DEFAULT_OVERLAP, DivergenceGuard, WindowHashes, requestStart } from './divergence.js';
 import { IDLE_TIMEOUT_MS, probe, openSegment } from './http-client.js';
-import { workPathFor } from './promote.js';
+import { loadPartFile, savePartFile } from './part-file.js';
+import { promote as promoteWork, workPathFor } from './promote.js';
 import { MAX_WRITE, openWorkFile } from './work-file.js';
 
 /** Plafond de sockets simultanées (`EX-A-13`). */
@@ -204,6 +206,8 @@ export async function download(url, target, {
   overlap = DEFAULT_OVERLAP,
   maxAttempts = MAX_ATTEMPTS,
   ifRange = null,
+  resume = true,
+  promote = false,
   onProgress = () => {},
 } = {}) {
   const capabilities = await probe(url, transport ? { transport } : {});
@@ -224,18 +228,40 @@ export async function download(url, target, {
     : Math.max(1, Math.min(chunkSize ?? chunkSizeFor(size, { profile }), size));
 
   const workPath = workPathFor(target);
-  const work = await openWorkFile(workPath, size);
+  /** @type {ReturnType<typeof createChunkMap> | null} */
+  let resumedMap = null;
+  if (resume) {
+    try {
+      const existing = /** @type {any} */ (await loadPartFile(target));
+      if (existing.totalSize === size) {
+        // `A-21` : les morceaux de reprise adjacents sont recollés avant de servir.
+        resumedMap = mergeResumeChunks(existing);
+      }
+    } catch {
+      // Pas de carte, carte illisible ou invalide : on repart d'une carte neuve.
+      resumedMap = null;
+    }
+  }
+  const work = await openWorkFile(workPath, size, { fresh: resumedMap === null });
   const stats = { requests: 0, restarts: 0, divergence: false, attempts: 0 };
   const guard = new DivergenceGuard({ overlap });
 
   try {
-    let map = buildChunkMap({
+    let map = resumedMap ?? buildChunkMap({
       url,
       target,
       totalSize: size,
       chunkSize: effectiveChunkSize,
       created: new Date(0).toISOString(),
     });
+    // Les écritures de carte sont sérialisées : une seule écriture atomique à la
+    // fois, et la dernière écrite reflète l'état le plus récent.
+    let saving = Promise.resolve();
+    const persist = (current) => {
+      saving = saving.then(() => savePartFile(target, current)).catch(() => {});
+      return saving;
+    };
+    await persist(map);
 
     const fetchChunk = async (id) => {
       let interval = intervals(map).find((i) => i.id === id);
@@ -269,6 +295,7 @@ export async function download(url, target, {
           }
           guard.recordTrail(size, outcome.tail);
           for (const chunk of intervals(map)) map = completeChunk(map, chunk.id);
+          await persist(map);
           onProgress({ done: progress(map).downloaded, total: size });
           return;
         }
@@ -326,6 +353,7 @@ export async function download(url, target, {
         }
 
         map = completeChunk(map, id);
+        await persist(map);
         onProgress({ done: progress(map).downloaded, total: size });
         return;
       }
@@ -371,6 +399,7 @@ export async function download(url, target, {
       guard.divergent = false;
       guard.windows.clear();
       map = buildChunkMap({ url, target, totalSize: size, chunkSize: size });
+      await persist(map);
       await runPool(1);
     }
 
@@ -382,6 +411,11 @@ export async function download(url, target, {
         { downloaded: finalProgress.downloaded, size },
       );
     }
+    let promotedPath = null;
+    if (promote) {
+      const done = await promoteWork({ workPath, target, map });
+      promotedPath = done.target;
+    }
     return {
       target,
       workPath,
@@ -392,6 +426,8 @@ export async function download(url, target, {
       restarts: stats.restarts,
       divergence: stats.divergence,
       attempts: stats.attempts,
+      resumed: resumedMap !== null,
+      promoted: promotedPath,
     };
   } finally {
     await work.close();

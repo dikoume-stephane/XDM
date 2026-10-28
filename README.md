@@ -11,7 +11,8 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 73 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 79 tests, sans dépendance (node --test)
+node bin/xdm.js <url> [dossier]    # téléchargement réel : plages, reprise, promotion
 ```
 
 ```bash
@@ -34,7 +35,7 @@ python3 tools/idman_class_profile.py --pattern 'HTTPConnection'   # fiche par cl
 Dépendances Python : `pefile`, `capstone` (`python3 -m pip install --break-system-packages pefile capstone`).
 Dépendances du socle : **aucune** — Node 22, ES modules, types JSDoc (`D-034`).
 
-## Le logiciel (socle `WP-20`)
+## Le logiciel (moteur, domaine A clos)
 
 | Module | Rôle | Décision |
 |---|---|---|
@@ -47,12 +48,14 @@ Dépendances du socle : **aucune** — Node 22, ES modules, types JSDoc (`D-034`
 | `src/promote.js` | assainissement du nom final, promotion atomique après vérification | `D-037`, `D-026` |
 | `src/http-client.js` | sonde de ressource, `Range`/`If-Range`, redirections ≤ 10, `identity`, inactivité 30 s | `D-038` |
 | `src/divergence.js` | hachage des fenêtres de recouvrement, détection de divergence entre connexions | `D-039` |
-| `src/connection-loop.js` | boucle de connexions : distribution des morceaux, reprise, repli, plafond 128 sockets | `D-039`, `D-035` |
+| `src/connection-loop.js` | boucle de connexions : distribution des morceaux, reprise depuis la carte, repli, plafond 128 sockets, promotion optionnelle | `D-039`, `D-040` |
+| `bin/xdm.js` | CLI : `xdm <url> [dossier] [--connexions N] [--morceau T]`, nom déduit de l'URL, promotion finale | `D-037`, `D-040` |
 
-État : **domaine A clos** (`WP-20`/`WP-21`) — 73 cas verts, 21 exigences sur 25 couvertes
-(`docs/specs/conformance.md`). Le moteur télécharge réellement : plages, reprise après
-coupure, repli sur divergence, 128 sockets au plus. Reste l'assemblage final (`WP-22`) :
-carte persistée, fusion des morceaux de reprise, promotion et CLI.
+État : **domaine A clos et assemblé** (`WP-20`→`WP-22`) — 79 cas verts, 21 exigences sur 25
+couvertes (`docs/specs/conformance.md`). La chaîne fonctionne de bout en bout : sonde,
+découpage, connexions parallèles, reprise après coupure **depuis la carte persistée**,
+détection de divergence, promotion atomique — pilotée par la CLI. Reste le grabber
+(`WP-11`, bloqué par l'exploration de `CIDMSpider`, cf. `Q-B-01`).
 
 ## Où lire quoi
 

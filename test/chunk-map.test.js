@@ -8,6 +8,7 @@ import {
   createChunkMap,
   freeChunks,
   intervals,
+  mergeResumeChunks,
   progress,
   validateChunkMap,
 } from "../src/chunk-map.js";
@@ -182,4 +183,53 @@ test("createChunkMap refuse une taille inconnue plutôt que de deviner", () => {
   assert.throws(() => createChunkMap({ ...BASE, totalSize: -1 }), TypeError);
   assert.throws(() => createChunkMap({ ...BASE, totalSize: 1.5 }), TypeError);
   assert.throws(() => createChunkMap({ ...BASE, chunkSize: 0 }), TypeError);
+});
+
+test('T-A-27 : fusion des morceaux de reprise adjacents (A-21)', () => {
+  const base = createChunkMap({ url: 'http://h/f', target: '/tmp/f', totalSize: 100, chunkSize: 40 });
+  base.chunks = [
+    { id: 1, start: 0, next: 2, completed: false },
+    { id: 2, start: 40, next: 3, completed: false },
+    { id: 3, start: 55, next: 4, completed: false },
+    { id: 4, start: 70, next: 0, completed: false },
+  ];
+  const merged = mergeResumeChunks(base);
+  assert.equal(merged.chunks.length, 1);
+  assert.deepEqual(merged.chunks[0], { id: 1, start: 0, next: 0, completed: false });
+  assert.deepEqual(intervals(merged).map((i) => [i.start, i.end]), [[0, 100]]);
+  assert.equal(validateChunkMap(merged).ok, true);
+  // La carte d'origine n'est pas modifiée.
+  assert.equal(base.chunks.length, 4);
+
+  // Un morceau clos n'est jamais absorbé : il ne peut pas être redemandé.
+  const mixed = {
+    ...base,
+    chunks: [
+      { id: 1, start: 0, next: 2, completed: true },
+      { id: 2, start: 40, next: 3, completed: false },
+      { id: 3, start: 55, next: 4, completed: false },
+      { id: 4, start: 70, next: 0, completed: true },
+    ],
+  };
+  const after = mergeResumeChunks(mixed);
+  assert.deepEqual(after.chunks.map((c) => [c.id, c.start, c.next, c.completed]), [
+    [1, 0, 2, true],
+    [2, 40, 4, false],
+    [4, 70, 0, true],
+  ]);
+  assert.equal(validateChunkMap(after).ok, true);
+  assert.equal(progress(after).downloaded, 40 + 30, 'morceaux clos [0,40) et [70,100)');
+});
+
+test('T-A-27 (suite) : fusion idempotente et couverture conservée', () => {
+  const base = createChunkMap({ url: 'http://h/f', target: '/tmp/f', totalSize: 90, chunkSize: 30 });
+  base.chunks = [
+    { id: 1, start: 0, next: 2, completed: true },
+    { id: 2, start: 30, next: 3, completed: false },
+    { id: 3, start: 60, next: 0, completed: false },
+  ];
+  const once = mergeResumeChunks(base);
+  const twice = mergeResumeChunks(once);
+  assert.deepEqual(twice.chunks, once.chunks);
+  assert.deepEqual(intervals(twice).map((i) => [i.start, i.end]), [[0, 30], [30, 90]]);
 });

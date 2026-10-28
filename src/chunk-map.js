@@ -189,6 +189,36 @@ export function freeChunks(map) {
 }
 
 /**
+ * Fusionne les morceaux de reprise **adjacents** (`A-21`, suite de `D-035`).
+ *
+ * `applyRollback` insère un morceau par coupure ; après plusieurs reprises, la
+ * chaîne se couvre de morceaux courts, ce qui multiplierait les connexions pour
+ * presque rien. Deux morceaux **incomplets** consécutifs décrivent une zone
+ * continue : les fusionner ne change ni la couverture ni la progression, et un
+ * morceau **clos** n'est jamais absorbé (il ne peut pas être redemandé).
+ *
+ * @param {ChunkMap} map
+ * @returns {ChunkMap} nouvelle carte (aucune mutation)
+ */
+export function mergeResumeChunks(map) {
+  const { order, errors } = chainOrder(map.chunks);
+  if (errors.length > 0) throw new Error(`carte invalide : ${errors[0]}`);
+
+  /** @type {Chunk[]} */
+  const kept = [];
+  for (const chunk of order) {
+    const last = kept[kept.length - 1];
+    if (last && !last.completed && !chunk.completed) continue; // absorbé par `last`
+    kept.push({ ...chunk });
+  }
+  kept.forEach((chunk, index) => {
+    chunk.next = index + 1 < kept.length ? kept[index + 1].id : 0;
+  });
+
+  return { ...structuredClone(map), chunks: kept };
+}
+
+/**
  * Clôt un morceau. Un morceau déjà clos est refusé (idempotence explicite).
  * @param {ChunkMap} map
  * @param {number} id

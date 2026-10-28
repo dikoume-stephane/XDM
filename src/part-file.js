@@ -15,6 +15,9 @@ import { validateChunkMap } from "./chunk-map.js";
 /** Suffixe du fichier de carte. */
 export const PART_SUFFIX = ".xdm-part.json";
 
+/** Compteur de fichiers temporaires : deux écritures concurrentes ne se volent pas. */
+let temporaryCounter = 0;
+
 /**
  * Chemin du fichier annexe pour une cible donnée.
  * @param {string} target
@@ -35,7 +38,11 @@ export async function savePartFile(target, map) {
   if (!ok) throw new Error(`carte refusée à l'écriture : ${errors[0]}`);
 
   const destination = partPath(target);
-  const temporary = join(dirname(destination), `.${process.pid}.tmp.part`);
+  temporaryCounter += 1;
+  const temporary = join(
+    dirname(destination),
+    `.${process.pid}.${temporaryCounter}.${Date.now()}.tmp.part`,
+  );
   const payload = `${JSON.stringify(map, null, 2)}\n`;
 
   const handle = await open(temporary, "w");

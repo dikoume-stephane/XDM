@@ -1,7 +1,7 @@
 # Fiche A — Moteur de téléchargement
 
 > **Domaine** : A (moteur) · **Lot** : `WP-05` (`A-05`, première fiche) · **Statut** : `brouillon` avancé
-> (19 exigences sur 19 au **vert**, socles `WP-20`/`WP-21` livrés, domaine **clos**)
+> (19 exigences sur 19 au **vert**, domaine **clos** ; chaîne complète de la sonde à la promotion)
 > **Dernière revue** : 2026-10-27
 > **Preuves** : annexe 14 v0.5 (moteur), annexe 13 v0.2 (filtres, hors périmètre ici),
 > `chunks.json`, `io-model.json`, `states.json` ; décisions `D-024`→`D-031`, `D-034`→`D-039`.
@@ -24,7 +24,7 @@ l'intégrité est vérifiable.
 | ID | Exigence | Niveau | Preuve | Test prévu |
 |---|---|---|---|---|
 | `EX-A-01` | Un téléchargement s'ouvre sur **un seul fichier de travail** préalloué, écrit à l'offset par chaque connexion | **Observé** (aligné sur IDM) | annexe 14 §5.2, §7 ; `CreateFileW` `0x156d48` | `T-A-01` : deux écritures concurrentes à des offsets disjoints produisent le fichier attendu |
-| `EX-A-02` | L'état de reprise est persisté dans `<cible>.xdm-part.json`, jamais dans le registre | **Décision** | `D-024` | `T-A-02` : reprise après `kill -9` |
+| `EX-A-02` | L'état de reprise est persisté dans `<cible>.xdm-part.json`, jamais dans le registre | **Décision** | `D-024`, `D-040` | `T-A-02` ✅ : la carte est écrite après chaque morceau clos |
 | `EX-A-03` | La carte de morceaux est une **liste de bornes** `{id, startOffset, nextId, completed}`, sans champ de fin explicite | **Observé** + **Décision** | annexe 14 §5.1 ; `D-030`, `D-035` | `T-A-03` : la fin d'un morceau = `startOffset` du suivant |
 | `EX-A-04` | Une carte non monotone, cyclique, ou dont un `nextId` est orphelin est **rejetée** au chargement | **Dérivé** | `D-030` | `T-A-04` : trois cartes corrompues → rejet explicite |
 | `EX-A-05` | La progression affichée est **recalculée** depuis la carte, jamais persistée | **Dérivé** | `D-031` | `T-A-05` : progression identique avant/après reprise |
@@ -37,7 +37,7 @@ l'intégrité est vérifiable.
 | `EX-A-12` | Le fichier final n'est promu qu'après vérification de la carte et de la taille attendue ; la promotion est un `rename` atomique et supprime la carte | **Observé** + **Décision** | annexe 14 §7 ; `D-026`, `D-036` | `T-A-12` ✅ : carte incomplète ou taille incohérente ⇒ rien n'est livré ni supprimé |
 | `EX-A-13` | Un seul réacteur d'E/S par session, plafond de **128 sockets**, délai `select` ≤ **12 000 ms** | **Observé** + **Décision** | annexe 14 §4.4 ; `io-model.json` ; `D-028`, `D-039` | `T-A-13` ✅ : 500 connexions demandées sur 200 morceaux → **128** travailleurs au plus |
 | `EX-A-18` | Inactivité d'une connexion **> 30 s** ⇒ la connexion est redémarrée (nouvelle `Range` au dernier offset confirmé), pas le téléchargement | **Observé** | annexe 14 §4.5 (`cmp eax, 0x1e` en `0x1a139f`, `0x18adad`) ; `D-038` | `T-A-25` ✅ : flux muet ⇒ `IDLE_TIMEOUT` avec `resumeAt` = dernier octet confirmé |
-| `EX-A-19` | Une tentative de reprise ne repart **jamais** de zéro tant que la carte est valide | **Observé** + **Décision** | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` : 3 redémarrages successifs, progression strictement croissante |
+| `EX-A-19` | Une tentative de reprise ne repart **jamais** de zéro tant que la carte est valide | **Observé** + **Décision** | annexe 14 §4.5, §5.3 ; `D-030`, `D-040` | `T-A-26` ✅ : reprise depuis la carte persistée, aucun morceau clos redemandé |
 | `EX-A-14` | Le nom final est déduit de l'URL, et seule la **dernière composante** assainie est conservée (≤ 200 octets, noms réservés neutralisés) | **Observé** (déduction du nom) + **Décision** | annexe 14 §3 (`GetDefaultlocalName`) ; `D-037` | `T-A-14` ✅ : `../../etc/passwd` → `passwd`, `CON.txt` → `_CON.txt` |
 | `EX-A-15` | Toute redirection (`Location:`) est résolue en URL absolue (RFC 3986), avec limite de 10 redirections et URL ≤ 10 239 octets | **Observé** | annexe 14 §8.1 (`InternetCombineUrlA`, `cmp ecx, 0x27ff`) ; `D-038` | `T-A-15` ✅ : chaîne de 11 redirections → abandon explicite, URL longue rejetée avant réseau |
 | `EX-A-16` | Compression désactivée pour les transferts par morceaux (`Accept-Encoding: identity`) | **Observé** | annexe 14 §8 ; `D-038` | `T-A-16` ✅ : l'en-tête part sur la sonde **et** sur chaque segment |
@@ -179,6 +179,7 @@ CONNECT --(socket prêt)--> HEADERS --(206 attendu)--> DATA --(morceau plein)-->
 
 | Date | Auteur | Changement |
 |---|---|---|
+| 2026-10-27 | assemblage `WP-22` | v0.7 : `D-040` — carte persistée à chaque morceau clos, reprise (`mergeResumeChunks`, `A-21`), promotion pilotée par `promote: true`, CLI `bin/xdm.js` ; **79 tests** |
 | 2026-10-27 | boucle de connexions `WP-22` | v0.6 : `src/connection-loop.js` + `src/divergence.js` (`D-039`) — distribution des morceaux, reprise à l'offset confirmé, repli sur divergence, plafond 128 sockets ; **domaine A clos (19/19)**, **73 tests** |
 | 2026-10-27 | client HTTP `WP-21` | v0.5 : `D-038` — sonde `bytes=0-0`, `identity`, 10 redirections bornées, inactivité 30 s avec offset de reprise ; `EX-A-08`, `EX-A-15`→`EX-A-18` vertes ; **61 tests** |
 | 2026-10-27 | socle `WP-20` | v0.4 : file de tâches (`D-036`) et assainissement du nom (`D-037`) écrits et testés ; `EX-A-07`, `EX-A-11`, `EX-A-12`, `EX-A-14` passent **vert** — **50 tests** au total |
