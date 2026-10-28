@@ -11,10 +11,11 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 108 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 128 tests, sans dépendance (node --test)
 node bin/xdm.js <url> [dossier]    # téléchargement réel : plages, reprise, promotion
 node bin/xdm-grab.js <url> [dir]   # aspiration de site : parcours, arborescence, file
 node bin/xdm-grab.js <url> [dir] --reprendre --sortie json   # reprise + résumé machine
+node bin/xdm-media.js <playlist.m3u8> [dir]   # flux HLS : segments, init, assemblage facultatif
 ```
 
 ```bash
@@ -55,6 +56,9 @@ Dépendances du socle : **aucune** — Node 22, ES modules, types JSDoc (`D-034`
 | `src/crawler.js` | aspiration : BFS par niveau, URL canonique, `robots.txt`, filtres du projet | `D-041` |
 | `src/grabber.js` | arborescence locale, collisions, `empty.html`, promotion en tâches ordinaires | `D-042` |
 | `src/grab-runner.js` | exécution d'une file : états, échec isolé, concurrence bornée, persistance | `D-043` |
+| `src/hls.js` | playlist HLS : variantes, segments, plages d'octets, init, clé | `D-046` |
+| `src/sidx.js` | boîtes MP4 et index `sidx` des flux DASH | `D-046` |
+| `src/media.js` | téléchargement d'un flux HLS segment par segment, assemblage facultatif | `D-046` |
 | `bin/xdm.js` | CLI : `xdm <url> [dossier] [--connexions N] [--morceau T]`, nom déduit de l'URL, promotion finale | `D-037`, `D-040` |
 
 État : **domaines A et B clos** — 97 cas verts, 30 exigences sur 32 couvertes

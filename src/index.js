@@ -153,3 +153,28 @@ export {
   prepareGrab,
   writeEmptyHtml,
 } from './grabber.js';
+
+export {
+  PLAYLIST_TYPES,
+  isPlaylist,
+  parseAttributes,
+  parseByteRange,
+  parsePlaylist,
+  resolveUrl,
+  selectVariant,
+} from './hls.js';
+export {
+  MEDIA_BOXES,
+  findBox,
+  parseBoxes,
+  parseSidx,
+  readMp4Index,
+} from './sidx.js';
+export {
+  DEFAULT_SEGMENT_EXTENSION,
+  assembleMedia,
+  downloadMedia,
+  extensionOf,
+  planMedia,
+  segmentName,
+} from './media.js';

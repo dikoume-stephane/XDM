@@ -1,6 +1,6 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.1 — **Dernière revue** : 2026-10-28
+> **Statut** : ✅ v1.2 — **Dernière revue** : 2026-10-28
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
 > fonde et le **test** qui la vérifiera. Aucune ligne d'implémentation ne référence une
 > exigence absente de ce fichier.
@@ -41,7 +41,7 @@
 | `EX-A-18` inactivité > 30 s ⇒ reconnexion | Observé | annexe 14 §4.5 (`0x1a139f`, `0x18adad`) ; `D-038` | `T-A-25` | **vert** |
 | `EX-A-19` reprise sans retour à zéro | Observé + Décision | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` | **vert** |
 
-**Couverture** : 19 exigences, **19 vertes** (`npm test`, 108 cas) — domaine A **clos**.
+**Couverture** : 19 exigences, **19 vertes** (`npm test`, 128 cas) — domaine A **clos**.
 La boucle de connexions (`src/connection-loop.js`) exécute les exigences de bout en bout
 contre des serveurs locaux, y compris la coupure, la reprise depuis la carte persistée et la
 promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
@@ -65,7 +65,7 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 | `EX-B-12` `empty.html` | Observé + Décision | annexe 13 §4 (`0xd1ed0`) ; `D-042` | `T-B-12` | **vert** |
 | `EX-B-13` pas de sortie de domaine | **Hypothèse** | — | `T-B-13` | **bloqué** |
 
-**Couverture** : 13 exigences, **13 vertes** (`npm test`, 108 cas) — domaine B **clos**.
+**Couverture** : 13 exigences, **13 vertes** (`npm test`, 128 cas) — domaine B **clos**.
 `Q-B-01` est close comme non instruite dans ce module (annexe 12 §6) : l'exploration et
 l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`,
 `src/grabber.js`, `D-041`/`D-042`).
@@ -106,18 +106,19 @@ qu'HTTP/1.1 sans proxy (`src/http-client.js`) ; `T-C-01`→`T-C-03` sont pourtan
 
 | Exigence | Niveau | Preuve (annexe / offset) | Test | État |
 |---|---|---|---|---|
-| `EX-D-01` playlist HLS reconnue | Observé | `0x6b2790`, MIME `0x6b2f48` | `T-D-01` | à faire |
-| `EX-D-02` variantes `STREAM-INF` | Observé + Dérivé | `0x6b275c` | `T-D-02` | à faire |
-| `EX-D-03` segments `EXTINF` | Dérivé | annexe 15 §3.1 | `T-D-03` | à faire |
-| `EX-D-04` `EXT-X-MAP` avant les segments | Observé + Dérivé | `0x6b27c8`, `-tmp_dashinit` | `T-D-04` | à faire |
-| `EX-D-05` `EXT-X-BYTERANGE` | Observé | `0x6b27f8` | `T-D-05` | à faire |
-| `EX-D-06` `EXT-X-KEY` sans déchiffrement | Observé + `D-004` | `0x6b2828` | `T-D-06` | à faire |
-| `EX-D-07` direct (`MEDIA-SEQUENCE`) | Observé + Dérivé | `0x6b284c` | `T-D-07` | à faire |
-| `EX-D-08` DASH par `sidx`, pas de `MPD` | Observé + `H-19` | `CMp4DashReader`, `CSidxParser` | `T-D-08` | **bloqué** (`H-19`) |
-| `EX-D-09` `DISCONTINUITY` | Dérivé | `0x6b2798` | `T-D-09` | à faire |
-| `EX-D-10` aucun DRM | Décision `D-004` | — | `T-D-10` | à faire |
+| `EX-D-01` playlist HLS reconnue | Observé | `0x6b2790`, MIME `0x6b2f48` | `T-D-01` | **vert** (`src/hls.js`) |
+| `EX-D-02` variantes `STREAM-INF` | Observé + Dérivé | `0x6b275c` | `T-D-02` | **vert** (débit le plus haut, `D-046`) |
+| `EX-D-03` segments `EXTINF` | Dérivé | annexe 15 §3.1 | `T-D-03` | **vert** (plan + téléchargement) |
+| `EX-D-04` `EXT-X-MAP` avant les segments | Observé + Dérivé | `0x6b27c8`, `-tmp_dashinit` | `T-D-04` | **vert** (`init.mp4` en premier) |
+| `EX-D-05` `EXT-X-BYTERANGE` | Observé | `0x6b27f8` | `T-D-05` | **vert** (plages explicites et implicites) |
+| `EX-D-06` `EXT-X-KEY` sans déchiffrement | Observé + `D-004` | `0x6b2828` | `T-D-06` | **vert** (`encrypted: true`, octets intacts) |
+| `EX-D-07` direct (`MEDIA-SEQUENCE`) | Observé + Dérivé | `0x6b284c` | `T-D-07` | **vert** (analyse ; suivi continu non implémenté) |
+| `EX-D-08` DASH par `sidx`, pas de `MPD` | Observé + `H-19` | `CMp4DashReader`, `CSidxParser` | `T-D-08` | 🟡 partiel (`src/sidx.js` lit l'index ; téléchargement DASH non câblé) |
+| `EX-D-09` `DISCONTINUITY` | Dérivé | `0x6b2798` | `T-D-09` | **vert** (frontière signalée) |
+| `EX-D-10` aucun DRM | Décision `D-004` | — | `T-D-10` | **vert** (décision écrite et testée) |
 
-**Couverture : 0 / 10** — domaine **spécifié, non implémenté** (`WP-26`).
+**Couverture : 9 / 10** — implémenté par `src/hls.js`, `src/sidx.js`, `src/media.js` et
+`bin/xdm-media.js` (`D-046`) ; seul `EX-D-08` reste partiel (index lu, flux DASH non câblé).
 
 ## 4. Ce que cette matrice révèle
 
@@ -142,12 +143,13 @@ qu'HTTP/1.1 sans proxy (`src/http-client.js`) ; `T-C-01`→`T-C-03` sont pourtan
 | 6 | `T-B-*` (sauf bloqués) | ✅ fait — `D-041` a débloqué le domaine B ; **13/13** |
 | 7 | `T-B-20` | ✅ fait — `D-043` : l'aspiration s'exécute de bout en bout |
 | 8 | `T-C-01`→`T-C-03` | à faire — reprise conditionnelle et en-têtes : à portée de `http-client.js` |
-| 9 | `T-D-*` | après `WP-26` — médias segmentés |
+| 9 | `T-D-*` | ✅ fait — `D-046` : HLS de bout en bout, index `sidx` lu |
 
 ## 6. Journal des révisions
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v1.2 : fiche D implémentée (`D-046`) — HLS segmenté de bout en bout, `sidx` lu ; **9/10** du domaine D, 128 tests, total **39 vertes / 52** |
 | 2026-10-28 | v1.1 : domaines C (transports) et D (médias) ajoutés (`WP-07`, annexe 15) — 20 exigences spécifiées, 0 implémentée ; 108 tests sur A+B |
 | 2026-10-28 | v1.0 : exécution (`src/grab-runner.js`, `bin/xdm-grab.js`, `D-043`) — file → téléchargement → promotion, 106 tests ; matrice figée |
 | 2026-10-28 | v0.9 : assemblage (`src/grabber.js`, `D-042`) — arborescence, collisions, `empty.html`, promotion ; **domaine B clos (13/13)**, **97 tests** |

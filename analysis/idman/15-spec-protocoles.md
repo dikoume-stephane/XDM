@@ -1,6 +1,6 @@
 # Annexe 15 — Transports (fiche C) et médias (fiche D)
 
-> **Statut** : 🟡 v1 — **Dernière revue** : 2026-10-28
+> **Statut** : 🟢 v2 — **Dernière revue** : 2026-10-28 (fiche D implémentée pour HLS, `D-046`)
 > **Lot** : `WP-07` (`A-05`, fiches C et D) · **Décisions liées** : `D-004`, `D-041`, `D-045`
 > **Preuves** : `cible/IDMan.exe` (SHA-256 `5f78da5a…2f11c9`), `analysis/idman/classes.json`,
 > chaînes extraites (`tools/` → `analysis/raw/idman/strings-*.txt`, non versionnées),
@@ -200,7 +200,10 @@ reconnus**, pas des filtres du grabber (`D-041`).
 | `EX-D-09` | `#EXT-X-DISCONTINUITY` : frontière de concaténation conservée | Dérivé | `0x6b2798` | `T-D-09` |
 | `EX-D-10` | aucun déchiffrement DRM ; limite écrite | Décision `D-004` | — | `T-D-10` |
 
-**Couverture : 0 / 10.** Spécifié, non implémenté (`WP-26`).
+**Couverture : 9 / 10** — implémenté en `WP-26` (`D-046`) : `src/hls.js` (analyse décrite
+aux §3.1), `src/media.js` (plan et téléchargement segment par segment) et
+`bin/xdm-media.js` (CLI). `EX-D-08` reste partielle : l'index `sidx` est lu
+(`src/sidx.js`), le téléchargement DASH de bout en bout n'est pas câblé.
 
 ---
 
@@ -236,4 +239,5 @@ reconnus**, pas des filtres du grabber (`D-041`).
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v2 : fiche D implémentée (`D-046`) — `src/hls.js`, `src/sidx.js`, `src/media.js`, `bin/xdm-media.js` ; 9 exigences sur 10 vertes, 128 tests au total |
 | 2026-10-28 | v1 : création. Fiche C (10 exigences, 9 observées), fiche D (10 exigences, 5 observées) ; 13 classes de transport/média avec vtables ; 12 balises HLS localisées ; `H-18` (RTMP hors grabber), `H-19` (DASH sans parseur de manifeste) ; 8 questions ouvertes |

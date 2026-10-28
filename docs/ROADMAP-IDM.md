@@ -104,16 +104,16 @@ décompilateur).
 
 **Prochaine marche (mise à jour du 2026-10-28)** : `WP-20`→`WP-23` sont **clos** et les
 quatre fiches de spécification sont écrites (`A`, `B`, `C`, `D`). Le banc de tests compte
-**108 cas verts**, la matrice de conformité recense **52 exigences** :
-**30 vertes** (domaines A et B, implémentés) et **20 spécifiées seulement** (domaines C et D).
+**128 cas verts**, la matrice de conformité recense **52 exigences** :
+**39 vertes** (domaines A, B et D) et **13 spécifiées seulement** (domaine C, plus `EX-D-08` partielle).
 L'aspiration s'exécute de bout en bout (`bin/xdm-grab.js`, `D-043`) et se reprend
 (`--reprendre`, `--sortie json`, `D-044`). Trois chantiers restent ouverts :
 
 1. **`A-09` — campagne d'observation en VM Windows** : protocole écrit
    (`analysis/idman/16-protocole-observation-vm.md`, 6 phases). C'est le seul moyen de
    trancher `Q-C-01`→`Q-C-05` et `Q-D-01`→`Q-D-03`, donc de valider les fiches C et D.
-2. **`WP-26` — implémentation des médias** (HLS par `EXTINF`/`EXT-X-MAP`, DASH par `sidx`),
-   qui consomme la fiche D et réutilise le moteur de morceaux.
+2. **`WP-26` — reste DASH de bout en bout** : l'index `sidx` est lu, les plages calculées ;
+   il manque le câblage (manifeste fourni de l'extérieur, `H-19`).
 3. **Un lot « transports »** (non planifié) : cookies, `If-Range`, proxys, FTP — fiche C.
 
 **Porte G1** : pour chaque domaine P0, un document de spécification avec
@@ -142,7 +142,7 @@ L'aspiration s'exécute de bout en bout (`bin/xdm-grab.js`, `D-043`) et se repre
 | WP-23 | ✅ **Clos** (`D-041`→`D-043`) — grabber : exploration et extraction de liens (`src/crawler.js`), filtres, arborescence locale (`src/grabber.js`), **exécution** (`src/grab-runner.js`) et CLI `bin/xdm-grab.js` | 4 |
 | WP-24 | Téléchargement d'arborescence : mapping URL→chemin, réécriture optionnelle des liens, déduplication | 5 |
 | WP-25 | Planification, statistiques, export de rapport | 6 |
-| WP-26 | Médias (HLS/DASH segmenté) — réutilise WP-21/22 | 7 |
+| WP-26 | ✅ **Clos pour HLS** (`D-046`) — `src/hls.js` (12 balises), `src/media.js`, `bin/xdm-media.js`, `src/sidx.js` (index MP4) ; DASH de bout en bout reste ouvert (`EX-D-08`) | 7 |
 
 **Porte G3** : parcours complet sur un site local (≥ 200 pages, fichiers de 1 Ko à
 200 Mo, coupures réseau simulées) sans perte ni doublon.
@@ -180,7 +180,7 @@ L'aspiration s'exécute de bout en bout (`bin/xdm-grab.js`, `D-043`) et se repre
 | **M3 — Spécifications** | Specs moteur + grabber + protocoles revues | M2 | Porte G1 |
 | **M4 — Prototype** | Parcours complet sur site local | M3 | Porte G3 |
 | **M3.6 — Domaines A+B** | 32 exigences, 30 vertes, 108 tests | D-041, D-042, D-043, D-044 | ✅ `npm test` |
-| **M3.7 — Domaines C+D** | 20 exigences, 0 verte, 0 test | D-045 | 🟡 spécifié (annexe 15) |
+| **M3.7 — Domaines C+D** | 20 exigences, 9 vertes, 128 tests | D-045, D-046 | 🟡 D implémenté (HLS), C spécifié |
 | **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |
 

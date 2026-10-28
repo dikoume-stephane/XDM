@@ -25,7 +25,8 @@
     "test:watch": "node --test --watch",
     "dl": "node bin/xdm.js",
     "grabber:idm": "python3 tools/idman_grabber.py",
-    "grab": "node bin/xdm-grab.js"
+    "grab": "node bin/xdm-grab.js",
+    "media": "node bin/xdm-media.js"
   },
   "devDependencies": {
     "rea-agents": "6.8.0"
@@ -35,6 +36,7 @@
   },
   "type": "module",
   "bin": {
-    "xdm": "bin/xdm.js"
+    "xdm": "bin/xdm.js",
+    "xdm-media": "bin/xdm-media.js"
   }
 }

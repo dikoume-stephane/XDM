@@ -1045,6 +1045,32 @@ RTMP, MMS, proxys) et les médias (HLS, DASH, conteneurs).
 implémentés** (30 exigences vertes sur 52) et **deux spécifiés seulement** (0/20). Ce qui
 reste à lever est comportemental : `A-09` (VM) pour C et D, `WP-26` pour l'implémentation.
 
+### D-046 — Médias : une playlist HLS est **une liste de fichiers**, pas un fichier
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-26` (fiche D)
+
+**Contexte.** La fiche D dit ce qu'IDM reconnaît (12 balises HLS, `CM3UParser`,
+`CMp4DashReader`, `CSidxParser`) sans dire comment XDM l'exécute.
+
+**Décision.**
+1. **Découpage en tâches ordinaires** : chaque segment est téléchargé par le moteur existant
+   (`connection-loop.js` : plages, reprise, promotion). Aucun second moteur, aucune
+   parallélisation des segments — l'ordre de la playlist est la seule vérité.
+2. **`#EXT-X-BYTERANGE` passe par `openSegment`** : un segment peut être une plage d'un
+   fichier plus gros ; c'est le seul endroit où le code de flux n'appelle pas `download()`.
+3. **Variante par défaut = débit le plus élevé** (`selectVariant`), surchargeable par
+   `--qualite` (débit minimal visé). Choix XDM : aucune preuve de la règle d'IDM (`Q-D-04`).
+4. **Aucun déchiffrement** : `#EXT-X-KEY` est lu, la clé n'est jamais demandée ; le flux est
+   téléchargé tel quel et le résumé porte `encrypted: true` (`D-004`, `EX-D-10`).
+5. **L'assemblage est explicite** (`--assembler`) et reste un `cat` : valide pour MPEG-TS,
+   sans valeur pour du fMP4 sans son init. Aucun assemblage automatique.
+6. **DASH : l'index seulement** : `src/sidx.js` lit une boîte `sidx` (versions 0 et 1) et
+   calcule les plages des sous-segments. Le manifeste `MPD` n'est pas analysé — cohérent
+   avec `H-19`. Le câblage DASH de bout en bout reste ouvert (`EX-D-08` partielle).
+
+**Conséquence.** Le domaine D passe de 0 à **9 exigences vertes sur 10** ; l'outil
+`bin/xdm-media.js` télécharge un flux HLS complet, playlists conservées, segments nommés
+`segment-00001.ts`. **128 tests.**
+
 ---
 
 ## Décisions en attente
@@ -1079,7 +1105,7 @@ après confirmation du périmètre (D-007) et lecture de la stack existante de X
 | A-20 | Écrire les tests de spécification du domaine A | porte G1 | ✅ **79 tests verts** : domaine A **clos** (`T-A-01`→`T-A-19`, `T-A-21`, `T-A-25`→`T-A-27`), domaine B partiel (`T-B-02`→`T-B-05`) |
 | A-22 | Client HTTP : `Range`, reprise, redirections, `Accept-Encoding` | `WP-21` | ✅ clos (`D-038`, `D-039`) : 19/19 exigences du domaine A au vert, 73 tests ; la boucle de connexions est livrée dans `src/connection-loop.js` |
 | A-21 | Fusion des morceaux de reprise adjacents (suite de `D-035`) | `WP-22` | ✅ clos (`D-040`) : `mergeResumeChunks` recolle les morceaux incomplets adjacents, jamais un morceau clos ; `T-A-27` vert |
-| A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | 🟡 **4 fiches ouvertes** : A — moteur (`A-moteur-de-telechargement.md`, 19 exigences, **aucune hypothèse**) et B — grabber (`B-grabber.md`, 13 exigences dont **3 bloquées** par `Q-B-01`). Matrice `docs/specs/conformance.md` (v0.1) : 32 exigences, 3 bloquées, 0 test. Reste : domaines C (transports), D (médias), F (persistance) |
+| A-05 | Ouvrir les fiches de spécification WP-10 (une par domaine P0) | WP-05+ | 🟢 **4 fiches écrites** : A — moteur (`A-moteur-de-telechargement.md`, 19 exigences, **aucune hypothèse**) et B — grabber (`B-grabber.md`, 13 exigences dont **3 bloquées** par `Q-B-01`). Matrice `docs/specs/conformance.md` (v0.1) : 32 exigences, 3 bloquées, 0 test. Reste : domaines C (transports), D (médias), F (persistance) |
 | A-11 | Structure logique d'un enregistrement `ChList` | lecture d'un état IDM existant | ✅ fait : `{ID, startPos, nextID}` = **liste de bornes** ; le morceau est un **intervalle** dans un fichier unique (preuve : aucun modèle `%s%d.tmp`, champ `file` partagé), assemblage = promotion du `.tmp` (annexe 14 §5, §7) → `D-030`, `D-031` ; reste l'encodage binaire exact, sans intérêt (D-024) |
 | A-12 | Énumérer les états de `Connection` | spécification de `WP-05` | ✅ fait : 39 états (0..38) en `this+0xa4`, 8 distributeurs, 115 transitions (annexe 14 §4) → `D-027` |
 | A-13 | Seuils et modèle d'E/S | valeurs par défaut de `WP-05` | ✅ levée : défaut **8** connexions (`0x0fbe17`), **128** sockets par session, `select` par session (`0x19503c`, `0x1959bd`) avec `délai = écoulé/10` (échéance atteinte) ou `/2`, **plafonné à 12 000 ms** (`0x2ee0`, `0x1958a7`), attente courte de 2–3 s (`0x19505d`) ; **timeout d'inactivité = 30 s** (`0x1e`), **300 s** pour `[conn+0x13c] == 2` (annexe 14 §4.4, §4.5) → `D-028` ; tentatives bornées par le réglage `mAttempts` (défaut non établi) |
