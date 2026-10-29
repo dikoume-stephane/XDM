@@ -25,6 +25,7 @@
     "test:watch": "node --test --watch",
     "audit": "node tools/audit-conformance.mjs",
     "audit:strict": "node tools/audit-conformance.mjs --strict",
+    "gate": "node tools/gate-g3.mjs",
     "dl": "node bin/xdm.js",
     "grabber:idm": "python3 tools/idman_grabber.py",
     "grab": "node bin/xdm-grab.js",

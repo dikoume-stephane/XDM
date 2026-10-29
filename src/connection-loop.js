@@ -341,7 +341,14 @@ export async function download(url, target, {
             skip: cursor - requestFrom,
           });
         } catch (error) {
-          if (error instanceof DownloadError && error.code === 'IDLE_TIMEOUT') {
+          // Une inactivité (`IDLE_TIMEOUT`) et une coupure de socket (`SEGMENT_FAILED`) sont
+          // la même situation vue de la carte : le morceau n'est pas clos, mais les octets
+          // déjà écrits sont bons. On rouvre la plage à `resumeAt` et on réessaie dans la
+          // limite des tentatives — un incident réseau ne doit pas condamner une tâche que
+          // la file devrait ensuite rejouer à la main.
+          const recoverable = error instanceof DownloadError
+            && (error.code === 'IDLE_TIMEOUT' || error.code === 'SEGMENT_FAILED');
+          if (recoverable) {
             stats.restarts += 1;
             const resumeAt = /** @type {number} */ (error.details.resumeAt);
             if (resumeAt > cursor) {

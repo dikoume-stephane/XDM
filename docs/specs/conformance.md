@@ -174,7 +174,7 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 
 | Date | Changement |
 |---|---|
-| 2026-10-28 | v1.8 : `D-056` — la matrice est **auditée** (`tools/audit-conformance.mjs`) : 5 écarts réels corrigés (domaine B clos avec 4 lignes « bloqué », `T-B-07` inexistant, `EX-C-08` citant `T-C-08`, 3 preuves qui étaient des chemins de code, 2 modules sans référence) ; `EX-B-15`/`16`, `EX-C-11`, `EX-D-10` citent désormais leur décision ; 212 tests, total **55 vertes / 56** |
+| 2026-10-28 | v1.8 : `D-056` — la matrice est **auditée** (`tools/audit-conformance.mjs`) : 5 écarts réels corrigés (domaine B clos avec 4 lignes « bloqué », `T-B-07` inexistant, `EX-C-08` citant `T-C-08`, 3 preuves qui étaient des chemins de code, 2 modules sans référence) ; `EX-B-15`/`16`, `EX-C-11`, `EX-D-10` citent désormais leur décision ; 217 tests, total **55 vertes / 56** |
 | 2026-10-28 | v1.7 : `D-055` — `429`/`503` sortent en `HTTP_STATUS` (statut, `retryable`, `Retry-After`) au lieu d'une « taille inconnue » ; `EX-C-11` verte ; 207 tests, total **55 vertes / 56** |
 | 2026-10-28 | v1.6 : `D-053` (réécriture, **sans précédent** dans la cible) et `D-054` (planification sans démon) — `EX-B-14`→`EX-B-16` vertes, domaine B **16/16** ; 196 tests, total **54 vertes / 55** |
 | 2026-10-28 | v1.5 : `D-052` — Digest, FTP par tunnel, PAC ; domaine C **9/10** (1 hors périmètre) ; 172 tests, total **51 vertes / 52** |

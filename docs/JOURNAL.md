@@ -1352,6 +1352,47 @@ huit écarts assumés listés exhaustivement.
 
 ---
 
+### D-057 — Porte G3 : la coupure réseau est une **reprise**, pas un échec
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : porte G3, sortie de la phase P3
+
+**Contexte.** La porte G3 (« parcours complet sur site local, ≥ 200 pages, fichiers de 1 Ko à
+200 Mo, coupures réseau simulées, sans perte ni doublon ») n'avait jamais été exécutée : les
+217 tests couvraient des comportements isolés, aucun ne comparait une arborescence entière
+au serveur.
+
+**Mesure avant décision.** `tools/gate-g3.mjs` génère le site (contenu déterministe, empreintes
+SHA-256), aspire, coupe la **première** requête de plage du plus gros fichier après 16 Kio, et
+compare le disque au serveur. Premier passage : `48 terminé(s), 1 échec(s)` — la tâche coupée
+était condamnée, puis réparée par une passe de reprise.
+
+**Cause.** `pumpSegment` signalait déjà le dernier octet écrit (`SEGMENT_FAILED` avec
+`resumeAt`), mais la boucle ne rattrapait que `IDLE_TIMEOUT` : une coupure franche traversait
+les tentatives et remontait jusqu'à la file, qui marquait la tâche `FAILED`. Un incident
+réseau transitoire devenait donc un échec définitif **avant** que la reprise interne n'ait
+servi à quoi que ce soit.
+
+**Décision.** `SEGMENT_FAILED` est traité comme `IDLE_TIMEOUT` : la plage est rouverte au
+dernier octet écrit, dans la limite des `maxAttempts` du morceau. Ce n'est pas une nouveauté
+de modèle, c'est la même règle appliquée à la même situation vue de la carte. La reprise de
+**tâche** (`retryFailed`, `--reprendre`) reste le filet pour ce qui n'est pas récupérable :
+fichier changé (`RESTART`), divergence (`DIVERGENT`), tentatives épuisées.
+
+**Résultat mesuré après correction** — profil de porte (`--pages 200 --max 200M`, 205,0 Mio) :
+**401/401 tâches `DONE` en une passe**, 0 doublon, 200 empreintes conformes, aucun résidu de
+travail, rapport égal au disque, coupure réellement infligée (**1 105 requêtes**, dont la
+requête coupée reprise à l'octet 16 384) ; **13,9 s** en boucle locale. Profil de test
+(24 pages, 2,1 Mio) : 0,6 s, rejoué par `T-G3`.
+
+**Second défaut, dans le banc cette fois.** Le calcul des octets attendus filtrait les pages
+sur `.html` et oubliait l'index `/` (217 o). La porte a **refusé** de déclarer victoire pour
+217 o sur 7,4 Mio — c'est le comportement attendu d'une mesure, et la raison pour laquelle le
+banc recalcule au lieu de recopier les compteurs du programme.
+
+**Conséquence.** Porte G3 **franchie** (`docs/specs/porte-g3.md`), phase P3 close. La phase
+P4 ne garde qu'un lot bloqué (`WP-30`, comparaison avec IDM : exige la VM Windows).
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
