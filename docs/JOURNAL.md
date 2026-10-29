@@ -1549,6 +1549,74 @@ fichier final complet). `EX-C-12`/`EX-C-13` vertes.
 
 ---
 
+### D-063 — Exactitude et bornes du parcours : `<base href>`, en-têtes, arrêt sur échecs
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/crawler.js`, `bin/xdm-grab.js`, `EX-B-21`, `EX-B-22`, `EX-C-14`
+
+**Contexte.** Trois manques mesurés sur le parcours, chacun d'un genre différent : une règle
+HTML ignorée, une option absente, et une enveloppe qui perdait ce qu'elle croyait envoyer.
+
+1. **`<base href>`** : `extractLinks` résolvait *tous* les liens contre l'URL du document. Une
+   page qui déclare `<base href="/sous/">` voyait donc ses fichiers relatifs résolus au mauvais
+   endroit — 404 en série, ou téléchargement sous une arborescence qui n'existe pas.
+2. **En-têtes personnalisés** : aucune option pour envoyer un jeton (`Authorization`) ni un
+   `Referer` particulier. Un site derrière une clé d'API était hors de portée.
+3. **Site en panne** : six pages à `500` ⇒ six requêtes, sans borne ; le parcours ne s'arrêtait
+   que par épuisement de la file ou plafond de pages.
+
+**Défaut trouvé en branchant le point 2 — et il était réel.** Le `fetchPage` par défaut était
+`(url) => fetchText(url)` : il **ignorait son second argument**. L'enveloppe de cookies
+(`D-062`) croyait donc envoyer la session à chaque page ; elle ne l'envoyait pas — seuls les
+* téléchargements* recevaient le cookie. Le test de `D-062` passait parce qu'il reprenait un
+téléchargement, jamais une page protégée. Corrigé (`fetchText(url, {headers})`), et prouvé par
+`T-C-15` : une page qui exige le cookie posé par l'accueil est servie, et le compteur de refus
+de page reste à zéro.
+
+**Décision.**
+- `documentBase(html, pageUrl)` : **première** balise `<base href>`, résolue contre la page ;
+  base vide, relative invalide ou d'un autre protocole ⇒ on garde l'URL de la page. La balise
+  est retirée avant l'extraction : déclarer une base n'est pas citer un fichier.
+- `--entete « Nom: valeur »` (répétable) : nom validé comme **jeton HTTP**, valeur sans
+  `CR`/`LF`/`NUL` — refus explicite plutôt que nettoyage, parce qu'accepter `\r\n` reviendrait
+  à laisser un script fabriquer des en-têtes que l'utilisateur n'a pas demandés. Les en-têtes
+  du moteur (`Range`, `If-Range`) restent prioritaires.
+- `--arret-erreurs N` : N échecs **consécutifs** arrêtent le parcours (`stopped: 'erreurs'`) ;
+  une page lue remet le compteur à zéro, une file vidée donne `'épuisement'`, un plafond de
+  pages donne `'plafond'`.
+
+**Conséquence.** `T-B-33`, `T-B-34`, `T-C-15`. Mesures : sans garde-fou **7 requêtes** (racine
++ 6 pages à `500`), avec `maxErrors: 3` **4 requêtes** ; un échec isolé au milieu de pages saines
+ne déclenche rien. Sans `--entete`, 2 fichiers refusés en `401` ; avec, 2 téléchargés et 0 page
+refusée.
+
+---
+
+### D-064 — `--essai` : un plan sans effet de bord, et un rapport qui dit pourquoi
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `bin/xdm-grab.js`, `src/report.js`, `EX-B-23`, `EX-B-15`
+
+**Contexte.** Deux angles morts du même problème : on ne savait pas **prévisualiser** une
+aspiration, et une fois lancée, le rapport ne disait pas **pourquoi** un fichier attendu
+manquait. Le rapport décrivait la file (états, échecs, taille), pas le parcours — donc il ne
+pouvait pas répondre à « mon `.zip` n'est pas là : exclu, élagué, bloqué par `robots.txt` ou
+hors profondeur ? ».
+
+**Décision.**
+- `--essai` : parcours + plan, **aucune écriture**. Le dossier cible n'est même pas créé
+  (`mkdir` sauté), `empty.html` n'est pas déposé (`emptyHtml: false`), ni projet ni file, aucun
+  téléchargement. Code de sortie **0** : un essai réussi n'est pas « hors fenêtre » (code 3).
+  Les options qui écrivent (`--rapport`) sont neutralisées et le disent.
+- **Diagnostic d'exploration** : `buildReport` accepte le résultat de `crawl()` et produit
+  `diagnostics` — pages visitées, fichiers retenus, motif d'arrêt, délai, parallélisme, et les
+  **motifs de rejet comptés** (`élagage:…`, `robots.txt`, `hors site`, `hors inclusion`…) avec
+  trois exemples chacun. Il vaut `null` quand il n'y a pas eu de parcours (reprise) : aucun
+  diagnostic n'est inventé.
+
+**Conséquence.** `T-C-16` (dossier absent après coup, `readdir` ⇒ `ENOENT`, zéro requête de
+fichier, JSON consommable) et `T-B-35` (comptage par motif, ordre décroissant, exemples,
+section Markdown, CSV toujours importable avec les motifs en commentaires `#`). `EX-B-23`
+verte, `EX-B-15` étendue.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation

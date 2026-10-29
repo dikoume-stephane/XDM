@@ -144,5 +144,6 @@ elles sont marquées ainsi.
 
 | Date | Changement |
 |---|---|
+| 2026-10-29 | v1.2 : `D-063`/`D-064` — 4 exigences ajoutées (`EX-B-21`→`23`, `EX-C-14`) et `EX-B-15` étendue au diagnostic d'exploration ; **66 exigences, 65 vertes, 0 écart**, 240 tests. Chaque nouvelle ligne cite sa décision, pas un chemin de code |
 | 2026-10-29 | v1.1 : `D-059`→`D-062` — 6 exigences ajoutées (`EX-B-17`→`20`, `EX-C-12`/`13`) avec leur preuve et leur test, dans le format déjà audité ; **62 exigences, 61 vertes, 0 écart**, 233 tests. Aucun écart nouveau : les deux exigences de cookies et de transport citent leur décision, pas un chemin de code |
 | 2026-10-28 | v1.0 : création (`WP-32`) — audit automatique (6 contrôles, lui-même testé), lecture manuelle en 5 questions, 8 écarts assumés, 5 limites déclarées. Résultat mesuré : **56 exigences, 55 vertes, 0 écart de traçabilité**, 212 tests |

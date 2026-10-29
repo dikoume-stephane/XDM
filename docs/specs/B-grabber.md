@@ -1,11 +1,11 @@
 # Fiche B — Grabber (aspiration de site)
 
 > **Domaine** : B (grabber) · **Lot** : `WP-11`/`WP-23` (`A-05`, deuxième fiche) · **Statut** : ✅ `clos`
-> (les 20 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
+> (les 23 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
 > **exploration** : choix XDM documentés depuis `D-041`, l'algorithme d'IDM n'étant pas dans
 > `IDMan.exe`)
-> **Dernière revue** : 2026-10-29 (v0.7 : `robots.txt` RFC 9309 (`D-059`), `Crawl-delay` et élagage
-> (`D-060`), exploration parallèle bornée (`D-061`) — 20 exigences)
+> **Dernière revue** : 2026-10-29 (v0.8 : `<base href>` et arrêt sur échecs consécutifs (`D-063`),
+> essai sans effet de bord et diagnostic du rapport (`D-064`) — 23 exigences)
 > **Preuves** : annexes 11 (modèle de projet), 12 (grabber), 13 (filtres et artefacts) ;
 > `filters.json` ; décisions `D-032`, `D-033`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9`.
@@ -47,6 +47,9 @@ pouvoir reprendre une aspiration interrompue.
 | `EX-B-18` | L'exploration peut être **parallèle et bornée** : au plus `parallelisme` requêtes simultanées, vagues absorbées **dans l'ordre de la file** ; le résultat (pages, entrées retenues, motifs) est identique à celui de l'exploration en série | **Décision** | `D-061` ; `Q-B-05` ; `src/crawler.js` | `T-B-30` ✅ : pic mesuré ≤ 3 et ≥ 2 avec `parallelisme: 3`, sortie identique au série, `RangeError` sous 1 |
 | `EX-B-19` | `Crawl-delay` (extension hors RFC) est traité comme un **conseil borné** : lu pour le groupe applicable, ignoré s'il n'est pas un nombre fini positif, appliqué **entre deux vagues** — jamais avant la première ni après la dernière ; `--delai` explicite l'emporte toujours, `0` l'annule | **Décision** | `D-060` ; `src/crawler.js` (`parseCrawlDelay`) | `T-B-31` ✅ : groupe nommé, valeurs absurdes ignorées, attentes comptées, `--delai` prioritaire |
 | `EX-B-20` | `--exclure` **élague** le parcours : la branche n'est pas demandée et rien de ce qu'elle cite n'entre dans la file ; les exclusions **par défaut** (`*.html`, `*.jpg`…) ne font, elles, que trier les téléchargements — sinon `--inclure` fermerait l'exploration | **Décision** | `D-060` ; `D-032` ; `src/crawler.js` (`prune`) | `T-B-32` ✅ (aucune requête vers la branche), `T-C-14` ✅ (bout en bout, motif conservé dans le projet) |
+| `EX-B-21` | Les liens **relatifs** se résolvent contre la base déclarée par la page (`<base href>`, première balise, base inexploitable ignorée) ; la balise elle-même ne devient jamais un lien à télécharger | **Décision** | `D-063` ; `src/crawler.js` (`documentBase`) | `T-B-33` ✅ : base absolue, relative, vide, `ftp:`, casse et retour à la ligne, fichier retenu **sous la base** |
+| `EX-B-22` | Le parcours **s'arrête** après N pages en échec **consécutif** (`--arret-erreurs`) et le dit (`stopped: 'erreurs'`) ; un échec isolé repart à zéro, une file vidée n'est pas un arrêt sur erreur, le plafond de pages est distingué (`stopped: 'plafond'`) | **Décision** | `D-063` ; `src/crawler.js` (`maxErrors`) | `T-B-34` ✅ : 7 requêtes sans garde-fou, 4 avec `maxErrors: 3`, échec isolé sans effet |
+| `EX-B-23` | `--essai` montre le **plan** — pages visitées, fichiers prévus, cibles, motif d'arrêt — **sans rien écrire** : dossier cible non créé, ni `empty.html`, ni projet, ni file, aucun téléchargement, code de sortie 0 ; `--sortie json` reste consommable | **Décision** | `D-064` ; `bin/xdm-grab.js` | `T-C-16` ✅ : `readdir` en `ENOENT` après coup, zéro requête de fichier, JSON exploitable |
 
 ## 3. Modèle de données
 

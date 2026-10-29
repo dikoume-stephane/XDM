@@ -41,15 +41,23 @@ export function humanDuration(milliseconds) {
 /**
  * Agrège projet et file en un rapport sérialisable.
  *
+ * Le troisième bloc, `diagnostics`, vient du **parcours** et non de la file : il répond à la
+ * question qu'un rapport de téléchargements ne peut pas traiter — « pourquoi ce fichier n'est
+ * il pas là ? » (page bloquée par `robots.txt`, branche élaguée, hors profondeur, hors site).
+ * Il est absent (`null`) quand l'exécution n'a pas parcouru — une reprise n'explore pas.
+ *
  * @param {{project?: object, queue: object, startedAt?: number, finishedAt?: number,
- *   siteMap?: Map<string, string> | Record<string, string>}} input
+ *   siteMap?: Map<string, string> | Record<string, string>, crawl?: object|null}} input
  * @returns {{generatedAt: string, url: string | null, pages: number,
  *   counts: Record<string, number>, total: number, done: number, failed: number,
  *   bytes: {known: number, unknown: number}, errors: {url: string, message: string}[],
  *   slowest: {url: string, attempts: number}[], durationMs: number | null,
- *   progress: number | null, reuses: number, entries: object[]}}
+ *   progress: number | null, reuses: number, entries: object[],
+ *   diagnostics: object|null}}
  */
-export function buildReport({ project = null, queue, startedAt, finishedAt, siteMap = null }) {
+export function buildReport({
+  project = null, queue, startedAt, finishedAt, siteMap = null, crawl = null,
+}) {
   const tasks = Array.isArray(queue?.tasks) ? queue.tasks : [];
   /** @type {Record<string, number>} */
   const counts = { PENDING: 0, ACTIVE: 0, PAUSED: 0, VERIFYING: 0, DONE: 0, FAILED: 0 };
@@ -93,6 +101,7 @@ export function buildReport({ project = null, queue, startedAt, finishedAt, site
     // Un taux sans dénominateur est `null` : il ne se confond pas avec 0 % ni avec 100 %.
     progress: total === 0 ? null : Math.round((done / total) * 1000) / 10,
     reuses: tasks.filter((task) => lookup.has(task.url)).length,
+    diagnostics: summarizeCrawl(crawl),
     entries: tasks.map((task) => ({
       id: task.id,
       url: task.url,
@@ -102,6 +111,42 @@ export function buildReport({ project = null, queue, startedAt, finishedAt, site
       attempts: attemptsOf(task),
       error: task.error ?? null,
     })),
+  };
+}
+
+/**
+ * Synthèse du parcours pour le rapport.
+ *
+ * Les motifs de rejet sont **comptés**, pas listés en vrac : un rapport qui déverse 2 000
+ * liens « hors site » n'apprend rien. On garde les trois premiers exemples par motif, et le
+ * total — de quoi vérifier une hypothèse (« mes fichiers sont tous exclus par `*.zip` »).
+ *
+ * @param {object|null|undefined} crawl résultat de `crawl()` (ou `null` si pas de parcours)
+ * @returns {object|null}
+ */
+export function summarizeCrawl(crawl) {
+  if (!crawl || typeof crawl !== 'object') return null;
+  const skipped = Array.isArray(crawl.skipped) ? crawl.skipped : [];
+  /** @type {Record<string, number>} */
+  const byReason = {};
+  /** @type {Record<string, string[]>} */
+  const examples = {};
+  for (const item of skipped) {
+    const reason = String(item.reason ?? 'inconnu');
+    byReason[reason] = (byReason[reason] ?? 0) + 1;
+    const list = examples[reason] ?? (examples[reason] = []);
+    if (list.length < 3 && typeof item.url === 'string') list.push(item.url);
+  }
+  return {
+    pagesVisited: Number.isInteger(crawl.fetched) ? crawl.fetched : 0,
+    retained: Array.isArray(crawl.retained) ? crawl.retained.length : 0,
+    stopped: crawl.stopped ?? 'épuisement',
+    delay: typeof crawl.delay === 'number' ? crawl.delay : 0,
+    parallelisme: Number.isInteger(crawl.parallelisme) ? crawl.parallelisme : null,
+    robots: crawl.robots ?? null,
+    skipped: Object.fromEntries(Object.entries(byReason).sort(([, a], [, b]) => b - a)),
+    examples,
+    failedPages: Array.isArray(crawl.errors) ? crawl.errors.slice(0, 20) : [],
   };
 }
 
@@ -124,6 +169,16 @@ export function toCsv(report) {
     lines.push([
       entry.id, entry.state, entry.url, entry.target, entry.size, entry.attempts, entry.error,
     ].map(csvField).join(';'));
+  }
+  // Les diagnostics ne sont pas des lignes de tâches : ils sortent en commentaires `#` après
+  // le tableau, ce qui laisse le CSV importable tel quel.
+  if (report.diagnostics) {
+    const reasons = Object.entries(report.diagnostics.skipped);
+    if (reasons.length > 0) {
+      lines.push('');
+      lines.push('# motif;liens');
+      for (const [reason, count] of reasons) lines.push(`# ${csvField(reason)};${count}`);
+    }
   }
   return `${lines.join('\n')}\n`;
 }
@@ -151,6 +206,30 @@ export function toMarkdown(report) {
   lines.push('| État | Nombre |');
   lines.push('|---|---|');
   for (const [state, count] of Object.entries(report.counts)) lines.push(`| ${state} | ${count} |`);
+
+  if (report.diagnostics) {
+    const d = report.diagnostics;
+    lines.push('');
+    lines.push('## Exploration');
+    lines.push('');
+    lines.push(`- **Pages visitées** : ${d.pagesVisited}`);
+    lines.push(`- **Fichiers retenus** : ${d.retained}`);
+    lines.push(`- **Arrêt** : ${d.stopped}`);
+    if (d.delay > 0) lines.push(`- **Délai entre vagues** : ${d.delay} s`);
+    if (d.parallelisme !== null) lines.push(`- **Requêtes simultanées** : ${d.parallelisme}`);
+    const reasons = Object.entries(d.skipped);
+    if (reasons.length === 0) {
+      lines.push('- **Liens écartés** : aucun');
+    } else {
+      lines.push('');
+      lines.push('| Motif de rejet | Liens | Exemple |');
+      lines.push('|---|---|---|');
+      for (const [reason, count] of reasons) {
+        const example = (d.examples[reason] ?? [])[0] ?? '—';
+        lines.push(`| ${reason.replace(/\|/g, '\\|')} | ${count} | \`${example}\` |`);
+      }
+    }
+  }
 
   if (report.errors.length > 0) {
     lines.push('');

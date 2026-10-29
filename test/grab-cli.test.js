@@ -92,6 +92,9 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
     noExclude: false,
     parallelisme: 1,
     delay: null,
+    maxErrors: null,
+    headers: {},
+    dryRun: false,
     report: null,
     window: null,
     quotaBytes: null,
@@ -105,7 +108,8 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
       url: 'http://h/', directory: 'dl', depth: 3, maxPages: 10, connections: 2,
       robots: false, resume: false, output: 'texte',
       rewrite: false, include: [], exclude: [], noExclude: false, parallelisme: 1,
-      delay: null, report: null, window: null,
+      delay: null, maxErrors: null, headers: {}, dryRun: false,
+      report: null, window: null,
       quotaBytes: null, quotaTasks: null, attempts: 1, cookies: null,
     },
   );
@@ -115,7 +119,8 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
       url: 'http://h/', directory: '.', depth: 2, maxPages: 2000, connections: 4,
       robots: true, resume: true, output: 'json',
       rewrite: false, include: [], exclude: [], noExclude: false, parallelisme: 1,
-      delay: null, report: null, window: null,
+      delay: null, maxErrors: null, headers: {}, dryRun: false,
+      report: null, window: null,
       quotaBytes: null, quotaTasks: null, attempts: 1, cookies: null,
     },
   );
@@ -230,7 +235,7 @@ test('T-B-22 : sortie machine — le résumé JSON est le seul contenu de stdout
       );
       const summary = JSON.parse(stdout);
       assert.deepEqual(Object.keys(summary).sort(), [
-        'directory', 'done', 'failed', 'pages', 'report', 'retained', 'rewritten',
+        'directory', 'done', 'dryRun', 'failed', 'pages', 'report', 'retained', 'rewritten',
         'started', 'tasks', 'url',
       ]);
       assert.equal(summary.done, 2);
@@ -250,6 +255,7 @@ test('T-B-22 : sortie machine — le résumé JSON est le seul contenu de stdout
         failed: 1,
         tasks: 2,
         started: true,
+        dryRun: false,
         rewritten: 0,
         report: null,
       });

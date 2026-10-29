@@ -9,6 +9,7 @@ import {
   extractLinks,
   isAllowed,
   canonicalUrl,
+  documentBase,
   parseCrawlDelay,
   parseRobots,
   robotsUrl,
@@ -25,7 +26,9 @@ function site(routes, { robotsText } = {}) {
     }
     const route = routes[url];
     if (route === undefined) return { status: 404, body: '' };
-    return typeof route === 'function' ? route(url) : { status: 200, body: route };
+    if (typeof route === 'function') return route(url);
+    // `{status, body}` permet de simuler une panne ; une chaîne reste une page `200`.
+    return typeof route === 'string' ? { status: 200, body: route } : route;
   };
   return { fetchPage, requests };
 }
@@ -445,4 +448,91 @@ test('T-B-32 : l’élagage coupe la branche, le filtre d’exclusion ne fait qu
     'http://e.example/a.html',
     'http://e.example/f/a.txt',
   ]);
+});
+
+test('T-B-33 : `<base href>` change la résolution des liens relatifs', () => {
+  const page = 'http://b.example/dossier/page.html';
+  assert.equal(documentBase('<base href="/autre/">', page), 'http://b.example/autre/');
+  assert.equal(documentBase('<base href="http://cdn.example/x/">', page), 'http://cdn.example/x/');
+  // Absente, vide, relative ou d'un autre protocole : on retombe sur la page.
+  assert.equal(documentBase('<html></html>', page), page);
+  assert.equal(documentBase('<base href="">', page), page);
+  assert.equal(documentBase('<base href="ftp://h/x/">', page), page);
+  assert.equal(documentBase(`<base href='../'>`, page), 'http://b.example/');
+  // Seule la **première** balise compte, et elle n'a pas besoin d'être écrite sur une ligne.
+  assert.equal(
+    documentBase('<head>\n<BASE\n  HREF="/un/">\n<base href="/deux/"></head>', page),
+    'http://b.example/un/',
+  );
+
+  const html = '<base href="/sous/"><a href="doc.zip">d</a><a href="/abs/autre.zip">a</a>'
+    + '<a href="#ancre">ici</a><img src="img/x.png">';
+  assert.deepEqual(extractLinks(html, page), [
+    'http://b.example/sous/doc.zip',
+    'http://b.example/abs/autre.zip',
+    'http://b.example/sous/img/x.png',
+  ]);
+
+  // Conséquence de parcours : les fichiers sont retenus **sous la base**, pas sous la page.
+  const routes = {
+    'http://b.example/dossier/page.html': '<base href="/sous/"><a href="doc.zip">d</a>',
+    'http://b.example/sous/doc.zip': 'ZIP',
+  };
+  return crawl('http://b.example/dossier/page.html', { depth: 1, robots: false, fetchPage: site(routes).fetchPage })
+    .then((result) => {
+      assert.deepEqual(result.retained.map((entry) => entry.url), ['http://b.example/sous/doc.zip']);
+    });
+});
+
+test('T-B-34 : un site en panne s’arrête après N échecs consécutifs', async () => {
+  // La racine répond, ses six pages renvoient `500` : sans garde-fou, six requêtes inutiles.
+  const links = Array.from({ length: 6 }, (_, i) => `<a href="/p${i}.html">p${i}</a>`).join('');
+  const routes = { 'http://x.example/': links };
+  for (let i = 0; i < 6; i += 1) routes[`http://x.example/p${i}.html`] = { status: 500, body: 'boom' };
+
+  const counted = () => {
+    const requests = [];
+    const { fetchPage } = site(routes);
+    return {
+      requests,
+      fetchPage: async (url) => {
+        requests.push(url);
+        return fetchPage(url);
+      },
+    };
+  };
+
+  const open = counted();
+  const unlimited = await crawl('http://x.example/', {
+    depth: 2, robots: false, parallelisme: 1, fetchPage: open.fetchPage,
+  });
+  assert.equal(open.requests.length, 7, 'sans garde-fou : la racine + les six pages');
+  assert.equal(unlimited.errors.length, 6);
+  assert.equal(unlimited.stopped, 'épuisement', 'une file vidée n’est pas un arrêt sur erreur');
+
+  const guarded = counted();
+  const stopped = await crawl('http://x.example/', {
+    depth: 2, robots: false, parallelisme: 1, maxErrors: 3, fetchPage: guarded.fetchPage,
+  });
+  assert.equal(stopped.stopped, 'erreurs');
+  assert.equal(guarded.requests.length, 4, 'racine + trois échecs, puis plus rien');
+  assert.equal(stopped.consecutiveErrors, 3);
+
+  // Un échec isolé ne déclenche rien : le compteur repart à zéro après une page lue.
+  const mixed = {
+    'http://y.example/': '<a href="/ok.html">o</a><a href="/ko.html">k</a><a href="/ok2.html">o2</a>',
+    'http://y.example/ok.html': 'ok',
+    'http://y.example/ko.html': { status: 404, body: '' },
+    'http://y.example/ok2.html': 'ok',
+  };
+  const survivant = await crawl('http://y.example/', {
+    depth: 2, robots: false, parallelisme: 1, maxErrors: 2, fetchPage: site(mixed).fetchPage,
+  });
+  assert.equal(survivant.stopped, 'épuisement');
+  assert.equal(survivant.pages.length, 4);
+
+  await assert.rejects(
+    () => crawl('http://y.example/', { fetchPage: site(mixed).fetchPage, maxErrors: 0 }),
+    /maxErrors/,
+  );
 });

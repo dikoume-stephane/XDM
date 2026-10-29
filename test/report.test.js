@@ -7,6 +7,7 @@ import {
   formatReport,
   humanBytes,
   humanDuration,
+  summarizeCrawl,
   toCsv,
   toMarkdown,
 } from '../src/report.js';
@@ -122,4 +123,53 @@ test('T-B-27 : formatReport refuse un format inconnu', () => {
   assert.match(formatReport(report, 'csv'), /^id;etat/);
   assert.match(formatReport(report, 'md'), /^# Rapport/);
   assert.throws(() => formatReport(report, 'xls'), /format de rapport inconnu/);
+});
+
+test('T-B-35 : le rapport dit pourquoi un fichier manque (diagnostic d’exploration)', () => {
+  const crawlResult = {
+    fetched: 4,
+    retained: [{ url: 'http://h/a.zip' }, { url: 'http://h/b.zip' }],
+    skipped: [
+      { url: 'http://h/prive/1.html', depth: 2, reason: 'élagage:*/prive/*' },
+      { url: 'http://h/prive/2.html', depth: 2, reason: 'élagage:*/prive/*' },
+      { url: 'http://h/secret.html', depth: 2, reason: 'robots.txt' },
+      { url: 'http://autre/1.zip', depth: 3, reason: 'hors site' },
+    ],
+    errors: [{ url: 'http://h/p.html', status: 500 }],
+    delay: 2,
+    parallelisme: 3,
+    stopped: 'erreurs',
+  };
+  const report = buildReport({ queue: { tasks: [] }, crawl: crawlResult });
+
+  assert.equal(report.diagnostics.pagesVisited, 4);
+  assert.equal(report.diagnostics.retained, 2);
+  assert.equal(report.diagnostics.stopped, 'erreurs');
+  assert.equal(report.diagnostics.delay, 2);
+  assert.equal(report.diagnostics.parallelisme, 3);
+  // Motifs ordonnés par nombre décroissant : le plus fréquent d'abord.
+  assert.deepEqual(Object.entries(report.diagnostics.skipped), [
+    ['élagage:*/prive/*', 2],
+    ['robots.txt', 1],
+    ['hors site', 1],
+  ]);
+  assert.deepEqual(report.diagnostics.examples['élagage:*/prive/*'],
+    ['http://h/prive/1.html', 'http://h/prive/2.html']);
+  assert.equal(report.diagnostics.failedPages.length, 1);
+
+  // Sans parcours (reprise), il n'y a pas de diagnostic inventé.
+  assert.equal(buildReport({ queue: { tasks: [] } }).diagnostics, null);
+  assert.equal(summarizeCrawl(null), null);
+
+  // Markdown : une section « Exploration » avec le tableau des motifs.
+  const markdown = formatReport(report, 'markdown');
+  assert.match(markdown, /## Exploration/);
+  assert.match(markdown, /`élagage:\*\/prive\/\*`|élagage:\*\/prive\/\*/);
+  assert.match(markdown, /\| robots\.txt \| 1 \|/);
+
+  // CSV : le tableau reste importable, les motifs passent en commentaires `#`.
+  const csv = formatReport(report, 'csv');
+  const lines = csv.trimEnd().split('\n');
+  assert.ok(lines[0].startsWith('id;etat;url'), 'entête de tableau inchangée');
+  assert.ok(lines.some((line) => line.startsWith('# élagage')), 'motifs en commentaires');
 });

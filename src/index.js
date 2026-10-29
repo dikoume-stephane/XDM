@@ -133,6 +133,7 @@ export {
   USER_AGENT,
   canonicalUrl,
   classifyLink,
+  documentBase,
   crawl,
   extractLinks,
   isAllowed,
@@ -256,6 +257,7 @@ export {
   formatReport,
   humanBytes,
   humanDuration,
+  summarizeCrawl,
   toCsv,
   toMarkdown,
 } from './report.js';

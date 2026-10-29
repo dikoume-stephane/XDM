@@ -13,10 +13,17 @@
  *  - **dédoublonnage** par URL normalisée (fragment retiré, hôte en minuscules, barre finale
  *    retirée hors racine) ;
  *  - **même origine** par défaut : un lien vers un autre hôte est *signalé*, pas suivi ;
- *  - **`robots.txt`** respecté : règle la plus longue, `Disallow` l'emporte à égalité ;
+ *  - **`robots.txt`** lu selon la RFC 9309 : groupe applicable seul, `*` et `$`, règle la
+ *    plus longue, `Allow` gagne à longueur égale (`D-059`, `EX-B-17`) ;
+ *  - **`Crawl-delay`** borné, appliqué entre deux vagues, `delai` explicite prioritaire
+ *    (`D-060`, `EX-B-19`) ;
+ *  - **élagage** (`prune`) : un motif d'élagage coupe la branche, une exclusion de projet ne
+ *    fait que trier les téléchargements (`D-060`, `EX-B-20`) ;
  *  - filtres d'inclusion/exclusion réutilisés de `project.js` (masques glob) ;
- *  - une seule connexion à la fois : le parcours ne parallélise pas (`EX-B-13`), les
- *    téléchargements qu'il produit, eux, sont multi-connexions (`WP-22`).
+ *  - exploration **parallèle bornée** (`parallelisme`, défaut 1) mais **déterministe** :
+ *    vagues absorbées dans l'ordre de la file (`D-061`, `EX-B-18`) ;
+ *  - **arrêt sur échecs consécutifs** (`maxErrors`) : un site muet ne se fait pas marteler
+ *    (`D-063`, `EX-B-22`).
  *
  * Aucune dépendance : `URL` (stdlib) et `project.js`.
  *
@@ -104,19 +111,56 @@ export function isPageUrl(url) {
 }
 
 /**
+ * Base de résolution des liens d'une page.
+ *
+ * HTML permet à une page de déclarer `<base href="…">` : tous les liens **relatifs** de la
+ * page se résolvent alors contre cette base, pas contre l'URL du document. Ignorer cette
+ * balise fait rater une arborescence entière sur les sites qui l'utilisent (ou pire, la fait
+ * télécharger au mauvais endroit). Seule la **première** balise compte (c'est la règle du
+ * navigateur) et une base inexploitable est ignorée sans erreur.
+ *
+ * @param {string} html
+ * @param {string} pageUrl
+ * @returns {string} base absolue (l'URL de la page si la balise est absente ou invalide)
+ */
+export function documentBase(html, pageUrl) {
+  if (typeof html !== 'string') return pageUrl;
+  const match = /<base\b[^>]*\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>]+))/i.exec(html);
+  if (!match) return pageUrl;
+  const raw = (match[1] ?? match[2] ?? match[3] ?? '').trim();
+  if (raw === '') return pageUrl;
+  try {
+    const resolved = new URL(raw, pageUrl);
+    if (resolved.protocol !== 'http:' && resolved.protocol !== 'https:') return pageUrl;
+    return resolved.href;
+  } catch {
+    return pageUrl;
+  }
+}
+
+/**
  * Extrait les liens d'une page (`href` et `src`), résolus en absolu et dédoublonnés.
+ *
+ * Les URL **fragmentaires** (`#ancre`) restent relatives à la page, jamais à la base : une
+ * ancre ne désigne pas un autre document.
+ *
  * @param {string} html
  * @param {string} pageUrl
  * @returns {string[]}
  */
 export function extractLinks(html, pageUrl) {
   if (typeof html !== 'string' || html.length === 0) return [];
+  const base = documentBase(html, pageUrl);
+  // La balise `<base>` **déclare** la base, elle ne cite pas un fichier : son `href` ne doit
+  // pas devenir un lien à télécharger (sinon chaque page aspirée produirait un faux fichier
+  // qui n'existe pas sur le serveur).
+  const body = html.replace(/<base\b[^>]*>/gi, '');
   const pattern = /(?:href|src)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>]+))/gi;
   const seen = new Set();
   const links = [];
-  for (const match of html.matchAll(pattern)) {
+  for (const match of body.matchAll(pattern)) {
     const raw = match[1] ?? match[2] ?? match[3] ?? '';
-    const normalized = canonicalUrl(raw, pageUrl);
+    const normalized = canonicalUrl(raw, base);
     if (normalized === null || seen.has(normalized)) continue;
     seen.add(normalized);
     links.push(normalized);
@@ -327,6 +371,7 @@ export function robotsUrl(url) {
  * @param {{fetchPage: (url: string) => Promise<{status: number, body: string}>,
  *   depth?: number, maxPages?: number, filters?: {include?: string[], exclude?: string[]},
  *   sameSite?: boolean, robots?: boolean, parallelisme?: number, prune?: string[],
+ *   maxErrors?: number|null,
  *   delai?: number|null, sleep?: (ms: number) => Promise<void>,
  *   onPage?: (page: object) => void}} options
  * @returns {Promise<{start: string, pages: object[], retained: object[], skipped: object[],
@@ -341,6 +386,7 @@ export async function crawl(startUrl, {
   robots = true,
   parallelisme = 1,
   prune = [],
+  maxErrors = null,
   delai = null,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   onPage = () => {},
@@ -356,6 +402,9 @@ export async function crawl(startUrl, {
   }
   if (delai !== null && (!Number.isFinite(delai) || delai < 0)) {
     throw new RangeError('crawl : `delai` ≥ 0 (secondes)');
+  }
+  if (maxErrors !== null && (!Number.isInteger(maxErrors) || maxErrors < 1)) {
+    throw new RangeError('crawl : `maxErrors` ≥ 1 (ou null)');
   }
 
   /** @type {{pattern: string, allow: boolean}[]} */
@@ -390,9 +439,13 @@ export async function crawl(startUrl, {
   /** File FIFO : l'ordre de visite est celui des niveaux (`D-041`). */
   const queue = [{ url: start, depth: 1 }];
 
+  /** Échecs consécutifs (remis à zéro par une page lue) : garde-fou `maxErrors`. */
+  let consecutiveErrors = 0;
+
   /** Absorbe la réponse d'une page : pages, erreurs, liens retenus, file. */
   const absorb = (node, outcome) => {
     if (!outcome.ok) {
+      consecutiveErrors += 1;
       errors.push({
         url: node.url,
         status: 0,
@@ -406,9 +459,11 @@ export async function crawl(startUrl, {
     onPage(page);
 
     if (response.status < 200 || response.status >= 300) {
+      consecutiveErrors += 1;
       errors.push({ url: node.url, status: response.status });
       return;
     }
+    consecutiveErrors = 0;
 
     for (const link of extractLinks(response.body, node.url)) {
       if (sameSite && !sameOrigin(link, start)) {
@@ -439,7 +494,17 @@ export async function crawl(startUrl, {
   /** Première vague : rien n'a encore été demandé, inutile d'attendre avant elle. */
   let waveIndex = 0;
 
+  /** @type {'épuisement'|'plafond'|'erreurs'} */
+  let stopReason = 'épuisement';
+
   while (queue.length > 0 && pages.length < maxPages) {
+    // Arrêt sur échecs consécutifs : au-delà de `maxErrors`, on ne demande plus rien. Un
+    // fichier manquant isolé ne déclenche rien (le compteur repart à zéro) ; un site qui
+    // répond `500` à tout s'arrête au bout de N requêtes au lieu d'être martelé (`D-063`).
+    if (maxErrors !== null && consecutiveErrors >= maxErrors) {
+      stopReason = 'erreurs';
+      break;
+    }
     // Constitution de la vague : robots.txt et dédoublonnage sont décidés ici, en série,
     // pour qu'une URL ne soit jamais demandée deux fois même si deux vagues se chevauchent.
     /** @type {{url: string, depth: number}[]} */
@@ -478,6 +543,10 @@ export async function crawl(startUrl, {
     for (let index = 0; index < wave.length; index += 1) absorb(wave[index], outcomes[index]);
   }
 
+  // Le plafond de pages n'est pas un épuisement de la file : le rapport doit pouvoir dire
+  // **pourquoi** le parcours s'est arrêté, sinon un site tronqué ressemble à un site fini.
+  if (stopReason === 'épuisement' && queue.length > 0) stopReason = 'plafond';
+
   return {
     start,
     pages,
@@ -486,5 +555,7 @@ export async function crawl(startUrl, {
     errors,
     fetched: pages.length,
     delay: effectiveDelay,
+    stopped: stopReason,
+    consecutiveErrors,
   };
 }
