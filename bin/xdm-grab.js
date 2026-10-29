@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * CLI d'aspiration de site — lot `WP-23`.
+ * CLI d'aspiration de site — lots `WP-23` (`D-043`), `WP-24` (`EX-B-14`, `D-053`) et
+ * `WP-25` (`EX-B-15`/`EX-B-16`, `D-054`).
  *
  * `xdm-grab <url> [dossier] [--profondeur N] [--pages N] [--connexions N] [--sans-robots]
  *   [--reprendre] [--inclure MOTIF] [--sans-exclusions] [--reecrire] [--rapport F]

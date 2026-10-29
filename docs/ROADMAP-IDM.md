@@ -104,7 +104,7 @@ décompilateur).
 
 **Prochaine marche (mise à jour du 2026-10-28)** : `WP-20`→`WP-23` sont **clos** et les
 quatre fiches de spécification sont écrites (`A`, `B`, `C`, `D`). Le banc de tests compte
-**207 cas verts**, la matrice de conformité recense **56 exigences** :
+**212 cas verts**, la matrice de conformité recense **56 exigences** :
 **55 vertes** (domaines A, B, C et D clos) et **1 hors périmètre** (RTMP/MMS, `H-18`).
 L'aspiration s'exécute de bout en bout (`bin/xdm-grab.js`, `D-043`), se reprend
 (`--reprendre`, `--sortie json`, `D-044`), réécrit les liens (`--reecrire`, `D-053`),
@@ -158,9 +158,9 @@ produit un rapport (`--rapport`) et respecte une fenêtre de planification sans 
 
 | Lot | Contenu |
 |---|---|
-| WP-30 | Comparaison avec le grabber IDM sur 3 sites témoins (mêmes filtres) : ensembles de fichiers, profondeur, ordre |
-| WP-31 | Tests de résilience : 429/503, redirections en boucle, cookies, formulaires POST, contenus compressés, plages invalides |
-| WP-32 | Revue « clean-room » : chaque exigence remonte à une description de comportement, pas à du code copié |
+| WP-30 | Comparaison avec le grabber IDM sur 3 sites témoins (mêmes filtres) : ensembles de fichiers, profondeur, ordre — ⏳ **bloqué** : exige la VM Windows (`A-09`), aucune comparaison possible sans IDM exécutable |
+| WP-31 | ✅ **Clos** (`D-055`) — 429/503 diagnostiqués (`HTTP_STATUS`, `retryable`, `Retry-After`), reprise bornée **par la file** (`--tentatives`), redirections en boucle, `416`, `gzip`, cookies. **Formulaires POST : hors périmètre** — l'aspirateur n'émet que des `GET` ; c'est écrit, pas oublié |
+| WP-32 | ✅ **Clos** (`D-056`) — `tools/audit-conformance.mjs` (6 contrôles, testé sur un jeu fautif) : 5 écarts réels trouvés et corrigés (domaine B annoncé clos avec 4 lignes « bloqué », `T-B-07` inexistant, `EX-C-08` citant `T-C-08`, trois « preuves » qui étaient des chemins de code, deux modules sans référence) ; `docs/specs/revue-clean-room.md` publie la méthode, le résultat et 8 écarts assumés |
 
 ---
 
@@ -186,7 +186,7 @@ produit un rapport (`--rapport`) et respecte une fenêtre de planification sans 
 | **M4 — Prototype** | Parcours complet sur site local | M3 | Porte G3 |
 | **M3.6 — Domaines A+B** | 32 exigences, 30 vertes, 108 tests | D-041, D-042, D-043, D-044 | ✅ `npm test` |
 | **M3.7 — Domaines C+D** | 20 exigences, 19 vertes, 172 tests | D-045→D-052 | ✅ D 10/10, C 9/10 (1 hors périmètre) |
-| **M3.8 — Grabber complet** | 16 exigences du domaine B, **16 vertes**, 207 tests | D-053, D-054 | ✅ réécriture (ajout XDM), rapport, planification sans démon |
+| **M3.8 — Grabber complet** | 16 exigences du domaine B, **16 vertes**, 212 tests | D-053, D-054 | ✅ réécriture (ajout XDM), rapport, planification sans démon |
 | **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |
 

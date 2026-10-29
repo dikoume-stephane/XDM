@@ -120,7 +120,7 @@ test('T-B-08 : parcours en largeur, profondeur = niveaux visités', () => {
   });
 });
 
-test('T-B-08 (suite) : profondeur 1 = page de départ seule', async () => {
+test('T-B-07 : profondeur 1 = page de départ seule, `DEFAULT_DEPTH` = 2', async () => {
   const routes = { 'http://s.example/': '<a href="/x.html">x</a>' };
   const { fetchPage, requests } = site(routes);
   const result = await crawl('http://s.example/', { fetchPage, depth: 1, robots: false });

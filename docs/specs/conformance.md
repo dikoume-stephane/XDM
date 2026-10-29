@@ -1,6 +1,8 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.7 — **Dernière revue** : 2026-10-28
+> **Statut** : ✅ v1.8 — **Dernière revue** : 2026-10-28
+> **Vérification** : `node tools/audit-conformance.mjs --strict` (6 contrôles) — la matrice
+> est auditée, pas seulement rédigée : voir `revue-clean-room.md`.
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
 > fonde et le **test** qui la vérifiera. Aucune ligne d'implémentation ne référence une
 > exigence absente de ce fichier.
@@ -57,16 +59,16 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 | `EX-B-04` identifiants à partir de 100 | Observé + Décision | annexe 13 §2 ter ; `D-033` | `T-B-04` | **vert** |
 | `EX-B-05` motif = masque glob | Observé | annexe 13 §4 bis | `T-B-05` | **vert** |
 | `EX-B-06` champs d'une entrée | Observé | annexe 12 §2 | `T-B-06` | **vert** |
-| `EX-B-07` profondeur paramétrable (`nLevels`) | Observé / Hypothèse | annexe 13 §4 bis | `T-B-07` | à faire |
-| `EX-B-08` exploration HTML → liens → classement | **Hypothèse** | — (`H-05`) | `T-B-08` | **bloqué** (`Q-B-01`) |
-| `EX-B-09` dédoublonnage des URL | **Hypothèse** | — | `T-B-09` | **bloqué** |
+| `EX-B-07` profondeur paramétrable (`nLevels`) | Observé + Décision | annexe 13 §4 bis ; `D-041` | `T-B-07` | **vert** (profondeur 1, 2 et arrêt aux niveaux) |
+| `EX-B-08` exploration HTML → liens → classement | **Décision** (`D-041`, `H-05` levée) | `Q-B-01` ; `src/crawler.js` | `T-B-08` | **vert** |
+| `EX-B-09` dédoublonnage des URL | **Décision** (`D-041`) | `Q-B-01` ; `canonicalUrl` | `T-B-09` | **vert** |
 | `EX-B-10` entrée = tâche de téléchargement | Observé | annexe 12 §1 ; `D-042`, `D-043` | `T-B-10` | **vert** |
 | `EX-B-11` arborescence locale | Observé + Décision | annexe 12 §2 ; `D-042` | `T-B-11` | **vert** |
 | `EX-B-12` `empty.html` | Observé + Décision | annexe 13 §4 (`0xd1ed0`) ; `D-042` | `T-B-12` | **vert** |
-| `EX-B-13` pas de sortie de domaine | **Hypothèse** | — | `T-B-13` | **bloqué** |
-| `EX-B-14` réécriture des liens vers les chemins locaux | **Décision** (`D-053`, sans précédent) | `Q-B-01` ; `src/rewrite.js` | `T-B-26` | **vert** |
-| `EX-B-15` rapport texte/JSON/CSV/Markdown, sans valeur inventée | **Décision** (`D-053`) | `src/report.js` | `T-B-27` | **vert** |
-| `EX-B-16` planification recalculée : fenêtres, quotas, ni démon ni cron | **Décision** (`D-054`) | `src/schedule.js` | `T-B-28` | **vert** |
+| `EX-B-13` pas de sortie de domaine | **Décision** (`D-041`) | annexe 12 §6 ; `src/crawler.js` | `T-B-13` | **vert** |
+| `EX-B-14` réécriture des liens vers les chemins locaux | **Décision** (`D-053`, sans précédent) | `D-053` ; `Q-B-01` | `T-B-26` | **vert** |
+| `EX-B-15` rapport texte/JSON/CSV/Markdown, sans valeur inventée | **Décision** (`D-053`) | `D-053` ; `src/report.js` | `T-B-27` | **vert** |
+| `EX-B-16` planification recalculée : fenêtres, quotas, ni démon ni cron | **Décision** (`D-054`) | `D-054` ; `src/schedule.js` | `T-B-28` | **vert** |
 
 **Couverture** : 16 exigences, **16 vertes** (`npm test`, 196 cas) — domaine B **clos**.
 `Q-B-01` est close comme non instruite dans ce module (annexe 12 §6) : l'exploration et
@@ -100,10 +102,10 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | `EX-C-05` `gzip, deflate` hors morceaux | Observé | `0x6b26bc` | `T-C-05` | **vert** (décompression gzip/deflate/br) |
 | `EX-C-06` séquence FTP `CWD`→`TYPE I`→`SIZE`→`REST`→`RETR` | Observé | annexe 15 §2.3 | `T-C-06` | **vert** (`src/ftp.js`) |
 | `EX-C-07` refus de `PASV` = échec explicite | Observé | annexe 15 §2.3 | `T-C-07` | **vert** (`PASV_UNSUPPORTED`) |
-| `EX-C-08` RTMP/RTMPT/MMS hors grabber | Observé + `H-18` | annexe 15 §2.4 | `T-C-08` | ⛔ **hors périmètre** (`H-18` : enregistrement de flux) |
+| `EX-C-08` RTMP/RTMPT/MMS hors grabber | Observé + `H-18` | annexe 15 §2.4 | — | ⛔ **hors périmètre** (`H-18` : enregistrement de flux) |
 | `EX-C-09` proxys HTTP/HTTPS/FTP/SOCKS + PAC | Observé | annexe 15 §2.5 | `T-C-09` | **vert** (`src/proxy.js`, `src/pac.js` ; FTP par tunnel) |
 | `EX-C-10` authentification proxy Basic/Digest | Observé | annexe 15 §2.5 | `T-C-10` | **vert** (Basic + Digest `qop=auth`) |
-| `EX-C-11` statuts transitoires : diagnostic explicite (`HTTP_STATUS`, `retryable`, `Retry-After`), pas de reprise silencieuse | **Décision** (`D-055`) | `src/retry.js`, `src/http-client.js` | `T-C-11` | **vert** (reprise par la file, `--tentatives`, `Retry-After` respecté) |
+| `EX-C-11` statuts transitoires : diagnostic explicite (`HTTP_STATUS`, `retryable`, `Retry-After`), pas de reprise silencieuse | **Décision** (`D-055`) | `D-055` ; `src/retry.js` | `T-C-11` | **vert** (reprise par la file, `--tentatives`, `Retry-After` respecté) |
 
 **Couverture : 10 vertes / 11, 1 hors périmètre** (`D-047`→`D-052`, `D-055`) :
 - **vertes** : `EX-C-01` (HTTP/1.1 seul), `EX-C-02` (en-têtes), `EX-C-03` (`If-Range` de la
@@ -126,9 +128,9 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | `EX-D-05` `EXT-X-BYTERANGE` | Observé | `0x6b27f8` | `T-D-05` | **vert** (plages explicites et implicites) |
 | `EX-D-06` `EXT-X-KEY` sans déchiffrement | Observé + `D-004` | `0x6b2828` | `T-D-06` | **vert** (`encrypted: true`, octets intacts) |
 | `EX-D-07` direct (`MEDIA-SEQUENCE`) | Observé + Dérivé | `0x6b284c` | `T-D-07` | **vert** (analyse ; suivi continu non implémenté) |
-| `EX-D-08` DASH par `sidx`, pas de `MPD` | Observé + `H-19` | `CMp4DashReader`, `CSidxParser` | `T-D-08` | **vert** (`src/dash.js` : plages de l'index, init, refus sans index) |
+| `EX-D-08` DASH par `sidx`, pas de `MPD` | Observé + `H-19` | `CMp4DashReader`, `CSidxParser` (`0x2b5aa8`) | `T-D-08` | **vert** (`src/dash.js` : plages de l'index, init, refus sans index) |
 | `EX-D-09` `DISCONTINUITY` | Dérivé | `0x6b2798` | `T-D-09` | **vert** (frontière signalée) |
-| `EX-D-10` aucun DRM | Décision `D-004` | — | `T-D-10` | **vert** (décision écrite et testée) |
+| `EX-D-10` aucun DRM | Décision | `D-004` ; annexe 15 §3 | `T-D-10` | **vert** (décision écrite et testée) |
 
 **Couverture : 10 / 10** — `src/hls.js`, `src/media.js` et `bin/xdm-media.js` (`D-046`)
 pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**.
@@ -172,6 +174,7 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v1.8 : `D-056` — la matrice est **auditée** (`tools/audit-conformance.mjs`) : 5 écarts réels corrigés (domaine B clos avec 4 lignes « bloqué », `T-B-07` inexistant, `EX-C-08` citant `T-C-08`, 3 preuves qui étaient des chemins de code, 2 modules sans référence) ; `EX-B-15`/`16`, `EX-C-11`, `EX-D-10` citent désormais leur décision ; 212 tests, total **55 vertes / 56** |
 | 2026-10-28 | v1.7 : `D-055` — `429`/`503` sortent en `HTTP_STATUS` (statut, `retryable`, `Retry-After`) au lieu d'une « taille inconnue » ; `EX-C-11` verte ; 207 tests, total **55 vertes / 56** |
 | 2026-10-28 | v1.6 : `D-053` (réécriture, **sans précédent** dans la cible) et `D-054` (planification sans démon) — `EX-B-14`→`EX-B-16` vertes, domaine B **16/16** ; 196 tests, total **54 vertes / 55** |
 | 2026-10-28 | v1.5 : `D-052` — Digest, FTP par tunnel, PAC ; domaine C **9/10** (1 hors périmètre) ; 172 tests, total **51 vertes / 52** |

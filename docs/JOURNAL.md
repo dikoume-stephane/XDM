@@ -1320,6 +1320,38 @@ un `503` permanent avec `maxAttempts: 2` ⇒ exactement 2 requêtes.
 
 ---
 
+### D-056 — La traçabilité est **vérifiée**, pas racontée
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `WP-32` (clos)
+
+**Contexte.** Le projet revendique, depuis le début, que chaque exigence remonte à une
+preuve et que chaque exigence verte possède un test. Cette revendication était **rédigée à la
+main** dans trois documents (`conformance.md`, `MEMOIRE.md`, `ROADMAP-IDM.md`) : rien ne
+signalait une ligne périmée.
+
+**Décision.** `tools/audit-conformance.mjs` (6 contrôles, 0 dépendance) mesure la chaîne :
+preuve citable, test cité **existant**, module citant une exigence/décision/annexe, absence
+d'exigence fantôme, totaux de section égaux à leurs propres lignes, hypothèse jamais verte.
+`test/audit.test.js` le rejoue sur la matrice réelle **et** sur un jeu volontairement fautif :
+un audit qui ne trouve rien n'est pas un audit.
+
+**Ce que l'audit a trouvé au premier passage** (et qui n'était pas cosmétique) :
+1. le domaine B était annoncé **clos (16/16)** alors que **quatre lignes** (`EX-B-07`→`13`)
+   disaient encore « bloqué » ou « à faire » — un chiffre faux dans le document qui fait foi ;
+2. `T-B-07` **n'existait pas** : le test de profondeur portait le numéro de son voisin
+   (`T-B-08 (suite)`), donc `EX-B-07` était verte sans test ;
+3. `EX-C-08` (RTMP/MMS, hors périmètre) citait `T-C-08`, qui n'a jamais existé ;
+4. `EX-B-15`, `EX-B-16` et `EX-C-11` citaient un **chemin de code** dans la colonne
+   « preuve » : une décision confondue avec un fichier ;
+5. `src/report.js` et `bin/xdm-grab.js` ne citaient **aucune** exigence — deux modules dont
+   la justification ne vivait que dans une conversation.
+
+**Conséquence.** `docs/specs/revue-clean-room.md` (v1.0) publie la méthode, le résultat
+mesuré (**56 exigences, 55 vertes, 0 écart**) et — surtout — ce que l'audit **ne peut pas**
+prouver (l'absence de copie), traité séparément en cinq questions de lecture manuelle, et
+huit écarts assumés listés exhaustivement.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation

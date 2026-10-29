@@ -11,7 +11,8 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 207 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 212 tests, sans dépendance (node --test)
+npm run audit                      # traçabilité : chaque exigence verte a un test qui existe
 node bin/xdm.js <url> [dossier]    # téléchargement réel : plages, reprise, promotion
 node bin/xdm-grab.js <url> [dir]   # aspiration de site : parcours, arborescence, file
 node bin/xdm-grab.js <url> [dir] --reprendre --sortie json   # reprise + résumé machine
@@ -132,7 +133,7 @@ tools/                     collecte de preuves, triage, extractions
   17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
 - ✅ WP-20 → WP-27 terminés : moteur de morceaux, boucle de connexions, aspiration de site
   et CLI (`bin/xdm.js`, `bin/xdm-grab.js`), transports (proxys, FTP, PAC), médias (HLS,
-  DASH) ; **207 tests**, domaines A, B, C et D clos (**55 exigences vertes sur 56**).
+  DASH) ; **212 tests**, domaines A, B, C et D clos (**55 exigences vertes sur 56**).
 - ✅ WP-24/WP-25 : réécriture des liens (`--reecrire`, `D-053`, ajout XDM assumé), rapport
   d'aspiration (texte/JSON/CSV/Markdown, `--rapport`) et planification sans démon
   (`--planifier`, `--quota-octets`, `--quota-taches`, `D-054`).

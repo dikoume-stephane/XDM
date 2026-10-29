@@ -1,5 +1,5 @@
 /**
- * Statistiques et rapport d'une aspiration — lot `WP-25`.
+ * Statistiques et rapport d'une aspiration — lot `WP-25`, exigence `EX-B-15` (`D-053`).
  *
  * Le rapport répond à trois questions, dans cet ordre : **qu'a-t-on voulu**, **qu'a-t-on
  * obtenu**, **qu'a-t-on raté**. Il se calcule à partir du projet (les entrées) et de la
