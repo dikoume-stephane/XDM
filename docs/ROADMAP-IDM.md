@@ -132,9 +132,9 @@ produit un rapport (`--rapport`) et respecte une fenêtre de planification sans 
 
 | Lot | Contenu | Sortie |
 |---|---|---|
-| WP-10 | Fiches de spécification par domaine (format imposé : but, entrées, états, erreurs, preuves, questions ouvertes) — **2 fiches ouvertes** : domaine A (moteur) et domaine B (grabber), `A-05` | `docs/specs/` (`A-moteur-de-telechargement.md`, `B-grabber.md`) |
+| WP-10 | ✅ **Clos** — **4 fiches** (A moteur, B grabber, C transports, D médias), format imposé respecté ; **84 exigences** dont 83 vertes et 1 hors périmètre | `docs/specs/` (`A-…`, `B-…`, annexe 15 pour C et D) |
 | WP-11 | ✅ **Clos** (`D-041`) — persistance résolue (`.gsd` + registre), **filtres entièrement décrits** (`A-10` → `D-032`/`D-033`), page de remplacement `empty.html`, **carte des réglages** (`grabber.json` : 10 champs, `nLevels` en `+0xb8`). Le **moteur d'exploration n'est pas dans `IDMan.exe`** (0 référence code aux conteneurs) ⇒ l'exploration est un **choix XDM** (BFS par niveau, défaut 2, `robots.txt` respecté) **implémenté et testé** (`src/crawler.js`, `T-B-07`→`T-B-09`, `T-B-13`) ; arborescence locale, `empty.html` et promotion en tâches ordinaires livrés (`src/grabber.js`, `D-042`) — **13/13 exigences vertes** | `analysis/idman/11-…` + `12-…` §6 + `grabber.json` |
-| WP-12 | ✅ **Clos** — matrice de conformité : 32 exigences, **30 vertes**, 2 bloquées (`A-05` fiches C–F, `A-09` VM) | `docs/specs/conformance.md` (v1.0) |
+| WP-12 | ✅ **Clos** — matrice de conformité : 84 exigences, **83 vertes**, 1 hors périmètre (`A-05` clos, `A-09` VM reste sans objet pour la matrice) | `docs/specs/conformance.md` (v1.0) |
 
 ---
 
@@ -146,8 +146,8 @@ produit un rapport (`--rapport`) et respecte une fenêtre de planification sans 
 | WP-21 | ✅ **Clos** — client HTTP écrit et testé (`src/http-client.js`, `D-038`) : sonde `bytes=0-0`, repli à une connexion sans `206`, redirections ≤ 10 et URL ≤ 10 239 o, `Accept-Encoding: identity`, `If-Range`, inactivité 30 s ⇒ `IDLE_TIMEOUT` + offset de reprise ; boucle de connexions et détection de divergence (`D-039`). **19/19 exigences du domaine A au vert** | 2 |
 | WP-22 | ✅ **Clos** — assemblage (`D-040`) : carte persistée à chaque morceau clos, reprise `mergeResumeChunks` (`A-21`), promotion explicite vérifiée, CLI `bin/xdm.js` | 3 |
 | WP-23 | ✅ **Clos** (`D-041`→`D-043`) — grabber : exploration et extraction de liens (`src/crawler.js`), filtres, arborescence locale (`src/grabber.js`), **exécution** (`src/grab-runner.js`) et CLI `bin/xdm-grab.js` | 4 |
-| WP-24 | Téléchargement d'arborescence : mapping URL→chemin, réécriture optionnelle des liens, déduplication | 5 |
-| WP-25 | Planification, statistiques, export de rapport | 6 |
+| WP-24 | ✅ **Clos** (`D-053`) — arborescence locale, réécriture optionnelle des liens (`--reecrire`), déduplication ; ajout XDM assumé (aucun parseur HTML dans la cible) | 5 |
+| WP-25 | ✅ **Clos** (`D-054`) — planification recalculée (`--planifier`, quotas octets/tâches), statistiques et export (texte/JSON/CSV/Markdown/HTML) | 6 |
 | WP-27 | ✅ **Clos** (`D-047`→`D-052`) — cookies, `If-Range`, en-têtes et compression, FTP passif, proxys HTTP/HTTPS/SOCKS5/FTP, Digest, PAC. `EX-C-08` (RTMP/MMS) hors périmètre (`H-18`) | 7 bis |
 | WP-26 | ✅ **Clos** (`D-046`, `D-048`) — HLS (`src/hls.js`, `src/media.js`) et DASH par `sidx` (`src/sidx.js`, `src/dash.js`), CLI `bin/xdm-media.js` (`--dash`) : **domaine D 10/10** | 7 |
 
@@ -172,6 +172,12 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | WP-30 | Comparaison avec le grabber IDM sur 3 sites témoins (mêmes filtres) : ensembles de fichiers, profondeur, ordre — ⏳ **bloqué** : exige la VM Windows (`A-09`), aucune comparaison possible sans IDM exécutable |
 | WP-31 | ✅ **Clos** (`D-055`) — 429/503 diagnostiqués (`HTTP_STATUS`, `retryable`, `Retry-After`), reprise bornée **par la file** (`--tentatives`), redirections en boucle, `416`, `gzip`, cookies. **Formulaires POST : hors périmètre** — l'aspirateur n'émet que des `GET` ; c'est écrit, pas oublié |
 | WP-32 | ✅ **Clos** (`D-056`) — `tools/audit-conformance.mjs` (6 contrôles, testé sur un jeu fautif) : 5 écarts réels trouvés et corrigés (domaine B annoncé clos avec 4 lignes « bloqué », `T-B-07` inexistant, `EX-C-08` citant `T-C-08`, trois « preuves » qui étaient des chemins de code, deux modules sans référence) ; `docs/specs/revue-clean-room.md` publie la méthode, le résultat et 8 écarts assumés |
+| WP-43 | ✅ **Clos** (`D-069`) — en-têtes personnalisés : validation unique (`parseHeaderOption`), deux CLI, sonde **et** plages (`EX-B-33`) |
+| WP-44 | ✅ **Clos** (`D-070`) — aspiration incrémentale (`--incremental`, `304`), crédit d'essais cumulés, progression, audit JSON (`EX-B-34`→`36`) |
+| WP-45 | ✅ **Clos** (`D-071`) — reprise de fichier par défaut mesurée, `--sans-reprise`, carte d'une autre URL refusée (`EX-A-20`) |
+| WP-46 | ✅ **Clos** (`D-072`) — nom par `Content-Disposition` et `--nom` (`EX-A-21`) |
+| WP-47 | ✅ **Clos** (`D-073`) — `xdm --sortie json` : un objet sur stdout, le reste sur stderr (`EX-A-22`) |
+| WP-48 | ✅ **Clos** (`D-074`) — `--proxy` appliqué au HTTP, rapport de vérification (`EX-A-23`, `EX-B-37`) |
 
 ---
 
@@ -182,12 +188,6 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | WP-40 | VM Windows 10 isolée + IDM installé, **usage conforme à la licence** ; captures Process Monitor/Frida des seules actions du grabber |
 | WP-41 | Validation des hypothèses ouvertes `H-01..H-12` (protocole de capture de liens, formats de projet, cache) |
 | WP-42 | Mesures de performance pour calibrer nos seuils (connexions/serveur, tailles de tampon) |
-| WP-43 | En-têtes personnalisés `--entete` : validation unique (`parseHeaderOption`), deux CLI, sonde **et** plages (`D-069`) |
-| WP-44 | Aspiration incrémentale (`--incremental`, `304`), crédit d'essais cumulés, progression et audit JSON (`D-070`) |
-| WP-45 | Reprise de fichier : défaut mesuré, `--sans-reprise`, carte d'une autre URL refusée (`D-071`) |
-| WP-46 | Nom de fichier par `Content-Disposition` et `--nom` (`D-072`) |
-| WP-47 | `xdm --sortie json` : un objet sur stdout, le reste sur stderr (`D-073`) |
-| WP-48 | `--proxy` appliqué au transfert HTTP et rapport de vérification (`D-074`) |
 
 **Porte G5** : toutes les hypothèses P0 tranchées, ou explicitement abandonnées.
 
