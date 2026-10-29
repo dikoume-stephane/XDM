@@ -5,11 +5,14 @@ import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
 import { USAGE, filtersOf, main, outputFormat, parseArgs, summarize } from '../bin/xdm-grab.js';
+
+/** Chemin du vrai binaire : les codes de sortie ne s'observent pas depuis `main()`. */
+const CLI = fileURLToPath(new URL('../bin/xdm-grab.js', import.meta.url));
 import { createProject, addFilter, loadProject, loadQueue } from '../src/index.js';
 import { EMPTY_HTML, EMPTY_HTML_NAME } from '../src/grabber.js';
 
@@ -504,4 +507,59 @@ test('T-C-14 : `--exclure` retire une page du parcours et ses fichiers de la fil
       });
     }
   });
+});
+
+test('T-B-51 : le code de sortie dit qu’une tâche a échoué, au lieu de « 0 »', async () => {
+  const run = (args) => new Promise((resolve) => {
+    const child = spawn(process.execPath, [CLI, ...args], { stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => { stdout += chunk; });
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    child.on('exit', (code) => resolve({ code, stdout, stderr }));
+  });
+
+  // Un fichier en 404 : la tâche finit `FAILED`, et le script appelant doit le savoir.
+  const server = http.createServer((req, res) => {
+    const path = new URL(req.url, 'http://h').pathname;
+    if (path === '/') {
+      const body = Buffer.from('<a href="/bon.txt">a</a><a href="/casse.bin">b</a>');
+      res.writeHead(200, { 'content-type': 'text/html', 'content-length': String(body.length) });
+      res.end(body);
+      return;
+    }
+    if (path === '/bon.txt') {
+      res.writeHead(200, { 'content-length': '2' });
+      res.end('ok');
+      return;
+    }
+    res.writeHead(404, { 'content-length': '0' });
+    res.end();
+  });
+  await new Promise((done) => server.listen(0, '127.0.0.1', done));
+  const { port } = server.address();
+  const dir = await mkdtemp(join(tmpdir(), 'xdm-code-'));
+  try {
+    const enEchec = await run([`http://127.0.0.1:${port}/`, dir]);
+    assert.equal(enEchec.code, 1, `attendu 1, reçu ${enEchec.code} (${enEchec.stderr})`);
+    assert.match(enEchec.stderr, /1 tâche\(s\) en échec/);
+
+    // Le rapport de vérification suit : il nomme la tâche, et sort en 1.
+    const verif = await run([`http://127.0.0.1:${port}/`, dir, '--verifier']);
+    assert.equal(verif.code, 1);
+    assert.match(verif.stdout, /ÉCHEC\s+casse\.bin/);
+
+    // Sans échec, le succès reste un succès (aucune régression de code de sortie).
+    const dir2 = await mkdtemp(join(tmpdir(), 'xdm-code-ok-'));
+    try {
+      const ok = await run([`http://127.0.0.1:${port}/`, dir2, '--inclure', '*.txt']);
+      assert.equal(ok.code, 0, ok.stderr);
+    } finally {
+      await rm(dir2, { recursive: true, force: true });
+    }
+  } finally {
+    server.closeAllConnections?.();
+    await new Promise((done) => server.close(done));
+    await rm(dir, { recursive: true, force: true });
+  }
 });

@@ -11,7 +11,7 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 281 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 286 tests, sans dépendance (node --test)
 npm run audit                      # traçabilité : chaque exigence verte a un test qui existe
 npm run gate                       # porte G3 : site local + coupure réseau, comparaison disque/serveur
 npm run gate -- --pages 200 --max 200M   # profil de la porte : 200 pages, jusqu'à 200 Mo
@@ -150,13 +150,18 @@ tools/                     collecte de preuves, triage, extractions
   17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
 - ✅ WP-20 → WP-27 terminés : moteur de morceaux, boucle de connexions, aspiration de site
   et CLI (`bin/xdm.js`, `bin/xdm-grab.js`), transports (proxys, FTP, PAC), médias (HLS,
-  DASH) ; **281 tests**, domaines A, B et D clos, domaine C à **14/15** (1 hors périmètre),
-  soit **87 exigences vertes sur 88** ; porte G3 franchie (200 pages, 205 Mio, coupure
+  DASH) ; **286 tests**, domaines A, B et D clos, domaine C à **14/15** (1 hors périmètre),
+  soit **91 exigences vertes sur 92** ; porte G3 franchie (200 pages, 205 Mio, coupure
   réseau absorbée).
 - ✅ WP-43/WP-44 : en-têtes personnalisés (`--entete`, validation unique partagée par les
   deux CLI, envoyés à la sonde **et** à chaque plage) et aspiration incrémentale
   (`--incremental`, `304` = fichier intact ; `--tentatives-total`, `--progression`) —
   `D-069`, `D-070`.
+- ✅ WP-50 : les CLI disent leurs bornes, leurs codes et leur aide — refus de
+  `--connexions` hors 1–128 et de `--morceau` hors 1–10 Mio (avec avertissement au-delà de
+  500 morceaux), code de sortie 1 dès qu'une tâche échoue, `--verifier` qui distingue
+  `FAILED` de `PENDING`, `--aide`/`--version` sur les trois CLI, compte de cookies juste —
+  `D-079`→`D-083`. **Guide de test** : [`docs/GUIDE-TEST.md`](docs/GUIDE-TEST.md).
 - ✅ WP-49 : l'authentification ne s'arrête plus au milieu d'un flux — `xdm-media` accepte
   `--entete`, `--cookies` et `--proxy` sur un **seul** transport (playlist, init et chaque
   segment), `xdm` sait persister un magasin de cookies, les trois CLI refusent un argument

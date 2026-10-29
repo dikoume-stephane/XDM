@@ -1,13 +1,13 @@
 # Fiche B — Grabber (aspiration de site)
 
 > **Domaine** : B (grabber) · **Lot** : `WP-11`/`WP-23` (`A-05`, deuxième fiche) · **Statut** : ✅ `clos`
-> (les 38 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
+> (les 41 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
 > **exploration** : choix XDM documentés depuis `D-041`, l'algorithme d'IDM n'étant pas dans
 > `IDMan.exe`)
-> **Dernière revue** : 2026-10-29 (v0.13 : `absent` publié dans le JSON de vérification
-> (`D-078`) ; v0.12 : en-têtes personnalisés (`D-069`), aspiration incrémentale (`D-070`),
-> `--sans-reprise` (`D-071`), nom par `Content-Disposition` (`D-072`), `--sortie json`
-> (`D-073`), proxy et rapport de vérification (`D-074`) — 38 exigences)
+> **Dernière revue** : 2026-10-29 (v0.14 : code de sortie d'une aspiration (`D-080`),
+> conformité de vérification (`D-081`), `--aide`/`--version` sur les trois CLI (`D-082`),
+> compte de cookies annoncé (`D-083`) — 41 exigences ; v0.13 : `absent` dans le JSON de
+> vérification (`D-078`))
 > **Preuves** : annexes 11 (modèle de projet), 12 (grabber), 13 (filtres et artefacts) ;
 > `filters.json` ; décisions `D-032`, `D-033`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9`.
@@ -56,7 +56,7 @@ pouvoir reprendre une aspiration interrompue.
 | `EX-B-25` | `--sous-domaines` élargit le parcours au **même site** — même hôte, sous-domaine, ou même parent d'au moins deux labels — et **jamais** à un tiers ; désactivé par défaut, limite « pas de *Public Suffix List* » nommée | **Décision** | `D-065` ; `src/crawler.js` (`sameSiteHost`) | `T-B-36` ✅ (`a.`/`b.` du même parent acceptés, `evil-example.test` et `example.test.autre.test` refusés), `T-C-19` ✅ |
 | `EX-B-26` | `--tentatives` couvre **aussi l'exploration** : mêmes statuts transitoires, même `Retry-After`, même plafond que les téléchargements (`D-055`) ; reprises comptées (`retries`) ; sans reprise, le statut est remonté tel quel | **Décision** | `D-065` ; `src/retry.js`, `src/crawler.js` | `T-B-38` ✅ (503 puis 200, une reprise, `Retry-After: 2` respecté), `T-C-19` ✅ |
 | `EX-B-27` | **Interruption propre** : première interruption = arrêt coopératif (aucune nouvelle vague ni tâche, les travaux en vol finissent, projet/file/cookies sauvegardés, code **130**) ; seconde = sortie immédiate ; aucune tâche ne reste `ACTIVE` | **Décision** | `D-066` ; `src/grab-runner.js` (`shouldStop`), `bin/xdm-grab.js` | `T-B-39` ✅ (arrêt entre deux vagues), `T-C-20` ✅ (vrai SIGINT : code 130, file sans `ACTIVE`) |
-| `EX-B-28` | `--aide`/`-h` et `--version`/`-V` répondent **sans URL** et sortent en code **0**, pour les deux CLI, sans effet de bord | **Décision** | `D-066` ; `bin/xdm-grab.js`, `bin/xdm.js` | `T-C-21` ✅ |
+| `EX-B-28` | `--aide`/`-h` et `--version`/`-V` répondent **sans URL** et sortent en code **0**, pour les **trois** CLI (`xdm`, `xdm-grab`, `xdm-media`), sans effet de bord | **Décision** | `D-066`, `D-082` ; `src/version.js`, `bin/xdm-grab.js`, `bin/xdm.js`, `bin/xdm-media.js` | `T-C-21` ✅ |
 | `EX-B-29` | Un arrêt **brutal** (SIGKILL, coupure de courant) laisse des tâches `ACTIVE`/`VERIFYING` ; `--reprendre` les **relève** par les transitions déjà autorisées (`ACTIVE → PAUSED → PENDING`, `VERIFYING → FAILED → PENDING`), annonce combien, et remet `startedAt` à `null` | **Décision** | `D-067` ; `src/grab-runner.js` (`recoverOrphans`) | `T-B-40` ✅ : deux orphelines relevées puis exécutées, file saine non touchée |
 | `EX-B-30` | `--taille-max` refuse un fichier trop gros **après la sonde et avant tout octet écrit** (`TOO_LARGE` avec taille et plafond) ; les tailles se lisent en unités **binaires** (`K` = 1 024) et une unité inconnue est refusée, pas interprétée | **Décision** | `D-067` ; `src/size.js`, `src/connection-loop.js` | `T-B-41` ✅ : refus sans fichier partiel, téléchargement normal sous le plafond, `--taille-max 2K` met la tâche en échec avec la raison |
 | `EX-B-31` | Avant la première connexion, l'**espace disque** est vérifié (`statfs`, `bavail × bsize`), avec réserve (défaut 64 Mio, bornée à la moitié du volume) ; le refus annonce les octets à libérer, écrit projet et file, sort en code 1 ; les tailles inconnues sont annoncées séparément | **Décision** | `D-067` ; `src/diskspace.js` | `T-B-42` ✅ : `statfs` factice, refus sans aucune requête de fichier, file en `PENDING`, tâche `DONE` non recomptée |
@@ -67,6 +67,9 @@ pouvoir reprendre une aspiration interrompue.
 | `EX-B-36` | `--progression` : paliers de 10 %, une ligne par palier et par fichier, taille inconnue annoncée **une fois** sans pourcentage inventé, `stderr` seulement ; `--verifier --sortie json` rend des compteurs et des **listes de chemins** | **Décision** | `D-070` ; `src/progress.js`, `bin/xdm-grab.js` | `T-B-47` ✅ (≤ 12 lignes pour 41 appels), `T-B-48` ✅ |
 | `EX-B-32` | `--verifier` compare **la file au disque** sans réseau : manquants (`DONE` sans fichier), tronqués (taille ≠ annoncée), partiels, absents, fichiers hors file ; les fichiers de l'outil sont exclus ; code 1 sur écart ; rien n'est créé ni corrigé ; le rapport HTML est **autonome** et intégralement échappé | **Décision** | `D-068` ; `src/verify.js`, `src/report.js` | `T-B-43` ✅, `T-B-44` ✅ (injection `<script>` neutralisée) |
 | `EX-B-38` | `--verifier --sortie json` publie les **six** listes d'anomalies en **chemins** : `missing`, `truncated`, `partial`, `absent`, `unmanaged`, `errors` — une tâche jamais commencée (`absent`) n'est pas une tâche conforme, et l'omettre du JSON faisait conclure à la conformité | **Décision** | `D-078` ; `bin/xdm-grab.js` (`summarize`) | `T-B-50` ✅ |
+| `EX-B-39` | **Code de sortie** : `0` seulement si aucune tâche n'a échoué ; une tâche `FAILED` sort en **1**, le nombre est annoncé et les codes sont écrits dans l'aide (`0`, `1`, `2`, `3`, `130`) | **Décision** | `D-080` ; `bin/xdm-grab.js` | `T-B-51` ✅ (vrai binaire) |
+| `EX-B-40` | `--verifier` : une tâche `FAILED` absente du disque est un **écart** (conformité fausse, code 1) et elle est nommée ; une tâche `PENDING` n'est pas un écart | **Décision** | `D-081` ; `src/verify.js` | `T-B-52` ✅ |
+| `EX-B-41` | Le **compte de cookies** annoncé après écriture est celui du fichier (`saved`), pour `xdm` comme pour `xdm-media` | **Décision** | `D-083` ; `bin/xdm.js`, `bin/xdm-media.js` | `T-A-34`, `T-D-12` ✅ |
 
 ## 3. Modèle de données
 
@@ -201,6 +204,7 @@ DISCOVERED --(GET)--> FETCHED --(parse)--> PARSED --(filtre)--> RETENU | EXCLU
 
 | Date | Auteur | Changement |
 |---|---|---|
+| 2026-10-29 | lot `WP-50` | v0.14 : `D-079`→`D-083` — bornes numériques, code de sortie, conformité de vérification, aide/version des trois CLI, compte de cookies ; **41/41**, 286 tests |
 | 2026-10-29 | lot `WP-49` | v0.13 : `D-077`/`D-078` — refus d'un positionnel de trop dans les trois CLI, `absent` dans le JSON de vérification ; **38/38**, 281 tests |
 | 2026-10-28 | lots `WP-24`/`WP-25` | v0.6 : `src/rewrite.js` (`D-053`), `src/report.js`, `src/schedule.js` (`D-054`) — `EX-B-14`→`EX-B-16` vertes, **16/16** ; réécriture **sans précédent** dans la cible, planification **sans démon** ; 220 tests |
 | 2026-10-28 | assemblage `WP-11` | v0.5 : `src/grabber.js` (`D-042`) — arborescence locale, collisions, `empty.html` non écrasé, promotion en tâches ordinaires ; `EX-B-01`/`06`/`10`/`11`/`12` vertes ⇒ **13/13**, **97 tests** |

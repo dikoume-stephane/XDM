@@ -26,9 +26,11 @@ import { parseHeaderOption, withHeaders } from '../src/headers.js';
 import { defaultTransport, fetchText } from '../src/http-client.js';
 import { assembleMedia, downloadMedia } from '../src/media.js';
 import { createProxyTransport, parseProxyUrl } from '../src/proxy.js';
+import { VERSION } from '../src/version.js';
 
 export const USAGE = `usage : xdm-media <playlist.m3u8> [dossier] [--qualite N] [--segments N] [--assembler F]
                    [--entete "Nom: valeur"] [--cookies F] [--proxy URL] [--sortie json]
+                   [--aide | --version]
        xdm-media <media.mp4> [dossier] --dash [--init <url>]
   --qualite    débit minimal visé en bits/s (défaut : variante la plus haute)
   --segments   nombre de segments à télécharger au plus (défaut : tous)
@@ -41,6 +43,8 @@ export const USAGE = `usage : xdm-media <playlist.m3u8> [dossier] [--qualite N] 
                la playlist sert ensuite aux segments
   --proxy      proxy http, https ou socks5 pour la playlist et les segments
   --sortie     format du résumé : texte (défaut) ou json
+  --aide, -h       afficher cette aide et sortir (code 0)
+  --version, -V    afficher la version et sortir (code 0)
 `;
 
 export const OUTPUT_FORMATS = /** @type {const} */ (['texte', 'json']);
@@ -169,6 +173,16 @@ export async function main(argv, {
   downloadFn,
   transport,
 } = {}) {
+  // `--aide` et `--version` répondent **sans** URL et sans réseau, en code 0 : demander de
+  // l'aide ne commence pas par une erreur d'usage (`D-082`). Cette CLI répondait 2 et 1.
+  if (argv.includes('--version') || argv.includes('-V')) {
+    log(`xdm-media ${VERSION} (Node ${process.version})`);
+    return { version: VERSION, output: 'texte' };
+  }
+  if (argv.includes('--aide') || argv.includes('--help') || argv.includes('-h')) {
+    log(USAGE.trimEnd());
+    return { help: true, output: 'texte' };
+  }
   const options = parseArgs(argv);
   const {
     url, directory, bandwidth, maxSegments, assemble, output, headers, cookies, proxy,
@@ -185,8 +199,9 @@ export async function main(argv, {
   const mediaTransport = jar ? withCookies(baseTransport, jar) : baseTransport;
   const flushCookies = async () => {
     if (!cookies || !jar) return;
-    const saved = await saveCookieJar(jar, cookies);
-    if (output !== 'json') log(`cookies  : ${saved.path} (${saved.count} cookie(s))`);
+    // `saveCookieJar` rend `{path, saved}` : lire `count` affichait « undefined cookie(s) ».
+    const { path, saved } = await saveCookieJar(jar, cookies);
+    if (output !== 'json') log(`cookies  : ${path} (${saved} cookie(s))`);
   };
   // La lecture de playlist passe par `fetchText`, qui prend un transport : c'est le même, donc
   // un `Set-Cookie` posé par la playlist est déjà dans le magasin quand les segments partent.

@@ -315,3 +315,4 @@ export {
   retryFailedCapped,
   runQueue,
 } from './grab-runner.js';
+export { VERSION } from './version.js';

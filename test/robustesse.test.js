@@ -276,3 +276,31 @@ test('T-B-44 : rapport HTML autonome, avec échappement', () => {
   assert.equal(formatReport(report, 'htm'), html);
   assert.throws(() => formatReport(report, 'pdf'), /format de rapport inconnu/);
 });
+
+test('T-B-52 : une tâche en échec compte dans la conformité, une tâche en attente non', async () => {
+  await withTempDir(async (dir) => {
+    await writeFile(join(dir, 'ok.bin'), 'OK');
+    let queue = createQueue({});
+    queue = addTask(queue, { url: 'http://h/ok.bin', target: join(dir, 'ok.bin'), totalSize: 2 }).queue;
+    queue = addTask(queue, { url: 'http://h/rate.bin', target: join(dir, 'rate.bin'), totalSize: 4 }).queue;
+    queue = addTask(queue, {
+      url: 'http://h/attente.bin', target: join(dir, 'attente.bin'), totalSize: 9,
+    }).queue;
+    // Une tâche **tentée et ratée**, une tâche **pas encore tentée** : les deux sont absentes
+    // du disque, une seule est un écart (`D-081`).
+    queue.tasks[0] = { ...queue.tasks[0], state: 'DONE' };
+    queue.tasks[1] = { ...queue.tasks[1], state: 'FAILED' };
+
+    const result = await verifyGrab({ rootDir: dir, tasks: queue.tasks });
+    assert.deepEqual(result.absent.map((item) => [item.path, item.state]),
+      [['rate.bin', 'FAILED'], ['attente.bin', 'PENDING']]);
+    assert.equal(result.failed, 1);
+    assert.equal(result.ok_, false, '3 tâches sur 5 absentes ne sont pas « conforme »');
+
+    // La même file **sans** l'échec reste conforme : une file interrompue n'est pas fautive.
+    const attenteSeule = [queue.tasks[0], queue.tasks[2]];
+    const calme = await verifyGrab({ rootDir: dir, tasks: attenteSeule });
+    assert.equal(calme.failed, 0);
+    assert.equal(calme.ok_, true);
+  });
+});

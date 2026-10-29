@@ -18,20 +18,23 @@
 import { mkdir, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { download, DownloadError } from '../src/connection-loop.js';
+import { download, DownloadError, MAX_SOCKETS } from '../src/connection-loop.js';
 import { createCookieJar, loadCookieJar, saveCookieJar, withCookies } from '../src/cookies.js';
+import { MAX_CHUNK_SIZE, MIN_CHUNK_SIZE } from '../src/chunk-policy.js';
 import { parseHeaderOption } from '../src/headers.js';
 import { defaultTransport, probe } from '../src/http-client.js';
 import { downloadFtp, parseFtpUrl } from '../src/ftp.js';
 import { fileNameFromDisposition, fileNameFromUrl, targetPathFor } from '../src/promote.js';
 import { parseProxyUrl, createProxyTransport } from '../src/proxy.js';
+import { VERSION } from '../src/version.js';
 
 export const USAGE = `usage : xdm <url> [dossier] [--connexions N] [--morceau TAILLE] [--proxy URL]
                    [--entete "Nom: valeur"] [--cookies F] [--incremental] [--sans-reprise]
                    [--nom FICHIER]
                    [--sortie texte|json] [--aide | --version]
   --connexions     connexions parallèles (défaut 8)
-  --morceau        taille de morceau en octets (1–10 Mio)
+  --morceau        taille de morceau en octets (1 o à 10 Mio ; en dessous de 1 Mio le nombre
+                   de morceaux explose et le transfert ralentit — un avertissement le dit)
   --proxy          proxy http, https ou socks5 pour le transfert (et pour la sonde)
   --entete         en-tête HTTP envoyé à chaque requête (sonde **et** morceaux), répétable,
                    ex. « Authorization: Bearer … » ; validation partagée avec xdm-grab
@@ -51,8 +54,11 @@ export const USAGE = `usage : xdm <url> [dossier] [--connexions N] [--morceau TA
 /** Schémas acceptés, et le transport associé. */
 export const SCHEMES = Object.freeze({ http: 'http', https: 'http', ftp: 'ftp' });
 
-/** Version annoncée par `--version` (celle du paquet). */
-export const VERSION = '0.1.0';
+/** Au-delà de ce nombre de morceaux, le découpage est signalé comme lent (`D-079`). */
+export const MORCEAUX_ALERTE = 500;
+
+// `VERSION` vient de `src/version.js` : une seule constante pour les trois CLI (`D-082`).
+export { VERSION };
 
 /**
  * Analyse les arguments. Aucune dépendance : les options reconnues sont peu
@@ -127,8 +133,26 @@ export function parseArgs(argv) {
   if (options.connections !== undefined && !Number.isInteger(options.connections)) {
     throw new DownloadError('--connexions attend un entier', 'USAGE');
   }
+  // Bornes (`D-079`) : le moteur plafonne à 128 sockets et à 10 Mio par morceau. Les laisser
+  // passer revenait à corriger l'appelant en silence — et `--morceau 100` sur 5 Mio ne
+  // « corrigeait » rien du tout : il pendait (52 429 morceaux d'un dixième de seconde).
+  if (options.connections !== undefined
+    && (options.connections < 1 || options.connections > MAX_SOCKETS)) {
+    throw new DownloadError(
+      `--connexions attend un entier de 1 à ${MAX_SOCKETS} (reçu : ${options.connections})`,
+      'USAGE',
+    );
+  }
   if (options.chunkSize !== undefined && !Number.isInteger(options.chunkSize)) {
     throw new DownloadError('--morceau attend un entier (octets)', 'USAGE');
+  }
+  if (options.chunkSize !== undefined
+    && (options.chunkSize < 1 || options.chunkSize > MAX_CHUNK_SIZE)) {
+    throw new DownloadError(
+      `--morceau attend une taille de 1 à ${MAX_CHUNK_SIZE} octets `
+      + `(${MAX_CHUNK_SIZE / (1024 * 1024)} Mio ; reçu : ${options.chunkSize})`,
+      'USAGE',
+    );
   }
   return {
     url,
@@ -236,8 +260,9 @@ export async function main(argv, {
     : (proxyTransport ?? undefined);
   const flushCookies = async () => {
     if (!jar) return;
-    const saved = await saveCookieJar(jar, cookies);
-    note(`cookies  : ${saved.path} (${saved.count} cookie(s))`);
+    // `saveCookieJar` rend `{path, saved}` : lire `count` affichait « undefined cookie(s) ».
+    const { path, saved } = await saveCookieJar(jar, cookies);
+    note(`cookies  : ${path} (${saved} cookie(s))`);
   };
   const requestHeaders = { ...headers };
 
@@ -273,6 +298,10 @@ export async function main(argv, {
   }
 
   let lastPercent = -1;
+  // Trop de morceaux = transfert lent, et ce n'est pas une erreur : on le dit **une fois**,
+  // dès que la taille totale est connue, plutôt que de refuser une valeur que les tests et
+  // les petits fichiers utilisent légitimement (`D-079`).
+  let warned = false;
   const result = await run(url, target, {
     connections: connections ?? 4,
     ...(chunkSize === undefined ? {} : { chunkSize }),
@@ -285,6 +314,11 @@ export async function main(argv, {
     ...(resume ? {} : { resume: false }),
     promote: true,
     onProgress: ({ done, total }) => {
+      if (!warned && chunkSize !== undefined && total / chunkSize > MORCEAUX_ALERTE) {
+        warned = true;
+        note(`avertissement : ${Math.ceil(total / chunkSize)} morceaux de ${chunkSize} octets `
+          + '— préférer au moins 1 Mio par morceau');
+      }
       const percent = Math.floor((done / total) * 100);
       if (percent !== lastPercent) {
         lastPercent = percent;

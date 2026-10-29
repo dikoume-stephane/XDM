@@ -106,7 +106,8 @@ export async function walkTree(rootDir) {
  *
  * @returns {Promise<{checked: number, ok: number, missing: object[], truncated: object[],
  *   partial: object[], absent: object[], unmanaged: {path: string, size: number}[],
- *   errors: object[], totalBytes: number, diskBytes: number, ok_: boolean}>}
+ *   errors: object[], totalBytes: number, diskBytes: number, failed: number,
+ *   ok_: boolean}>}
  */
 export async function verifyGrab({ rootDir, tasks, stat = fsStat, walk = walkTree }) {
   const list = Array.isArray(tasks) ? tasks : [];
@@ -176,7 +177,17 @@ export async function verifyGrab({ rootDir, tasks, stat = fsStat, walk = walkTre
     ),
     diskBytes,
   };
-  return { ...report, ok_: missing.length === 0 && truncated.length === 0 && tree.errors.length === 0 };
+  // Une tâche **en échec** n'est pas « pas encore tentée » : elle a été tentée et a raté, et
+  // le disque n'a rien. La compter comme `absent` sans conséquence faisait dire « conforme »
+  // à une aspiration où 3 fichiers sur 5 manquaient (`D-081`). `PENDING` reste normal : une
+  // file interrompue n'est pas une file fautive.
+  const failed = absent.filter((item) => item.state === 'FAILED').length;
+  return {
+    ...report,
+    failed,
+    ok_: missing.length === 0 && truncated.length === 0 && tree.errors.length === 0
+      && failed === 0,
+  };
 }
 
 /**

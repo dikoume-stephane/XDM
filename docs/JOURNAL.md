@@ -2014,6 +2014,106 @@ a gelé.
 **Mesures.** `T-B-50` : une file dont une tâche n'a jamais été téléchargée rend
 `absent: ['<chemin>']`, `conforms: false`, et un code de sortie 1.
 
+### D-079 — Les bornes numériques se refusent, elles ne se corrigent pas
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `bin/xdm.js`, `EX-A-25`
+
+**Contexte — trois valeurs absurdes acceptées sans un mot.**
+1. `--connexions 0` et `--connexions 200` téléchargeaient normalement : le moteur plafonne à
+   128 sockets (`MAX_SOCKETS`) et le dit à personne.
+2. `--morceau 20971520` (20 Mio) était accepté alors que l'aide annonce 1–10 Mio : la taille
+   était ramenée en silence à la borne haute, ou utilisée telle quelle selon le chemin.
+3. `--morceau 100` sur 5 Mio part en **52 429 morceaux** : mesuré à **plus de 400 s** sans un
+   seul message. Ce n'est pas un plantage, c'est un transfert qui n'aboutit pas — le pire des
+   deux, parce que l'utilisateur attend.
+
+**Décision.**
+1. Refus **local** (avant tout réseau) : `--connexions` hors 1..`MAX_SOCKETS`, `--morceau` hors
+   1..`MAX_CHUNK_SIZE` (10 485 760 octets). Le message donne la valeur reçue et l'intervalle.
+2. Les constantes sont **celles du moteur** (`src/connection-loop.js`, `src/chunk-policy.js`) :
+   une seconde table de bornes dans la CLI serait une deuxième vérité.
+3. Un découpage qui dépasse **500 morceaux** reste licite — les tests et les petits fichiers
+   s'en servent — mais il est **signalé une fois**, dès que la taille totale est connue
+   (`avertissement : 5 243 morceaux de 1 000 octets — préférer au moins 1 Mio par morceau`).
+
+**Mesures.** `T-A-33` : les quatre refus, les trois valeurs limites acceptées (1, 128, 1 Mio,
+10 Mio) et l'avertissement obtenu sur un vrai serveur (64 Kio découpés en 100 octets).
+
+---
+
+### D-080 — Un fichier qui n'a pas pu être téléchargé n'est pas un succès
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `bin/xdm-grab.js`, `EX-B-39`
+
+**Contexte.** Aspiration de test : 5 fichiers, **3 refusés en `401`**. Le résumé affichait
+`failed: 3`, trois lignes `échec http://…`, et le processus sortait en **code 0**. Un script
+qui enchaîne (« aspirer, puis archiver ») n'avait aucun moyen de savoir que l'aspiration
+était incomplète sans analyser la sortie en français.
+
+**Décision.** Le code de sortie suit le résultat : `1` dès qu'une tâche est `FAILED`, avec le
+nombre annoncé et le rappel des deux suites possibles (`--reprendre` rejoue, `--verifier`
+nomme). Les codes existants ne bougent pas : `0` succès, `1` écart ou échec, `2` usage,
+`3` hors fenêtre de planification, `130` interrompu — et ils sont désormais **écrits dans
+l'aide**.
+
+**Mesures.** `T-B-51` (vrai binaire, deux sites) : un fichier en `404` donne `1` et
+`1 tâche(s) en échec` ; `--verifier` nomme ensuite `ÉCHEC casse.bin` et sort en `1` ; un site
+sans échec sort en `0` — le succès n'est pas devenu une erreur.
+
+---
+
+### D-081 — « Tentée et ratée » n'est pas « pas encore tentée »
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/verify.js`, `bin/xdm-grab.js`, `EX-B-40`
+
+**Contexte.** `--verifier` rangeait dans `absent` **deux situations opposées** : la tâche
+`PENDING` qu'on n'a jamais essayée (normal après une interruption) et la tâche `FAILED` qui a
+échoué trois fois. Seules `missing` et `truncated` comptaient dans `conforms`. Résultat mesuré :
+`5 tâche(s), 2 conforme(s)` suivi de « vérification : conforme » et d'un code **0**, alors que
+**trois fichiers sur cinq manquaient**. `D-078` venait justement de rendre cette liste visible.
+
+**Décision.** `verifyGrab` compte les `absent` dont l'état est `FAILED` : ce nombre entre dans
+`ok_` (donc dans `conforms` et dans le code de sortie) et chaque tâche concernée est nommée
+`ÉCHEC … (tâche FAILED : rien écrit sur le disque)`. Une tâche `PENDING` reste **hors** de la
+conformité : une file interrompue n'est pas une file fautive.
+
+**Mesures.** `T-B-52` : une file `DONE/FAILED/PENDING` rend `failed: 1` et `ok_: false` ; la
+même file sans la tâche en échec rend `ok_: true`.
+
+---
+
+### D-082 — La troisième CLI répond comme les deux autres
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `bin/xdm-media.js`, `src/version.js`, `EX-B-28`
+
+**Contexte.** `xdm-media --aide` sortait en **code 2** (comme une erreur d'usage) et
+`xdm-media --version` répondait « option inconnue » en **code 1**, pendant que `xdm` et
+`xdm-grab` répondaient en **code 0** sur `stdout`. Trois outils du même paquet, trois réponses
+à la même question — et un utilisateur qui commence par `--aide` reçoit une erreur.
+
+**Décision.** `--aide`/`-h` et `--version`/`-V` sont traités **avant** l'analyse des arguments,
+comme dans les deux autres CLI : réponse sur `stdout`, code 0, aucun accès réseau. La version
+vient d'un module unique (`src/version.js`), exporté par le barillet : trois littéraux dans
+trois fichiers finissent toujours par diverger.
+
+**Mesures.** `T-C-21` (étendue) : les trois binaires répondent en 0 (`xdm 0.1.0`,
+`xdm-grab 0.1.0`, `xdm-media 0.1.0`), et par appel programmatique `main(['--version'])` rend
+un objet, ne lève pas.
+
+---
+
+### D-083 — Un message qui lit un champ inexistant invente un chiffre
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `bin/xdm.js`, `bin/xdm-media.js`, `EX-B-41`
+
+**Contexte.** Après une écriture de magasin, les deux CLI annonçaient
+`cookies : /tmp/c.json (undefined cookie(s))`. `saveCookieJar` rend `{path, saved}` ; les CLI
+lisaient `saved.count`. Le fichier était correct (1 cookie, vérifié à la main) — seul le
+message mentait, c'est-à-dire la seule partie que l'utilisateur lit.
+
+**Décision.** Lire le champ qui existe, et **tester le message** : un compteur faux est un
+défaut de même nature qu'un `--proxy` inerte (`D-074`), il se voit simplement moins. Les deux
+CLI sont couvertes, parce que le code avait été dupliqué.
+
+**Mesures.** `T-A-34` et `T-D-12` : la ligne annonce `(1 cookie(s))` et ne contient plus
+`undefined`, pour `xdm` (cookie posé par la sonde) et pour `xdm-media` (cookie posé par la
+playlist).
+
 ---
 
 ## Décisions en attente

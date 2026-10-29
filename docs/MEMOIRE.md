@@ -7,7 +7,12 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-29 **v17** — lot `WP-49` : authentification unifiée des médias
+- **Dernière revue** : 2026-10-29 **v18** — lot `WP-50` : bornes numériques refusées
+  (`D-079`), code de sortie d'une aspiration (`D-080`), conformité de vérification (`D-081`),
+  `--aide`/`--version` sur les trois CLI (`D-082`), compte de cookies annoncé (`D-083`),
+  **guide de test** (`docs/GUIDE-TEST.md`) et **banc d'essai** (`tools/banc-essai.mjs`) —
+  **286 tests**, **271 exports**, **92 exigences, 91 vertes** (A, B, D clos ; C à 14/15).
+  Précédent (v17) : lot `WP-49`, authentification unifiée des médias
   (`--entete`/`--cookies`/`--proxy`, un seul transport, enveloppe partagée `withHeaders`) `D-075`,
   magasin de cookies du moteur (`xdm --cookies`) `D-076`, refus d'un positionnel de trop dans
   les trois CLI `D-077`, `absent` dans le JSON de vérification `D-078` — **3 exigences ajoutées**
@@ -104,7 +109,9 @@
 | `src/schedule.js` | fenêtres locales, traversée de minuit, quotas, plan d'exécution | `D-054` | `T-B-28` |
 | `bin/xdm-grab.js` | CLI d'aspiration : parcours → arborescence → file → téléchargements ; `--reprendre`, `--inclure`/`--exclure`, `--paralleles`, `--delai`, `--arret-erreurs`, `--entete`, `--essai`, `--sitemap`, `--sous-domaines`, `--taille-max`, `--espace-min`, `--verifier`, `--cookies`, `--reecrire`, `--rapport`, `--planifier`, `--tentatives`, `--aide`, `--version`, `--sortie json` | `D-043`, `D-044`, `D-053`→`D-055`, `D-059`→`D-066` | `T-B-10`, `T-B-20`→`T-B-22`, `T-B-26`→`T-B-39`, `T-C-14`→`T-C-21` |
 | `bin/xdm.js` | CLI : `xdm <url> [dossier]`, nom déduit de l'URL, **transport choisi par le schéma** (`http`/`https`/`ftp`), promotion finale, `--cookies` (magasin relu et réécrit), `--aide`/`--version` | `D-037`, `D-040`, `D-062`, `D-066`, `D-076` | `T-A-14`, `T-A-24`, `T-C-13`, `T-C-21` |
-| `src/index.js` | barillet (270 exports) | `D-034` | — |
+| `src/version.js` | version unique des trois CLI (`--version`) | `D-082` | `T-C-21` |
+| `tools/banc-essai.mjs` | banc d'essai local : site de 3 pages, fichier à plages, fichier protégé par en-tête, session par cookie, flux HLS, `robots.txt`, fichier qui se tait, journal des requêtes | `D-075`, `D-079` | `GUIDE-TEST.md` (§A.4) |
+| `src/index.js` | barillet (271 exports) | `D-034` | — |
 
 **Règle** : une exigence ne passe au vert que si un test de `test/` la couvre ; le tableau de
 [`specs/conformance.md`](specs/conformance.md) fait foi, et il est **vérifié par outil** :
@@ -177,6 +184,8 @@ Un identifiant n'est **jamais** réutilisé, même après abandon d'un lot.
 
 ## 6. Par où commencer la lecture
 
+- **Je veux tester moi-même** → [`GUIDE-TEST.md`](GUIDE-TEST.md) (piste A : produit, 20 min ;
+  piste B : cible IDM en VM, 2 h).
 - **Nouveau sur le projet** → `ROADMAP-IDM.md` §0-1, puis `02-cartographie-fonctionnelle.md`.
 - **Je veux vérifier une affirmation** → `00-preuves.md` puis `08-index-citations.md`.
 - **Je veux coder** → `ROADMAP-IDM.md` §3 (P3) + la fiche `docs/specs/` du domaine.

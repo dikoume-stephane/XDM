@@ -1,6 +1,6 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.15 — **Dernière revue** : 2026-10-29
+> **Statut** : ✅ v1.16 — **Dernière revue** : 2026-10-29
 > **Vérification** : `node tools/audit-conformance.mjs --strict` (6 contrôles) — la matrice
 > est auditée, pas seulement rédigée : voir `revue-clean-room.md`.
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
@@ -32,6 +32,7 @@
 | `EX-A-22` `--sortie json` : un seul objet sur `stdout`, progression et messages sur `stderr` | **Décision** (`D-073`) | `D-073` ; `bin/xdm.js` | `T-A-31` | **vert** |
 | `EX-A-23` `--proxy` appliqué au transfert HTTP **et** à la sonde ; proxy illisible refusé localement | **Décision** (`D-074`) | `D-074` ; `src/proxy.js`, `bin/xdm.js` | `T-A-32` | **vert** |
 | `EX-A-24` **magasin de cookies pour le moteur** (`xdm --cookies F`) : le fichier est relu au départ et réécrit à la fin ; le `Set-Cookie` de la **sonde** sert ensuite à **chaque morceau**, dans le même transport, sans recopie manuelle | **Décision** (`D-076`) | `D-076` ; `src/cookies.js` (`withCookies`), `bin/xdm.js` | `T-A-24` | **vert** |
+| `EX-A-25` **bornes des options numériques** : `--connexions` 1..128 et `--morceau` 1..10 485 760 octets sont refusés **localement** (message avec la valeur reçue) au lieu d'être corrigés en silence ; un découpage donnant plus de 500 morceaux est **signalé** au lieu de laisser croire à un transfert normal | **Décision** (`D-079`) | `D-079` ; `bin/xdm.js` (`MORCEAUX_ALERTE`), `src/connection-loop.js` (`MAX_SOCKETS`), `src/chunk-policy.js` | `T-A-33` | **vert** |
 | `EX-A-05` progression dérivée | Dérivé | `D-031` | `T-A-05` | **vert** |
 | `EX-A-06` morceau 1–10 MiB, paliers 2/10 MiB | Observé + Décision | annexe 14 §5.4 ; `chunks.json` ; `D-029` | `T-A-06` | **vert** |
 | `EX-A-07` 1 → N connexions, plafond 8 par défaut | Observé + Décision | annexe 14 §6 ; `0x0fbe17` ; `D-036`, `D-043` | `T-A-07` | **vert** (allocation, file, boucle et **runner** ; la boucle réseau reste à écrire) |
@@ -48,7 +49,7 @@
 | `EX-A-18` inactivité > 30 s ⇒ reconnexion | Observé | annexe 14 §4.5 (`0x1a139f`, `0x18adad`) ; `D-038` | `T-A-25` | **vert** |
 | `EX-A-19` reprise sans retour à zéro | Observé + Décision | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` | **vert** |
 
-**Couverture** : 24 exigences, **24 vertes** (`npm test`, 281 cas) — domaine A **clos**.
+**Couverture** : 25 exigences, **25 vertes** (`npm test`, 286 cas) — domaine A **clos**.
 La boucle de connexions (`src/connection-loop.js`) exécute les exigences de bout en bout
 contre des serveurs locaux, y compris la coupure, la reprise depuis la carte persistée et la
 promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
@@ -90,14 +91,17 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 | `EX-B-25` `--sous-domaines` élargit le parcours au **même site** (même hôte, sous-domaine, même parent d'au moins deux labels), jamais à un domaine tiers ; opt-in, et la limite « pas de *Public Suffix List* » est nommée | **Décision** (`D-065`) | `D-065` ; `src/crawler.js` (`sameSiteHost`) | `T-B-36`, `T-C-19` | **vert** |
 | `EX-B-26` `--tentatives` couvre **aussi l'exploration** : mêmes statuts transitoires et même `Retry-After` que les téléchargements (`D-055`), reprises comptées, aucune seconde politique | **Décision** (`D-065`) | `D-065` ; `src/retry.js`, `src/crawler.js` | `T-B-38`, `T-C-19` | **vert** |
 | `EX-B-27` **interruption propre** (Ctrl-C) : arrêt coopératif — les tâches en vol finissent, les autres restent `PENDING`, projet/file/cookies sauvegardés, code **130**, seconde interruption = sortie immédiate ; aucune tâche laissée `ACTIVE` | **Décision** (`D-066`) | `D-066` ; `src/grab-runner.js` (`shouldStop`), `bin/xdm-grab.js` | `T-B-39`, `T-C-20` | **vert** |
-| `EX-B-28` `--aide`/`--version` répondent **sans URL** et sortent en code **0** (les deux CLI), sans effet de bord | **Décision** (`D-066`) | `D-066` ; `bin/xdm-grab.js`, `bin/xdm.js` | `T-C-21` | **vert** |
+| `EX-B-28` `--aide`/`--version` répondent **sans URL** et sortent en code **0** — sur les **trois** CLI (`xdm`, `xdm-grab`, `xdm-media`), sans effet de bord ; `xdm-media` répondait 2 à `--aide` et « option inconnue » à `--version` | **Décision** (`D-066`, étendue par `D-082`) | `D-066`, `D-082` ; `src/version.js`, `bin/xdm-media.js` | `T-C-21` | **vert** |
 | `EX-B-21` les liens relatifs se résolvent contre la **base déclarée** (`<base href>`, première balise, base inexploitable ignorée) ; la balise ne devient jamais un lien à télécharger | **Décision** (`D-063`) | `D-063` ; `src/crawler.js` (`documentBase`) | `T-B-33` | **vert** |
 | `EX-B-22` le parcours **s'arrête** après N pages en échec **consécutif** (`--arret-erreurs`), et le dit (`stopped: 'erreurs'`) ; un échec isolé ne déclenche rien, une file vidée n'est pas un arrêt sur erreur | **Décision** (`D-063`) | `D-063` ; `src/crawler.js` (`maxErrors`) | `T-B-34` | **vert** |
 | `EX-B-23` `--essai` montre le **plan** (pages, fichiers, cibles, arrêt) sans rien écrire ni télécharger : dossier cible non créé, ni `empty.html`, ni projet, ni file, code de sortie 0 ; `--sortie json` reste consommable | **Décision** (`D-064`) | `D-064` ; `bin/xdm-grab.js` | `T-C-16` | **vert** |
 | `EX-B-38` le JSON de vérification (`--verifier --sortie json`) publie les **six** listes d'anomalies, `absent` comprise : une tâche jamais commencée n'est pas une tâche conforme, et l'oublier dans le JSON la faisait disparaître des scripts | **Décision** (`D-078`) | `D-078` ; `bin/xdm-grab.js` (`summarize`) | `T-B-50` | **vert** |
+| `EX-B-39` **code de sortie** d'une aspiration : `0` seulement si aucune tâche n'a échoué ; une tâche `FAILED` sort en **1** et le nombre est annoncé (auparavant : code 0 avec 3 fichiers sur 5 manquants) | **Décision** (`D-080`) | `D-080` ; `bin/xdm-grab.js` | `T-B-51` | **vert** (vrai binaire, deux sites) |
+| `EX-B-40` `--verifier` distingue « **tentée et ratée** » (`FAILED`, écart, conformité fausse, code 1) de « **pas encore tentée** » (`PENDING`, normal) ; les tâches `FAILED` sont nommées une par une | **Décision** (`D-081`) | `D-081` ; `src/verify.js` (`failed`), `bin/xdm-grab.js` | `T-B-52` | **vert** |
+| `EX-B-41` le **compte de cookies** annoncé après écriture est celui du fichier, pour `xdm` **et** `xdm-media` : le message lisait `saved.count`, champ inexistant, et affichait « undefined cookie(s) » | **Décision** (`D-083`) | `D-083` ; `bin/xdm.js`, `bin/xdm-media.js` | `T-A-34`, `T-D-12` | **vert** |
 | `EX-B-20` `--exclure` **élague** la branche : un lien élagué n'est ni retenu ni demandé, donc rien de ce qu'il cite n'entre dans la file ; l'exclusion par défaut, elle, continue de ne trier que les téléchargements | **Décision** (`D-060`) | `D-060` ; `D-032` ; `src/crawler.js` (`prune`) | `T-B-32`, `T-C-14` | **vert** |
 
-**Couverture** : 38 exigences, **38 vertes** (`npm test`, 281 cas) — domaine B **clos**.
+**Couverture** : 41 exigences, **41 vertes** (`npm test`, 286 cas) — domaine B **clos**.
 `Q-B-01` est close comme non instruite dans ce module (annexe 12 §6) : l'exploration et
 l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`,
 `src/grabber.js`, `D-041`/`D-042`).
@@ -218,6 +222,7 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 
 | Date | Changement |
 |---|---|
+| 2026-10-29 | v1.16 : `D-079`→`D-083` — bornes numériques refusées (`EX-A-25`), code de sortie d'une aspiration (`EX-B-39`), conformité de vérification (`EX-B-40`), compte de cookies annoncé (`EX-B-41`), `--aide`/`--version` sur les trois CLI (`EX-B-28` étendue) ; A **25/25**, B **41/41**, C **14/15**, D **11/11**, 286 tests, total **91 vertes / 92** |
 | 2026-10-29 | v1.15 : `D-075`→`D-078` — authentification unifiée des médias (`EX-D-11`), magasin de cookies du moteur (`EX-A-24`), refus d'un positionnel de trop (`EX-C-15`), `absent` dans le JSON de vérification (`EX-B-38`) ; A **24/24**, B **38/38**, C **14/15**, D **11/11**, 281 tests, total **87 vertes / 88** |
 | 2026-10-29 | v1.14 : `D-071`→`D-074` — reprise par défaut et `--sans-reprise` (`EX-A-20`), nom par `Content-Disposition` (`EX-A-21`), `--sortie json` (`EX-A-22`), `--proxy` appliqué (`EX-A-23`), rapport de vérification (`EX-B-37`) ; A **23/23**, B **37/37**, 274 tests, total **83 vertes / 84** |
 | 2026-10-29 | v1.13 : `D-069`/`D-070` — en-têtes personnalisés (`EX-B-33`), aspiration incrémentale (`EX-B-34`), plafond d'essais cumulés (`EX-B-35`), progression et audit JSON (`EX-B-36`) ; domaine B **36/36**, 265 tests, total **78 vertes / 79** |

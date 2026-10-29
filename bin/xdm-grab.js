@@ -84,10 +84,13 @@ export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages
   --espace-min     exiger au moins cette taille libre en plus des fichiers prévus ;
                    vérifié avant la première connexion (défaut : 64 Mio)
   --verifier       vérifier une aspiration existante (file ↔ disque) sans aucun accès réseau ;
-                   code 1 si un fichier manque ou est tronqué (les fichiers hors file sont
-                   signalés sans faire échouer : ils peuvent être légitimes)
+                   code 1 si un fichier manque, est tronqué ou si une tâche a échoué (les
+                   fichiers hors file sont signalés sans faire échouer : ils peuvent être
+                   légitimes) ; une tâche seulement « pas encore tentée » n'est pas un écart
   --aide, -h       afficher cette aide et sortir (code 0)
   --version, -V    afficher la version et sortir (code 0)
+  codes            : 0 succès, 1 tâche(s) en échec ou écart de vérification, 2 usage,
+                     3 hors fenêtre de planification, 130 interrompu
   --paralleles     pages explorées simultanément (défaut 1, déterministe)
   --sans-exclusions  vider les exclusions par défaut (D-032 : l'exclusion l'emporte sur
                    l'inclusion, donc --inclure « *.html » seul ne retient aucune page)
@@ -445,6 +448,10 @@ export async function main(argv, {
     for (const item of result.partial) {
       log(`  PARTIEL   ${item.path} (état ${item.state}, ${item.size} octets)`);
     }
+    // `D-081` : une tâche en échec est nommée, et elle compte dans la conformité.
+    for (const item of result.absent.filter((entry) => entry.state === 'FAILED')) {
+      log(`  ÉCHEC     ${item.path} (tâche FAILED : rien écrit sur le disque)`);
+    }
     if (result.unmanaged.length > 0) {
       log(`  hors file : ${result.unmanaged.length} fichier(s) `
         + `(${result.unmanaged.slice(0, 5).map((file) => file.path).join(', ')}`
@@ -471,7 +478,7 @@ export async function main(argv, {
       pages: tasks.length,
       retained: tasks.length,
       done: result.ok,
-      failed: result.missing.length + result.truncated.length,
+      failed: result.missing.length + result.truncated.length + (result.failed ?? 0),
       directory: rootDir,
       started: false,
       conforms: result.ok_,
@@ -935,7 +942,14 @@ if (invokedDirectly) {
       // Code 3 = « hors fenêtre de planification » : un essai n'est pas un rendez-vous manqué,
       // et une aide ou une version encore moins.
       if (result.conforms === false) process.exitCode = 1;
-      else if (result.blocked === 'espace') process.exitCode = 1;
+      // Un fichier qui n'a pas pu être téléchargé n'est pas un succès : la file le sait
+      // (`FAILED`), le code de sortie doit le dire aussi — sinon un script enchaîne sur une
+      // aspiration incomplète sans jamais s'en apercevoir (`D-080`).
+      else if (result.failed > 0) {
+        process.exitCode = 1;
+        console.error(`xdm-grab : ${result.failed} tâche(s) en échec — la file les conserve ; `
+          + '« --reprendre » les rejouera, « --verifier » les nommera');
+      } else if (result.blocked === 'espace') process.exitCode = 1;
       else if (result.started === false && result.dryRun !== true
         && result.help !== true && result.version === undefined
         && result.verify === undefined) process.exitCode = 3;

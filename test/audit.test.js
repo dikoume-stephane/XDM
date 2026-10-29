@@ -11,11 +11,11 @@ test('T-32 : la matrice réelle ne présente aucun écart de traçabilité', () 
   assert.deepEqual(result.problems, [], formatAudit(result));
 
   // Les chiffres revendiqués dans la documentation sont ceux que l'audit compte.
-  assert.equal(result.totals.requirements, 88);
-  assert.equal(result.totals.green, 87, '88 exigences, 1 hors périmètre');
+  assert.equal(result.totals.requirements, 92);
+  assert.equal(result.totals.green, 91, '92 exigences, 1 hors périmètre');
   const byDomain = Object.fromEntries(result.sections.map((s) => [s.title, [s.green, s.total]]));
-  assert.deepEqual(byDomain['2. Domaine A — moteur de téléchargement'], [24, 24]);
-  assert.deepEqual(byDomain['3. Domaine B — grabber'], [38, 38]);
+  assert.deepEqual(byDomain['2. Domaine A — moteur de téléchargement'], [25, 25]);
+  assert.deepEqual(byDomain['3. Domaine B — grabber'], [41, 41]);
   assert.deepEqual(byDomain['3 bis. Domaine C — transports (`WP-07`)'], [14, 15]);
   assert.deepEqual(byDomain['3 ter. Domaine D — médias (`WP-07`)'], [11, 11]);
 });

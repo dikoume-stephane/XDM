@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { main, parseArgs } from '../bin/xdm-grab.js';
+import { main as mediaMain } from '../bin/xdm-media.js';
 import { loadQueue } from '../src/task-queue.js';
 
 const CLI = fileURLToPath(new URL('../bin/xdm-grab.js', import.meta.url));
@@ -256,4 +257,25 @@ test('T-C-21 : `--aide` et `--version` répondent sans URL, avec le code 0', asy
   const telAide = await run(cli, ['-h']);
   assert.equal(telAide.code, 0);
   assert.match(telAide.stdout, /le schéma de l’URL choisit le transport|le schéma de l'URL choisit le transport/);
+
+  // `D-082` : la **troisième** CLI répond comme les deux autres. Elle sortait 2 pour `--aide`
+  // et 1 pour `--version` (« option inconnue ») — un script qui interrogeait les trois outils
+  // le même jour recevait deux réponses différentes à la même question.
+  const media = fileURLToPath(new URL('../bin/xdm-media.js', import.meta.url));
+  const flux = await run(media, ['--version']);
+  assert.equal(flux.code, 0);
+  assert.match(flux.stdout, /^xdm-media 0\.1\.0/);
+  const fluxAide = await run(media, ['--aide']);
+  assert.equal(fluxAide.code, 0);
+  assert.match(fluxAide.stdout, /usage : xdm-media/);
+  assert.match(fluxAide.stdout, /--cookies/);
+  const court = await run(media, ['-h']);
+  assert.equal(court.code, 0);
+  // En programme : un objet, pas une levée, et rien n'est téléchargé.
+  const lignesMedia = [];
+  const versionMedia = await mediaMain(['--version'], { log: (line) => lignesMedia.push(line) });
+  assert.equal(versionMedia.version, '0.1.0');
+  assert.match(lignesMedia[0], /^xdm-media 0\.1\.0/);
+  const aideMedia = await mediaMain(['--aide'], { log: () => {} });
+  assert.equal(aideMedia.help, true);
 });

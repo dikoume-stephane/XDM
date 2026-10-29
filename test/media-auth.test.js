@@ -266,3 +266,52 @@ test('T-B-50 : `--verifier --sortie json` inclut les tâches non commencées', a
     assert.equal(summary.conforms, true, 'une tâche non commencée n’est pas un écart');
   });
 });
+
+test('T-A-34 : `xdm --cookies` annonce le nombre de cookies écrits, pas « undefined »', async () => {
+  // Le fichier posé par la sonde est daté : c'est le seul cas persisté (`D-062`).
+  const body = Buffer.from('contenu');
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, {
+      'content-length': String(body.length),
+      'accept-ranges': 'bytes',
+      'set-cookie': 'session=ok; Path=/; Max-Age=3600',
+    });
+    res.end(body);
+  });
+  await new Promise((done) => server.listen(0, '127.0.0.1', done));
+  const { port } = server.address();
+  await withTempDir(async (dir) => {
+    const lignes = [];
+    try {
+      await xdmMain([`http://127.0.0.1:${port}/f.bin`, dir, '--cookies', join(dir, 'c.json')], {
+        log: (line) => lignes.push(line),
+      });
+    } finally {
+      server.closeAllConnections?.();
+      await new Promise((done) => server.close(done));
+    }
+    const annonce = lignes.find((line) => line.startsWith('cookies'));
+    assert.ok(annonce, `aucune ligne « cookies » dans : ${lignes.join(' | ')}`);
+    assert.match(annonce, /\(1 cookie\(s\)\)/, 'le compte lu est un champ qui n\'existe pas');
+    assert.doesNotMatch(annonce, /undefined/);
+  });
+});
+
+test('T-D-12 : `xdm-media --cookies` annonce lui aussi le compte réel', async () => {
+  const stream = await startProtectedStream({ needHeader: { name: 'x-jeton', value: 'k' }, setCookie: true });
+  await withTempDir(async (dir) => {
+    const lignes = [];
+    try {
+      await mediaMain(
+        [stream.url, dir, '--entete', 'x-jeton: k', '--cookies', join(dir, 'c.json')],
+        { log: (line) => lignes.push(line) },
+      );
+    } finally {
+      await stream.close();
+    }
+    const annonce = lignes.find((line) => line.startsWith('cookies'));
+    assert.ok(annonce, `aucune ligne « cookies » dans : ${lignes.join(' | ')}`);
+    assert.match(annonce, /\(1 cookie\(s\)\)/);
+    assert.doesNotMatch(annonce, /undefined/);
+  });
+});
