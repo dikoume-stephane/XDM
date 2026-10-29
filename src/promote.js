@@ -96,6 +96,64 @@ export function fileNameFromUrl(rawUrl) {
 }
 
 /**
+ * Nom de fichier annoncé par un en-tête `Content-Disposition` (RFC 6266), ou `null`.
+ *
+ * Une URL ne dit pas toujours ce qu'elle transporte : `…/download?id=3` se nommerait
+ * « download », sans extension, et un fichier sans extension est un fichier qu'on n'ouvre pas
+ * d'un double-clic. Le serveur, lui, le sait — encore faut-il lire l'en-tête.
+ *
+ * Les deux formes sont acceptées, `filename*` (RFC 5987, encodage explicite) **avant**
+ * `filename` (forme historique, souvent en latin-1) : quand les deux sont présentes, la forme
+ * étendue est celle que le serveur veut vraiment. Un nom qui se réduit à rien après
+ * assainissement (`.` , `..`, séparateurs) est refusé plutôt que transformé en « download » :
+ * l'appelant garde alors le nom déduit de l'URL, ce qui est un choix visible.
+ *
+ * @param {string|null|undefined} header
+ * @returns {string|null}
+ */
+export function fileNameFromDisposition(header) {
+  if (typeof header !== 'string' || header.trim() === '') return null;
+
+  // `filename*=UTF-8''na%C3%AFve.tar.gz` — charset et langue facultatifs, valeur encodée.
+  const extended = /(?:^|;)\s*filename\*\s*=\s*([^;]+)/i.exec(header);
+  if (extended) {
+    const raw = extended[1].trim().replace(/^"(.*)"$/, '$1');
+    const parts = raw.split("'");
+    // `charset'langue'valeur` : trois segments au plus, la valeur est le dernier.
+    const encoded = parts.length >= 3 ? parts.slice(2).join("'") : raw;
+    let decoded = encoded;
+    try {
+      decoded = decodeURIComponent(encoded);
+    } catch {
+      // Séquence invalide : garder la forme brute vaut mieux que perdre le nom.
+    }
+    const cleaned = cleanDispositionName(decoded);
+    if (cleaned !== null) return cleaned;
+  }
+
+  const plain = /(?:^|;)\s*filename\s*=\s*("(?:[^"\\]|\\.)*"|[^;]+)/i.exec(header);
+  if (!plain) return null;
+  let value = plain[1].trim();
+  if (value.startsWith('"') && value.endsWith('"') && value.length >= 2) {
+    value = value.slice(1, -1).replace(/\\(.)/g, '$1');
+  }
+  return cleanDispositionName(value);
+}
+
+/** Assainit un nom de `Content-Disposition` ; `null` si rien d'exploitable ne reste. */
+function cleanDispositionName(value) {
+  const text = String(value).trim();
+  if (text === '' || text === '.' || text === '..') return null;
+  const name = sanitizeFileName(text);
+  // `sanitizeFileName` rend « download » pour un nom vide : ici, l'absence de nom doit se
+  // distinguer d'un nom qui vaut littéralement « download ».
+  if (name === 'download' && !/^download$/i.test(text.split(/[\\/]/).filter(Boolean).at(-1) ?? '')) {
+    return null;
+  }
+  return name;
+}
+
+/**
  * Erreur de promotion : la carte ou le fichier ne permettent pas de livrer.
  */
 export class PromotionError extends Error {

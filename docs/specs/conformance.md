@@ -1,12 +1,12 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.13 — **Dernière revue** : 2026-10-29
+> **Statut** : ✅ v1.14 — **Dernière revue** : 2026-10-29
 > **Vérification** : `node tools/audit-conformance.mjs --strict` (6 contrôles) — la matrice
 > est auditée, pas seulement rédigée : voir `revue-clean-room.md`.
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
 > fonde et le **test** qui la vérifiera. Aucune ligne d'implémentation ne référence une
 > exigence absente de ce fichier.
-> **Sources** : `docs/specs/A-moteur-de-telechargement.md` (v0.7),
+> **Sources** : `docs/specs/A-moteur-de-telechargement.md` (v0.9),
 > `docs/specs/B-grabber.md` (v0.11), annexes 12 à 16 ; fiches C et D dans l'annexe 15.
 > **Rappel** : « preuve » ne veut pas dire « comportement validé ». Une exigence
 > **Hypothèse** n'a pas de preuve et ne peut pas être marquée conforme.
@@ -27,6 +27,10 @@
 | `EX-A-02` état dans `<cible>.xdm-part.json` | Décision | `D-024` | `T-A-02` | **vert** |
 | `EX-A-03` carte = liste de bornes | Observé + Décision | annexe 14 §5.1 ; `D-030` | `T-A-03` | **vert** |
 | `EX-A-04` rejet des cartes incohérentes | Dérivé | `D-030` | `T-A-04` | **vert** |
+| `EX-A-20` reprise au niveau **fichier** par défaut (carte relue, morceaux clos non redemandés), `--sans-reprise` pour repartir de zéro, carte d'une **autre URL** jamais recollée et raison du refus annoncée (`url`, `taille`, `validateur`) | **Décision** (`D-071`) | `D-071` ; `src/connection-loop.js`, `bin/xdm.js` | `T-A-29`, `T-A-30` | **vert** |
+| `EX-A-21` nom final : `--nom`, sinon l'URL, sinon `Content-Disposition` (`filename*` avant `filename`) quand le nom de l'URL n'a pas d'extension ; composante finale assainie | **Décision** (`D-072`) | `D-072` ; `src/promote.js`, `src/http-client.js` | `T-A-30` | **vert** |
+| `EX-A-22` `--sortie json` : un seul objet sur `stdout`, progression et messages sur `stderr` | **Décision** (`D-073`) | `D-073` ; `bin/xdm.js` | `T-A-31` | **vert** |
+| `EX-A-23` `--proxy` appliqué au transfert HTTP **et** à la sonde ; proxy illisible refusé localement | **Décision** (`D-074`) | `D-074` ; `src/proxy.js`, `bin/xdm.js` | `T-A-32` | **vert** |
 | `EX-A-05` progression dérivée | Dérivé | `D-031` | `T-A-05` | **vert** |
 | `EX-A-06` morceau 1–10 MiB, paliers 2/10 MiB | Observé + Décision | annexe 14 §5.4 ; `chunks.json` ; `D-029` | `T-A-06` | **vert** |
 | `EX-A-07` 1 → N connexions, plafond 8 par défaut | Observé + Décision | annexe 14 §6 ; `0x0fbe17` ; `D-036`, `D-043` | `T-A-07` | **vert** (allocation, file, boucle et **runner** ; la boucle réseau reste à écrire) |
@@ -43,7 +47,7 @@
 | `EX-A-18` inactivité > 30 s ⇒ reconnexion | Observé | annexe 14 §4.5 (`0x1a139f`, `0x18adad`) ; `D-038` | `T-A-25` | **vert** |
 | `EX-A-19` reprise sans retour à zéro | Observé + Décision | annexe 14 §4.5, §5.3 ; `D-030` | `T-A-26` | **vert** |
 
-**Couverture** : 19 exigences, **19 vertes** (`npm test`, 196 cas) — domaine A **clos**.
+**Couverture** : 23 exigences, **23 vertes** (`npm test`, 274 cas) — domaine A **clos**.
 La boucle de connexions (`src/connection-loop.js`) exécute les exigences de bout en bout
 contre des serveurs locaux, y compris la coupure, la reprise depuis la carte persistée et la
 promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
@@ -80,6 +84,7 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 | `EX-B-34` **aspiration incrémentale** (`--incremental`) : `If-Modified-Since` sur la date du fichier local ; un `304` laisse le fichier **intact** (aucune écriture, même date) et compte comme **terminé** ; un `200` réécrit ; avec `--reprendre`, les tâches `DONE` sont **rouvertes** pour être reposées au serveur | **Décision** (`D-070`) | `D-070` ; `src/connection-loop.js`, `src/http-client.js` (`probe`), `src/grab-runner.js` (`reopenDone`) | `T-B-45` | **vert** |
 | `EX-B-35` **crédit d'essais cumulés** (`--tentatives-total`) : au-delà du plafond, une tâche en échec n'est **pas** rejouée par `--reprendre`, reste `FAILED` avec son message, et le nombre est annoncé | **Décision** (`D-070`) | `D-070` ; `src/grab-runner.js` (`retryFailedCapped`) | `T-B-46` | **vert** |
 | `EX-B-36` **progression lisible** (`--progression`) : paliers de 10 %, une ligne par palier et par fichier, taille inconnue annoncée **une fois** sans pourcentage inventé ; `--verifier --sortie json` rend des compteurs et des **listes de chemins**, pas des objets de tâche | **Décision** (`D-070`) | `D-070` ; `src/progress.js`, `bin/xdm-grab.js` (`summarize`) | `T-B-47`, `T-B-48` | **vert** |
+| `EX-B-37` `--verifier --rapport` écrit un **rapport de vérification** dans les quatre formats (extension ⇒ format, `.htm` compris) : anomalies seules (`MANQUANT`, `TRONQUÉ`, `PARTIEL`, `ABSENT`, `HORS FILE`), conformité, octets annoncés et sur disque | **Décision** (`D-074`) | `D-074` ; `src/report.js` (`buildVerifyReport`), `bin/xdm-grab.js` (`reportFormatFor`) | `T-B-49` | **vert** |
 | `EX-B-24` **plans de site** (opt-in) : directives `Sitemap:` du `robots.txt` d'abord, sinon `/sitemap.xml` ; index suivi **un seul niveau**, plans et URL **plafonnés** ; seules les URL de la même origine sont retenues ; les URL trouvées sont des **amorces** soumises aux mêmes contrôles (`robots.txt`, filtres, site, plafond) — une amorce fichier est retenue sans être « visitée » | **Décision** (`D-065`) | `D-065` ; `src/sitemap.js` | `T-C-17`, `T-B-37` | **vert** |
 | `EX-B-25` `--sous-domaines` élargit le parcours au **même site** (même hôte, sous-domaine, même parent d'au moins deux labels), jamais à un domaine tiers ; opt-in, et la limite « pas de *Public Suffix List* » est nommée | **Décision** (`D-065`) | `D-065` ; `src/crawler.js` (`sameSiteHost`) | `T-B-36`, `T-C-19` | **vert** |
 | `EX-B-26` `--tentatives` couvre **aussi l'exploration** : mêmes statuts transitoires et même `Retry-After` que les téléchargements (`D-055`), reprises comptées, aucune seconde politique | **Décision** (`D-065`) | `D-065` ; `src/retry.js`, `src/crawler.js` | `T-B-38`, `T-C-19` | **vert** |
@@ -90,7 +95,7 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 | `EX-B-23` `--essai` montre le **plan** (pages, fichiers, cibles, arrêt) sans rien écrire ni télécharger : dossier cible non créé, ni `empty.html`, ni projet, ni file, code de sortie 0 ; `--sortie json` reste consommable | **Décision** (`D-064`) | `D-064` ; `bin/xdm-grab.js` | `T-C-16` | **vert** |
 | `EX-B-20` `--exclure` **élague** la branche : un lien élagué n'est ni retenu ni demandé, donc rien de ce qu'il cite n'entre dans la file ; l'exclusion par défaut, elle, continue de ne trier que les téléchargements | **Décision** (`D-060`) | `D-060` ; `D-032` ; `src/crawler.js` (`prune`) | `T-B-32`, `T-C-14` | **vert** |
 
-**Couverture** : 36 exigences, **36 vertes** (`npm test`, 265 cas) — domaine B **clos**.
+**Couverture** : 37 exigences, **37 vertes** (`npm test`, 274 cas) — domaine B **clos**.
 `Q-B-01` est close comme non instruite dans ce module (annexe 12 §6) : l'exploration et
 l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`,
 `src/grabber.js`, `D-041`/`D-042`).
@@ -172,7 +177,7 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 
 ## 4. Ce que cette matrice révèle
 
-1. **Le domaine A est spécifiable et testable immédiatement** : 19 exigences, aucune
+1. **Le domaine A est spécifiable et testable immédiatement** : 23 exigences, aucune
    hypothèse, chaque test peut s'écrire sans réseau réel (serveur local + fichiers).
 2. **Le domaine B ne l'est pas** : 3 exigences sur 13 reposent sur l'algorithme
    d'exploration, qui n'est pas établi (`Q-B-01`, `A-09`).
@@ -209,6 +214,7 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 
 | Date | Changement |
 |---|---|
+| 2026-10-29 | v1.14 : `D-071`→`D-074` — reprise par défaut et `--sans-reprise` (`EX-A-20`), nom par `Content-Disposition` (`EX-A-21`), `--sortie json` (`EX-A-22`), `--proxy` appliqué (`EX-A-23`), rapport de vérification (`EX-B-37`) ; A **23/23**, B **37/37**, 274 tests, total **83 vertes / 84** |
 | 2026-10-29 | v1.13 : `D-069`/`D-070` — en-têtes personnalisés (`EX-B-33`), aspiration incrémentale (`EX-B-34`), plafond d'essais cumulés (`EX-B-35`), progression et audit JSON (`EX-B-36`) ; domaine B **36/36**, 265 tests, total **78 vertes / 79** |
 | 2026-10-29 | v1.12 : `D-067`/`D-068` — reprise des tâches orphelines (`EX-B-29`), plafond de taille (`EX-B-30`), espace disque (`EX-B-31`), vérification et rapport HTML (`EX-B-32`) ; domaine B **32/32**, 257 tests, total **74 vertes / 75** |
 | 2026-10-29 | v1.11 : `D-065`/`D-066` — plans de site et amorces (`EX-B-24`), `--sous-domaines` (`EX-B-25`), reprise pendant l'exploration (`EX-B-26`), interruption propre (`EX-B-27`), aide et version (`EX-B-28`) ; domaine B **28/28**, C **13/14** ; 250 tests, total **70 vertes / 71** |

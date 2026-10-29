@@ -11,11 +11,14 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 265 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 274 tests, sans dépendance (node --test)
 npm run audit                      # traçabilité : chaque exigence verte a un test qui existe
 npm run gate                       # porte G3 : site local + coupure réseau, comparaison disque/serveur
 npm run gate -- --pages 200 --max 200M   # profil de la porte : 200 pages, jusqu'à 200 Mo
 node bin/xdm.js <url> [dossier]    # téléchargement réel : plages, reprise, promotion
+node bin/xdm.js <url> [dossier] --sortie json   # un objet sur stdout, la progression sur stderr
+node bin/xdm.js <url> [dossier] --proxy http://127.0.0.1:8080 --sans-reprise
+node bin/xdm.js <url> [dossier] --nom archive.zip   # sinon le nom vient de l'URL ou du serveur
 node bin/xdm-grab.js <url> [dir]   # aspiration de site : parcours, arborescence, file
 node bin/xdm-grab.js <url> [dir] --reprendre --sortie json   # reprise + résumé machine
 node bin/xdm-grab.js <url> [dir] --exclure '*/prive/*' --paralleles 4 --cookies c.json
@@ -144,13 +147,17 @@ tools/                     collecte de preuves, triage, extractions
   17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
 - ✅ WP-20 → WP-27 terminés : moteur de morceaux, boucle de connexions, aspiration de site
   et CLI (`bin/xdm.js`, `bin/xdm-grab.js`), transports (proxys, FTP, PAC), médias (HLS,
-  DASH) ; **265 tests**, domaines A, B et D clos, domaine C à **13/14** (1 hors périmètre),
-  soit **78 exigences vertes sur 79** ; porte G3 franchie (200 pages, 205 Mio, coupure
+  DASH) ; **274 tests**, domaines A, B et D clos, domaine C à **13/14** (1 hors périmètre),
+  soit **83 exigences vertes sur 84** ; porte G3 franchie (200 pages, 205 Mio, coupure
   réseau absorbée).
 - ✅ WP-43/WP-44 : en-têtes personnalisés (`--entete`, validation unique partagée par les
   deux CLI, envoyés à la sonde **et** à chaque plage) et aspiration incrémentale
   (`--incremental`, `304` = fichier intact ; `--tentatives-total`, `--progression`) —
   `D-069`, `D-070`.
+- ✅ WP-45 → WP-48 : l'outil ne ment plus sur ses options — reprise de fichier par défaut et
+  `--sans-reprise`, carte d'une autre URL refusée, nom par `Content-Disposition`, `--sortie
+  json`, `--proxy` **réellement** appliqué au HTTP, et rapport écrit par `--verifier
+  --rapport` — `D-071`→`D-074`.
 - ✅ WP-24/WP-25 : réécriture des liens (`--reecrire`, `D-053`, ajout XDM assumé), rapport
   d'aspiration (texte/JSON/CSV/Markdown, `--rapport`) et planification sans démon
   (`--planifier`, `--quota-octets`, `--quota-taches`, `D-054`).

@@ -85,6 +85,7 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
     connections: 4,
     robots: true,
     resume: false,
+    noResume: false,
     output: 'texte',
     rewrite: false,
     include: [],
@@ -116,7 +117,7 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
     parseArgs(['http://h/', 'dl', '--profondeur', '3', '--pages', '10', '--connexions', '2', '--sans-robots']),
     {
       url: 'http://h/', directory: 'dl', depth: 3, maxPages: 10, connections: 2,
-      robots: false, resume: false, output: 'texte',
+      robots: false, resume: false, noResume: false, output: 'texte',
       rewrite: false, include: [], exclude: [], noExclude: false, parallelisme: 1,
       delay: null, maxErrors: null, headers: {}, dryRun: false,
       sitemap: false, subdomains: false, maxSize: null, minSpace: null, verify: false,
@@ -130,7 +131,7 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
     parseArgs(['http://h/', '--reprendre', '--sortie', 'json']),
     {
       url: 'http://h/', directory: '.', depth: 2, maxPages: 2000, connections: 4,
-      robots: true, resume: true, output: 'json',
+      robots: true, resume: true, noResume: false, output: 'json',
       rewrite: false, include: [], exclude: [], noExclude: false, parallelisme: 1,
       delay: null, maxErrors: null, headers: {}, dryRun: false,
       sitemap: false, subdomains: false, maxSize: null, minSpace: null, verify: false,

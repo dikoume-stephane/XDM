@@ -254,7 +254,8 @@ function drain(stream) {
  * @param {{transport?: typeof defaultTransport, headers?: Record<string, string>, maxRedirects?: number}} [options]
  * @returns {Promise<{url: string, finalUrl: string, redirects: number, status: number,
  *   acceptRanges: boolean, size: number | null, etag: string | null,
- *   lastModified: string | null, contentType: string | null}>}
+ *   lastModified: string | null, contentType: string | null,
+ *   contentDisposition?: string | null}>}
  */
 export async function probe(url, {
   transport = defaultTransport,
@@ -298,6 +299,8 @@ export async function probe(url, {
         acceptRanges: null,
         etag: responseHeaders.etag ?? null,
         lastModified: responseHeaders['last-modified'] ?? null,
+        contentType: responseHeaders['content-type'] ?? null,
+        contentDisposition: responseHeaders['content-disposition'] ?? null,
       };
     }
 
@@ -328,6 +331,9 @@ export async function probe(url, {
       etag: responseHeaders.etag ?? null,
       lastModified: responseHeaders['last-modified'] ?? null,
       contentType: responseHeaders['content-type'] ?? null,
+      // Nom que le serveur donne au fichier (`Content-Disposition`, RFC 6266) : une URL
+      // `…/download?id=3` ne dit rien, l'en-tête si (`D-072`).
+      contentDisposition: responseHeaders['content-disposition'] ?? null,
     };
   }
 }

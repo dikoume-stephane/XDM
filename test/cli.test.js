@@ -30,6 +30,8 @@ test('T-A-14 : la CLI refuse une invocation sans URL', async () => {
     chunkSize: 512,
     headers: {},
     incremental: false,
+    resume: true,
+    output: 'texte',
   });
   // `--entete` : même validation que l'aspiration (module partagé), et l'injection est refusée.
   assert.deepEqual(parseArgs(['http://h/f', '--entete', 'Authorization: Bearer x']).headers,

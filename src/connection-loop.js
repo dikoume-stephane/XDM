@@ -261,10 +261,20 @@ export async function download(url, target, {
   const workPath = workPathFor(target);
   /** @type {ReturnType<typeof createChunkMap> | null} */
   let resumedMap = null;
+  // Une carte ignorée a une **raison**, et cette raison est rendue à l'appelant (`D-071`) :
+  // « reprise refusée » sans dire pourquoi ressemble à une reprise qui n'a rien trouvé.
+  /** @type {'url'|'taille'|'validateur'|null} */
+  let resumeDropped = null;
   if (resume) {
     try {
       const existing = /** @type {any} */ (await loadPartFile(target));
-      if (existing.totalSize === size) {
+      if (existing.totalSize !== size) {
+        resumeDropped = 'taille';
+      } else if (typeof existing.url === 'string' && existing.url !== url) {
+        // La carte désigne une **autre** ressource : recoller ses morceaux dans ce fichier
+        // fabriquerait un hybride de deux téléchargements, sans que rien ne le signale.
+        resumeDropped = 'url';
+      } else {
         // `A-21` : les morceaux de reprise adjacents sont recollés avant de servir.
         resumedMap = mergeResumeChunks(existing);
       }
@@ -285,6 +295,7 @@ export async function download(url, target, {
     // Le fichier a changé pendant l'interruption : la carte acquise est périmée.
     resumedMap = null;
     discarded = true;
+    resumeDropped = 'validateur';
   }
   const validator = ifRange ?? (resumedMap !== null ? storedValidator : null);
   const work = await openWorkFile(workPath, size, { fresh: resumedMap === null });
@@ -510,6 +521,7 @@ export async function download(url, target, {
       target,
       workPath,
       size,
+      resumeDropped: resumeDropped ?? null,
       connections: stats.divergence ? 1 : effectiveConnections,
       chunkSize: stats.divergence ? size : effectiveChunkSize,
       requests: stats.requests,

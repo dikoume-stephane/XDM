@@ -1,11 +1,12 @@
 # Fiche B — Grabber (aspiration de site)
 
 > **Domaine** : B (grabber) · **Lot** : `WP-11`/`WP-23` (`A-05`, deuxième fiche) · **Statut** : ✅ `clos`
-> (les 36 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
+> (les 37 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
 > **exploration** : choix XDM documentés depuis `D-041`, l'algorithme d'IDM n'étant pas dans
 > `IDMan.exe`)
-> **Dernière revue** : 2026-10-29 (v0.11 : en-têtes personnalisés (`D-069`), aspiration
-> incrémentale, crédit d'essais cumulés et progression (`D-070`) — 36 exigences)
+> **Dernière revue** : 2026-10-29 (v0.12 : en-têtes personnalisés (`D-069`), aspiration
+> incrémentale (`D-070`), `--sans-reprise` (`D-071`), nom par `Content-Disposition` (`D-072`),
+> `--sortie json` (`D-073`), proxy et rapport de vérification (`D-074`) — 37 exigences)
 > **Preuves** : annexes 11 (modèle de projet), 12 (grabber), 13 (filtres et artefacts) ;
 > `filters.json` ; décisions `D-032`, `D-033`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9`.
@@ -61,6 +62,7 @@ pouvoir reprendre une aspiration interrompue.
 | `EX-B-33` | `--entete` (répétable, **les deux CLI**) : validation unique (`parseHeaderOption`), nom = jeton RFC 9110, valeur sans `CR`/`LF`/`NUL`, refus **explicite** ; l'en-tête part avec la **sonde et chaque plage** ; les en-têtes du moteur (`Range`, `Accept-Encoding`, `If-Range`) gardent la priorité | **Décision** | `D-069` ; `src/headers.js`, `src/connection-loop.js` | `T-A-28` ✅ (toutes les requêtes de données portent l'en-tête), `T-C-22` ✅ (injection `\r\n` refusée) |
 | `EX-B-34` | `--incremental` : `If-Modified-Since` sur la date du fichier local ; `304` ⇒ **aucune écriture**, fichier et date intacts, tâche terminée, taille **non inventée** ; `200` ⇒ réécriture ; avec `--reprendre`, `reopenDone` rouvre les `DONE` dont le fichier existe (`DONE → PENDING`) | **Décision** | `D-070` ; `src/http-client.js`, `src/connection-loop.js`, `src/grab-runner.js` | `T-B-45` ✅, `T-A-28` ✅ (contenu et `mtimeMs` inchangés) |
 | `EX-B-35` | `--tentatives-total` : crédit d'essais **cumulés** ; une tâche au plafond reste `FAILED` avec son message, n'est **pas** rejouée par `--reprendre`, et est nommée dans la sortie | **Décision** | `D-070` ; `src/grab-runner.js` (`retryFailedCapped`) | `T-B-46` ✅ (tâche à 3 essais non rejouée, celle à 1 essai rejouée) |
+| `EX-B-37` | `--verifier --rapport F` écrit un **rapport de vérification** (JSON, CSV, Markdown, HTML ; `.htm` reconnu) : anomalies seules (`MANQUANT`, `TRONQUÉ`, `PARTIEL`, `ABSENT`, `HORS FILE`), conformité, octets annoncés et sur disque ; les rapports s'écrivent où on le demande, jamais dans le dossier vérifié sans le dire | **Décision** | `D-074` ; `src/report.js`, `bin/xdm-grab.js` | `T-B-49` ✅ (4 formats, conforme et non conforme) |
 | `EX-B-36` | `--progression` : paliers de 10 %, une ligne par palier et par fichier, taille inconnue annoncée **une fois** sans pourcentage inventé, `stderr` seulement ; `--verifier --sortie json` rend des compteurs et des **listes de chemins** | **Décision** | `D-070` ; `src/progress.js`, `bin/xdm-grab.js` | `T-B-47` ✅ (≤ 12 lignes pour 41 appels), `T-B-48` ✅ |
 | `EX-B-32` | `--verifier` compare **la file au disque** sans réseau : manquants (`DONE` sans fichier), tronqués (taille ≠ annoncée), partiels, absents, fichiers hors file ; les fichiers de l'outil sont exclus ; code 1 sur écart ; rien n'est créé ni corrigé ; le rapport HTML est **autonome** et intégralement échappé | **Décision** | `D-068` ; `src/verify.js`, `src/report.js` | `T-B-43` ✅, `T-B-44` ✅ (injection `<script>` neutralisée) |
 

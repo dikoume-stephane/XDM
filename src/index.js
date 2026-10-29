@@ -79,6 +79,7 @@ export {
   WORK_SUFFIX,
   checkReadyToPromote,
   discard,
+  fileNameFromDisposition,
   fileNameFromUrl,
   promote,
   sanitizeFileName,
@@ -302,6 +303,7 @@ export { DEFAULT_RESERVE_BYTES, checkSpace, estimateSpace, freeSpace, nearestExi
 export { SIZE_UNITS, parseSize } from './size.js';
 export { isToolFile, verifyGrab, walkTree } from './verify.js';
 export { createProgressReporter, defaultLabel, formatProgress } from './progress.js';
+export { buildVerifyReport } from './report.js';
 export {
   downloadTask,
   executeGrab,

@@ -1831,6 +1831,107 @@ appels d'avancement ⇒ **≤ 12 lignes**, dernière à 100 %, taille inconnue �
 
 ---
 
+### D-071 — La reprise existe : il faut pouvoir la refuser, et refuser une carte étrangère
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/connection-loop.js`, `bin/xdm.js`, `bin/xdm-grab.js`, `src/grab-runner.js`, `EX-A-20`
+
+**Contexte — une hypothèse démentie par la mesure.** J'avais noté qu'« `xdm` ne reprend pas un
+fichier interrompu ». Mesure : tuer le processus au milieu d'un fichier de 4 Mio puis relancer
+donnait **deux** requêtes et 4 Mio relus. Mais un second essai, avec des morceaux de 4 Kio et
+une coupure qui laisse le premier morceau **clos**, montre que la carte est relue et que la
+seconde passe ne demande que 61 440 octets. La reprise était donc déjà le comportement par
+défaut du moteur (`resume = true`) : c'est la première mesure qui était mal instrumentée — le
+`kill` tombait avant la clôture du moindre morceau, et une preuve qui ne mesure rien n'est pas
+une preuve.
+
+**Décision.** Ce qui manquait n'est donc pas la reprise, c'est le **contrôle** :
+1. **`--sans-reprise`** (les deux CLI) : repartir d'un fichier propre quand la carte ne mérite
+   plus confiance (carte tronquée par un disque plein, fichier modifié à la main).
+2. **Une carte d'une autre URL n'est jamais recollée.** `loadPartFile` rend aussi l'URL
+   d'origine ; si elle diffère de celle demandée, la carte est ignorée. Sans cette garde, deux
+   téléchargements successifs vers la même cible se recollent **silencieusement** dès que le
+   serveur ne fournit ni `ETag` ni `Last-Modified` — et le fichier livré est un hybride.
+3. **La raison du refus est dite** : `resumeDropped: 'url' | 'taille' | 'validateur'`, rendue
+   par `download` et annoncée par la CLI (« reprise ignorée (carte d'une autre URL) : lecture
+   complète »). Une reprise refusée sans raison ressemble à une reprise qui n'a rien trouvé.
+
+**Mesures.** `T-A-29` : fichier coupé à 4 Kio ⇒ seconde passe **< 32 Kio** demandés pour 32 Kio ;
+avec `--sans-reprise`, la totalité est relue. `T-A-30` : carte réécrite avec une autre URL ⇒
+`resumeDropped: 'url'`, fichier final identique à la source, aucun morceau de l'autre ressource.
+
+---
+
+### D-072 — Le nom du fichier ne se devine pas toujours dans l'URL
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/promote.js`, `src/http-client.js`, `bin/xdm.js`, `EX-A-21`
+
+**Contexte.** `http://h/download?id=3` produisait `download`, **sans extension** : un fichier
+qu'aucun système n'ouvre d'un double-clic, alors que le serveur avait envoyé
+`Content-Disposition: attachment; filename="rapport final.pdf"` — donc avait dit son nom.
+
+**Décision.** `probe` expose `contentDisposition` ; `fileNameFromDisposition` lit l'en-tête
+(RFC 6266) : `filename*` (RFC 5987, `charset'langue'valeur` encodée) **avant** `filename`
+(forme historique), guillemets et échappements retirés, puis **assainissement habituel**
+(composante finale seule, `sanitizeFileName`). Ordre des priorités : `--nom`, puis l'URL si elle
+a une extension, puis l'en-tête, puis l'URL. La sonde supplémentaire n'a lieu **que** dans le
+troisième cas : une URL qui nomme son fichier ne coûte pas une requête de plus. Un nom qui se
+réduit à rien (`.`, `..`) est refusé, pas remplacé par « download » : l'appelant garde le nom
+de l'URL, ce qui est visible.
+
+**Mesures.** `T-A-30` : `?id=3` + en-tête ⇒ `rapport final.pdf` ; `archive.tar.gz` garde son nom
+malgré un en-tête qui dit `autre.zip` ; `--nom force.zip` l'emporte ; `filename="../../etc/passwd"`
+⇒ `passwd` **dans** le dossier, rien en dehors.
+
+---
+
+### D-073 — Une CLI qui ne parle qu'aux humains ne sert qu'à moitié
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `bin/xdm.js`, `EX-A-22`
+
+**Contexte.** `xdm-grab --sortie json` existe depuis `D-044` ; `xdm` n'avait rien. Un script qui
+télécharge un fichier et veut sa taille devait analyser `écrit /tmp/x (4096 octets, 3 requêtes)`
+— c'est-à-dire lire une phrase française avec une expression régulière.
+
+**Décision.** `--sortie json` rend **un seul objet** sur `stdout`
+(`{url, target, size, requests, notModified?, resumeDropped?}`) et déplace **tout le reste** sur
+`stderr` : progression, messages, refus de reprise. `JSON.parse(stdout)` doit suffire — c'est la
+seule définition testable d'une sortie machine. En mode texte, rien ne change.
+
+**Mesures.** `T-A-31` : `stdout` = **1 ligne**, `JSON.parse` réussit, `size` = 4096, et la
+progression est bien sur `stderr` ; vérifié aussi sur le **vrai binaire** (`execFile`).
+
+---
+
+### D-074 — `--proxy` était documenté, pas appliqué ; `--verifier --rapport` n'écrivait rien
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `bin/xdm.js`, `bin/xdm-grab.js`, `src/report.js`, `EX-A-23`, `EX-B-37`
+
+**Contexte — deux options qui mentaient.**
+1. `xdm --aide` annonçait `--proxy` « proxy HTTP pour le transfert ». Le code ne le passait
+   qu'au transport **FTP** : un `xdm <url> --proxy …` téléchargeait en direct, sans un mot. Une
+   option documentée et inerte est pire qu'une option absente : elle fait croire à un contrôle
+   qui n'existe pas.
+2. `xdm-grab … --verifier --rapport r.html` affichait son constat puis **s'arrêtait sans
+   écrire** : le retour anticipé du mode vérification court-circuitait la section du rapport.
+   Silence total, code 0, aucun fichier.
+
+**Décision.**
+1. `--proxy` enveloppe le transport (`createProxyTransport`) et sert donc **à la fois** la
+   sonde et les morceaux, puisque le moteur n'a qu'un transport. Le proxy est validé
+   (`parseProxyUrl`) **à l'analyse des arguments** : un `--proxy ftp://…` est refusé avant la
+   première connexion.
+2. Le mode vérification construit un **rapport de vérification** (`buildVerifyReport`) : mêmes
+   quatre formats, mêmes fonctions de rendu, mais des lignes qui disent un **état constaté**
+   (`MANQUANT`, `TRONQUÉ`, `PARTIEL`, `ABSENT`, `HORS FILE`) et une section de conformité (tâches
+   vérifiées, conformes, octets annoncés / sur disque). Seules les **anomalies** sont listées :
+   400 lignes « OK » cachent les trois qui comptent.
+3. Le format se déduit de l'extension par **une seule** fonction (`reportFormatFor`), et le
+   `.htm` est reconnu : l'ancienne expression `\.[ch]tml$` ne correspondait qu'à `.html`, donc
+   un `--rapport x.htm` sortait en Markdown sans le dire.
+
+**Mesures.** `T-A-32` : un proxy `CONNECT` local voit passer la connexion, le fichier arrive, et
+`--proxy ftp://x` est refusé localement. `T-B-49` : rapport HTML avec `MANQUANT` et `HORS FILE`,
+JSON `conforms: false`, CSV, Markdown, et un cas **conforme** dont le rapport ne contient
+**aucune** entrée ; `r.htm` ⇒ HTML.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation

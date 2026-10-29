@@ -1,6 +1,6 @@
 # Revue « clean-room » (WP-32)
 
-> **Statut** : ✅ v1.5 — **Dernière revue** : 2026-10-29
+> **Statut** : ✅ v1.6 — **Dernière revue** : 2026-10-29
 > **Rôle** : vérifier que la reconstruction repose sur des **descriptions de comportement**
 > et non sur du code recopié, et que cette revendication est **mesurable**.
 > **Moyens** : `tools/audit-conformance.mjs` (automatique) + lecture manuelle (§3).
@@ -144,6 +144,7 @@ elles sont marquées ainsi.
 
 | Date | Changement |
 |---|---|
+| 2026-10-29 | v1.6 : `D-071`→`D-074` — 5 exigences (`EX-A-20`→`23`, `EX-B-37`) : reprise de fichier par défaut et `--sans-reprise`, carte d'une autre URL refusée, nom par `Content-Disposition`, `--sortie json`, `--proxy` appliqué, rapport de vérification ; **84 exigences, 83 vertes, 0 écart**, 274 tests. Deux options documentées mais inertes ont été corrigées, pas contournées |
 | 2026-10-29 | v1.5 : `D-069`/`D-070` — 4 exigences (`EX-B-33`→`36`) : en-têtes personnalisés, aspiration incrémentale, crédit d'essais cumulés, progression/audit JSON ; **79 exigences, 78 vertes, 0 écart**, 265 tests. La validation d'en-tête n'existe **qu'une fois** (`parseHeaderOption`) et les deux CLI y délèguent : aucune règle dupliquée à diverger |
 | 2026-10-29 | v1.4 : `D-067`/`D-068` — 4 exigences (`EX-B-29`→`32`) ; **75 exigences, 74 vertes, 0 écart**, 257 tests. Deux fonctions redéfinies ont été retirées au profit des modules d'origine (`WORK_SUFFIX`, `PART_SUFFIX`), pour ne pas créer deux vérités |
 | 2026-10-29 | v1.3 : `D-065`/`D-066` — 5 exigences (`EX-B-24`→`28`) : plans de site, sous-domaines, reprise de l'exploration, interruption propre, aide/version ; **71 exigences, 70 vertes, 0 écart**, 250 tests |

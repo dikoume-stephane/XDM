@@ -49,7 +49,7 @@ export async function downloadTask(task, { downloadOptions = {}, download: run =
   // L'arborescence du site peut être profonde : le dossier cible d'une entrée
   // (`rootDir/a/b/c.zip`) n'existe pas encore au moment de la promotion.
   await mkdir(dirname(task.target), { recursive: true });
-  const { incremental = false, ...options } = downloadOptions;
+  const { incremental = false, resume = null, ...options } = downloadOptions;
 
   // Aspiration incrémentale (`D-070`) : si le fichier local existe déjà, on demande au
   // serveur s'il a changé (`If-Modified-Since` sur la date du fichier local). Un `304`
@@ -67,6 +67,9 @@ export async function downloadTask(task, { downloadOptions = {}, download: run =
 
   const result = await run(task.url, task.target, {
     promote: true,
+    // Reprise au niveau **fichier** (`D-071`) : elle est le défaut du moteur ; `resume: false`
+    // est la seule valeur qui change quelque chose, et elle doit se propager telle quelle.
+    ...(resume === false ? { resume: false } : {}),
     ...(ifModifiedSince !== null ? { ifModifiedSince } : {}),
     ...options,
   });

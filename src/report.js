@@ -115,6 +115,95 @@ export function buildReport({
 }
 
 /**
+ * Rapport de **vérification** : la file confrontée au disque (`D-074`).
+ *
+ * Il réutilise la forme d'un rapport d'aspiration (`entries`, `counts`, `total`) pour que les
+ * quatre formats existants le rendent sans code parallèle ; ce qui change est ce que les
+ * lignes **disent** : un état de fichier constaté (`MANQUANT`, `TRONQUÉ`, `PARTIEL`,
+ * `ABSENT`, `HORS FILE`), pas un état de tâche décidé par l'outil.
+ *
+ * Seules les anomalies sont listées : un rapport de vérification qui répète 400 lignes « OK »
+ * cache les trois qui comptent. Le nombre de conformes reste dans `verification.ok`.
+ *
+ * @param {{rootDir: string, url?: string|null, verify: object, tasks?: object[],
+ *   startedAt?: number, finishedAt?: number}} input
+ * @returns {object} rapport sérialisable, compatible avec `formatReport`
+ */
+export function buildVerifyReport({ rootDir, url = null, verify, tasks = [], startedAt, finishedAt }) {
+  const counts = {
+    MANQUANT: 0, TRONQUÉ: 0, PARTIEL: 0, ABSENT: 0, 'HORS FILE': 0,
+  };
+  /** @type {object[]} */
+  const entries = [];
+  let id = 0;
+  const push = (state, target, size, error) => {
+    id += 1;
+    counts[state] += 1;
+    entries.push({ id, state, url: null, target, size, attempts: 0, error });
+  };
+
+  for (const item of verify.missing ?? []) {
+    push('MANQUANT', item.path, null, 'annoncé terminé, fichier absent');
+  }
+  for (const item of verify.truncated ?? []) {
+    push('TRONQUÉ', item.path, item.found, `attendu ${item.expected}, trouvé ${item.found}`);
+  }
+  for (const item of verify.partial ?? []) {
+    push('PARTIEL', item.path, item.size ?? null, `tâche non terminée (${item.state})`);
+  }
+  for (const item of verify.absent ?? []) {
+    push('ABSENT', item.path, null, 'pas encore téléchargé');
+  }
+  for (const item of verify.unmanaged ?? []) {
+    push('HORS FILE', item.path, item.size ?? null, 'fichier absent de la file');
+  }
+  // L'URL n'est connue que pour les entrées de la file : la retrouver ici évite de la
+  // recopier dans `verify.js`, qui raisonne en chemins.
+  const byPath = new Map((tasks ?? []).map((task) => [String(task.target ?? ''), task.url ?? null]));
+  for (const entry of entries) {
+    if (entry.url !== null) continue;
+    for (const [target, taskUrl] of byPath) {
+      if (target === entry.target || target.endsWith(`/${entry.target}`) || target.endsWith(entry.target)) {
+        entry.url = taskUrl;
+        break;
+      }
+    }
+  }
+
+  const durationMs = Number.isFinite(startedAt) && Number.isFinite(finishedAt)
+    ? Math.max(0, finishedAt - startedAt)
+    : null;
+
+  return {
+    mode: 'verification',
+    generatedAt: new Date(finishedAt ?? Date.now()).toISOString(),
+    url: url ?? rootDir,
+    pages: Array.isArray(tasks) ? tasks.length : 0,
+    counts,
+    total: verify.checked ?? 0,
+    done: verify.ok ?? 0,
+    failed: counts.MANQUANT + counts['TRONQUÉ'],
+    bytes: { known: verify.totalBytes ?? 0, unknown: 0 },
+    errors: (verify.errors ?? []).map((error) => ({ url: error.path, message: error.message })),
+    slowest: [],
+    durationMs,
+    progress: null,
+    reuses: 0,
+    diagnostics: null,
+    verification: {
+      conforms: verify.ok_ === true,
+      checked: verify.checked ?? 0,
+      ok: verify.ok ?? 0,
+      totalBytes: verify.totalBytes ?? 0,
+      diskBytes: verify.diskBytes ?? 0,
+      unmanaged: counts['HORS FILE'],
+      anomalies: entries.length,
+    },
+    entries,
+  };
+}
+
+/**
  * Synthèse du parcours pour le rapport.
  *
  * Les motifs de rejet sont **comptés**, pas listés en vrac : un rapport qui déverse 2 000
@@ -190,12 +279,20 @@ export function toCsv(report) {
  */
 export function toMarkdown(report) {
   const lines = [];
-  lines.push('# Rapport d’aspiration');
+  const verification = report.verification ?? null;
+  lines.push(verification ? '# Rapport de vérification' : '# Rapport d’aspiration');
   lines.push('');
   lines.push(`- **Site** : ${report.url ?? '—'}`);
   lines.push(`- **Généré le** : ${report.generatedAt}`);
   lines.push(`- **Entrées du projet** : ${report.pages}`);
-  lines.push(`- **Tâches** : ${report.total} (${report.done} terminées, ${report.failed} en échec)`);
+  if (verification) {
+    lines.push(`- **Conforme** : ${verification.conforms ? 'oui' : '**non**'}`);
+    lines.push(`- **Tâches vérifiées** : ${verification.checked} (${verification.ok} conformes)`);
+    lines.push(`- **Octets annoncés** : ${humanBytes(verification.totalBytes)}`
+      + ` — **sur disque** : ${humanBytes(verification.diskBytes)}`);
+  } else {
+    lines.push(`- **Tâches** : ${report.total} (${report.done} terminées, ${report.failed} en échec)`);
+  }
   lines.push(`- **Progression** : ${report.progress === null ? '—' : `${report.progress} %`}`);
   lines.push(`- **Volume annoncé** : ${humanBytes(report.bytes.known)}`
     + (report.bytes.unknown > 0 ? ` (+ ${report.bytes.unknown} de taille inconnue)` : ''));
@@ -312,7 +409,7 @@ ${report.errors.map((error) => `<tr><td><code>${escapeHtml(error.url)}</code></t
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Rapport d’aspiration — ${escapeHtml(report.url ?? 'site')}</title>
+<title>${report.verification ? 'Rapport de vérification' : 'Rapport d’aspiration'} — ${escapeHtml(report.url ?? 'site')}</title>
 <style>
 body { font-family: system-ui, sans-serif; margin: 2rem; color: #1a1a1a; }
 table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
@@ -325,7 +422,7 @@ dt { font-weight: 600; }
 </style>
 </head>
 <body>
-<h1>Rapport d’aspiration</h1>
+<h1>${report.verification ? 'Rapport de vérification' : 'Rapport d’aspiration'}</h1>
 <dl>
 <dt>Site</dt><dd>${escapeHtml(report.url ?? '—')}</dd>
 <dt>Généré le</dt><dd>${escapeHtml(report.generatedAt)}</dd>
@@ -333,6 +430,9 @@ dt { font-weight: 600; }
 <dt>Tâches</dt><dd>${report.total} (${report.done} terminées, ${report.failed} en échec)</dd>
 <dt>Progression</dt><dd>${report.progress === null ? '—' : `${report.progress} %`}</dd>
 <dt>Volume annoncé</dt><dd>${escapeHtml(humanBytes(report.bytes.known))}${report.bytes.unknown > 0 ? ` (+ ${report.bytes.unknown} de taille inconnue)` : ''}</dd>
+${report.verification ? `<dt>Conforme</dt><dd>${report.verification.conforms ? 'oui' : 'non'}</dd>
+<dt>Tâches vérifiées</dt><dd>${report.verification.checked} (${report.verification.ok} conformes)</dd>
+<dt>Octets sur disque</dt><dd>${escapeHtml(humanBytes(report.verification.diskBytes))}</dd>` : ''}
 ${report.durationMs === null ? '' : `<dt>Durée</dt><dd>${escapeHtml(humanDuration(report.durationMs))}</dd>`}
 </dl>
 <h2>États</h2>

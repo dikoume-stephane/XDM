@@ -39,7 +39,9 @@ import {
 import { createCookieJar, loadCookieJar, saveCookieJar, withCookies } from '../src/cookies.js';
 import { defaultTransport } from '../src/http-client.js';
 import { parseHeaderOption } from '../src/headers.js';
-import { buildReport, formatReport, summarizeCrawl } from '../src/report.js';
+import {
+  buildReport, buildVerifyReport, formatReport, summarizeCrawl,
+} from '../src/report.js';
 import { rewriteDocument, siteMapFromEntries } from '../src/rewrite.js';
 import { createSchedule, planRun } from '../src/schedule.js';
 import { createQueue, loadQueue, saveQueue } from '../src/task-queue.js';
@@ -61,8 +63,9 @@ export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages
   --connexions     téléchargements simultanés (défaut 4)
   --sans-robots    ignorer robots.txt (déconseillé)
   --reprendre      reprendre le projet et la file déjà présents dans <dossier>, sans re-parcourir ;
-                   relève aussi les tâches laissées en cours par un arrêt brutal (suppose
-                   qu'aucune autre exécution ne travaille dans ce dossier)
+                   relève les tâches laissées en cours par un arrêt brutal et reprend les
+                   fichiers à partir de leur carte (un morceau écrit n'est pas redemandé) ;
+                   suppose qu'aucune autre exécution ne travaille dans ce dossier
   --inclure        motif à inclure, répétable (ex. « *.html »)
   --exclure        motif à exclure, répétable — l'emporte sur l'inclusion (D-032)
   --delai          secondes entre deux vagues de requêtes ; 0 pour ignorer le Crawl-delay
@@ -101,12 +104,30 @@ export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages
                    une tâche en échec n'est plus rejouée par --reprendre
   --incremental    si un fichier local existe, demander If-Modified-Since : un 304 le laisse
                    intact et compte comme terminé
+  --sans-reprise   télécharger chaque fichier depuis zéro, sans lire sa carte de morceaux
+                   (la reprise est le défaut ; une carte d'une autre URL est toujours ignorée)
   --progression    afficher l'avancement de chaque fichier (%, octets) sur la sortie d'erreur
   --sortie         format du résumé : texte (défaut) ou json
 
 code de sortie : 0 terminé, 1 erreur, 2 usage, 3 hors fenêtre de planification`;
 
 export const OUTPUT_FORMATS = /** @type {const} */ (['texte', 'json']);
+
+/**
+ * Format d'un rapport, déduit de l'extension du fichier demandé.
+ *
+ * Une seule règle, deux appelants (rapport d'aspiration et rapport de vérification) : deux
+ * copies de ce `if` finiraient par diverger sur `.htm` (`D-074`).
+ *
+ * @param {string} path
+ * @returns {'json'|'csv'|'html'|'markdown'}
+ */
+export function reportFormatFor(path) {
+  if (path.endsWith('.json')) return 'json';
+  if (path.endsWith('.csv')) return 'csv';
+  if (/\.[ch]?tml?$/.test(path)) return 'html';
+  return 'markdown';
+}
 
 /**
  * Analyse les arguments de la ligne de commande.
@@ -124,6 +145,7 @@ export function parseArgs(argv) {
     connections: 4,
     robots: true,
     resume: false,
+    noResume: false,
     output: 'texte',
     rewrite: false,
     include: [],
@@ -167,6 +189,7 @@ export function parseArgs(argv) {
     else if (argument === '--connexions') options.connections = value();
     else if (argument === '--sans-robots') options.robots = false;
     else if (argument === '--reprendre') options.resume = true;
+    else if (argument === '--sans-reprise') options.noResume = true;
     else if (argument === '--reecrire') options.rewrite = true;
     else if (argument === '--sans-exclusions') options.noExclude = true;
     else if (argument === '--paralleles') options.parallelisme = value();
@@ -406,6 +429,7 @@ export async function main(argv, {
         rewritten: 0,
       };
     }
+    const verifyStartedAt = Date.now();
     const result = await verifyGrab({ rootDir, tasks });
     log(`vérification de ${rootDir} : ${result.checked} tâche(s), ${result.ok} conforme(s)`);
     log(`  octets annoncés : ${result.totalBytes}, octets sur disque : ${result.diskBytes}`);
@@ -423,6 +447,18 @@ export async function main(argv, {
     }
     for (const error of result.errors) log(`  ILLISIBLE ${error.path} : ${error.message}`);
     log(result.ok_ ? 'vérification : conforme' : 'vérification : ÉCART DÉTECTÉ (code 1)');
+
+    // Rapport de vérification (`D-074`) : `--verifier --rapport x.html` n'écrivait **rien** et
+    // ne le disait pas. Il écrit maintenant le constat, dans le format déduit de l'extension.
+    let verifyReportPath = null;
+    if (options.report) {
+      const verifyReport = buildVerifyReport({
+        rootDir, url, verify: result, tasks, startedAt: verifyStartedAt, finishedAt: Date.now(),
+      });
+      verifyReportPath = resolve(options.report);
+      await writeFile(verifyReportPath, formatReport(verifyReport, reportFormatFor(verifyReportPath)), 'utf8');
+      log(`rapport  : ${verifyReportPath}`);
+    }
     return {
       verify: result,
       project: null,
@@ -434,7 +470,7 @@ export async function main(argv, {
       directory: rootDir,
       started: false,
       conforms: result.ok_,
-      report: null,
+      report: verifyReportPath,
       rewritten: 0,
     };
   }
@@ -692,6 +728,9 @@ export async function main(argv, {
     transport: withUserHeaders(withCookies(defaultTransport, jar)),
     ...(options.maxSize !== null ? { maxSize: options.maxSize } : {}),
     ...(options.incremental ? { incremental: true } : {}),
+    // `--sans-reprise` (`D-071`) : la reprise d'un fichier est le défaut du moteur ; cette
+    // option la coupe pour tout le lot, par exemple quand une carte ne mérite plus confiance.
+    ...(options.noResume ? { resume: false } : {}),
     ...downloadOptions,
   };
 
@@ -842,10 +881,7 @@ export async function main(argv, {
       crawl: plan.crawl ?? null,
     });
     reportPath = resolve(options.report);
-    const format = reportPath.endsWith('.json') ? 'json'
-      : reportPath.endsWith('.csv') ? 'csv'
-        : /\.[ch]tml$/.test(reportPath) ? 'html' : 'markdown';
-    await writeFile(reportPath, formatReport(report, format), 'utf8');
+    await writeFile(reportPath, formatReport(report, reportFormatFor(reportPath)), 'utf8');
     log(`rapport  : ${reportPath}`);
   }
   if (outcome.failures.length > 0) {

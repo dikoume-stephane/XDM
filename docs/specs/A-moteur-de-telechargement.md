@@ -1,8 +1,11 @@
 # Fiche A — Moteur de téléchargement
 
 > **Domaine** : A (moteur) · **Lot** : `WP-05` (`A-05`, première fiche) · **Statut** : `brouillon` avancé
-> (19 exigences sur 19 au **vert**, domaine **clos** ; chaîne complète de la sonde à la promotion)
-> **Dernière revue** : 2026-10-27
+> (23 exigences sur 23 au **vert**, domaine **clos** ; chaîne complète de la sonde à la promotion,
+> et outil de ligne de commande qui dit ce qu'il fait)
+> **Dernière revue** : 2026-10-29 (v0.9 : reprise par défaut et `--sans-reprise` (`D-071`),
+> nom tiré de `Content-Disposition` (`D-072`), `--sortie json` (`D-073`), `--proxy` réellement
+> appliqué (`D-074`))
 > **Preuves** : annexe 14 v0.5 (moteur), annexe 13 v0.2 (filtres, hors périmètre ici),
 > `chunks.json`, `io-model.json`, `states.json` ; décisions `D-024`→`D-031`, `D-034`→`D-039`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9` — les offsets cités ne valent que
@@ -42,6 +45,10 @@ l'intégrité est vérifiable.
 | `EX-A-15` | Toute redirection (`Location:`) est résolue en URL absolue (RFC 3986), avec limite de 10 redirections et URL ≤ 10 239 octets | **Observé** | annexe 14 §8.1 (`InternetCombineUrlA`, `cmp ecx, 0x27ff`) ; `D-038` | `T-A-15` ✅ : chaîne de 11 redirections → abandon explicite, URL longue rejetée avant réseau |
 | `EX-A-16` | Compression désactivée pour les transferts par morceaux (`Accept-Encoding: identity`) | **Observé** | annexe 14 §8 ; `D-038` | `T-A-16` ✅ : l'en-tête part sur la sonde **et** sur chaque segment |
 | `EX-A-17` | Aucune télémétrie, aucun appel réseau hors du téléchargement demandé | **Décision** | `D-004`, `D-012`, `D-038` | `T-A-17` ✅ : une seule connexion ouverte, jamais deux en parallèle |
+| `EX-A-20` | La **reprise au niveau fichier** est le comportement par défaut : une carte `<cible>.xdm-part.json` valide est relue, les morceaux clos ne sont pas redemandés ; `--sans-reprise` repart de zéro ; une carte qui désigne une **autre URL** n'est jamais recollée, et la raison du refus (`url`, `taille`, `validateur`) est rendue et annoncée | **Décision** (`D-071`) | `D-071` ; `src/connection-loop.js`, `bin/xdm.js`, `bin/xdm-grab.js` | `T-A-29`, `T-A-30` ✅ |
+| `EX-A-21` | Nom final : `--nom` l'emporte ; sinon celui de l'URL ; si ce nom **n'a pas d'extension**, l'en-tête `Content-Disposition` est consulté (`filename*` avant `filename`) et le nom assaini (composante finale seule) ; `--nom` absent et en-tête absent ⇒ nom de l'URL | **Décision** (`D-072`) | `D-072` ; `src/promote.js` (`fileNameFromDisposition`), `src/http-client.js` (`probe`) | `T-A-30` ✅ |
+| `EX-A-22` | `--sortie json` : **un seul objet** sur `stdout` (URL, cible, taille, requêtes, `notModified`, `resumeDropped`), progression et messages sur `stderr` — `JSON.parse(stdout)` suffit | **Décision** (`D-073`) | `D-073` ; `bin/xdm.js` | `T-A-31` ✅ |
+| `EX-A-23` | `--proxy` s'applique au transfert HTTP **et** à la sonde (même transport) ; un proxy illisible est refusé **localement**, avant toute connexion | **Décision** (`D-074`) | `D-074` ; `src/proxy.js` (`createProxyTransport`), `bin/xdm.js` | `T-A-32` ✅ |
 
 ## 3. Modèle de données
 
@@ -179,6 +186,7 @@ CONNECT --(socket prêt)--> HEADERS --(206 attendu)--> DATA --(morceau plein)-->
 
 | Date | Auteur | Changement |
 |---|---|---|
+| 2026-10-29 | outil de téléchargement | v0.9 : `D-071`→`D-074` — reprise par défaut et `--sans-reprise`, carte d'une autre URL refusée, nom par `Content-Disposition`, `--sortie json`, `--proxy` réellement appliqué ; **domaine A 23/23**, 274 tests |
 | 2026-10-27 | assemblage `WP-22` | v0.7 : `D-040` — carte persistée à chaque morceau clos, reprise (`mergeResumeChunks`, `A-21`), promotion pilotée par `promote: true`, CLI `bin/xdm.js` ; **79 tests** |
 | 2026-10-27 | boucle de connexions `WP-22` | v0.6 : `src/connection-loop.js` + `src/divergence.js` (`D-039`) — distribution des morceaux, reprise à l'offset confirmé, repli sur divergence, plafond 128 sockets ; **domaine A clos (19/19)**, **73 tests** |
 | 2026-10-27 | client HTTP `WP-21` | v0.5 : `D-038` — sonde `bytes=0-0`, `identity`, 10 redirections bornées, inactivité 30 s avec offset de reprise ; `EX-A-08`, `EX-A-15`→`EX-A-18` vertes ; **61 tests** |
