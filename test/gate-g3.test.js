@@ -93,3 +93,34 @@ test('T-G3 : sans coupure, la porte passe aussi (le banc ne dépend pas de l’i
   assert.equal(result.summary.cuts, 0);
   assert.equal(result.summary.recoveredBy, 'interne');
 });
+
+test('T-G3 : sans `Range`, une coupure coûte un redémarrage — et la reprise le rattrape', async () => {
+  const result = await runGate({
+    pages: 4, minSize: 1024, maxSize: 64 * 1024, cut: true, ranges: false,
+  });
+  assert.equal(result.ok, true, JSON.stringify(result.checks.filter((c) => !c.ok), null, 1));
+  assert.equal(result.summary.cuts, 1, 'l’incident a bien eu lieu, sur le transfert (pas sur la sonde)');
+  assert.equal(result.summary.recoveredBy, 'reprise',
+    'sans plage il n’y a rien à reprendre dans le fichier : la tâche est rejouée');
+  assert.equal(result.summary.passes, 2);
+});
+
+test('T-G3 : un serveur saturé (429) est absorbé par la reprise, sans second passage', async () => {
+  const result = await runGate({
+    pages: 3, minSize: 1024, maxSize: 32 * 1024, cut: false, saturate: 1, attempts: 2,
+  });
+  assert.equal(result.ok, true, JSON.stringify(result.checks.filter((c) => !c.ok), null, 1));
+  assert.equal(result.summary.throttled, 3, 'un refus par fichier, exactement');
+  assert.equal(result.summary.passes, 1);
+  assert.equal(result.summary.recoveredBy, 'interne');
+});
+
+test('T-G3 : une saturation mal dimensionnée échoue — le banc ne l’absout pas', async () => {
+  const result = await runGate({
+    pages: 3, minSize: 1024, maxSize: 32 * 1024, cut: false, saturate: 2, attempts: 2,
+  });
+  // Deux refus pour deux tentatives : la seconde est la dernière, donc échec constaté.
+  assert.equal(result.summary.throttled, 6);
+  assert.equal(result.ok, false, 'une saturation non couverte doit se voir');
+  assert.ok(result.checks.some((c) => !c.ok && /saturation/.test(c.name)));
+});

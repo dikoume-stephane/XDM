@@ -1383,10 +1383,24 @@ travail, rapport égal au disque, coupure réellement infligée (**1 105 requêt
 requête coupée reprise à l'octet 16 384) ; **13,9 s** en boucle locale. Profil de test
 (24 pages, 2,1 Mio) : 0,6 s, rejoué par `T-G3`.
 
-**Second défaut, dans le banc cette fois.** Le calcul des octets attendus filtrait les pages
+**Deuxième défaut réel — le `Retry-After` de la sonde était jeté.** Le profil saturé
+(`--saturer 2`) a montré des reprises attendant un recul exponentiel alors que le serveur
+disait `Retry-After: 0` : `probe` transportait `details.retryAfterMs`, mais la file ne lisait
+que `details.headers`. `planRetry` accepte désormais `retryAfterMs` et le fait primer ; mesure :
+**6,3 s → 0,23 s** sur le même profil, à résultat identique (16 refus `429` absorbés, une passe).
+
+**Troisième défaut, dans le banc cette fois.** Le calcul des octets attendus filtrait les pages
 sur `.html` et oubliait l'index `/` (217 o). La porte a **refusé** de déclarer victoire pour
 217 o sur 7,4 Mio — c'est le comportement attendu d'une mesure, et la raison pour laquelle le
 banc recalcule au lieu de recopier les compteurs du programme.
+
+La coupure tombait d'ailleurs sur la **sonde** (`Range: bytes=0-0`) en mode sans plage : le
+banc félicitait une exécution qui n'avait rien éprouvé. Corrigé — la sonde n'est plus coupée.
+
+**Profils mesurés.** ① porte : 200 pages/200 fichiers, 205,0 Mio, coupure absorbée dans la
+boucle, **401/401 en une passe**, 13,7 s. ② sans plage : 40 fichiers, 8,2 Mio, coupure non
+reprenable dans le fichier ⇒ **2 passes** (la reprise de tâche rattrape). ③ saturé : 8 fichiers,
+**16 refus `429`**, 1 passe, 0,23 s.
 
 **Conséquence.** Porte G3 **franchie** (`docs/specs/porte-g3.md`), phase P3 close. La phase
 P4 ne garde qu'un lot bloqué (`WP-30`, comparaison avec IDM : exige la VM Windows).

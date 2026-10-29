@@ -16,6 +16,8 @@
  *   node tools/gate-g3.mjs --pages 200 --max 200M   # profil de la porte (long, ~200 Mo)
  *   node tools/gate-g3.mjs --json                   # résultat machine
  *   node tools/gate-g3.mjs --sans-coupure           # ne pas simuler l'incident réseau
+ *   node tools/gate-g3.mjs --sans-plages            # serveur qui ignore `Range` (repli 1 connexion)
+ *   node tools/gate-g3.mjs --saturer 2              # 2 × 429 par fichier avant de servir
  *
  * Code de sortie : 0 porte franchie, 1 porte non franchie (écart détaillé).
  */
@@ -127,8 +129,12 @@ export function buildSite({
  * @param {{cutOnce?: string|null, cutAfter?: number, range?: boolean}} [options]
  * @returns {Promise<{origin: string, close: () => Promise<void>, stats: {requests: number, cuts: number}}>}
  */
-export async function serveSite(site, { cutOnce = null, cutAfter = 32 * 1024, range = true } = {}) {
-  const stats = { requests: 0, cuts: 0 };
+export async function serveSite(site, {
+  cutOnce = null, cutAfter = 32 * 1024, range = true, saturate = 0,
+} = {}) {
+  const stats = { requests: 0, cuts: 0, throttled: 0 };
+  /** @type {Map<string, number>} */
+  const throttledOf = new Map();
   /** @type {Set<string>} */
   const alreadyCut = new Set();
 
@@ -141,7 +147,23 @@ export async function serveSite(site, { cutOnce = null, cutAfter = 32 * 1024, ra
       res.end();
       return;
     }
+    // Saturation : les `saturate` premières requêtes d'un chemin reçoivent `429` avec
+    // `Retry-After: 0`. C'est le chemin « statut transitoire ⇒ nouvelle tentative » vu de
+    // bout en bout, et non plus seulement par un test unitaire.
+    const seen = throttledOf.get(path) ?? 0;
+    if (path.startsWith('/f/') && saturate > 0 && seen < saturate) {
+      throttledOf.set(path, seen + 1);
+      stats.throttled += 1;
+      res.writeHead(429, { 'retry-after': '0', 'content-length': '0' });
+      res.end();
+      return;
+    }
+
     const header = req.headers.range;
+    // La sonde du moteur demande `bytes=0-0` : couper **là** ne prouve rien (personne ne lit
+    // ce corps). L'incident doit tomber sur le transfert, sinon le banc se félicite d'avoir
+    // survécu à une requête dont il n'attendait rien.
+    const isProbe = header === 'bytes=0-0';
     const match = header && range ? /^bytes=(\d+)-(\d*)$/.exec(header) : null;
     if (match) {
       const start = Number(match[1]);
@@ -158,7 +180,7 @@ export async function serveSite(site, { cutOnce = null, cutAfter = 32 * 1024, ra
         'content-length': String(slice.length),
         etag: `"g3-${route.body.length}"`,
       });
-      if (cutOnce === path && !alreadyCut.has(path) && slice.length > cutAfter) {
+      if (cutOnce === path && !alreadyCut.has(path) && slice.length > cutAfter && !isProbe) {
         alreadyCut.add(path);
         stats.cuts += 1;
         res.write(slice.subarray(0, cutAfter));
@@ -175,6 +197,16 @@ export async function serveSite(site, { cutOnce = null, cutAfter = 32 * 1024, ra
       etag: `"g3-${route.body.length}"`,
       ...(range ? { 'accept-ranges': 'bytes' } : {}),
     });
+    // Même incident possible **sans** `Range` : la coupure tombe alors sur le corps complet,
+    // et la conséquence n'est pas la même — sans plage, il n'y a rien à reprendre, il faut
+    // tout redemander (`EX-A-08`). La porte doit mesurer cette différence, pas l'éviter.
+    if (cutOnce === path && !alreadyCut.has(path) && route.body.length > cutAfter && !isProbe) {
+      alreadyCut.add(path);
+      stats.cuts += 1;
+      res.write(route.body.subarray(0, cutAfter));
+      setTimeout(() => res.socket?.destroy(), 5);
+      return;
+    }
     res.end(route.body);
   });
 
@@ -239,6 +271,7 @@ async function listFiles(dir, prefix = '') {
  * Franchit — ou non — la porte G3.
  *
  * @param {{pages?: number, minSize?: number, maxSize?: number, cut?: boolean,
+ *   ranges?: boolean, saturate?: number, attempts?: number,
  *   directory?: string, keep?: boolean, log?: (line: string) => void}} [options]
  * @returns {Promise<{ok: boolean, checks: {name: string, ok: boolean, detail: string}[],
  *   summary: object}>}
@@ -248,6 +281,9 @@ export async function runGate({
   minSize = 1024,
   maxSize = 2 * 1024 * 1024,
   cut = true,
+  ranges = true,
+  saturate = 0,
+  attempts = 1,
   directory = null,
   keep = false,
   log = () => {},
@@ -257,7 +293,9 @@ export async function runGate({
   // La plus grosse ressource est celle qu'on coupe : c'est là que la reprise coûte cher.
   const biggest = [...site.files.entries()].sort((a, b) => b[1].size - a[1].size)[0];
   const target = cut ? biggest[0] : null;
-  const server = await serveSite(site, { cutOnce: target, cutAfter: 16 * 1024 });
+  const server = await serveSite(site, {
+    cutOnce: target, cutAfter: 16 * 1024, range: ranges, saturate,
+  });
 
   /** @type {{name: string, ok: boolean, detail: string}[]} */
   const checks = [];
@@ -274,10 +312,14 @@ export async function runGate({
       '--sans-exclusions',
       '--inclure', '*',
       '--connexions', '4',
+      '--tentatives', String(attempts),
       '--rapport', join(root, 'rapport.json'),
     ];
     log(`aspiration de ${pages} page(s) et ${site.files.size} fichier(s) `
-      + `(${human(minSize)} → ${human(maxSize)})${cut ? `, coupure sur ${target}` : ''}`);
+      + `(${human(minSize)} → ${human(maxSize)})`
+      + `${cut ? `, coupure sur ${target}` : ''}`
+      + `${ranges ? '' : ', serveur sans Range'}`
+      + `${saturate > 0 ? `, ${saturate} × 429 par fichier` : ''}`);
     const first = await main(args, { log: () => {} });
     log(`première passe : ${first.done} terminé(s), ${first.failed} échec(s)`);
 
@@ -349,6 +391,13 @@ export async function runGate({
       check('coupure réellement infligée', server.stats.cuts === 1,
         `${server.stats.cuts} coupure(s), ${server.stats.requests} requête(s)`);
     }
+    if (saturate > 0) {
+      // Chaque fichier a été saturé `saturate` fois : la relance a bien eu lieu, et le
+      // nombre de refus est exactement celui qu'on a provoqué.
+      check('saturation absorbée par la reprise', server.stats.throttled === saturate * site.files.size
+        && attempts > saturate,
+      `${server.stats.throttled} refus 429 pour ${site.files.size} fichier(s), ${attempts} tentative(s)`);
+    }
 
     const ok = checks.every((item) => item.ok);
     return {
@@ -362,6 +411,8 @@ export async function runGate({
         cuts: server.stats.cuts,
         passes: second === null ? 1 : 2,
         recoveredBy,
+        throttled: server.stats.throttled,
+        ranges,
         tasks: queue.tasks.length,
       },
     };
@@ -386,6 +437,10 @@ if (isMain) {
   const maxSize = parseSize(option('--max', '2M'));
   const minSize = parseSize(option('--min', '1K'));
   const cut = !argv.includes('--sans-coupure');
+  const ranges = !argv.includes('--sans-plages');
+  const saturate = Number(option('--saturer', '0'));
+  // Chaque refus consomme une tentative : il en faut une de plus que de refus provoqués.
+  const attempts = Number(option('--tentatives', String(Math.max(1, saturate + 1))));
   const json = argv.includes('--json');
   const keep = argv.includes('--garder');
 
@@ -394,6 +449,9 @@ if (isMain) {
     minSize,
     maxSize,
     cut,
+    ranges,
+    saturate,
+    attempts,
     keep,
     log: json ? () => {} : (line) => console.log(line),
   });
@@ -405,7 +463,9 @@ if (isMain) {
     console.log('');
     console.log(`Porte G3 : ${result.ok ? 'franchie' : 'NON franchie'} — `
       + `${s.files} fichier(s), ${human(s.bytesServed)}, ${s.requests} requête(s), `
-      + `${s.cuts} coupure(s), ${s.passes} passe(s)`);
+      + `${s.cuts} coupure(s), ${s.passes} passe(s)`
+      + `${s.ranges ? '' : ', repli sans plage'}`
+      + `${s.throttled > 0 ? `, ${s.throttled} refus 429` : ''}`);
   }
   if (!result.ok) process.exitCode = 1;
 }

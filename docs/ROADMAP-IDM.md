@@ -104,7 +104,7 @@ décompilateur).
 
 **Prochaine marche (mise à jour du 2026-10-28)** : `WP-20`→`WP-23` sont **clos** et les
 quatre fiches de spécification sont écrites (`A`, `B`, `C`, `D`). Le banc de tests compte
-**217 cas verts**, la matrice de conformité recense **56 exigences** :
+**220 cas verts**, la matrice de conformité recense **56 exigences** :
 **55 vertes** (domaines A, B, C et D clos) et **1 hors périmètre** (RTMP/MMS, `H-18`).
 L'aspiration s'exécute de bout en bout (`bin/xdm-grab.js`, `D-043`), se reprend
 (`--reprendre`, `--sortie json`, `D-044`), réécrit les liens (`--reecrire`, `D-053`),
@@ -155,7 +155,10 @@ produit un rapport (`--rapport`) et respecte une fenêtre de planification sans 
 du disque et du serveur. Mesure : **401/401 tâches `DONE` en une passe**, 0 doublon, aucun
 résidu de travail, rapport égal au disque, **1 105 requêtes**, **13,9 s**. La porte a trouvé
 un vrai défaut (une coupure de socket condamnait la tâche au lieu d'être reprise) et un
-défaut dans le banc lui-même (index oublié dans le calcul d'octets). Reproduire :
+défaut dans le banc lui-même (index oublié dans le calcul d'octets). Deux profils
+supplémentaires : `--sans-plages` (repli 1 connexion : la coupure coûte un redémarrage, la
+reprise de tâche le rattrape) et `--saturer N` (refus `429` absorbés par `--tentatives` ; il a
+révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). Reproduire :
 `npm run gate -- --pages 200 --max 200M`.
 
 ---
@@ -192,7 +195,7 @@ défaut dans le banc lui-même (index oublié dans le calcul d'octets). Reprodui
 | **M4 — Prototype** | Parcours complet sur site local | M3 | Porte G3 |
 | **M3.6 — Domaines A+B** | 32 exigences, 30 vertes, 108 tests | D-041, D-042, D-043, D-044 | ✅ `npm test` |
 | **M3.7 — Domaines C+D** | 20 exigences, 19 vertes, 172 tests | D-045→D-052 | ✅ D 10/10, C 9/10 (1 hors périmètre) |
-| **M3.8 — Grabber complet** | 16 exigences du domaine B, **16 vertes**, 217 tests | D-053, D-054 | ✅ réécriture (ajout XDM), rapport, planification sans démon |
+| **M3.8 — Grabber complet** | 16 exigences du domaine B, **16 vertes**, 220 tests | D-053, D-054 | ✅ réécriture (ajout XDM), rapport, planification sans démon |
 | **M4 — Prototype (porte G3)** | 200 pages, 1 Ko → 200 Mo, coupure réseau | D-057 | ✅ **franchie** : 401/401 en une passe, 205,0 Mio, empreintes conformes |
 | **M3.9 — Traçabilité auditée** | 56 exigences, 55 vertes, 0 écart | D-056 | ✅ `npm run audit --strict` |
 | **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |

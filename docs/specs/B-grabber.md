@@ -176,7 +176,7 @@ DISCOVERED --(GET)--> FETCHED --(parse)--> PARSED --(filtre)--> RETENU | EXCLU
 
 | Date | Auteur | Changement |
 |---|---|---|
-| 2026-10-28 | lots `WP-24`/`WP-25` | v0.6 : `src/rewrite.js` (`D-053`), `src/report.js`, `src/schedule.js` (`D-054`) — `EX-B-14`→`EX-B-16` vertes, **16/16** ; réécriture **sans précédent** dans la cible, planification **sans démon** ; 217 tests |
+| 2026-10-28 | lots `WP-24`/`WP-25` | v0.6 : `src/rewrite.js` (`D-053`), `src/report.js`, `src/schedule.js` (`D-054`) — `EX-B-14`→`EX-B-16` vertes, **16/16** ; réécriture **sans précédent** dans la cible, planification **sans démon** ; 220 tests |
 | 2026-10-28 | assemblage `WP-11` | v0.5 : `src/grabber.js` (`D-042`) — arborescence locale, collisions, `empty.html` non écrasé, promotion en tâches ordinaires ; `EX-B-01`/`06`/`10`/`11`/`12` vertes ⇒ **13/13**, **97 tests** |
 | 2026-10-28 | parcours `WP-11` | v0.4 : `src/crawler.js` — BFS par niveau, URL canonique, `robots.txt`, filtres ; `EX-B-07`→`EX-B-09` et `EX-B-13` **vertes** (`T-B-07`→`T-B-09`, `T-B-13`) ; **90 tests** |
 | 2026-10-28 | mesures `WP-11` | v0.3 : `D-041` — le moteur d'exploration n'est pas dans `IDMan.exe` (0 référence code aux conteneurs, annexe 12 §6) ; l'exploration devient un **choix XDM** documenté (`EX-B-07`→`EX-B-09`, `EX-B-13`) ; plus aucune exigence en `Hypothèse` |

@@ -113,12 +113,17 @@ export function retryDelay(attempt, { base = DEFAULT_BACKOFF_MS, max = MAX_BACKO
  * sera disponible. Sans en-tête, on applique `retryDelay`. Au-delà de `maxAttempts`, on
  * renonce (`retry: false`) et on explique pourquoi.
  *
+ * `retryAfterMs` sert quand l'attente a **déjà** été extraite en amont (la sonde du client
+ * HTTP la calcule et la transporte dans l'erreur) : sans ce paramètre, la file retomberait
+ * sur un recul exponentiel alors que le serveur a dit combien de temps attendre — c'est
+ * exactement le défaut que la porte G3 a mis au jour.
+ *
  * @param {{status: number, headers?: Record<string, string|string[]|undefined>,
- *   attempts: number, maxAttempts?: number, now?: number}} input
+ *   retryAfterMs?: number|null, attempts: number, maxAttempts?: number, now?: number}} input
  * @returns {{retry: boolean, delayMs: number, reason: string}}
  */
 export function planRetry({
-  status, headers = {}, attempts, maxAttempts = 3, now = Date.now(),
+  status, headers = {}, retryAfterMs = null, attempts, maxAttempts = 3, now = Date.now(),
 }) {
   if (!Number.isInteger(attempts) || attempts < 0) {
     throw new RetryError('planRetry : `attempts` doit être un entier ≥ 0', 'BAD_ATTEMPTS', { attempts });
@@ -132,7 +137,10 @@ export function planRetry({
   if (attempts >= maxAttempts) {
     return { retry: false, delayMs: 0, reason: `${attempts} tentative(s), plafond ${maxAttempts}` };
   }
-  const announced = parseRetryAfter(headers['retry-after'], now);
+  // L'attente déjà calculée prime : elle vient du même en-tête, mais d'un seul endroit.
+  const announced = Number.isFinite(retryAfterMs) && retryAfterMs >= 0
+    ? Math.min(/** @type {number} */ (retryAfterMs), MAX_RETRY_AFTER_MS)
+    : parseRetryAfter(headers['retry-after'], now);
   if (announced !== null) {
     return { retry: true, delayMs: announced, reason: 'Retry-After du serveur' };
   }

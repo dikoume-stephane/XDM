@@ -11,7 +11,7 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 217 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 220 tests, sans dépendance (node --test)
 npm run audit                      # traçabilité : chaque exigence verte a un test qui existe
 npm run gate                       # porte G3 : site local + coupure réseau, comparaison disque/serveur
 npm run gate -- --pages 200 --max 200M   # profil de la porte : 200 pages, jusqu'à 200 Mo
@@ -135,7 +135,7 @@ tools/                     collecte de preuves, triage, extractions
   17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
 - ✅ WP-20 → WP-27 terminés : moteur de morceaux, boucle de connexions, aspiration de site
   et CLI (`bin/xdm.js`, `bin/xdm-grab.js`), transports (proxys, FTP, PAC), médias (HLS,
-  DASH) ; **217 tests**, domaines A, B, C et D clos (**55 exigences vertes sur 56**), porte
+  DASH) ; **220 tests**, domaines A, B, C et D clos (**55 exigences vertes sur 56**), porte
   G3 franchie (200 pages, 205 Mio, coupure réseau absorbée).
 - ✅ WP-24/WP-25 : réécriture des liens (`--reecrire`, `D-053`, ajout XDM assumé), rapport
   d'aspiration (texte/JSON/CSV/Markdown, `--rapport`) et planification sans démon

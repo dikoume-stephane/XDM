@@ -1,6 +1,6 @@
 # Porte G3 — parcours complet sur site local
 
-> **Statut** : ✅ **franchie** — **Dernière revue** : 2026-10-28 (v1.0, `D-057`)
+> **Statut** : ✅ **franchie** — **Dernière revue** : 2026-10-28 (v1.1, `D-057`)
 > **Définition (roadmap, §3)** : « parcours complet sur un site local (≥ 200 pages, fichiers
 > de 1 Ko à 200 Mo, coupures réseau simulées) **sans perte ni doublon** ».
 > **Banc** : `tools/gate-g3.mjs` · **Tests** : `test/gate-g3.test.js` (`T-G3`)
@@ -30,7 +30,9 @@ cohérente avec elle-même passerait inaperçue. Une empreinte SHA-256, non.
 | Fichiers | autant que de pages, `1 Ko` → `200 Mo` | longue traîne de petits fichiers + **une** grosse ressource |
 | Volume | 205,0 Mio au profil de porte | une progression géométrique sur 200 fichiers produirait 3 Go : inutile et infaisable en test |
 | Contenu | déterministe, SHA-256 enchaîné depuis une graine | deux exécutions ⇒ mêmes octets, donc mêmes empreintes |
-| Incident | la **première** requête de plage sur le plus gros fichier est coupée après 16 Kio | une vraie coupure de socket, pas un code HTTP d'erreur |
+| Incident | la **première** requête **de transfert** (jamais la sonde) sur le plus gros fichier est coupée après 16 Kio | une vraie coupure de socket, pas un code HTTP d'erreur |
+| Profil sans plage | `--sans-plages` : le serveur ignore `Range` | éprouve le repli « 200 complet » (`EX-A-08`) à l'échelle d'un site |
+| Profil saturé | `--saturer N` : `N` réponses `429` par fichier avant de servir | éprouve la reprise de bout en bout, pas seulement en unité |
 | Filtres | `--sans-exclusions --inclure '*'` | les pages sont exclues par défaut (`D-032`) ; sans cela, pas de miroir |
 
 Le serveur de test **compte ses coupures** : si l'incident n'a pas eu lieu, le banc le dit
@@ -56,8 +58,20 @@ première passe : 401 terminé(s), 0 échec(s)
 Porte G3 : franchie — 200 fichier(s), 205.0 Mio, 1105 requête(s), 1 coupure(s), 1 passe(s)
 ```
 
-Durée mesurée : **13,9 s** (murale, boucle locale, 4 connexions, profondeur 2). Profil de test
+Durée mesurée : **13,7 s** (murale, boucle locale, 4 connexions, profondeur 2). Profil de test
 (24 pages, 2,1 Mio) : **0,6 s**, franchie également — c'est ce profil que rejoue `T-G3`.
+
+### Les deux autres profils
+
+| Profil | Commande | Résultat mesuré |
+|---|---|---|
+| **Sans `Range`** (repli 1 connexion, `EX-A-08`) | `npm run gate -- --pages 40 --max 8M --sans-plages` | franchie, 40 fichiers, **8,2 Mio**, 206 requêtes, **1 coupure, 2 passes** — la coupure coûte un redémarrage complet, la reprise de tâche le rattrape |
+| **Saturé** (`429`) | `npm run gate -- --pages 8 --max 128K --sans-coupure --saturer 2` | franchie, **16 refus `429`** pour 8 fichiers, **3 tentatives**, **1 passe**, **0,23 s** |
+
+La différence entre les deux premiers profils est le résultat intéressant : avec `Range`, une
+coupure est absorbée **dans la boucle** (aucune tâche en échec) ; sans `Range`, il n'y a rien à
+reprendre dans le fichier, donc la tâche échoue et c'est la **reprise** qui la récupère. Le banc
+distingue les deux (`recoveredBy`) au lieu de féliciter indistinctement.
 
 ### Ce que chaque contrôle exclut
 
@@ -72,7 +86,7 @@ Durée mesurée : **13,9 s** (murale, boucle locale, 4 connexions, profondeur 2)
 
 ---
 
-## 4. Deux défauts trouvés par la porte
+## 4. Trois défauts trouvés par la porte — dont deux dans le banc
 
 **1. Une coupure de socket condamnait la tâche.** `pumpSegment` signalait déjà l'octet
 atteint (`SEGMENT_FAILED` avec `resumeAt`), mais la boucle ne rattrapait que `IDLE_TIMEOUT` :
@@ -83,10 +97,19 @@ rouverte au dernier octet écrit, dans la limite des tentatives du morceau. Mesu
 `49/49` en **une** passe, sans reprise. La reprise de tâche reste couverte par `T-A-26` et
 `T-B-21`, elle n'est simplement plus le chemin normal d'une coupure.
 
-**2. Le banc lui-même s'est trompé, et a refusé de le cacher.** Le calcul des octets attendus
-filtrait les pages sur l'extension `.html` — donc oubliait l'**index** (`/`, 217 octets).
-Écart de 217 o sur 7,4 Mio : invisible à l'œil, refusé par la porte. C'est exactement le
-comportement recherché : un banc qui arrondit ne mesure plus rien.
+**2. Le `Retry-After` lu par la sonde était jeté.** Le profil saturé a montré des reprises
+qui attendaient un recul exponentiel alors que le serveur avait dit `Retry-After: 0` : la file
+lisait `error.details.headers`, que la sonde ne renseignait pas — elle transportait
+`retryAfterMs`, personne ne le lisait. Correction (`D-057`, suite) : `planRetry` accepte
+`retryAfterMs` et le fait primer sur tout recalcul ; la file le transmet. Mesure : profil
+saturé de **6,3 s → 0,23 s**, à résultat identique (16 refus absorbés, une passe).
+
+**3. Le banc lui-même s'est trompé deux fois, et a refusé de le cacher.** D'abord le calcul
+des octets attendus filtrait les pages sur `.html` et oubliait l'index `/` (217 o) ; ensuite,
+en mode `--sans-plages`, la coupure tombait sur la **sonde** (`Range: bytes=0-0`), dont
+personne ne lit le corps — le banc se félicitait d'avoir survécu à une requête sans enjeu.
+Les deux fois, c'est la porte qui a dit non : un écart de 217 o sur 7,4 Mio est invisible à
+l'œil, et un banc qui arrondit ne mesure plus rien.
 
 ---
 
@@ -95,7 +118,7 @@ comportement recherché : un banc qui arrondit ne mesure plus rien.
 | Limite | Pourquoi | Ce qui la lèverait |
 |---|---|---|
 | Aucune latence, aucun DNS, aucune perte de paquets | serveur en boucle locale | un `tc netem` ou un proxy dégradant, hors sandbox |
-| Un seul incident, sur un seul fichier | un scénario doit rester reproductible | un mode `--coupures N` (non implémenté) |
+| Un seul incident par nature, sur un seul fichier | un scénario doit rester reproductible | des modes `--coupures N` / `--coupure-dure` (non implémentés) |
 | Pas de gros fichier > 200 Mo | taille du profil de la porte, pas une limite du code | `--max 2G` (le découpage est déjà testé unitairement) |
 | Pas de pages dynamiques ni de `POST` | l'aspirateur n'émet que des `GET` (dit dans la roadmap) | hors périmètre |
 | Pas de comparaison avec IDM | exige la VM Windows (`A-09`, `WP-30`) | phase P5 |
@@ -106,4 +129,5 @@ comportement recherché : un banc qui arrondit ne mesure plus rien.
 
 | Date | Changement |
 |---|---|
+| 2026-10-28 | v1.1 : profils `--sans-plages` et `--saturer` (8 tests `T-G3`) ; troisième défaut réel corrigé (`Retry-After` de la sonde ignoré par la file : 6,3 s → 0,23 s) ; deux erreurs du banc documentées (index oublié, coupure tombée sur la sonde) |
 | 2026-10-28 | v1.0 : création (`D-057`) — banc `tools/gate-g3.mjs`, 5 tests `T-G3`, profils test et porte mesurés, deux défauts réels corrigés (coupure de socket ⇒ reprise interne ; calcul d'octets du banc) |

@@ -9,7 +9,7 @@
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
 - **Dernière revue** : 2026-10-28 **v9** (réécriture `D-053`, rapport, planification
   `D-054`, résilience `D-055`, audit `D-056`, porte G3 `D-057` — **4 modules** et
-  **2 outils** ajoutés, **217 tests**, **231 exports**, porte G3 **franchie** ;
+  **2 outils** ajoutés, **220 tests**, **231 exports**, porte G3 **franchie** ;
   plus ancien : annexe 15 v5 : fiches C et D implémentées ; annexe 16 v1 : protocole VM ;
   annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`,
   `D-032`/`D-033` ; **A, B, C et D clos : 56 exigences, 55 vertes, `D-034`→`D-057`,
@@ -82,7 +82,7 @@
 | `src/rewrite.js` | réécriture locale des liens HTML/CSS ; `<script>`, `<style>`, `<pre>` intacts | `D-053` | `T-B-26` |
 | `src/retry.js` | statuts transitoires : `retryable`, `Retry-After`, recul exponentiel plafonné | `D-055` | `T-C-11` |
 | `tools/audit-conformance.mjs` | audit de traçabilité : preuve, test existant, référence de module, totaux | `D-056` | `T-32` |
-| `tools/gate-g3.mjs` | porte G3 : site synthétique de 200 pages/200 Mo, coupure de socket, comparaison disque ↔ serveur par empreinte | `D-057` | `T-G3` |
+| `tools/gate-g3.mjs` | porte G3 : site synthétique de 200 pages/200 Mo, coupure de socket, profils `--sans-plages` et `--saturer`, comparaison disque ↔ serveur par empreinte | `D-057` | `T-G3` |
 | `src/report.js` | rapport d'aspiration : texte, JSON, CSV (`;`), Markdown | `D-053` | `T-B-27` |
 | `src/schedule.js` | fenêtres locales, traversée de minuit, quotas, plan d'exécution | `D-054` | `T-B-28` |
 | `bin/xdm-grab.js` | CLI d'aspiration : parcours → arborescence → file → téléchargements ; `--reprendre`, `--inclure`, `--reecrire`, `--rapport`, `--planifier`, `--tentatives`, `--sortie json` | `D-043`, `D-044`, `D-053`, `D-054`, `D-055` | `T-B-10`, `T-B-20`→`T-B-22`, `T-B-26`→`T-B-28` |

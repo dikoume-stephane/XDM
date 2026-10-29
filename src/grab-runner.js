@@ -155,6 +155,8 @@ export async function runQueue(queue, {
             const plan = planRetry({
               status,
               headers: error?.details?.headers ?? {},
+              // La sonde a déjà lu `Retry-After` : ne pas la refaire, ne pas l'ignorer.
+              retryAfterMs: error?.details?.retryAfterMs ?? null,
               attempts: started.attempts,
               maxAttempts,
             });

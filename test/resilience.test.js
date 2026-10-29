@@ -105,6 +105,18 @@ test('T-C-11 : plan de reprise — le serveur prime, le plafond tranche', () => 
     retry: false, delayMs: 0, reason: '3 tentative(s), plafond 3',
   });
 
+  // L'attente déjà extraite en amont (par la sonde) prime sur tout recalcul.
+  assert.deepEqual(planRetry({ status: 503, attempts: 1, retryAfterMs: 2500 }), {
+    retry: true, delayMs: 2500, reason: 'Retry-After du serveur',
+  });
+  assert.deepEqual(
+    planRetry({ status: 429, attempts: 1, retryAfterMs: 1000, headers: { 'retry-after': '60' } }),
+    { retry: true, delayMs: 1000, reason: 'Retry-After du serveur' },
+    'une seule source d’attente : celle déjà lue',
+  );
+  assert.equal(planRetry({ status: 503, attempts: 0, retryAfterMs: Number.NaN }).delayMs, DEFAULT_BACKOFF_MS,
+    'une valeur inutilisable retombe sur le recul, elle ne l’annule pas');
+
   assert.throws(() => planRetry({ status: 503, attempts: -1 }), RetryError);
   assert.throws(() => planRetry({ status: 503, attempts: 0, maxAttempts: 0 }), RetryError);
 });
