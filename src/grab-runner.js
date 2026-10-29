@@ -19,7 +19,7 @@
  * @module grab-runner
  */
 
-import { mkdir } from 'node:fs/promises';
+import { mkdir, stat } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 import { download } from './connection-loop.js';
@@ -49,8 +49,33 @@ export async function downloadTask(task, { downloadOptions = {}, download: run =
   // L'arborescence du site peut être profonde : le dossier cible d'une entrée
   // (`rootDir/a/b/c.zip`) n'existe pas encore au moment de la promotion.
   await mkdir(dirname(task.target), { recursive: true });
-  const result = await run(task.url, task.target, { promote: true, ...downloadOptions });
-  return { target: result.target, size: result.size, requests: result.requests };
+  const { incremental = false, ...options } = downloadOptions;
+
+  // Aspiration incrémentale (`D-070`) : si le fichier local existe déjà, on demande au
+  // serveur s'il a changé (`If-Modified-Since` sur la date du fichier local). Un `304`
+  // laisse le fichier **intact** et compte comme un succès : c'est ce qu'on veut d'une
+  // reprise sur un site inchangé, pas un nouveau téléchargement de 200 Mio.
+  let ifModifiedSince = null;
+  if (incremental) {
+    try {
+      const stats = await stat(task.target);
+      if (stats.isFile() && stats.size > 0) ifModifiedSince = stats.mtimeMs;
+    } catch {
+      // Fichier absent : comportement normal, on télécharge.
+    }
+  }
+
+  const result = await run(task.url, task.target, {
+    promote: true,
+    ...(ifModifiedSince !== null ? { ifModifiedSince } : {}),
+    ...options,
+  });
+  return {
+    target: result.target,
+    size: result.size,
+    requests: result.requests,
+    ...(result.notModified ? { notModified: true } : {}),
+  };
 }
 
 /**
@@ -128,6 +153,70 @@ export function retryFailed(queue, now = Date.now()) {
     }
   }
   return current;
+}
+
+/**
+ * Relève les tâches en échec, dans la limite d'un **crédit d'essais cumulés** (`D-070`).
+ *
+ * `retryFailed` rejoue tout ce qui est `FAILED`, sans mémoire du nombre d'exécutions déjà
+ * consommées : relancer `--reprendre` en boucle sur un site cassé rejoue indéfiniment les
+ * mêmes erreurs. Ici, une tâche dont `attempts` a atteint le plafond **reste** `FAILED`, avec
+ * son message, et elle est rendue dans `exhausted` pour que l'appelant puisse le dire.
+ *
+ * @param {object} queue
+ * @param {{maxAttempts: number, now?: number}} options
+ * @returns {{queue: object, revived: object[], exhausted: object[]}}
+ */
+export function retryFailedCapped(queue, { maxAttempts, now = Date.now() } = /** @type {any} */ ({})) {
+  if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
+    throw new RangeError('retryFailedCapped : `maxAttempts` ≥ 1');
+  }
+  let current = queue;
+  /** @type {object[]} */
+  const revived = [];
+  /** @type {object[]} */
+  const exhausted = [];
+  for (const task of Array.isArray(queue?.tasks) ? queue.tasks : []) {
+    if (task.state !== 'FAILED') continue;
+    const attempts = Number.isInteger(task.attempts) ? task.attempts : 0;
+    if (attempts >= maxAttempts) {
+      exhausted.push({ id: task.id, url: task.url, attempts, error: task.error ?? null });
+      continue;
+    }
+    current = transition(current, task.id, 'PENDING', (entry) => ({
+      ...entry, error: null, updatedAt: now,
+    }));
+    revived.push({ id: task.id, url: task.url, attempts });
+  }
+  return { queue: current, revived, exhausted };
+}
+
+/**
+ * Rouvre des tâches `DONE` pour une re-vérification incrémentale (`D-070`).
+ *
+ * Une tâche terminée est un fait daté : le fichier a été téléchargé **à un instant donné**.
+ * En aspiration incrémentale on veut savoir s'il a changé depuis, ce qui suppose de reposer
+ * la question au serveur. L'appelant décide *quelles* tâches rouvrir (celles dont le fichier
+ * est encore sur disque) ; cette fonction ne fait que la transition, sans toucher aux autres.
+ *
+ * @param {object} queue
+ * @param {Iterable<number>} ids
+ * @param {{now?: number}} [options]
+ * @returns {{queue: object, reopened: object[]}}
+ */
+export function reopenDone(queue, ids, { now = Date.now() } = {}) {
+  const wanted = ids instanceof Set ? ids : new Set(ids);
+  let current = queue;
+  /** @type {object[]} */
+  const reopened = [];
+  for (const task of Array.isArray(queue?.tasks) ? queue.tasks : []) {
+    if (task.state !== 'DONE' || !wanted.has(task.id)) continue;
+    current = transition(current, task.id, 'PENDING', (entry) => ({
+      ...entry, error: null, startedAt: null, updatedAt: now,
+    }));
+    reopened.push({ id: task.id, url: task.url, path: task.target });
+  }
+  return { queue: current, reopened };
 }
 
 /**

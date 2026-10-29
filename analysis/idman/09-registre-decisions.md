@@ -1,6 +1,6 @@
 # 09 — Registre des décisions (vue dense)
 
-> **Statut** : ✅ synchronisé avec `docs/JOURNAL.md` · **Dernière revue** : 2026-10-26
+> **Statut** : ✅ synchronisé avec `docs/JOURNAL.md` · **Dernière revue** : 2026-10-29
 > **Règle** : ce tableau est un **résumé** ; en cas de divergence, le journal fait foi.
 > Les décisions ne sont jamais supprimées : on ajoute une ligne « remplace » / « remplacée par ».
 
@@ -45,6 +45,8 @@
 | D-037 | Nom final = dernière composante assainie de l'URL, ≤ 200 octets, noms réservés neutralisés | ✅ appliquée | WP-20 | `JOURNAL`, `src/promote.js` |
 | D-038 | Client HTTP sans état, transport injectable : sonde `bytes=0-0`, `identity`, 10 redirections, `IDLE_TIMEOUT` 30 s avec offset de reprise | ✅ appliquée | WP-21 | `JOURNAL`, `src/http-client.js` |
 | D-039 | Divergence détectée par hachage des fenêtres de recouvrement (1 024 o), repli à une connexion et reprise entière | ✅ appliquée | WP-21/22 | `JOURNAL`, `src/divergence.js`, `src/connection-loop.js` |
+| D-070 | Aspiration incrémentale : `If-Modified-Since` sur la date locale, `304` = fichier **intact** et tâche terminée (aucune écriture, taille non inventée), `reopenDone` pour reposer la question avec `--reprendre` (`DONE → PENDING`), `--tentatives-total` (crédit cumulé, tâche épuisée nommée), `--progression` par paliers de 10 %, `--verifier --sortie json` en listes de chemins | ✅ appliquée | WP-44 | `JOURNAL`, `src/connection-loop.js`, `src/grab-runner.js`, `src/progress.js`, `EX-B-34`→`EX-B-36` |
+| D-069 | En-têtes personnalisés : `parseHeaderOption` unique (nom = jeton RFC 9110, valeur sans `CR`/`LF`/`NUL`, refus explicite), `--entete` répétable dans **les deux** CLI, en-têtes de l'appelant sur la **sonde et chaque plage** ; les en-têtes du moteur gardent la priorité | ✅ appliquée | WP-43 | `JOURNAL`, `src/headers.js`, `src/connection-loop.js`, `EX-B-33` |
 | D-068 | `--verifier` : audit **file ↔ disque** sans réseau (manquants, tronqués, partiels, absents, hors file ; fichiers de l'outil exclus), code 1 sur écart, sans rien créer ni corriger ; rapport **HTML autonome** et intégralement échappé | ✅ appliquée | WP-38 | `JOURNAL`, `src/verify.js`, `src/report.js`, `EX-B-32` |
 | D-067 | Robustesse de l'aspiration : relève des tâches laissées `ACTIVE`/`VERIFYING` par un arrêt brutal (transitions existantes), `--taille-max` refusé après la sonde (`TOO_LARGE`, unités binaires), espace disque vérifié avant la première connexion (`bavail`, réserve, octets à libérer) | ✅ appliquée | WP-37 | `JOURNAL`, `src/grab-runner.js`, `src/size.js`, `src/diskspace.js`, `EX-B-29`→`EX-B-31` |
 | D-066 | Interruption propre : arrêt coopératif (rien de nouveau ne démarre, l'en-vol finit), projet/file/cookies sauvegardés, code **130**, seconde interruption = sortie immédiate, aucune tâche `ACTIVE` ; `--aide`/`--version` sans URL et code 0 pour les deux CLI | ✅ appliquée | WP-36 | `JOURNAL`, `src/grab-runner.js`, `bin/xdm-grab.js`, `EX-B-27` |

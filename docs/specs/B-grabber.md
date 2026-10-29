@@ -1,11 +1,11 @@
 # Fiche B — Grabber (aspiration de site)
 
 > **Domaine** : B (grabber) · **Lot** : `WP-11`/`WP-23` (`A-05`, deuxième fiche) · **Statut** : ✅ `clos`
-> (les 32 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
+> (les 36 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
 > **exploration** : choix XDM documentés depuis `D-041`, l'algorithme d'IDM n'étant pas dans
 > `IDMan.exe`)
-> **Dernière revue** : 2026-10-29 (v0.10 : reprise après arrêt brutal, plafond de taille, espace
-> disque (`D-067`), vérification d'une aspiration et rapport HTML (`D-068`) — 32 exigences)
+> **Dernière revue** : 2026-10-29 (v0.11 : en-têtes personnalisés (`D-069`), aspiration
+> incrémentale, crédit d'essais cumulés et progression (`D-070`) — 36 exigences)
 > **Preuves** : annexes 11 (modèle de projet), 12 (grabber), 13 (filtres et artefacts) ;
 > `filters.json` ; décisions `D-032`, `D-033`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9`.
@@ -58,6 +58,10 @@ pouvoir reprendre une aspiration interrompue.
 | `EX-B-29` | Un arrêt **brutal** (SIGKILL, coupure de courant) laisse des tâches `ACTIVE`/`VERIFYING` ; `--reprendre` les **relève** par les transitions déjà autorisées (`ACTIVE → PAUSED → PENDING`, `VERIFYING → FAILED → PENDING`), annonce combien, et remet `startedAt` à `null` | **Décision** | `D-067` ; `src/grab-runner.js` (`recoverOrphans`) | `T-B-40` ✅ : deux orphelines relevées puis exécutées, file saine non touchée |
 | `EX-B-30` | `--taille-max` refuse un fichier trop gros **après la sonde et avant tout octet écrit** (`TOO_LARGE` avec taille et plafond) ; les tailles se lisent en unités **binaires** (`K` = 1 024) et une unité inconnue est refusée, pas interprétée | **Décision** | `D-067` ; `src/size.js`, `src/connection-loop.js` | `T-B-41` ✅ : refus sans fichier partiel, téléchargement normal sous le plafond, `--taille-max 2K` met la tâche en échec avec la raison |
 | `EX-B-31` | Avant la première connexion, l'**espace disque** est vérifié (`statfs`, `bavail × bsize`), avec réserve (défaut 64 Mio, bornée à la moitié du volume) ; le refus annonce les octets à libérer, écrit projet et file, sort en code 1 ; les tailles inconnues sont annoncées séparément | **Décision** | `D-067` ; `src/diskspace.js` | `T-B-42` ✅ : `statfs` factice, refus sans aucune requête de fichier, file en `PENDING`, tâche `DONE` non recomptée |
+| `EX-B-33` | `--entete` (répétable, **les deux CLI**) : validation unique (`parseHeaderOption`), nom = jeton RFC 9110, valeur sans `CR`/`LF`/`NUL`, refus **explicite** ; l'en-tête part avec la **sonde et chaque plage** ; les en-têtes du moteur (`Range`, `Accept-Encoding`, `If-Range`) gardent la priorité | **Décision** | `D-069` ; `src/headers.js`, `src/connection-loop.js` | `T-A-28` ✅ (toutes les requêtes de données portent l'en-tête), `T-C-22` ✅ (injection `\r\n` refusée) |
+| `EX-B-34` | `--incremental` : `If-Modified-Since` sur la date du fichier local ; `304` ⇒ **aucune écriture**, fichier et date intacts, tâche terminée, taille **non inventée** ; `200` ⇒ réécriture ; avec `--reprendre`, `reopenDone` rouvre les `DONE` dont le fichier existe (`DONE → PENDING`) | **Décision** | `D-070` ; `src/http-client.js`, `src/connection-loop.js`, `src/grab-runner.js` | `T-B-45` ✅, `T-A-28` ✅ (contenu et `mtimeMs` inchangés) |
+| `EX-B-35` | `--tentatives-total` : crédit d'essais **cumulés** ; une tâche au plafond reste `FAILED` avec son message, n'est **pas** rejouée par `--reprendre`, et est nommée dans la sortie | **Décision** | `D-070` ; `src/grab-runner.js` (`retryFailedCapped`) | `T-B-46` ✅ (tâche à 3 essais non rejouée, celle à 1 essai rejouée) |
+| `EX-B-36` | `--progression` : paliers de 10 %, une ligne par palier et par fichier, taille inconnue annoncée **une fois** sans pourcentage inventé, `stderr` seulement ; `--verifier --sortie json` rend des compteurs et des **listes de chemins** | **Décision** | `D-070` ; `src/progress.js`, `bin/xdm-grab.js` | `T-B-47` ✅ (≤ 12 lignes pour 41 appels), `T-B-48` ✅ |
 | `EX-B-32` | `--verifier` compare **la file au disque** sans réseau : manquants (`DONE` sans fichier), tronqués (taille ≠ annoncée), partiels, absents, fichiers hors file ; les fichiers de l'outil sont exclus ; code 1 sur écart ; rien n'est créé ni corrigé ; le rapport HTML est **autonome** et intégralement échappé | **Décision** | `D-068` ; `src/verify.js`, `src/report.js` | `T-B-43` ✅, `T-B-44` ✅ (injection `<script>` neutralisée) |
 
 ## 3. Modèle de données

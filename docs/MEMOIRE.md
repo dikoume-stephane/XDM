@@ -7,17 +7,18 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-29 **v14** (`robots.txt` RFC 9309 `D-059`, `Crawl-delay` et
+- **Dernière revue** : 2026-10-29 **v15** (`robots.txt` RFC 9309 `D-059`, `Crawl-delay` et
   élagage `--exclure` `D-060`, exploration parallèle bornée `D-061`, cookies persistants et
   transport par schéma `D-062`, parcours exact et borné `D-063`, essai et diagnostic `D-064`,
   plans de site / sous-domaines / reprise du parcours `D-065`, interruption et usage `D-066`,
-  robustesse (orphelins, taille, espace) `D-067`, vérification et rapport HTML `D-068` —
-  **16 exigences B** et **3 exigences C** ajoutées, **257 tests**, **255 exports**, porte G3
-  **franchie** ;
+  robustesse (orphelins, taille, espace) `D-067`, vérification et rapport HTML `D-068`,
+  en-têtes personnalisés `D-069`, aspiration incrémentale / crédit d'essais / progression
+  `D-070` — **20 exigences B** et **3 exigences C** ajoutées, **265 tests**, **267 exports**,
+  porte G3 **franchie** ;
   plus ancien : annexe 15 v5 : fiches C et D implémentées ; annexe 16 v1 : protocole VM ;
   annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`,
-  `D-032`/`D-033` ; **A, B et D clos, C à 13/14 (1 hors périmètre) : 75 exigences,
-  74 vertes, `D-034`→`D-068`,
+  `D-032`/`D-033` ; **A, B et D clos, C à 13/14 (1 hors périmètre) : 79 exigences,
+  78 vertes, `D-034`→`D-070`,
   traçabilité auditée (`npm run audit`), porte G3 franchie (`npm run gate`)**).
 
 ---

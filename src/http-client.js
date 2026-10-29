@@ -285,6 +285,22 @@ export async function probe(url, {
       continue;
     }
 
+    // `304` en réponse à `If-Modified-Since` (`D-070`) : la ressource n'a pas changé. Ce
+    // n'est ni une erreur ni une taille inconnue — c'est la réponse attendue d'une
+    // vérification conditionnelle, et l'appelant doit pouvoir s'arrêter là sans écrire.
+    if (response.status === 304) {
+      return {
+        url,
+        finalUrl: current,
+        status: 304,
+        notModified: true,
+        size: null,
+        acceptRanges: null,
+        etag: responseHeaders.etag ?? null,
+        lastModified: responseHeaders['last-modified'] ?? null,
+      };
+    }
+
     // Un statut autre que `200`/`206` n'est pas une réponse exploitable : le dire ici, avec
     // son statut et l'attente demandée, évite qu'un `429` ressorte plus tard comme une
     // « taille inconnue » — un message faux qui enverrait chercher le bug au mauvais endroit.

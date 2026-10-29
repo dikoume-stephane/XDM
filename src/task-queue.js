@@ -37,7 +37,9 @@ export const TRANSITIONS = {
   ACTIVE: ["PAUSED", "VERIFYING", "FAILED"],
   PAUSED: ["PENDING", "FAILED"],
   VERIFYING: ["DONE", "FAILED"],
-  DONE: [],
+  // `DONE` n'est plus strictement terminal : `--incremental` rouvre une tâche terminée pour
+  // re-vérifier le fichier distant (`D-070`). Aucune autre sortie n'est ouverte.
+  DONE: ["PENDING"],
   FAILED: ["PENDING"],
 };
 

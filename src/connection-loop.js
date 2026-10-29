@@ -209,9 +209,29 @@ export async function download(url, target, {
   resume = true,
   promote = false,
   maxSize = null,
+  headers = {},
+  ifModifiedSince = null,
   onProgress = () => {},
 } = {}) {
-  const capabilities = await probe(url, transport ? { transport } : {});
+  // En-têtes de l'appelant (`D-069`) : ils partent avec la sonde **et** avec chaque plage.
+  // Les envoyer à l'un et pas aux autres donnerait une sonde autorisée et des morceaux
+  // refusés — le pire des deux mondes, et un diagnostic incompréhensible.
+  const callerHeaders = { ...headers };
+  const capabilities = await probe(url, {
+    ...(transport ? { transport } : {}),
+    headers: {
+      ...callerHeaders,
+      ...(ifModifiedSince ? { 'if-modified-since': new Date(ifModifiedSince).toUTCString() } : {}),
+    },
+  });
+  // `304` (`D-070`) : le fichier distant n'a pas changé depuis la version locale. Rien n'est
+  // ouvert, rien n'est écrit : c'est un succès, pas un échec silencieux.
+  if (capabilities.notModified) {
+    return {
+      target, size: null, requests: 1, chunks: 0, restarts: 0, divergence: false,
+      attempts: 0, notModified: true,
+    };
+  }
   if (capabilities.size === null) {
     throw new DownloadError(
       `taille inconnue pour ${capabilities.finalUrl}`,
@@ -302,7 +322,11 @@ export async function download(url, target, {
         const segment = await openSegment(
           capabilities.finalUrl,
           { start: requestFrom, size: interval.end - requestFrom },
-          { ...(transport ? { transport } : {}), ifRange: validator },
+          {
+            ...(transport ? { transport } : {}),
+            ifRange: validator,
+            headers: callerHeaders,
+          },
         );
         stats.requests += 1;
 

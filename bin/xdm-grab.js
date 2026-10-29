@@ -6,7 +6,8 @@
  * `xdm-grab <url> [dossier] [--profondeur N] [--pages N] [--connexions N] [--sans-robots]
  *   [--reprendre] [--inclure MOTIF] [--exclure MOTIF] [--sans-exclusions] [--paralleles N]
  *   [--delai SECONDES] [--arret-erreurs N] [--entete "Nom: valeur"] [--essai]
- *   [--sitemap] [--sous-domaines] [--taille-max T] [--espace-min T] [--verifier]
+ *   [--sitemap] [--sous-domaines] [--taille-max T] [--espace-min T] [--incremental]
+ *   [--progression] [--verifier] [--sortie json]
  *   [--aide] [--version]
  *   [--reecrire] [--rapport F]
  *   [--planifier « lun-ven 01:00-06:00 »] [--tentatives N]
@@ -24,10 +25,12 @@ import { join, resolve } from 'node:path';
 import { crawl, robotsUrl } from '../src/crawler.js';
 import { prepareGrab } from '../src/grabber.js';
 import {
-  downloadTask, executeGrab, listOrphans, recoverOrphans, retryFailed,
+  downloadTask, executeGrab, listOrphans, recoverOrphans, reopenDone, retryFailed,
+  retryFailedCapped,
 } from '../src/grab-runner.js';
 import { checkSpace, estimateSpace } from '../src/diskspace.js';
 import { parseSize } from '../src/size.js';
+import { createProgressReporter } from '../src/progress.js';
 import { verifyGrab } from '../src/verify.js';
 import { fetchText } from '../src/http-client.js';
 import {
@@ -35,6 +38,7 @@ import {
 } from '../src/project.js';
 import { createCookieJar, loadCookieJar, saveCookieJar, withCookies } from '../src/cookies.js';
 import { defaultTransport } from '../src/http-client.js';
+import { parseHeaderOption } from '../src/headers.js';
 import { buildReport, formatReport, summarizeCrawl } from '../src/report.js';
 import { rewriteDocument, siteMapFromEntries } from '../src/rewrite.js';
 import { createSchedule, planRun } from '../src/schedule.js';
@@ -48,7 +52,8 @@ export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages
                    [--reprendre] [--inclure MOTIF] [--exclure MOTIF] [--sans-exclusions]
                    [--paralleles N] [--delai SECONDES] [--arret-erreurs N]
                    [--entete "Nom: valeur"] [--essai] [--sitemap] [--sous-domaines]
-                   [--taille-max TAILLE] [--espace-min TAILLE] [--verifier]
+                   [--taille-max TAILLE] [--espace-min TAILLE] [--incremental]
+                   [--progression] [--verifier]
                    [--reecrire] [--rapport F] [--planifier FENÊTRE]
                    [--quota-octets N | --quota-taches N] [--tentatives N] [--sortie texte|json]
   --profondeur     niveaux visités (défaut 2)
@@ -92,6 +97,11 @@ export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages
                    seuls les cookies datés sont conservés, fichier en 0600 — D-062)
   --tentatives     essais par tâche sur un statut transitoire (défaut 1 ; 429/503 respectent
                    l'en-tête Retry-After)
+  --tentatives-total  nombre total d'essais cumulés, toutes exécutions confondues : au-delà,
+                   une tâche en échec n'est plus rejouée par --reprendre
+  --incremental    si un fichier local existe, demander If-Modified-Since : un 304 le laisse
+                   intact et compte comme terminé
+  --progression    afficher l'avancement de chaque fichier (%, octets) sur la sortie d'erreur
   --sortie         format du résumé : texte (défaut) ou json
 
 code de sortie : 0 terminé, 1 erreur, 2 usage, 3 hors fenêtre de planification`;
@@ -129,6 +139,9 @@ export function parseArgs(argv) {
     maxSize: null,
     minSpace: null,
     verify: false,
+    incremental: false,
+    totalAttempts: null,
+    progress: false,
     help: false,
     version: false,
     report: null,
@@ -172,6 +185,9 @@ export function parseArgs(argv) {
     else if (argument === '--sitemap') options.sitemap = true;
     else if (argument === '--sous-domaines') options.subdomains = true;
     else if (argument === '--verifier') options.verify = true;
+    else if (argument === '--incremental') options.incremental = true;
+    else if (argument === '--progression') options.progress = true;
+    else if (argument === '--tentatives-total') options.totalAttempts = value();
     else if (argument === '--taille-max') {
       i += 1;
       if (argv[i] === undefined) throw new Error(`--taille-max attend une taille\n${USAGE}`);
@@ -248,29 +264,14 @@ export function parseArgs(argv) {
 }
 
 /**
- * Décompose `Nom: valeur` en en-tête sûr.
- *
- * Le nom doit être un jeton HTTP (RFC 9110 §5.1) et la valeur ne peut pas contenir de retour
- * à la ligne : accepter `\r\n` dans une option reviendrait à offrir une **injection d'en-tête**
- * à quiconque écrit un script d'aspiration, et à laisser le serveur voir des en-têtes que
- * l'utilisateur n'a pas demandés. On refuse, on ne nettoie pas.
+ * En-tête `Nom: valeur` — la validation vit dans `src/headers.js` (`D-069`), pour que les
+ * deux CLI appliquent exactement la même règle.
  *
  * @param {string} raw
  * @returns {{name: string, value: string}}
  */
 export function parseHeader(raw) {
-  if (typeof raw !== 'string') throw new Error(`en-tête invalide : ${raw}`);
-  const separator = raw.indexOf(':');
-  if (separator <= 0) throw new Error(`en-tête invalide (attendu « Nom: valeur ») : ${raw}`);
-  const name = raw.slice(0, separator).trim().toLowerCase();
-  const value = raw.slice(separator + 1).trim();
-  if (!/^[!#$%&'*+.^_`|~0-9a-z-]+$/.test(name)) {
-    throw new Error(`nom d'en-tête invalide : ${name}`);
-  }
-  if (/[\r\n\u0000]/.test(value)) {
-    throw new Error(`valeur d'en-tête invalide (retour à la ligne interdit) : ${name}`);
-  }
-  return { name, value };
+  return parseHeaderOption(raw);
 }
 
 /**
@@ -304,7 +305,7 @@ async function exists(path) {
  */
 export function summarize(result) {
   return {
-    url: result.project.rootUrl,
+    url: result.project?.rootUrl ?? null,
     directory: result.directory,
     pages: result.pages,
     retained: result.retained,
@@ -315,6 +316,22 @@ export function summarize(result) {
     dryRun: result.dryRun ?? false,
     interrupted: result.interrupted ?? false,
     blocked: result.blocked ?? null,
+    // `--verifier` en JSON (`D-070`) : les compteurs et les listes, sans les objets de tâche
+    // entiers — un script veut savoir *combien* et *lesquels*, pas relire toute la file.
+    ...(result.verify
+      ? {
+        conforms: result.conforms ?? null,
+        verify: {
+          checked: result.verify.checked,
+          ok: result.verify.ok,
+          missing: result.verify.missing.map((item) => item.path),
+          truncated: result.verify.truncated.map((item) => item.path),
+          partial: result.verify.partial.map((item) => item.path),
+          unmanaged: result.verify.unmanaged.map((item) => item.path),
+          errors: result.verify.errors.map((item) => item.path),
+        },
+      }
+      : {}),
     rewritten: result.rewritten ?? 0,
     report: result.report ?? null,
   };
@@ -553,7 +570,19 @@ export async function main(argv, {
       log(`reprise : ${orphans.length} tâche(s) interrompue(s) brutalement, remises en attente`);
     }
     plan.queue = recoverOrphans(plan.queue).queue;
-    plan.queue = retryFailed(plan.queue);
+    const reprise = options.totalAttempts === null
+      ? { queue: retryFailed(plan.queue), exhausted: [] }
+      : retryFailedCapped(plan.queue, { maxAttempts: options.totalAttempts });
+    plan.queue = reprise.queue;
+    if (reprise.exhausted.length > 0) {
+      // Une tâche qui a déjà consommé tout son crédit d'essais n'est **pas** rejouée, et le
+      // message dit pourquoi : la relancer en boucle ferait passer un site cassé pour un
+      // réseau capricieux (`D-070`).
+      log(`reprise : ${reprise.exhausted.length} tâche(s) au plafond d’essais cumulés, non rejouée(s)`);
+      for (const task of reprise.exhausted.slice(0, 5)) {
+        log(`  ${task.url} : ${task.attempts} essai(s), ${task.error ?? 'sans message'}`);
+      }
+    }
   }
 
   // Interruption tombée pendant le parcours : le plan est **enregistré** (pour `--reprendre`)
@@ -662,6 +691,7 @@ export async function main(argv, {
   downloadOptions = {
     transport: withUserHeaders(withCookies(defaultTransport, jar)),
     ...(options.maxSize !== null ? { maxSize: options.maxSize } : {}),
+    ...(options.incremental ? { incremental: true } : {}),
     ...downloadOptions,
   };
 
@@ -698,11 +728,56 @@ export async function main(argv, {
     log(`espace : ${space.unknown} fichier(s) de taille inconnue non comptés dans l'estimation`);
   }
 
+  // Aspiration incrémentale (`D-070`) : une tâche `DONE` n'est pas un fait définitif, c'est
+  // un fait daté. Celles dont le fichier est encore sur disque sont rouvertes et reposées au
+  // serveur avec `If-Modified-Since` : `304` ⇒ fichier intact et tâche re-`DONE`, `200` ⇒
+  // fichier modifié réécrit. Sans cette réouverture, une seconde aspiration ne vérifierait
+  // jamais rien — les tâches étant déjà terminées, le serveur ne serait même pas interrogé.
+  if (options.incremental) {
+    const ids = [];
+    for (const task of plan.queue.tasks) {
+      if (task.state !== 'DONE') continue;
+      try {
+        const stats = await stat(task.target);
+        if (stats.isFile() && stats.size > 0) ids.push(task.id);
+      } catch {
+        // Fichier disparu du disque : la tâche sera traitée comme neuve, pas re-vérifiée.
+      }
+    }
+    const rouvertes = reopenDone(plan.queue, ids);
+    plan.queue = rouvertes.queue;
+    if (rouvertes.reopened.length > 0) {
+      log(`incrémental : ${rouvertes.reopened.length} fichier(s) déjà présent(s) re-vérifié(s)`);
+    }
+  }
+
+  // Avancement (`--progression`, `D-070`) : le rapporteur n'écrit qu'aux paliers de 10 %.
+  // Il passe par `log`, donc en JSON il reste sur stderr avec le reste de la progression.
+  const progress = options.progress && !runTask ? createProgressReporter(log) : null;
+  const effectiveDownloadOptions = progress
+    ? {
+      ...downloadOptions,
+      onProgress: (event) => {
+        const task = progressTask;
+        if (task) progress.report(task, event.done, event.total);
+        if (task && Number.isFinite(event.total) && event.done >= event.total) {
+          progress.finish(task, event.total);
+        }
+      },
+    }
+    : downloadOptions;
+  /** Tâche en cours de téléchargement (le transport ne la connaît pas). */
+  let progressTask = null;
+
   // Tâche d'exécution : celle du test si elle existe, sinon le téléchargement réel avec
   // les options demandées, sinon le comportement par défaut du runner.
   const effectiveRunTask = runTask
-    ?? (Object.keys(downloadOptions).length > 0
-      ? (task) => downloadTask(task, { downloadOptions })
+    ?? (Object.keys(effectiveDownloadOptions).length > 0
+      ? (task) => {
+        if (progress) progressTask = task;
+        return downloadTask(task, { downloadOptions: effectiveDownloadOptions })
+          .finally(() => { if (progress) progressTask = null; });
+      }
       : undefined);
 
   // Le quota ne retire aucune tâche : les non retenues restent `PENDING`.
@@ -718,6 +793,13 @@ export async function main(argv, {
     maxAttempts: options.attempts,
     // Ctrl-C : on termine les tâches en vol, on n'en démarre plus (`D-066`).
     ...(signal ? { shouldStop: () => signal.aborted === true } : {}),
+    // Un `304` est un succès silencieux : le dire, sinon un fichier « non téléchargé » et un
+    // fichier « déjà à jour » se ressemblent dans la sortie (`D-070`).
+    onEvent: (event) => {
+      if (event.type === 'done' && event.result?.notModified) {
+        log(`inchangé ${event.task.url} (304 : le fichier local est à jour)`);
+      }
+    },
     ...(effectiveRunTask ? { runTask: effectiveRunTask } : {}),
   });
 

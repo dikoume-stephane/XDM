@@ -205,6 +205,7 @@ export {
   buildHeaders,
   buildPageHeaders,
   lowercaseKeys,
+  parseHeaderOption,
 } from './headers.js';
 export {
   FtpError,
@@ -300,3 +301,14 @@ export {
 export { DEFAULT_RESERVE_BYTES, checkSpace, estimateSpace, freeSpace, nearestExisting } from './diskspace.js';
 export { SIZE_UNITS, parseSize } from './size.js';
 export { isToolFile, verifyGrab, walkTree } from './verify.js';
+export { createProgressReporter, defaultLabel, formatProgress } from './progress.js';
+export {
+  downloadTask,
+  executeGrab,
+  listOrphans,
+  recoverOrphans,
+  reopenDone,
+  retryFailed,
+  retryFailedCapped,
+  runQueue,
+} from './grab-runner.js';

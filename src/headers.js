@@ -91,3 +91,33 @@ export function buildChunkHeaders({ cookie = null, overrides = {} } = {}) {
 export function buildPageHeaders({ referer = null, cookie = null, overrides = {} } = {}) {
   return buildHeaders({ encoding: PAGE_ENCODINGS, referer, cookie, overrides });
 }
+
+/**
+ * Décompose `Nom: valeur` en en-tête sûr (`D-069`).
+ *
+ * Le nom doit être un jeton HTTP (RFC 9110 §5.1) et la valeur ne peut pas contenir de retour
+ * à la ligne : accepter `\r\n` dans une option reviendrait à offrir une **injection
+ * d'en-tête** à quiconque écrit un script, et à laisser le serveur voir des en-têtes que
+ * l'utilisateur n'a pas demandés. On refuse, on ne nettoie pas.
+ *
+ * Les deux CLI partagent cette fonction : deux validations séparées divergeraient, et
+ * c'est toujours celle qu'on n'a pas corrigée qui laisse passer l'injection.
+ *
+ * @param {string} raw
+ * @returns {{name: string, value: string}} nom en minuscules (forme canonique HTTP)
+ * @throws {Error} si la forme ou le contenu sont invalides
+ */
+export function parseHeaderOption(raw) {
+  if (typeof raw !== 'string') throw new Error(`en-tête invalide : ${raw}`);
+  const separator = raw.indexOf(':');
+  if (separator <= 0) throw new Error(`en-tête invalide (attendu « Nom: valeur ») : ${raw}`);
+  const name = raw.slice(0, separator).trim().toLowerCase();
+  const value = raw.slice(separator + 1).trim();
+  if (!/^[!#$%&'*+.^_`|~0-9a-z-]+$/.test(name)) {
+    throw new Error(`nom d'en-tête invalide : ${name}`);
+  }
+  if (/[\r\n\u0000]/.test(value)) {
+    throw new Error(`valeur d'en-tête invalide (retour à la ligne interdit) : ${name}`);
+  }
+  return { name, value };
+}

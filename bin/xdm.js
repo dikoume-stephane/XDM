@@ -15,18 +15,23 @@
  * réseau, avec la liste de ce qui est accepté.
  */
 
-import { mkdir } from 'node:fs/promises';
+import { mkdir, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { download, DownloadError } from '../src/connection-loop.js';
+import { parseHeaderOption } from '../src/headers.js';
 import { downloadFtp, parseFtpUrl } from '../src/ftp.js';
 import { fileNameFromUrl, targetPathFor } from '../src/promote.js';
 
 export const USAGE = `usage : xdm <url> [dossier] [--connexions N] [--morceau TAILLE] [--proxy URL]
-                   [--aide | --version]
+                   [--entete "Nom: valeur"] [--incremental] [--aide | --version]
   --connexions     connexions parallèles (défaut 8)
   --morceau        taille de morceau en octets (1–10 Mio)
   --proxy          proxy HTTP pour le transfert
+  --entete         en-tête HTTP envoyé à chaque requête (sonde **et** morceaux), répétable,
+                   ex. « Authorization: Bearer … » ; validation partagée avec xdm-grab
+  --incremental    si le fichier local existe, demander If-Modified-Since : un 304 le laisse
+                   intact et sort en code 0 (le fichier était déjà à jour)
   --aide, -h       afficher cette aide et sortir (code 0)
   --version, -V    afficher la version et sortir (code 0)
   le schéma de l'URL choisit le transport : http, https, ftp\n`;
@@ -47,14 +52,22 @@ export const VERSION = '0.1.0';
 export function parseArgs(argv) {
   /** @type {string[]} */
   const positional = [];
-  /** @type {{connections?: number, chunkSize?: number, proxy?: string}} */
-  const options = {};
+  /** @type {{connections?: number, chunkSize?: number, proxy?: string,
+   *   headers: Record<string, string>, incremental: boolean}} */
+  const options = { headers: {}, incremental: false };
   for (let i = 0; i < argv.length; i += 1) {
     const argument = argv[i];
     if (argument === '--connexions') {
       options.connections = Number(argv[(i += 1)]);
     } else if (argument === '--morceau') {
       options.chunkSize = Number(argv[(i += 1)]);
+    } else if (argument === '--incremental') {
+      options.incremental = true;
+    } else if (argument === '--entete') {
+      i += 1;
+      if (!argv[i]) throw new DownloadError(`--entete attend « Nom: valeur »\n${USAGE}`, 'USAGE');
+      const { name, value } = parseHeaderOption(argv[i]);
+      options.headers[name] = value;
     } else if (argument === '--proxy') {
       i += 1;
       if (!argv[i]) throw new DownloadError(`--proxy attend une URL\n${USAGE}`, 'USAGE');
@@ -137,7 +150,7 @@ export async function main(argv, {
     log(USAGE.trimEnd());
     return null;
   }
-  const { url, directory, connections, chunkSize, proxy } = parseArgs(argv);
+  const { url, directory, connections, chunkSize, proxy, headers, incremental } = parseArgs(argv);
   const transport = transportFor(url);
 
   if (transport === 'ftp') {
@@ -158,10 +171,24 @@ export async function main(argv, {
   const target = targetPathFor(resolve(directory), fileNameFromUrl(url));
   await mkdir(resolve(directory), { recursive: true });
 
+  // Un fichier déjà à jour n'est pas réécrit : `--incremental` compare la date locale à
+  // celle du serveur (`If-Modified-Since`) et sort en succès sur `304` (`D-070`).
+  let ifModifiedSince = null;
+  if (incremental) {
+    try {
+      const stats = await stat(target);
+      if (stats.isFile() && stats.size > 0) ifModifiedSince = stats.mtimeMs;
+    } catch {
+      // Pas de fichier local : rien à comparer, le téléchargement a lieu.
+    }
+  }
+
   let lastPercent = -1;
   const result = await run(url, target, {
     connections: connections ?? 4,
     ...(chunkSize === undefined ? {} : { chunkSize }),
+    ...(Object.keys(headers).length > 0 ? { headers } : {}),
+    ...(ifModifiedSince !== null ? { ifModifiedSince } : {}),
     promote: true,
     onProgress: ({ done, total }) => {
       const percent = Math.floor((done / total) * 100);
@@ -171,6 +198,10 @@ export async function main(argv, {
       }
     },
   });
+  if (result.notModified) {
+    log(`inchangé ${result.target} (304 : le fichier local est à jour)`);
+    return { target: result.target, size: null, requests: result.requests, notModified: true };
+  }
   log(`écrit ${result.target} (${result.size} octets, ${result.requests} requêtes)`);
   return { target: result.target, size: result.size, requests: result.requests };
 }

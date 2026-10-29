@@ -1757,6 +1757,80 @@ ressource externe.
 
 ---
 
+### D-069 — Les en-têtes de l'appelant vont partout, ou nulle part
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/headers.js`, `src/connection-loop.js`, `bin/xdm.js`, `bin/xdm-grab.js`, `EX-B-33`
+
+**Contexte.** Une aspiration protégée par un en-tête (jeton `Authorization`, cookie de session,
+`X-Api-Key`) avait deux issues, toutes deux mauvaises : soit l'outil ne savait pas l'envoyer
+et l'utilisateur contournait le problème par un proxy, soit l'option existait à moitié —
+envoyée à la sonde et oubliée sur les plages, ce qui produit un fichier à moitié écrit et un
+diagnostic incompréhensible (sonde acceptée, morceaux en `403`).
+
+**Décision.**
+1. **`parseHeaderOption`** (`src/headers.js`) est la seule porte d'entrée : `« Nom: valeur »`,
+   nom = **jeton RFC 9110**, valeur sans `CR`, `LF` ni `NUL`, refus **explicite** et non
+   correction silencieuse. Le refus d'injection d'en-tête est un choix, pas un effet de bord :
+   une valeur nettoyée en douce laisserait croire que ce qui a été demandé est ce qui a été
+   envoyé. Les deux CLI passent par cette fonction (`bin/xdm-grab.js` y délègue, `bin/xdm.js`
+   l'utilise directement) : une seule règle, deux commandes.
+2. **`download({headers})`** transmet `callerHeaders` à la **sonde** et à **chaque**
+   `openSegment` — jamais à l'un sans l'autre. Les en-têtes du moteur (`Range`,
+   `Accept-Encoding`, `If-Range`) gardent la priorité : l'appelant ajoute, il ne remplace pas
+   la mécanique de reprise.
+3. **`--entete` répétable** dans les deux CLI. Deux en-têtes de même nom : le dernier gagne
+   (nom replié en minuscules, comme partout dans le module).
+
+**Mesures.** `T-A-28` : sans en-tête, `HTTP_STATUS` 401 sur la sonde ; avec, 2 requêtes de
+données et **toutes** portent `x-secret` ; `T-C-22` : la CLI `xdm.js` écrit le fichier avec
+`--entete`, et `--entete 'X: a\r\nY: b'` est refusé.
+
+---
+
+### D-070 — Ne pas retélécharger ce qui n'a pas changé, et le dire
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/http-client.js`, `src/connection-loop.js`, `src/grab-runner.js`, `src/progress.js`, `bin/xdm-grab.js`, `EX-B-34`→`EX-B-36`
+
+**Contexte — trois manques mesurés.**
+- Une seconde aspiration du même site **retéléchargeait tout** : 205 Mio pour vérifier qu'un
+  fichier n'avait pas bougé.
+- `--reprendre` rejouait indéfiniment les mêmes échecs : `retryFailed` ne connaît que l'état,
+  pas le nombre d'essais déjà consommés. Sur un site cassé, chaque `--reprendre` relançait
+  200 requêtes en échec et le seul signe était un code 1.
+- Un fichier de 40 Mio prenait 40 s **en silence** : rien ne distinguait une aspiration qui
+  travaille d'une aspiration bloquée.
+
+**Décision.**
+1. **`If-Modified-Since`** (`--incremental`) : la date **du fichier local** est envoyée sur la
+   sonde. `probe` reconnaît `304` (`{status: 304, notModified: true, size: null}`) et
+   `download` s'arrête là : **aucune ouverture, aucune écriture**, retour
+   `{size: null, notModified: true, requests: 1}`. La taille n'est pas inventée — un `304` ne
+   dit pas la taille, il dit qu'elle n'a pas changé.
+2. **Rouvrir ce qui est `DONE`** : avec `--reprendre`, la file sur disque fait foi et les
+   tâches terminées seraient ignorées — donc jamais reposées au serveur. `reopenDone`
+   (`DONE → PENDING`, seule transition nouvelle de la machine à états) rend la question
+   possible, pour les seules tâches dont le fichier est encore sur disque. Sur un parcours
+   neuf, ce n'est pas nécessaire : les tâches sont `PENDING` et le fichier local suffit à
+   déclencher la condition.
+3. **`--tentatives-total`** : `retryFailedCapped` plafonne le **cumul** des essais. Une tâche
+   au plafond reste `FAILED` avec son message et est **nommée** : « non rejouée » se dit, au
+   lieu de ressembler à une reprise qui n'a rien à faire.
+4. **`--progression`** : paliers de 10 %, une ligne par palier et par fichier, via
+   `src/progress.js` (module pur, testable sans terminal). Une taille inconnue est annoncée
+   **une fois** sans pourcentage inventé (`EX-B-15`). Le rapporteur passe par `log`, donc en
+   JSON la progression reste sur `stderr` et `stdout` porte l'objet seul.
+5. **`--verifier --sortie json`** : compteurs et **listes de chemins**, pas d'objets de tâche
+   entiers. Un script veut `missing: ['b.bin']`, pas la file complète à re-parcourir.
+
+**Mesures.** `T-A-28` (second cas) : `ifModifiedSince` ⇒ `notModified: true`, contenu et
+`mtimeMs` **inchangés** ; sans condition, le fichier est réécrit. `T-B-45` : deux aspirations
+puis `--reprendre --incremental` ⇒ `failed: 0`, fichier intact, « inchangé » annoncé deux
+fois. `T-B-46` : 2 tâches `FAILED` à 3 et 1 essais, plafond 3 ⇒ seule l'essai-1 est rejouée,
+l'autre reste `FAILED` avec `HTTP 500` ; la CLI le dit en une ligne + détail. `T-B-47` : 41
+appels d'avancement ⇒ **≤ 12 lignes**, dernière à 100 %, taille inconnue ⇒ **1** ligne.
+`T-B-48` : `--verifier --sortie json` ⇒ `conforms: false`, `missing: ['b.bin']`, `ok: 1`,
+`checked: 2`, y compris via le vrai binaire.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
