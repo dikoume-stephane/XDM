@@ -38,7 +38,7 @@ import {
 } from '../src/project.js';
 import { createCookieJar, loadCookieJar, saveCookieJar, withCookies } from '../src/cookies.js';
 import { defaultTransport } from '../src/http-client.js';
-import { parseHeaderOption } from '../src/headers.js';
+import { parseHeaderOption, withHeaders } from '../src/headers.js';
 import {
   buildReport, buildVerifyReport, formatReport, summarizeCrawl,
 } from '../src/report.js';
@@ -277,6 +277,10 @@ export function parseArgs(argv) {
   }
   const url = positional[0];
   if (!url) throw new Error(USAGE);
+  // Un troisième argument positionnel était ignoré en silence (`D-077`).
+  if (positional.length > 2) {
+    throw new Error(`trop d'arguments : ${positional.slice(2).join(' ')}\n${USAGE}`);
+  }
   try {
     // eslint-disable-next-line no-new
     new URL(url);
@@ -350,6 +354,7 @@ export function summarize(result) {
           missing: result.verify.missing.map((item) => item.path),
           truncated: result.verify.truncated.map((item) => item.path),
           partial: result.verify.partial.map((item) => item.path),
+          absent: result.verify.absent.map((item) => item.path),
           unmanaged: result.verify.unmanaged.map((item) => item.path),
           errors: result.verify.errors.map((item) => item.path),
         },
@@ -492,16 +497,8 @@ export async function main(argv, {
   // **persistance** d'une exécution à l'autre (`D-062`).
   const userHeaders = options.headers;
   /** Ajoute `--entete` sans jamais écraser un en-tête du moteur (`Range`, `If-Range`). */
-  const withUserHeaders = (transport) => (
-    Object.keys(userHeaders).length === 0
-      ? transport
-      : (url, init = {}) => transport(url, {
-        ...init,
-        headers: { ...userHeaders, ...(init.headers ?? {}) },
-      })
-  );
-
-  const plainFetch = withUserHeaders(fetchPage);
+  // Enveloppe partagée avec `xdm-media` (`D-075`) : une seule règle de priorité des en-têtes.
+  const plainFetch = withHeaders(fetchPage, userHeaders);
   fetchPage = async (url, init = {}) => {
     const response = await plainFetch(url, { ...init, headers: jar.apply(url, init.headers ?? {}) });
     if (response?.headers) jar.store(url, response.headers);
@@ -725,7 +722,7 @@ export async function main(argv, {
   // Les téléchargements doivent voir la même session que l'exploration, sinon un fichier
   // protégé par cookie échoue alors que la page qui le cite vient d'être lue.
   downloadOptions = {
-    transport: withUserHeaders(withCookies(defaultTransport, jar)),
+    transport: withHeaders(withCookies(defaultTransport, jar), userHeaders),
     ...(options.maxSize !== null ? { maxSize: options.maxSize } : {}),
     ...(options.incremental ? { incremental: true } : {}),
     // `--sans-reprise` (`D-071`) : la reprise d'un fichier est le défaut du moteur ; cette

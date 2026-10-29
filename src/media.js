@@ -158,6 +158,12 @@ export async function downloadMedia({
 
   const read = async (url) => {
     const answer = await fetchText(url);
+    // Une playlist répondue en `401`/`404` donnait « #EXTM3U attendu » : le vrai problème
+    // (authentification refusée, URL morte) était remplacé par un message de format (`D-075`).
+    if (answer && typeof answer === 'object' && Number.isInteger(answer.status)
+      && (answer.status < 200 || answer.status >= 300)) {
+      throw new Error(`playlist ${url} : statut ${answer.status}`);
+    }
     return typeof answer === 'string' ? answer : answer.body;
   };
 
@@ -196,7 +202,7 @@ export async function downloadMedia({
         byteRange: limited.init.byteRange,
         ...(transport ? { transport } : {}),
       })
-      : await downloadAndMeasure(limited.init.url, target, downloadFn);
+      : await downloadAndMeasure(limited.init.url, target, downloadFn, transport);
     files.push(target);
   }
 
@@ -211,7 +217,7 @@ export async function downloadMedia({
         byteRange: segment.byteRange,
         ...(transport ? { transport } : {}),
       })
-      : await downloadAndMeasure(segment.url, target, downloadFn);
+      : await downloadAndMeasure(segment.url, target, downloadFn, transport);
     files.push(target);
   }
 
@@ -231,13 +237,24 @@ export async function downloadMedia({
 
 /**
  * Téléchargement d'un fichier entier par le moteur, avec mesure des octets.
+ *
+ * Le transport doit suivre **tous** les segments, pas seulement ceux qui portent un
+ * `#EXT-X-BYTERANGE` (`D-075`). Il était perdu ici : un flux derrière un proxy ou derrière un
+ * jeton se téléchargeait donc en direct, ce qui donnait des segments en `403` inexplicables
+ * — et, sans proxy, une fuite de la requête hors du tunnel demandé.
+ *
  * @param {string} url
  * @param {string} target
  * @param {Function} downloadFn
+ * @param {Function} [transport]
  * @returns {Promise<number>}
  */
-async function downloadAndMeasure(url, target, downloadFn) {
-  const result = await downloadFn(url, target, { promote: true, connections: 1 });
+async function downloadAndMeasure(url, target, downloadFn, transport) {
+  const result = await downloadFn(url, target, {
+    promote: true,
+    connections: 1,
+    ...(transport ? { transport } : {}),
+  });
   const size = result?.size;
   if (typeof size === 'number') return size;
   const { stat } = await import('node:fs/promises');

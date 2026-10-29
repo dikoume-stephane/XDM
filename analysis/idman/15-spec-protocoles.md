@@ -1,6 +1,7 @@
 # Annexe 15 — Transports (fiche C) et médias (fiche D)
 
-> **Statut** : ✅ v5 — **Dernière revue** : 2026-10-28 (domaines C et D clos : `D-046`→`D-052`)
+> **Statut** : ✅ v6 — **Dernière revue** : 2026-10-29 (domaines C et D clos ; `D-075` ajoutée :
+> authentification unifiée des médias)
 > **Lot** : `WP-07` (`A-05`, fiches C et D) · **Décisions liées** : `D-004`, `D-041`, `D-045`
 > **Preuves** : `cible/IDMan.exe` (SHA-256 `5f78da5a…2f11c9`), `analysis/idman/classes.json`,
 > chaînes extraites (`tools/` → `analysis/raw/idman/strings-*.txt`, non versionnées),
@@ -199,11 +200,13 @@ reconnus**, pas des filtres du grabber (`D-041`).
 | `EX-D-08` | DASH : index `sidx` lu, init segment écrit ; manifeste `MPD` non parsé | Observé + Hypothèse `H-19` | `CMp4DashReader`, `CSidxParser` | `T-D-08` |
 | `EX-D-09` | `#EXT-X-DISCONTINUITY` : frontière de concaténation conservée | Dérivé | `0x6b2798` | `T-D-09` |
 | `EX-D-10` | aucun déchiffrement DRM ; limite écrite | Décision `D-004` | — | `T-D-10` |
+| `EX-D-11` | `xdm-media` porte un **seul** transport authentifié (en-têtes, cookies, proxy) pour la playlist, l'init et chaque segment ; une playlist non-2xx lève son statut | Décision `D-075` | `D-075` (`src/headers.js`, `src/media.js`) | `T-D-11` |
 
-**Couverture : 10 / 10** — domaine **clos**. `src/hls.js` (§3.1), `src/media.js` et
+**Couverture : 11 / 11** — domaine **clos**. `src/hls.js` (§3.1), `src/media.js` et
 `bin/xdm-media.js` pour HLS (`D-046`) ; `src/sidx.js` et `src/dash.js` pour DASH par index
 (`D-048`, `EX-D-08`) : l'entrée est un fichier, l'init est son préfixe ou une URL séparée,
-aucune fusion de fragments, refus explicite sans index.
+aucune fusion de fragments, refus explicite sans index. L'authentification (`EX-D-11`,
+`D-075`) est portée par le transport, donc elle ne peut pas manquer à un segment sur deux.
 
 ---
 

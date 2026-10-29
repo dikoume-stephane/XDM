@@ -144,6 +144,7 @@ elles sont marquées ainsi.
 
 | Date | Changement |
 |---|---|
+| 2026-10-29 | v1.7 : `D-075`→`D-078` — 4 exigences (`EX-D-11`, `EX-A-24`, `EX-C-15`, `EX-B-38`) : un seul transport authentifié pour les médias, `xdm --cookies`, positionnels de trop refusés, `absent` dans le JSON de vérification ; **88 exigences, 87 vertes, 0 écart**, 281 tests. Une enveloppe **partagée** (`withHeaders`) remplace deux copies locales de la même règle, et le transport perdu pour les segments sans `BYTERANGE` a été trouvé par un test, pas par relecture |
 | 2026-10-29 | v1.6 : `D-071`→`D-074` — 5 exigences (`EX-A-20`→`23`, `EX-B-37`) : reprise de fichier par défaut et `--sans-reprise`, carte d'une autre URL refusée, nom par `Content-Disposition`, `--sortie json`, `--proxy` appliqué, rapport de vérification ; **84 exigences, 83 vertes, 0 écart**, 274 tests. Deux options documentées mais inertes ont été corrigées, pas contournées |
 | 2026-10-29 | v1.5 : `D-069`/`D-070` — 4 exigences (`EX-B-33`→`36`) : en-têtes personnalisés, aspiration incrémentale, crédit d'essais cumulés, progression/audit JSON ; **79 exigences, 78 vertes, 0 écart**, 265 tests. La validation d'en-tête n'existe **qu'une fois** (`parseHeaderOption`) et les deux CLI y délèguent : aucune règle dupliquée à diverger |
 | 2026-10-29 | v1.4 : `D-067`/`D-068` — 4 exigences (`EX-B-29`→`32`) ; **75 exigences, 74 vertes, 0 écart**, 257 tests. Deux fonctions redéfinies ont été retirées au profit des modules d'origine (`WORK_SUFFIX`, `PART_SUFFIX`), pour ne pas créer deux vérités |

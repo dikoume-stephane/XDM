@@ -1930,6 +1930,90 @@ progression est bien sur `stderr` ; vérifié aussi sur le **vrai binaire** (`ex
 JSON `conforms: false`, CSV, Markdown, et un cas **conforme** dont le rapport ne contient
 **aucune** entrée ; `r.htm` ⇒ HTML.
 
+### D-075 — Un flux protégé ne s'ouvrait qu'à moitié : un seul transport, partout
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `bin/xdm-media.js`, `src/media.js`, `src/headers.js`, `EX-D-11`
+
+**Contexte — trois fuites dans la même CLI.**
+1. `xdm-media` n'avait **aucune** option d'authentification : ni `--entete`, ni `--cookies`, ni
+   `--proxy`. Un flux HLS derrière un jeton ou un tunnel était hors d'atteinte, alors que les
+   deux autres CLI savaient le faire depuis `D-062`/`D-069`/`D-074`.
+2. Même en passant un en-tête, il n'arrivait pas aux segments : le transport était retenu par
+   `fetchToFile` pour les seuls segments portant un `BYTERANGE` explicite, et
+   `downloadAndMeasure` — le chemin des segments ordinaires — ne le recevait **pas du tout**.
+   Résultat mesuré : `statut 401 pour /seg0.ts` alors que la playlist, elle, passait.
+3. Une playlist répondue en `401`/`404` produisait « #EXTM3U attendu » : le message parlait de
+   format là où le serveur parlait d'authentification.
+
+**Décision.**
+1. **Une** enveloppe partagée `withHeaders(transport, headers)` (`src/headers.js`), qui donne la
+   priorité aux en-têtes du moteur (`Range`, `If-Range`, `Accept-Encoding`) : l'appelant ne peut
+   pas casser une plage. `xdm-grab` s'en sert aussi — la même règle, une seule fois.
+2. Le transport média est **composé une fois** : `withHeaders(proxy ?? défaut, entetes)` puis
+   `withCookies(…, jar)`. Il est passé à `downloadMedia`, donc à l'init, à **tous** les segments
+   et aux plages, sans exception (§ point 2 ci-dessus corrigé dans `downloadAndMeasure`).
+3. Une playlist non-2xx lève `playlist <url> : statut N` — le statut, pas une supposition.
+
+**Mesures.** `T-D-11` en **4 cas** (serveurs locaux) : l'en-tête couvre playlist **et** les deux
+segments (refus `401` sans lui) ; le cookie posé **par la playlist** est exigé des seuls segments
+et il y arrive ; un segment **sans** `BYTERANGE` reçoit bien le transport (c'était la fuite n° 2) ;
+`--proxy` sert playlist et segments, et `--proxy ftp://x` est refusé **localement**, avant tout
+réseau.
+
+---
+
+### D-076 — Le cookie que la sonde rapporte doit servir aux morceaux
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `bin/xdm.js`, `EX-A-24`
+
+**Contexte.** `xdm` envoyait déjà un `--entete Cookie: …` si on le lui dictait, mais ne savait pas
+retenir ce que le serveur lui donnait : un site qui pose son jeton sur la **sonde** puis l'exige
+sur chaque `Range` rendait le téléchargement impossible sans recopier le cookie à la main — et
+impossible tout court si le jeton change à chaque session.
+
+**Décision.** `xdm --cookies F` : le magasin (`src/cookies.js`, déjà utilisé par `xdm-grab`,
+`D-062`) est relu au départ, **enveloppe le transport** (donc sonde **et** morceaux), et réécrit
+à la fin, y compris dans le chemin `304`. Seuls les cookies **datés** sont conservés, fichier en
+`0600`, écrit par fichier temporaire puis `rename` : mêmes règles que `xdm-grab`, aucune seconde
+politique.
+
+**Mesures.** `T-A-24` : la **première** requête seulement est admise sans jeton ; les quatre
+plages suivantes portent `session=ok`, vues côté serveur ; le fichier fait 16 octets et le
+magasin relu contient `session`. Sans `--cookies`, les mêmes plages sont refusées `401` — le
+défaut n'est pas « magique », il est explicite.
+
+---
+
+### D-077 — Un argument ignoré en silence est un mensonge
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `bin/xdm.js`, `bin/xdm-grab.js`, `bin/xdm-media.js`, `EX-C-15`
+
+**Contexte.** `xdm a.m3u8 dir b.m3u8` téléchargeait `a.m3u8` dans `dir` et **ignorait** `b.m3u8`,
+avec un code de sortie 0. Les trois CLI avaient le même défaut. Une faute de frappe dans un
+script ne se voyait donc nulle part.
+
+**Décision.** Au-delà du **second** positionnel (`url` puis `dossier`), la CLI refuse :
+`trop d'arguments : b.m3u8` puis l'usage, code 1. Le nom du fichier d'arrivée reste ce qu'il
+était (`--nom`, `Content-Disposition`, `D-072`) : ce refus ne change rien d'autre.
+
+**Mesures.** `T-A-25` : les trois CLI refusent `['http://h/f', 'dir', 'extra']` avec le message
+`trop d'arguments` ; les invocations à deux positionnels continuent de passer (`T-A-31`,
+`T-D-03`, `T-B-20` restent verts).
+
+---
+
+### D-078 — Une tâche jamais commencée n'est pas une tâche conforme
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `bin/xdm-grab.js` (`summarize`), `EX-B-38`
+
+**Contexte.** `--verifier --sortie json` publiait cinq listes d'anomalies (`missing`, `truncated`,
+`partial`, `unmanaged`, `errors`) et **oubliait** `absent` — la tâche que le disque n'a jamais
+vue, c'est-à-dire le cas le plus grave. Le rapport texte, lui, la comptait depuis `D-068`. Un
+script qui décidait sur le JSON concluait donc à la conformité d'une aspiration vide.
+
+**Décision.** Le JSON publie les **six** listes, `absent` comprise, avec des **chemins** et non
+des objets de tâche (`D-070`). Aucun autre champ ne bouge : le format reste celui que `T-B-47`
+a gelé.
+
+**Mesures.** `T-B-50` : une file dont une tâche n'a jamais été téléchargée rend
+`absent: ['<chemin>']`, `conforms: false`, et un code de sortie 1.
+
 ---
 
 ## Décisions en attente

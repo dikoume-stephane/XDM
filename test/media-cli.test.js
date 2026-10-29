@@ -68,6 +68,9 @@ test('T-D-03 : arguments de la CLI de flux', () => {
     output: 'texte',
     dash: false,
     initUrl: null,
+    headers: {},
+    cookies: null,
+    proxy: undefined,
   });
   assert.deepEqual(
     parseArgs(['http://h/live.m3u8', 'dl', '--qualite', '1200000', '--segments', '5', '--assembler', 'out.ts', '--sortie', 'json']),
@@ -80,6 +83,9 @@ test('T-D-03 : arguments de la CLI de flux', () => {
       output: 'json',
       dash: false,
       initUrl: null,
+      headers: {},
+      cookies: null,
+      proxy: undefined,
     },
   );
   assert.throws(() => parseArgs([]), /usage/);

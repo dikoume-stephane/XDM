@@ -1,12 +1,13 @@
 # Fiche B — Grabber (aspiration de site)
 
 > **Domaine** : B (grabber) · **Lot** : `WP-11`/`WP-23` (`A-05`, deuxième fiche) · **Statut** : ✅ `clos`
-> (les 37 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
+> (les 38 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
 > **exploration** : choix XDM documentés depuis `D-041`, l'algorithme d'IDM n'étant pas dans
 > `IDMan.exe`)
-> **Dernière revue** : 2026-10-29 (v0.12 : en-têtes personnalisés (`D-069`), aspiration
-> incrémentale (`D-070`), `--sans-reprise` (`D-071`), nom par `Content-Disposition` (`D-072`),
-> `--sortie json` (`D-073`), proxy et rapport de vérification (`D-074`) — 37 exigences)
+> **Dernière revue** : 2026-10-29 (v0.13 : `absent` publié dans le JSON de vérification
+> (`D-078`) ; v0.12 : en-têtes personnalisés (`D-069`), aspiration incrémentale (`D-070`),
+> `--sans-reprise` (`D-071`), nom par `Content-Disposition` (`D-072`), `--sortie json`
+> (`D-073`), proxy et rapport de vérification (`D-074`) — 38 exigences)
 > **Preuves** : annexes 11 (modèle de projet), 12 (grabber), 13 (filtres et artefacts) ;
 > `filters.json` ; décisions `D-032`, `D-033`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9`.
@@ -65,6 +66,7 @@ pouvoir reprendre une aspiration interrompue.
 | `EX-B-37` | `--verifier --rapport F` écrit un **rapport de vérification** (JSON, CSV, Markdown, HTML ; `.htm` reconnu) : anomalies seules (`MANQUANT`, `TRONQUÉ`, `PARTIEL`, `ABSENT`, `HORS FILE`), conformité, octets annoncés et sur disque ; les rapports s'écrivent où on le demande, jamais dans le dossier vérifié sans le dire | **Décision** | `D-074` ; `src/report.js`, `bin/xdm-grab.js` | `T-B-49` ✅ (4 formats, conforme et non conforme) |
 | `EX-B-36` | `--progression` : paliers de 10 %, une ligne par palier et par fichier, taille inconnue annoncée **une fois** sans pourcentage inventé, `stderr` seulement ; `--verifier --sortie json` rend des compteurs et des **listes de chemins** | **Décision** | `D-070` ; `src/progress.js`, `bin/xdm-grab.js` | `T-B-47` ✅ (≤ 12 lignes pour 41 appels), `T-B-48` ✅ |
 | `EX-B-32` | `--verifier` compare **la file au disque** sans réseau : manquants (`DONE` sans fichier), tronqués (taille ≠ annoncée), partiels, absents, fichiers hors file ; les fichiers de l'outil sont exclus ; code 1 sur écart ; rien n'est créé ni corrigé ; le rapport HTML est **autonome** et intégralement échappé | **Décision** | `D-068` ; `src/verify.js`, `src/report.js` | `T-B-43` ✅, `T-B-44` ✅ (injection `<script>` neutralisée) |
+| `EX-B-38` | `--verifier --sortie json` publie les **six** listes d'anomalies en **chemins** : `missing`, `truncated`, `partial`, `absent`, `unmanaged`, `errors` — une tâche jamais commencée (`absent`) n'est pas une tâche conforme, et l'omettre du JSON faisait conclure à la conformité | **Décision** | `D-078` ; `bin/xdm-grab.js` (`summarize`) | `T-B-50` ✅ |
 
 ## 3. Modèle de données
 
@@ -199,6 +201,7 @@ DISCOVERED --(GET)--> FETCHED --(parse)--> PARSED --(filtre)--> RETENU | EXCLU
 
 | Date | Auteur | Changement |
 |---|---|---|
+| 2026-10-29 | lot `WP-49` | v0.13 : `D-077`/`D-078` — refus d'un positionnel de trop dans les trois CLI, `absent` dans le JSON de vérification ; **38/38**, 281 tests |
 | 2026-10-28 | lots `WP-24`/`WP-25` | v0.6 : `src/rewrite.js` (`D-053`), `src/report.js`, `src/schedule.js` (`D-054`) — `EX-B-14`→`EX-B-16` vertes, **16/16** ; réécriture **sans précédent** dans la cible, planification **sans démon** ; 220 tests |
 | 2026-10-28 | assemblage `WP-11` | v0.5 : `src/grabber.js` (`D-042`) — arborescence locale, collisions, `empty.html` non écrasé, promotion en tâches ordinaires ; `EX-B-01`/`06`/`10`/`11`/`12` vertes ⇒ **13/13**, **97 tests** |
 | 2026-10-28 | parcours `WP-11` | v0.4 : `src/crawler.js` — BFS par niveau, URL canonique, `robots.txt`, filtres ; `EX-B-07`→`EX-B-09` et `EX-B-13` **vertes** (`T-B-07`→`T-B-09`, `T-B-13`) ; **90 tests** |

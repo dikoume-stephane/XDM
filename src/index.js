@@ -207,6 +207,7 @@ export {
   buildPageHeaders,
   lowercaseKeys,
   parseHeaderOption,
+  withHeaders,
 } from './headers.js';
 export {
   FtpError,

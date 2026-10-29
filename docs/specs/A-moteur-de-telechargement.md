@@ -1,11 +1,11 @@
 # Fiche A — Moteur de téléchargement
 
 > **Domaine** : A (moteur) · **Lot** : `WP-05` (`A-05`, première fiche) · **Statut** : `brouillon` avancé
-> (23 exigences sur 23 au **vert**, domaine **clos** ; chaîne complète de la sonde à la promotion,
+> (24 exigences sur 24 au **vert**, domaine **clos** ; chaîne complète de la sonde à la promotion,
 > et outil de ligne de commande qui dit ce qu'il fait)
-> **Dernière revue** : 2026-10-29 (v0.9 : reprise par défaut et `--sans-reprise` (`D-071`),
-> nom tiré de `Content-Disposition` (`D-072`), `--sortie json` (`D-073`), `--proxy` réellement
-> appliqué (`D-074`))
+> **Dernière revue** : 2026-10-29 (v0.10 : magasin de cookies `--cookies` pour la sonde **et**
+> les morceaux (`D-076`) ; v0.9 : reprise par défaut et `--sans-reprise` (`D-071`), nom tiré de
+> `Content-Disposition` (`D-072`), `--sortie json` (`D-073`), `--proxy` appliqué (`D-074`))
 > **Preuves** : annexe 14 v0.5 (moteur), annexe 13 v0.2 (filtres, hors périmètre ici),
 > `chunks.json`, `io-model.json`, `states.json` ; décisions `D-024`→`D-031`, `D-034`→`D-039`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9` — les offsets cités ne valent que
@@ -48,6 +48,7 @@ l'intégrité est vérifiable.
 | `EX-A-20` | La **reprise au niveau fichier** est le comportement par défaut : une carte `<cible>.xdm-part.json` valide est relue, les morceaux clos ne sont pas redemandés ; `--sans-reprise` repart de zéro ; une carte qui désigne une **autre URL** n'est jamais recollée, et la raison du refus (`url`, `taille`, `validateur`) est rendue et annoncée | **Décision** (`D-071`) | `D-071` ; `src/connection-loop.js`, `bin/xdm.js`, `bin/xdm-grab.js` | `T-A-29`, `T-A-30` ✅ |
 | `EX-A-21` | Nom final : `--nom` l'emporte ; sinon celui de l'URL ; si ce nom **n'a pas d'extension**, l'en-tête `Content-Disposition` est consulté (`filename*` avant `filename`) et le nom assaini (composante finale seule) ; `--nom` absent et en-tête absent ⇒ nom de l'URL | **Décision** (`D-072`) | `D-072` ; `src/promote.js` (`fileNameFromDisposition`), `src/http-client.js` (`probe`) | `T-A-30` ✅ |
 | `EX-A-22` | `--sortie json` : **un seul objet** sur `stdout` (URL, cible, taille, requêtes, `notModified`, `resumeDropped`), progression et messages sur `stderr` — `JSON.parse(stdout)` suffit | **Décision** (`D-073`) | `D-073` ; `bin/xdm.js` | `T-A-31` ✅ |
+| `EX-A-24` | **Magasin de cookies** (`xdm --cookies F`) : le fichier est relu au départ, le magasin enveloppe le transport — le `Set-Cookie` de la **sonde** sert donc à chaque morceau — et il est réécrit à la fin (chemin `304` compris) ; seuls les cookies **datés** sont conservés, fichier en `0600` | **Décision** (`D-076`) | `D-076` ; `src/cookies.js` (`withCookies`), `bin/xdm.js` | `T-A-24` ✅ |
 | `EX-A-23` | `--proxy` s'applique au transfert HTTP **et** à la sonde (même transport) ; un proxy illisible est refusé **localement**, avant toute connexion | **Décision** (`D-074`) | `D-074` ; `src/proxy.js` (`createProxyTransport`), `bin/xdm.js` | `T-A-32` ✅ |
 
 ## 3. Modèle de données
@@ -186,6 +187,7 @@ CONNECT --(socket prêt)--> HEADERS --(206 attendu)--> DATA --(morceau plein)-->
 
 | Date | Auteur | Changement |
 |---|---|---|
+| 2026-10-29 | outil de téléchargement | v0.10 : `D-075`/`D-076` — `--cookies` (magasin relu, appliqué à la sonde et aux morceaux, réécrit), authentification unifiée des médias côté `xdm-media` (fiche D) ; **domaine A 24/24**, 281 tests |
 | 2026-10-29 | outil de téléchargement | v0.9 : `D-071`→`D-074` — reprise par défaut et `--sans-reprise`, carte d'une autre URL refusée, nom par `Content-Disposition`, `--sortie json`, `--proxy` réellement appliqué ; **domaine A 23/23**, 274 tests |
 | 2026-10-27 | assemblage `WP-22` | v0.7 : `D-040` — carte persistée à chaque morceau clos, reprise (`mergeResumeChunks`, `A-21`), promotion pilotée par `promote: true`, CLI `bin/xdm.js` ; **79 tests** |
 | 2026-10-27 | boucle de connexions `WP-22` | v0.6 : `src/connection-loop.js` + `src/divergence.js` (`D-039`) — distribution des morceaux, reprise à l'offset confirmé, repli sur divergence, plafond 128 sockets ; **domaine A clos (19/19)**, **73 tests** |

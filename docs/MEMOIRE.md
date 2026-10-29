@@ -7,7 +7,13 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-29 **v16** (`robots.txt` RFC 9309 `D-059`, `Crawl-delay` et
+- **Dernière revue** : 2026-10-29 **v17** — lot `WP-49` : authentification unifiée des médias
+  (`--entete`/`--cookies`/`--proxy`, un seul transport, enveloppe partagée `withHeaders`) `D-075`,
+  magasin de cookies du moteur (`xdm --cookies`) `D-076`, refus d'un positionnel de trop dans
+  les trois CLI `D-077`, `absent` dans le JSON de vérification `D-078` — **3 exigences ajoutées**
+  (`EX-A-24`, `EX-C-15`, `EX-B-38`) et `EX-D-11` créée, **281 tests**, **270 exports**, **44
+  fichiers de test** ; A, B, D clos, C à **14/15** (1 hors périmètre) : **88 exigences, 87
+  vertes**. Précédent (v16) : `robots.txt` RFC 9309 `D-059`, `Crawl-delay` et
   élagage `--exclure` `D-060`, exploration parallèle bornée `D-061`, cookies persistants et
   transport par schéma `D-062`, parcours exact et borné `D-063`, essai et diagnostic `D-064`,
   plans de site / sous-domaines / reprise du parcours `D-065`, interruption et usage `D-066`,
@@ -76,7 +82,7 @@
 | `src/crawler.js` | aspiration : BFS par niveau (vagues bornées), URL canonique, `<base href>`, `robots.txt` RFC 9309, `Crawl-delay`, filtres et **élagage**, arrêt sur échecs consécutifs, amorces, sous-domaines, reprise des statuts transitoires, interruption | `D-041`, `D-059`→`D-061`, `D-063`, `D-065`, `D-066` | `T-B-07`→`T-B-09`, `T-B-13`, `T-B-29`→`T-B-39` |
 | `src/sitemap.js` | plans de site : `<loc>` sans dépendance XML, directives `Sitemap:`, index un niveau, plafonds, découverte bornée | `D-065` | `T-C-17` |
 | `src/grabber.js` | aspiration : arborescence locale, collisions, `empty.html`, promotion en tâches ordinaires | `D-042` | `T-B-01`, `T-B-06`, `T-B-10`→`T-B-12` |
-| `src/headers.js` | en-têtes de requête : agent, `Accept`, `Referer`, deux politiques de compression | `D-049` | `T-C-02`, `T-C-05` |
+| `src/headers.js` | en-têtes de requête : agent, `Accept`, `Referer`, deux politiques de compression ; **enveloppe partagée `withHeaders`** (un transport porte ses en-têtes, le moteur garde la priorité) | `D-049`, `D-075` | `T-C-02`, `T-C-05`, `T-D-11` |
 | `src/ftp.js` | client FTP passif : `CWD`→`TYPE I`→`SIZE`→`REST`→`RETR`, reprise, refus explicite, contrôle par tunnel | `D-050`, `D-052` | `T-C-06`, `T-C-07`, `T-C-09` |
 | `src/proxy.js` | proxys : `CONNECT` HTTP/HTTPS, SOCKS5 (DNS distant), Basic et Digest ; composable en transport | `D-051`, `D-052` | `T-C-09`, `T-C-10` |
 | `src/pac.js` | PAC : sous-ensemble explicite (`if`/`else`, cinq fonctions), directives ordonnées, refus du reste | `D-052` | `T-C-09` |
@@ -84,8 +90,8 @@
 | `src/dash.js` | média MP4 segmenté : `sidx` → plages, init (préfixe ou URL), refus sans index | `D-048` | `T-D-08` |
 | `src/hls.js` | analyse de playlist HLS : variantes, renditions, segments, plages, clé, init | `D-046` | `T-D-01`→`T-D-07`, `T-D-09` |
 | `src/sidx.js` | boîtes MP4 et index `sidx` : plages exactes des sous-segments | `D-046` | `T-D-08` |
-| `src/media.js` | plan et téléchargement d'un flux HLS, assemblage facultatif | `D-046` | `T-D-02`→`T-D-06`, `T-D-10` |
-| `bin/xdm-media.js` | CLI de flux : playlist → segments → dossier assemblé | `D-046` | `T-D-03` |
+| `src/media.js` | plan et téléchargement d'un flux HLS : **transport propagé à tous les segments**, statut de playlist explicite, assemblage facultatif | `D-046`, `D-075` | `T-D-02`→`T-D-06`, `T-D-10`, `T-D-11` |
+| `bin/xdm-media.js` | CLI de flux : playlist → segments → dossier assemblé ; `--entete`, `--cookies`, `--proxy` sur **un seul** transport (playlist, init, segments) | `D-046`, `D-075` | `T-D-03`, `T-D-11` |
 | `src/grab-runner.js` | exécution d'une file : états, échec isolé, concurrence, persistance, `only` (quota), `shouldStop` (interruption), `recoverOrphans` (arrêt brutal) | `D-043`, `D-054`, `D-066`, `D-067` | `T-A-07`, `T-A-22`, `T-B-01`, `T-B-28`, `T-B-40`, `T-C-20` |
 | `src/size.js` | tailles lisibles → octets, unités binaires, refus explicites | `D-067` | `T-B-41` |
 | `src/diskspace.js` | espace libre (`bavail`), réserve bornée, estimation des tâches restantes, plus proche parent existant | `D-067` | `T-B-42` |
@@ -97,8 +103,8 @@
 | `src/report.js` | rapport d'aspiration : texte, JSON, CSV (`;`), Markdown, **HTML autonome échappé**, diagnostic d'exploration (motifs de rejet comptés) | `D-053`, `D-064`, `D-068` | `T-B-27`, `T-B-35`, `T-B-44` |
 | `src/schedule.js` | fenêtres locales, traversée de minuit, quotas, plan d'exécution | `D-054` | `T-B-28` |
 | `bin/xdm-grab.js` | CLI d'aspiration : parcours → arborescence → file → téléchargements ; `--reprendre`, `--inclure`/`--exclure`, `--paralleles`, `--delai`, `--arret-erreurs`, `--entete`, `--essai`, `--sitemap`, `--sous-domaines`, `--taille-max`, `--espace-min`, `--verifier`, `--cookies`, `--reecrire`, `--rapport`, `--planifier`, `--tentatives`, `--aide`, `--version`, `--sortie json` | `D-043`, `D-044`, `D-053`→`D-055`, `D-059`→`D-066` | `T-B-10`, `T-B-20`→`T-B-22`, `T-B-26`→`T-B-39`, `T-C-14`→`T-C-21` |
-| `bin/xdm.js` | CLI : `xdm <url> [dossier]`, nom déduit de l'URL, **transport choisi par le schéma** (`http`/`https`/`ftp`), promotion finale, `--aide`/`--version` | `D-037`, `D-040`, `D-062`, `D-066` | `T-A-14`, `T-C-13`, `T-C-21` |
-| `src/index.js` | barillet (255 exports) | `D-034` | — |
+| `bin/xdm.js` | CLI : `xdm <url> [dossier]`, nom déduit de l'URL, **transport choisi par le schéma** (`http`/`https`/`ftp`), promotion finale, `--cookies` (magasin relu et réécrit), `--aide`/`--version` | `D-037`, `D-040`, `D-062`, `D-066`, `D-076` | `T-A-14`, `T-A-24`, `T-C-13`, `T-C-21` |
+| `src/index.js` | barillet (270 exports) | `D-034` | — |
 
 **Règle** : une exigence ne passe au vert que si un test de `test/` la couvre ; le tableau de
 [`specs/conformance.md`](specs/conformance.md) fait foi, et il est **vérifié par outil** :

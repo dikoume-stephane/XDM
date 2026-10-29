@@ -19,20 +19,24 @@ import { mkdir, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { download, DownloadError } from '../src/connection-loop.js';
+import { createCookieJar, loadCookieJar, saveCookieJar, withCookies } from '../src/cookies.js';
 import { parseHeaderOption } from '../src/headers.js';
-import { probe } from '../src/http-client.js';
+import { defaultTransport, probe } from '../src/http-client.js';
 import { downloadFtp, parseFtpUrl } from '../src/ftp.js';
 import { fileNameFromDisposition, fileNameFromUrl, targetPathFor } from '../src/promote.js';
 import { parseProxyUrl, createProxyTransport } from '../src/proxy.js';
 
 export const USAGE = `usage : xdm <url> [dossier] [--connexions N] [--morceau TAILLE] [--proxy URL]
-                   [--entete "Nom: valeur"] [--incremental] [--sans-reprise] [--nom FICHIER]
+                   [--entete "Nom: valeur"] [--cookies F] [--incremental] [--sans-reprise]
+                   [--nom FICHIER]
                    [--sortie texte|json] [--aide | --version]
   --connexions     connexions parallèles (défaut 8)
   --morceau        taille de morceau en octets (1–10 Mio)
   --proxy          proxy http, https ou socks5 pour le transfert (et pour la sonde)
   --entete         en-tête HTTP envoyé à chaque requête (sonde **et** morceaux), répétable,
                    ex. « Authorization: Bearer … » ; validation partagée avec xdm-grab
+  --cookies        magasin de cookies (JSON) : lu au départ, écrit à la fin — le cookie posé
+                   par la sonde sert ensuite aux morceaux
   --incremental    si le fichier local existe, demander If-Modified-Since : un 304 le laisse
                    intact et sort en code 0 (le fichier était déjà à jour)
   --sans-reprise   repartir de zéro même si une carte de morceaux existe (la reprise est le
@@ -55,7 +59,8 @@ export const VERSION = '0.1.0';
  * nombreuses et explicites.
  * @param {string[]} argv
  * @returns {{url: string, directory: string, connections?: number, chunkSize?: number,
- *   proxy?: string, name?: string, output: 'texte'|'json', resume: boolean}}
+ *   proxy?: string, name?: string, output: 'texte'|'json', resume: boolean,
+ *   cookies?: string}}
  */
 export function parseArgs(argv) {
   /** @type {string[]} */
@@ -74,6 +79,10 @@ export function parseArgs(argv) {
       options.incremental = true;
     } else if (argument === '--sans-reprise') {
       options.resume = false;
+    } else if (argument === '--cookies') {
+      i += 1;
+      if (!argv[i]) throw new DownloadError(`--cookies attend un fichier\n${USAGE}`, 'USAGE');
+      options.cookies = argv[i];
     } else if (argument === '--nom') {
       i += 1;
       if (!argv[i]) throw new DownloadError(`--nom attend un nom de fichier\n${USAGE}`, 'USAGE');
@@ -110,6 +119,11 @@ export function parseArgs(argv) {
   }
   const url = positional[0];
   if (!url) throw new DownloadError(USAGE, 'USAGE');
+  // Un troisième argument positionnel était ignoré en silence : `xdm a b c` téléchargeait `a`
+  // et laissait croire que `c` avait été traité (`D-077`).
+  if (positional.length > 2) {
+    throw new DownloadError(`trop d'arguments : ${positional.slice(2).join(' ')}\n${USAGE}`, 'USAGE');
+  }
   if (options.connections !== undefined && !Number.isInteger(options.connections)) {
     throw new DownloadError('--connexions attend un entier', 'USAGE');
   }
@@ -182,6 +196,7 @@ export async function main(argv, {
   }
   const {
     url, directory, connections, chunkSize, proxy, headers, incremental, resume, name, output,
+    cookies,
   } = parseArgs(argv);
   const transport = transportFor(url);
   // En JSON, stdout ne porte **que** l'objet : la progression et les messages partent sur la
@@ -212,7 +227,18 @@ export async function main(argv, {
   // Proxy HTTP (`D-071`) : `--proxy` était documenté et appliqué au seul FTP ; il enveloppe
   // désormais la sonde **et** les morceaux, puisque les deux passent par le même transport.
   const proxyTransport = proxy ? createProxyTransport(parseProxyUrl(proxy)) : null;
-  const callTransport = proxyTransport ?? undefined;
+  // Cookies (`D-076`) : le magasin enveloppe le transport, donc il s'applique à la sonde **et**
+  // aux morceaux. Un serveur qui pose son jeton sur la réponse de la sonde le retrouve ensuite
+  // sur chaque `Range` — sans cette enveloppe, il faut recopier le `Cookie` à la main.
+  const jar = cookies ? (await loadCookieJar(cookies)).jar : null;
+  const callTransport = jar
+    ? withCookies(proxyTransport ?? defaultTransport, jar)
+    : (proxyTransport ?? undefined);
+  const flushCookies = async () => {
+    if (!jar) return;
+    const saved = await saveCookieJar(jar, cookies);
+    note(`cookies  : ${saved.path} (${saved.count} cookie(s))`);
+  };
   const requestHeaders = { ...headers };
 
   let fileName = name ?? fileNameFromUrl(url);
@@ -275,9 +301,11 @@ export async function main(argv, {
     note(`reprise ignorée (${raison}) : lecture complète`);
   }
   if (result.notModified) {
+    await flushCookies();
     note(`inchangé ${result.target} (304 : le fichier local est à jour)`);
     return finish({ url, target: result.target, size: null, requests: result.requests, notModified: true });
   }
+  await flushCookies();
   note(`écrit ${result.target} (${result.size} octets, ${result.requests} requêtes)`);
   return finish({
     url,

@@ -121,3 +121,25 @@ export function parseHeaderOption(raw) {
   }
   return { name, value };
 }
+
+/**
+ * Enveloppe un transport pour y ajouter des en-têtes d'appelant.
+ *
+ * Les en-têtes du moteur (`Range`, `If-Range`, `Accept-Encoding`) gardent la priorité : ils
+ * sont calculés après et écrasent ceux de l'appelant, jamais l'inverse (`D-069`). Une enveloppe
+ * de transport vaut mieux qu'un paramètre à retenir à chaque appel : un seul oubli et une
+ * requête part sans le jeton, ce qui donne un `403` inexplicable au milieu d'un flux (`D-075`).
+ *
+ * @param {(url: string, init?: object) => Promise<any>} transport
+ * @param {Record<string, string>} [headers]
+ * @returns {(url: string, init?: object) => Promise<any>}
+ */
+export function withHeaders(transport, headers = {}) {
+  if (typeof transport !== 'function') throw new TypeError('withHeaders : `transport` requis');
+  const extra = { ...headers };
+  if (Object.keys(extra).length === 0) return transport;
+  return (url, init = {}) => transport(url, {
+    ...init,
+    headers: { ...extra, ...(init.headers ?? {}) },
+  });
+}

@@ -11,7 +11,7 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 274 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 281 tests, sans dépendance (node --test)
 npm run audit                      # traçabilité : chaque exigence verte a un test qui existe
 npm run gate                       # porte G3 : site local + coupure réseau, comparaison disque/serveur
 npm run gate -- --pages 200 --max 200M   # profil de la porte : 200 pages, jusqu'à 200 Mo
@@ -34,6 +34,9 @@ node bin/xdm-grab.js <url> [dir] --reecrire --rapport r.md   # liens locaux + ra
 node bin/xdm-grab.js <url> [dir] --planifier 'lun-ven 01:00-06:00' --quota-octets 50000000
 node bin/xdm-media.js <playlist.m3u8> [dir]   # flux HLS : segments, init, assemblage facultatif
 node bin/xdm-media.js <media.mp4> [dir] --dash   # MP4 segmenté : plages lues dans l'index sidx
+node bin/xdm-media.js <p.m3u8> [dir] --entete 'Authorization: Bearer x' --cookies c.json
+                                    # playlist ET segments derrière le même transport authentifié
+node bin/xdm.js <url> [dir] --cookies c.json     # le cookie posé par la sonde sert aux morceaux
 ```
 
 ```bash
@@ -147,13 +150,17 @@ tools/                     collecte de preuves, triage, extractions
   17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
 - ✅ WP-20 → WP-27 terminés : moteur de morceaux, boucle de connexions, aspiration de site
   et CLI (`bin/xdm.js`, `bin/xdm-grab.js`), transports (proxys, FTP, PAC), médias (HLS,
-  DASH) ; **274 tests**, domaines A, B et D clos, domaine C à **13/14** (1 hors périmètre),
-  soit **83 exigences vertes sur 84** ; porte G3 franchie (200 pages, 205 Mio, coupure
+  DASH) ; **281 tests**, domaines A, B et D clos, domaine C à **14/15** (1 hors périmètre),
+  soit **87 exigences vertes sur 88** ; porte G3 franchie (200 pages, 205 Mio, coupure
   réseau absorbée).
 - ✅ WP-43/WP-44 : en-têtes personnalisés (`--entete`, validation unique partagée par les
   deux CLI, envoyés à la sonde **et** à chaque plage) et aspiration incrémentale
   (`--incremental`, `304` = fichier intact ; `--tentatives-total`, `--progression`) —
   `D-069`, `D-070`.
+- ✅ WP-49 : l'authentification ne s'arrête plus au milieu d'un flux — `xdm-media` accepte
+  `--entete`, `--cookies` et `--proxy` sur un **seul** transport (playlist, init et chaque
+  segment), `xdm` sait persister un magasin de cookies, les trois CLI refusent un argument
+  positionnel de trop, et `--verifier --sortie json` publie `absent` — `D-075`→`D-078`.
 - ✅ WP-45 → WP-48 : l'outil ne ment plus sur ses options — reprise de fichier par défaut et
   `--sans-reprise`, carte d'une autre URL refusée, nom par `Content-Disposition`, `--sortie
   json`, `--proxy` **réellement** appliqué au HTTP, et rapport écrit par `--verifier

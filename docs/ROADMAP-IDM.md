@@ -178,6 +178,7 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | WP-46 | ✅ **Clos** (`D-072`) — nom par `Content-Disposition` et `--nom` (`EX-A-21`) |
 | WP-47 | ✅ **Clos** (`D-073`) — `xdm --sortie json` : un objet sur stdout, le reste sur stderr (`EX-A-22`) |
 | WP-48 | ✅ **Clos** (`D-074`) — `--proxy` appliqué au HTTP, rapport de vérification (`EX-A-23`, `EX-B-37`) |
+| WP-49 | ✅ **Clos** (`D-075`→`D-078`) — authentification unifiée des médias (`EX-D-11`), `xdm --cookies` (`EX-A-24`), refus d'un positionnel de trop (`EX-C-15`), `absent` dans le JSON de vérification (`EX-B-38`) ; **281 tests**, **88 exigences / 87 vertes** |
 
 ---
 
@@ -212,6 +213,7 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | **M3.13 — Robustesse et audit** | reprise après arrêt brutal, `--taille-max`, espace disque, `--verifier`, rapport HTML | D-067, D-068 | ✅ domaine B **32/32**, 257 tests |
 | **M3.14 — En-têtes partout, rien de retéléchargé** | validation d'en-tête **unique** (`parseHeaderOption`) partagée par les deux CLI, `--entete` dans `xdm.js`, en-têtes sur la sonde **et** chaque plage ; `--incremental` (`If-Modified-Since`, `304` = fichier intact), `reopenDone`, `--tentatives-total`, `--progression` par paliers, `--verifier --sortie json` | D-069, D-070 | ✅ domaine B **36/36**, 265 tests |
 | **M3.15 — L'outil ne ment plus sur ses options** | reprise de fichier par défaut + `--sans-reprise` + carte d'une autre URL refusée, nom par `Content-Disposition`, `--sortie json`, `--proxy` réellement appliqué, rapport de vérification | D-071→D-074 | ✅ domaine A **23/23**, B **37/37**, 274 tests |
+| **M3.16 — L'authentification ne s'arrête plus au milieu d'un flux** | un seul transport authentifié pour `xdm-media` (en-têtes, cookies, proxy) : playlist, init et **chaque** segment ; `xdm --cookies` ; refus d'un positionnel de trop ; `absent` dans le JSON de vérification | D-075→D-078 | ✅ domaine A **24/24**, B **38/38**, C **14/15**, D **11/11**, 281 tests |
 | **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |
 
@@ -257,7 +259,7 @@ code, c'est une **preuve d'exécution de la cible** — impossible dans cet envi
 |---|---|---|
 | **P0** Cadrage | périmètre, décisions, hygiène | `JOURNAL` `D-001`→`D-019` ; `analysis/idman/00…08` |
 | **P1** Cartographie | anatomie, 422 classes, chaînes, protocoles, états de connexion | annexes 01–08 ; `classes.json`, `states.json`, `chunks.json` |
-| **P2** Spécifications | 4 fiches (A, B, C, D), **84 exigences**, matrice auditée | `docs/specs/`, `conformance.md` v1.14, `npm run audit` |
+| **P2** Spécifications | 4 fiches (A, B, C, D), **88 exigences**, matrice auditée | `docs/specs/`, `conformance.md` v1.15, `npm run audit` |
 | **P3** Reconstruction | moteur, file, transports, grabber, médias, CLI ; **porte G3 franchie** | `src/` (27 modules), `bin/` (3 CLI), `npm run gate` |
 | **P4** Parcours outillé | `robots.txt` RFC 9309, `--exclure` (élagage), `Crawl-delay`, `--paralleles`, `--cookies`, `xdm ftp://` | `D-059`→`D-062`, `EX-B-17`→`EX-B-20`, `EX-C-12`/`EX-C-13` |
 | **P4** Parcours exact | `<base href>`, `--entete`, `--arret-erreurs`, `--essai`, diagnostic du rapport | `D-063`, `D-064`, `EX-B-21`→`EX-B-23`, `EX-C-14` |
@@ -265,12 +267,14 @@ code, c'est une **preuve d'exécution de la cible** — impossible dans cet envi
 | **P4** Robustesse | reprise après arrêt brutal, plafond de taille, espace disque, vérification, rapport HTML | `D-067`, `D-068`, `EX-B-29`→`EX-B-32` |
 | **P4** En-têtes et incrémental | validation partagée, `--entete` aux deux CLI, en-têtes sur toute plage, `304` = intact, crédit d'essais cumulés, progression par paliers, audit JSON | `D-069`, `D-070`, `EX-B-33`→`EX-B-36` |
 | **P4** Outil honnête | reprise par défaut + `--sans-reprise` + carte étrangère refusée, nom par `Content-Disposition`, `--sortie json`, `--proxy` appliqué, rapport de vérification | `D-071`→`D-074`, `EX-A-20`→`EX-A-23`, `EX-B-37` |
+| **P4** Authentification de bout en bout | transport média unique (en-têtes, cookies, proxy), `xdm --cookies`, positionnels refusés, JSON de vérification complet | `D-075`→`D-078`, `EX-D-11`, `EX-A-24`, `EX-C-15`, `EX-B-38` |
 | **P4** Résilience + revue | `429`/`503`, coupures, `416`, boucles ; revue clean-room publiée | `D-055`, `D-056`, `revue-clean-room.md` |
 | **P5** Dynamique | **non commencée** — aucune VM Windows dans cet environnement | `A-09` |
 
-Chiffres au 2026-10-29 : **274 tests verts**, **269 exports**, **84 exigences (83 vertes,
-1 hors périmètre)**, **0 écart de traçabilité**, **29 documents `.md` sans lien cassé**,
-porte G3 à 200 pages / 205,0 Mio.
+Chiffres au 2026-10-29 : **281 tests verts** (44 fichiers), **270 exports**, **88 exigences
+(87 vertes, 1 hors périmètre)**, **78 décisions**, **0 écart de traçabilité**, **29 documents
+`.md` sans lien cassé**, porte G3 à 200 pages / 205,0 Mio ; **23 lots sur 26** clos, les trois
+restants (`WP-30`, `WP-40`→`WP-42`) exigent une VM Windows.
 
 ### 7.2 Ce qui reste, et pourquoi c'est bloqué
 
