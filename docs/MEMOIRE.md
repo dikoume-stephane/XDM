@@ -7,12 +7,13 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-28 **v9** (réécriture `D-053`, rapport, planification
-  `D-054`, résilience `D-055`, audit `D-056`, porte G3 `D-057` — **4 modules** et
-  **2 outils** ajoutés, **220 tests**, **231 exports**, porte G3 **franchie** ;
+- **Dernière revue** : 2026-10-28 **v10** (réécriture `D-053`, rapport, planification
+  `D-054`, résilience `D-055`, audit `D-056`, porte G3 `D-057`, roadmap v1.3 `D-058` —
+  **4 modules** et **2 outils** ajoutés, **220 tests**, **231 exports**, porte G3
+  **franchie** ;
   plus ancien : annexe 15 v5 : fiches C et D implémentées ; annexe 16 v1 : protocole VM ;
   annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`,
-  `D-032`/`D-033` ; **A, B, C et D clos : 56 exigences, 55 vertes, `D-034`→`D-057`,
+  `D-032`/`D-033` ; **A, B, C et D clos : 56 exigences, 55 vertes, `D-034`→`D-058`,
   traçabilité auditée (`npm run audit`), porte G3 franchie (`npm run gate`)**).
 
 ---
@@ -22,7 +23,7 @@
 | Niveau | Fichier | Nature | Règle de mise à jour |
 |---|---|---|---|
 | Décisions | [`JOURNAL.md`](JOURNAL.md) | chronologique, **immuable** | on ajoute une entrée ; on ne réécrit jamais une décision passée (on la remplace) |
-| Plan | [`ROADMAP-IDM.md`](ROADMAP-IDM.md) | vivant | révisé à chaque jalon / changement de périmètre |
+| Plan | [`ROADMAP-IDM.md`](ROADMAP-IDM.md) | vivant | révisé à chaque jalon / changement de périmètre ; **v1.3** : §7 = état des lieux (fait mesuré / bloqué nommé / si la VM arrive) |
 | Index | ce fichier | vivant | mis à jour dès qu'une annexe est créée ou déplacée |
 | Connaissances | `analysis/idman/NN-*.md` | thématique, versionnée | enrichie par ajout de lignes sourcées ; jamais « de mémoire » |
 

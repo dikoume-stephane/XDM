@@ -2,7 +2,9 @@
 
 > **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, SHA-256 `5f78da5a…2f11c9`.
 > **Projet** : XDM (dépôt `dikoume-stephane/XDM`), branche `arena/c3b095dd-xdm`.
-> **Version du plan** : v1 — 2026-10-26 · **Révision** : à chaque jalon atteint.
+> **Version du plan** : **v1.3** — 2026-10-28 · **Révision** : à chaque jalon atteint.
+> **État** : P0–P3 **closes**, porte **G3 franchie** ; P4 close sauf `WP-30` (bloqué, VM
+> Windows) ; P5 bloquée (`A-09`). Détail : §7.
 > **Décisions liées** : [`JOURNAL.md`](JOURNAL.md) · **Preuves** : `analysis/idman/` ·
 > **Index mémoire** : [`MEMOIRE.md`](MEMOIRE.md).
 
@@ -229,19 +231,51 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | P4 | 4-6 j | comparaisons, résilience |
 | P5 | 3-5 j | sous réserve de la VM |
 
-**Chemin critique (après clôture de la P3)** : `A-09` (VM Windows) → `WP-07` (fiches C–F,
-`A-05`) → P5 (comparaison témoin). Le code du grabber ne bloque plus rien : `WP-23` est clos.
+**Chemin critique** : `A-09` (VM Windows) → `WP-30` (comparaison témoin) → P5. Tout le reste
+est fait ou explicitement hors périmètre : la seule chose qui manque au projet n'est plus du
+code, c'est une **preuve d'exécution de la cible** — impossible dans cet environnement.
 
 ---
 
-## 7. Prochaines actions (ordre d'exécution)
+## 7. État réel et prochaines actions
 
-1. **A-01** — confirmer le périmètre (Site Grabber ? projet XDM ?) → conditionne tout.
-2. **A-02** — installer Ghidra 12.1.x, exporter `GHIDRA_INSTALL_DIR`, vérifier
-   `rea doctor` puis `rea function cible/IDMan.exe --address <entry>`.
-3. **WP-04** — script d'extraction des vtables (pefile), première table
-   `classe → RVA` sur 20 classes du grabber.
-4. **WP-06** — ouvrir la fiche `docs/specs/grabber.md` avec les 22 classes et les 9
-   dialogues déjà identifiés.
-5. **A-05** — créer le gabarit de fiche de spécification et l'appliquer d'abord au
-   moteur (WP-05), pour valider le format avant de le multiplier.
+### 7.1 Ce qui est fait (mesuré, pas déclaré)
+
+| Phase | Sortie | Preuve |
+|---|---|---|
+| **P0** Cadrage | périmètre, décisions, hygiène | `JOURNAL` `D-001`→`D-019` ; `analysis/idman/00…08` |
+| **P1** Cartographie | anatomie, 422 classes, chaînes, protocoles, états de connexion | annexes 01–08 ; `classes.json`, `states.json`, `chunks.json` |
+| **P2** Spécifications | 4 fiches (A, B, C, D), **56 exigences**, matrice auditée | `docs/specs/`, `conformance.md` v1.8, `npm run audit` |
+| **P3** Reconstruction | moteur, file, transports, grabber, médias, CLI ; **porte G3 franchie** | `src/` (27 modules), `bin/` (3 CLI), `npm run gate` |
+| **P4** Résilience + revue | `429`/`503`, coupures, `416`, boucles ; revue clean-room publiée | `D-055`, `D-056`, `revue-clean-room.md` |
+| **P5** Dynamique | **non commencée** — aucune VM Windows dans cet environnement | `A-09` |
+
+Chiffres au 2026-10-28 : **220 tests verts**, **231 exports**, **56 exigences (55 vertes,
+1 hors périmètre)**, **0 écart de traçabilité**, **29 documents `.md` sans lien cassé**,
+porte G3 à 200 pages / 205,0 Mio.
+
+### 7.2 Ce qui reste, et pourquoi c'est bloqué
+
+| # | Action | Blocage | Ce qu'il faudrait |
+|---|---|---|---|
+| 1 | `WP-30` — comparaison avec le grabber IDM sur 3 sites témoins | ⛔ **bloqué** : aucun IDM exécutable ici | VM Windows (`A-09`), même filtres, mêmes URLs |
+| 2 | `P5` — validation dynamique (ordre des requêtes, temporisations, `robots.txt`) | ⛔ **bloqué** (même cause) | protocole déjà écrit : annexe 16, 6 phases |
+| 3 | `A-09-bis` — format binaire du `.gsd` | ⛔ **bloqué** : aucun échantillon | un fichier projet produit par IDM |
+| 4 | `A-02`/`WP-03` — décompilation | ⛔ **bloqué** : ni JVM ni CDN GitHub depuis ce sandbox (`D-019`) | `GHIDRA_INSTALL_DIR` hors sandbox |
+| 5 | `Q-B-02`/`Q-B-03`/`Q-B-04`/`Q-B-05` — `robots.txt`, défaut `nLevels`, rôle d'`empty.html`, parallélisme du crawl | 🟡 **sans effet** : tranchées par décision XDM, marquées comme telles | VM (même protocole) |
+
+Aucune de ces cinq lignes ne bloque **le produit** : elles bloquent la **fidélité prouvée**.
+C'est la distinction que le projet tient depuis `D-041`, et elle est écrite noir sur blanc dans
+chaque fiche concernée.
+
+### 7.3 Si la VM devient disponible (ordre d'exécution)
+
+1. **Annexe 16, phases 1–3** — installer, capturer le trafic d'une aspiration témoin, relever
+   l'ordre exact des requêtes et les temporisations ; lever `Q-C-01`→`Q-C-05`.
+2. **`A-09-bis`** — produire trois `.gsd` (projets vides, avec filtres, avec planification) et
+   les déverser ; vérifier ou infirmer `EX-B-01`/`EX-B-02`.
+3. **`WP-30`** — rejouer les 3 sites témoins des deux côtés, comparer ensembles de fichiers,
+   profondeur et ordre ; consigner les écarts **avant** de les corriger.
+4. **P5** — réévaluer `Q-B-*`, puis mettre à jour les fiches C et D (`Observé` au lieu de
+   `Décision`) et relancer `npm run audit` : toute ligne qui change de niveau doit changer de
+   preuve.

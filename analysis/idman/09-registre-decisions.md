@@ -45,6 +45,7 @@
 | D-037 | Nom final = dernière composante assainie de l'URL, ≤ 200 octets, noms réservés neutralisés | ✅ appliquée | WP-20 | `JOURNAL`, `src/promote.js` |
 | D-038 | Client HTTP sans état, transport injectable : sonde `bytes=0-0`, `identity`, 10 redirections, `IDLE_TIMEOUT` 30 s avec offset de reprise | ✅ appliquée | WP-21 | `JOURNAL`, `src/http-client.js` |
 | D-039 | Divergence détectée par hachage des fenêtres de recouvrement (1 024 o), repli à une connexion et reprise entière | ✅ appliquée | WP-21/22 | `JOURNAL`, `src/divergence.js`, `src/connection-loop.js` |
+| D-058 | Roadmap v1.3 : §7 réécrit en état des lieux vérifiable (fait / bloqué / si la VM arrive) ; « bloqué » distingue le produit (mesuré) de la fidélité prouvée | ✅ appliquée | — | `JOURNAL`, `docs/ROADMAP-IDM.md` |
 | D-057 | Porte G3 franchie : coupure de socket traitée comme inactivité (plage rouverte au dernier octet écrit, tentatives bornées) ; banc `tools/gate-g3.mjs` comparant disque et serveur par empreinte | ✅ appliquée | G3 | `JOURNAL`, `docs/specs/porte-g3.md` |
 | D-056 | Traçabilité vérifiée par outil : `tools/audit-conformance.mjs` (6 contrôles, testé sur un jeu fautif) + revue clean-room publiée ; écarts assumés listés exhaustivement | ✅ appliquée | WP-32 | `JOURNAL`, `docs/specs/revue-clean-room.md` |
 | D-055 | Statuts transitoires (`429`, `503`, …) : `HTTP_STATUS` avec statut, `retryable` et `Retry-After` ; aucune reprise silencieuse dans le client, la file décide (`src/retry.js`) | ✅ appliquée | WP-31 | `JOURNAL`, `src/retry.js` |

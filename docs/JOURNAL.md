@@ -1407,6 +1407,35 @@ P4 ne garde qu'un lot bloqué (`WP-30`, comparaison avec IDM : exige la VM Windo
 
 ---
 
+### D-058 — La roadmap elle-même est un livrable vérifié
+**Statut** : appliquée · **Date** : 2026-10-28 · **Portée** : `docs/ROADMAP-IDM.md` v1.3
+
+**Contexte.** La section « Prochaines actions » datait de la phase P0 et proposait encore de
+« créer le gabarit de fiche de spécification » et d'« ouvrir la fiche grabber » — deux lots
+clos depuis (`D-041`, `D-042`). Une roadmap qui propose du travail fait n'est pas neutre : elle
+envoie un lecteur — ou un agent — refaire ce qui existe.
+
+**Décision.** Le §7 devient un **état des lieux** en trois parties, chacune vérifiable :
+1. **Ce qui est fait**, phase par phase, avec la **preuve** (commande, fichier, chapitre) et
+   non l'intention ;
+2. **Ce qui reste**, avec le **blocage nommé** — quatre lignes bloquées par l'absence de VM
+   Windows (`WP-30`, P5, `A-09-bis`, décompilation) et une ligne de questions « sans effet »
+   tranchées par décision ;
+3. **Ce qu'on ferait si la VM devenait disponible**, dans l'ordre, pour que la reprise ne
+   dépende pas d'une conversation perdue.
+
+**Clarification ajoutée.** « Bloqué » ne veut plus dire la même chose des deux côtés : ces
+lignes ne bloquent pas **le produit** (il fonctionne et il est mesuré), elles bloquent la
+**fidélité prouvée** au-delà de ce qui est lisible dans le binaire. C'est la distinction que le
+projet applique depuis `D-041` ; elle est désormais visible au niveau du plan, pas seulement
+dans chaque fiche.
+
+**Conséquence.** Roadmap v1.3. Les chiffres du §7.1 sont ceux qui se recalculent :
+`node --test` (220), `npm run audit` (56 exigences, 0 écart), `npm run gate` (205,0 Mio),
+`node -e "import('./src/index.js')"` (231 exports), 29 `.md` et 0 lien cassé.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
