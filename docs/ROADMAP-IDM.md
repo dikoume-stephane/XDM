@@ -260,7 +260,7 @@ code, c'est une **preuve d'exécution de la cible** — impossible dans cet envi
 | **P0** Cadrage | périmètre, décisions, hygiène | `JOURNAL` `D-001`→`D-019` ; `analysis/idman/00…08` |
 | **P1** Cartographie | anatomie, 422 classes, chaînes, protocoles, états de connexion | annexes 01–08 ; `classes.json`, `states.json`, `chunks.json` |
 | **P2** Spécifications | 4 fiches (A, B, C, D), **88 exigences**, matrice auditée | `docs/specs/`, `conformance.md` v1.15, `npm run audit` |
-| **P3** Reconstruction | moteur, file, transports, grabber, médias, CLI ; **porte G3 franchie** | `src/` (27 modules), `bin/` (3 CLI), `npm run gate` |
+| **P3** Reconstruction | moteur, file, transports, grabber, médias, CLI ; **porte G3 franchie** | `src/` (32 modules, 10 452 lignes avec `bin/`), `bin/` (3 CLI), `npm run gate` |
 | **P4** Parcours outillé | `robots.txt` RFC 9309, `--exclure` (élagage), `Crawl-delay`, `--paralleles`, `--cookies`, `xdm ftp://` | `D-059`→`D-062`, `EX-B-17`→`EX-B-20`, `EX-C-12`/`EX-C-13` |
 | **P4** Parcours exact | `<base href>`, `--entete`, `--arret-erreurs`, `--essai`, diagnostic du rapport | `D-063`, `D-064`, `EX-B-21`→`EX-B-23`, `EX-C-14` |
 | **P4** Parcours complet et interruptible | plans de site, sous-domaines, reprise de l'exploration, Ctrl-C propre, aide/version | `D-065`, `D-066`, `EX-B-24`→`EX-B-28` |
