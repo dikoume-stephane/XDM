@@ -6,7 +6,8 @@
  * `xdm-grab <url> [dossier] [--profondeur N] [--pages N] [--connexions N] [--sans-robots]
  *   [--reprendre] [--inclure MOTIF] [--exclure MOTIF] [--sans-exclusions] [--paralleles N]
  *   [--delai SECONDES] [--arret-erreurs N] [--entete "Nom: valeur"] [--essai]
- *   [--sitemap] [--sous-domaines] [--aide] [--version]
+ *   [--sitemap] [--sous-domaines] [--taille-max T] [--espace-min T] [--verifier]
+ *   [--aide] [--version]
  *   [--reecrire] [--rapport F]
  *   [--planifier « lun-ven 01:00-06:00 »] [--tentatives N]
  *   [--quota-octets N | --quota-taches N] [--sortie texte|json]`
@@ -22,7 +23,12 @@ import { join, resolve } from 'node:path';
 
 import { crawl, robotsUrl } from '../src/crawler.js';
 import { prepareGrab } from '../src/grabber.js';
-import { downloadTask, executeGrab, retryFailed } from '../src/grab-runner.js';
+import {
+  downloadTask, executeGrab, listOrphans, recoverOrphans, retryFailed,
+} from '../src/grab-runner.js';
+import { checkSpace, estimateSpace } from '../src/diskspace.js';
+import { parseSize } from '../src/size.js';
+import { verifyGrab } from '../src/verify.js';
 import { fetchText } from '../src/http-client.js';
 import {
   addFilter, createProject, loadProject, projectPath, saveProject, splitMotif,
@@ -42,13 +48,16 @@ export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages
                    [--reprendre] [--inclure MOTIF] [--exclure MOTIF] [--sans-exclusions]
                    [--paralleles N] [--delai SECONDES] [--arret-erreurs N]
                    [--entete "Nom: valeur"] [--essai] [--sitemap] [--sous-domaines]
+                   [--taille-max TAILLE] [--espace-min TAILLE] [--verifier]
                    [--reecrire] [--rapport F] [--planifier FENÊTRE]
                    [--quota-octets N | --quota-taches N] [--tentatives N] [--sortie texte|json]
   --profondeur     niveaux visités (défaut 2)
   --pages          nombre maximal de pages visitées (défaut 2000)
   --connexions     téléchargements simultanés (défaut 4)
   --sans-robots    ignorer robots.txt (déconseillé)
-  --reprendre      reprendre le projet et la file déjà présents dans <dossier>, sans re-parcourir
+  --reprendre      reprendre le projet et la file déjà présents dans <dossier>, sans re-parcourir ;
+                   relève aussi les tâches laissées en cours par un arrêt brutal (suppose
+                   qu'aucune autre exécution ne travaille dans ce dossier)
   --inclure        motif à inclure, répétable (ex. « *.html »)
   --exclure        motif à exclure, répétable — l'emporte sur l'inclusion (D-032)
   --delai          secondes entre deux vagues de requêtes ; 0 pour ignorer le Crawl-delay
@@ -62,13 +71,20 @@ export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages
   --sitemap        partir aussi des plans de site : directives « Sitemap: » du robots.txt,
                    sinon /sitemap.xml ; les URL listées passent les mêmes contrôles
   --sous-domaines  accepter les sous-domaines du site de départ (jamais un domaine tiers)
+  --taille-max     refuser un fichier plus gros que cette taille (500K, 1,5M, 2G ; unités
+                   binaires) — refus après la sonde, avant tout octet écrit
+  --espace-min     exiger au moins cette taille libre en plus des fichiers prévus ;
+                   vérifié avant la première connexion (défaut : 64 Mio)
+  --verifier       vérifier une aspiration existante (file ↔ disque) sans aucun accès réseau ;
+                   code 1 si un fichier manque ou est tronqué (les fichiers hors file sont
+                   signalés sans faire échouer : ils peuvent être légitimes)
   --aide, -h       afficher cette aide et sortir (code 0)
   --version, -V    afficher la version et sortir (code 0)
   --paralleles     pages explorées simultanément (défaut 1, déterministe)
   --sans-exclusions  vider les exclusions par défaut (D-032 : l'exclusion l'emporte sur
                    l'inclusion, donc --inclure « *.html » seul ne retient aucune page)
   --reecrire       réécrire les liens HTML/CSS vers les chemins locaux (choix XDM, D-053)
-  --rapport        écrire un rapport (extension .json, .csv ou .md ; Markdown par défaut)
+  --rapport        écrire un rapport (extension .json, .csv, .html ou .md ; Markdown par défaut)
   --planifier      n'exécuter que dans la fenêtre donnée, ex. « lun-ven 01:00-06:00 »
   --quota-octets   budget d'octets pour cette exécution
   --quota-taches   nombre de tâches pour cette exécution
@@ -110,6 +126,9 @@ export function parseArgs(argv) {
     dryRun: false,
     sitemap: false,
     subdomains: false,
+    maxSize: null,
+    minSpace: null,
+    verify: false,
     help: false,
     version: false,
     report: null,
@@ -152,6 +171,24 @@ export function parseArgs(argv) {
     else if (argument === '--essai') options.dryRun = true;
     else if (argument === '--sitemap') options.sitemap = true;
     else if (argument === '--sous-domaines') options.subdomains = true;
+    else if (argument === '--verifier') options.verify = true;
+    else if (argument === '--taille-max') {
+      i += 1;
+      if (argv[i] === undefined) throw new Error(`--taille-max attend une taille\n${USAGE}`);
+      try {
+        options.maxSize = parseSize(argv[i]);
+      } catch (error) {
+        throw new Error(`valeur invalide pour --taille-max : ${argv[i]} (${error.message})`);
+      }
+    } else if (argument === '--espace-min') {
+      i += 1;
+      if (argv[i] === undefined) throw new Error(`--espace-min attend une taille\n${USAGE}`);
+      try {
+        options.minSpace = parseSize(argv[i]);
+      } catch (error) {
+        throw new Error(`valeur invalide pour --espace-min : ${argv[i]} (${error.message})`);
+      }
+    }
     else if (argument === '--aide' || argument === '-h') options.help = true;
     else if (argument === '--version' || argument === '-V') options.version = true;
     else if (argument === '--entete') {
@@ -277,6 +314,7 @@ export function summarize(result) {
     started: result.started ?? true,
     dryRun: result.dryRun ?? false,
     interrupted: result.interrupted ?? false,
+    blocked: result.blocked ?? null,
     rewritten: result.rewritten ?? 0,
     report: result.report ?? null,
   };
@@ -297,7 +335,7 @@ export function outputFormat(argv) {
  * @param {string[]} argv
  * @param {{log?: (line: string) => void, fetchPage?: (url: string) => Promise<object>,
  *   downloadOptions?: object, runTask?: (task: object) => Promise<object>,
- *   signal?: {aborted: boolean}|null}} [deps]
+ *   signal?: {aborted: boolean}|null, statfs?: Function|null}} [deps]
  * @returns {Promise<{project: object, queue: object, pages: number, retained: number,
  *   done: number, failed: number, directory: string}>}
  */
@@ -309,6 +347,7 @@ export async function main(argv, {
   downloadOptions: injectedDownloadOptions = {},
   runTask,
   signal = null,
+  statfs = null,
 } = {}) {
   // `--aide` et `--version` répondent **sans** exiger d'URL : demander de l'aide ne doit pas
   // commencer par une erreur d'usage (et le cas est testé).
@@ -328,6 +367,61 @@ export async function main(argv, {
   let downloadOptions = injectedDownloadOptions;
   const { url, directory, depth, maxPages, connections, robots, resume } = options;
   const rootDir = resolve(directory);
+
+  // `--verifier` (`D-068`) : on lit ce qui existe, on n'écrit rien et on ne contacte personne.
+  // Placé **avant** la création du dossier : vérifier une aspiration absente ne doit pas la
+  // créer, sinon la vérification fabrique ce qu'elle prétend constater.
+  if (options.verify) {
+    const tasks = await loadQueue(rootDir).then((queue) => queue.tasks).catch(() => null);
+    if (tasks === null) {
+      log(`vérification : aucune file dans ${rootDir} — rien à vérifier`);
+      return {
+        verify: { checked: 0, ok_: false, missing: [], truncated: [], unmanaged: [] },
+        project: null,
+        queue: { tasks: [] },
+        pages: 0,
+        retained: 0,
+        done: 0,
+        failed: 0,
+        directory: rootDir,
+        started: false,
+        report: null,
+        rewritten: 0,
+      };
+    }
+    const result = await verifyGrab({ rootDir, tasks });
+    log(`vérification de ${rootDir} : ${result.checked} tâche(s), ${result.ok} conforme(s)`);
+    log(`  octets annoncés : ${result.totalBytes}, octets sur disque : ${result.diskBytes}`);
+    for (const item of result.missing) log(`  MANQUANT  ${item.path} (${item.url})`);
+    for (const item of result.truncated) {
+      log(`  TRONQUÉ   ${item.path} : ${item.found} octets au lieu de ${item.expected}`);
+    }
+    for (const item of result.partial) {
+      log(`  PARTIEL   ${item.path} (état ${item.state}, ${item.size} octets)`);
+    }
+    if (result.unmanaged.length > 0) {
+      log(`  hors file : ${result.unmanaged.length} fichier(s) `
+        + `(${result.unmanaged.slice(0, 5).map((file) => file.path).join(', ')}`
+        + `${result.unmanaged.length > 5 ? ', …' : ''})`);
+    }
+    for (const error of result.errors) log(`  ILLISIBLE ${error.path} : ${error.message}`);
+    log(result.ok_ ? 'vérification : conforme' : 'vérification : ÉCART DÉTECTÉ (code 1)');
+    return {
+      verify: result,
+      project: null,
+      queue: { tasks },
+      pages: tasks.length,
+      retained: tasks.length,
+      done: result.ok,
+      failed: result.missing.length + result.truncated.length,
+      directory: rootDir,
+      started: false,
+      conforms: result.ok_,
+      report: null,
+      rewritten: 0,
+    };
+  }
+
   // `--essai` ne crée **rien** : un essai qui laisse un dossier derrière lui n'est pas un
   // essai, c'est une aspiration partielle (`D-064`).
   if (!options.dryRun) await mkdir(rootDir, { recursive: true });
@@ -448,8 +542,19 @@ export async function main(argv, {
       crawl: found,
     };
   }
-  // Reprise : une tâche laissée en échec (coupure, 404 passager) redevient candidate.
-  if (resume) plan.queue = retryFailed(plan.queue);
+  // Reprise : une tâche laissée en échec (coupure, 404 passager) redevient candidate, et une
+  // tâche laissée **en cours** par un arrêt brutal (SIGKILL, coupure de courant) aussi —
+  // sinon elle ne serait jamais reprise, `startNext` ne regardant que les `PENDING`
+  // (`D-067`). Une reprise suppose donc qu'aucune autre exécution ne travaille dans ce
+  // dossier : c'est écrit dans l'aide.
+  if (resume) {
+    const orphans = listOrphans(plan.queue);
+    if (orphans.length > 0) {
+      log(`reprise : ${orphans.length} tâche(s) interrompue(s) brutalement, remises en attente`);
+    }
+    plan.queue = recoverOrphans(plan.queue).queue;
+    plan.queue = retryFailed(plan.queue);
+  }
 
   // Interruption tombée pendant le parcours : le plan est **enregistré** (pour `--reprendre`)
   // et rien n'est téléchargé. Sortir sans sauver laisserait un dossier à moitié écrit.
@@ -556,8 +661,42 @@ export async function main(argv, {
   // protégé par cookie échoue alors que la page qui le cite vient d'être lue.
   downloadOptions = {
     transport: withUserHeaders(withCookies(defaultTransport, jar)),
+    ...(options.maxSize !== null ? { maxSize: options.maxSize } : {}),
     ...downloadOptions,
   };
+
+  // Espace disque (`D-067`) : refus **avant** la première connexion, avec un chiffre à
+  // libérer. Les tâches de taille inconnue sont annoncées à part, jamais comptées comme zéro.
+  const space = estimateSpace(plan.queue.tasks);
+  const spaceCheck = await checkSpace({
+    dir: rootDir,
+    needed: space.remaining,
+    ...(options.minSpace !== null ? { reserve: options.minSpace } : {}),
+    ...(statfs ? { statfs } : {}),
+  });
+  if (!spaceCheck.enough) {
+    log(`espace insuffisant dans ${rootDir} : ${spaceCheck.missing} octet(s) à libérer `
+      + `(disponible ${spaceCheck.available}, requis ${spaceCheck.needed + spaceCheck.reserve})`);
+    await saveProject(projectPath(rootDir, plan.project.name), plan.project);
+    await saveQueue(rootDir, plan.queue);
+    return {
+      project: plan.project,
+      queue: plan.queue,
+      pages: plan.pages,
+      retained: plan.retained,
+      done: 0,
+      failed: 0,
+      directory: rootDir,
+      started: false,
+      blocked: 'espace',
+      space: spaceCheck,
+      report: null,
+      rewritten: 0,
+    };
+  }
+  if (space.unknown > 0) {
+    log(`espace : ${space.unknown} fichier(s) de taille inconnue non comptés dans l'estimation`);
+  }
 
   // Tâche d'exécution : celle du test si elle existe, sinon le téléchargement réel avec
   // les options demandées, sinon le comportement par défaut du runner.
@@ -622,7 +761,8 @@ export async function main(argv, {
     });
     reportPath = resolve(options.report);
     const format = reportPath.endsWith('.json') ? 'json'
-      : reportPath.endsWith('.csv') ? 'csv' : 'markdown';
+      : reportPath.endsWith('.csv') ? 'csv'
+        : /\.[ch]tml$/.test(reportPath) ? 'html' : 'markdown';
     await writeFile(reportPath, formatReport(report, format), 'utf8');
     log(`rapport  : ${reportPath}`);
   }
@@ -679,8 +819,11 @@ if (invokedDirectly) {
       }
       // Code 3 = « hors fenêtre de planification » : un essai n'est pas un rendez-vous manqué,
       // et une aide ou une version encore moins.
-      if (result.started === false && result.dryRun !== true
-        && result.help !== true && result.version === undefined) process.exitCode = 3;
+      if (result.conforms === false) process.exitCode = 1;
+      else if (result.blocked === 'espace') process.exitCode = 1;
+      else if (result.started === false && result.dryRun !== true
+        && result.help !== true && result.version === undefined
+        && result.verify === undefined) process.exitCode = 3;
     })
     .catch((error) => {
       const message = String(error?.message ?? error).trimEnd();

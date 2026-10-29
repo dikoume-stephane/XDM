@@ -208,6 +208,7 @@ export async function download(url, target, {
   ifRange = null,
   resume = true,
   promote = false,
+  maxSize = null,
   onProgress = () => {},
 } = {}) {
   const capabilities = await probe(url, transport ? { transport } : {});
@@ -219,6 +220,16 @@ export async function download(url, target, {
     );
   }
   const size = capabilities.size;
+  // Plafond de taille (`D-067`) : refusé **après la sonde, avant tout octet écrit**. Un
+  // serveur qui annonce 4 Gio alors qu'on visait un PDF de 2 Mio ne doit pas remplir le disque
+  // avant qu'on s'en aperçoive ; et le fichier local ne doit pas exister à moitié.
+  if (maxSize !== null && size > maxSize) {
+    throw new DownloadError(
+      `fichier trop volumineux : ${size} octets (plafond ${maxSize})`,
+      'TOO_LARGE',
+      { url: capabilities.finalUrl, size, maxSize },
+    );
+  }
   const single = capabilities.acceptRanges !== true;
   const effectiveConnections = single
     ? 1

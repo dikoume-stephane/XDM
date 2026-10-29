@@ -183,15 +183,21 @@ test('T-C-20 : Ctrl-C arrête proprement, sans tâche restée `ACTIVE`', async (
       let stderr = '';
       // L'écoute de `exit` est posée **avant** l'interruption : un processus peut sortir
       // pendant qu'on attend autre chose, et l'événement serait alors perdu.
-      const exited = new Promise((resolve) => child.on('exit', resolve));
+      // `close` (et non `exit`) : il n'arrive qu'une fois les flux stdio vidés, donc le
+      // dernier message sur stderr est bien arrivé au parent.
+      const exited = new Promise((resolve) => child.on('close', resolve));
       child.stdout.on('data', (chunk) => { stdout += chunk; });
       child.stderr.on('data', (chunk) => { stderr += chunk; });
       const interrupted = new Promise((resolve) => {
+        // Un seul signal : la seconde interruption sort tout de suite (comportement voulu),
+        // donc un test qui en envoie deux ne mesurerait plus la reprise.
+        let signale = false;
         child.stdout.on('data', (chunk) => {
           stdout += chunk;
-          // Le parcours vient de finir : on laisse partir **un** téléchargement (150 ms),
-          // puis on interrompt au milieu des suivants.
-          if (/page\(s\) visitée/.test(stdout)) {
+          if (!signale && /page\(s\) visitée/.test(stdout)) {
+            signale = true;
+            // Le parcours vient de finir : on laisse partir **un** téléchargement (150 ms),
+            // puis on interrompt au milieu des suivants.
             setTimeout(() => {
               child.kill('SIGINT');
               resolve(null);

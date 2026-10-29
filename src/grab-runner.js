@@ -54,6 +54,60 @@ export async function downloadTask(task, { downloadOptions = {}, download: run =
 }
 
 /**
+ * Tâches qu'un arrêt **brutal** a laissées en cours (`D-067`).
+ *
+ * Un `Ctrl-C` propre (`D-066`) ne laisse jamais de tâche `ACTIVE` : les travaux en vol vont
+ * au bout, les autres restent `PENDING`. Mais un `SIGKILL`, une coupure de courant ou un
+ * plantage ne laissent pas le temps d'écrire : la file sur disque contient alors des tâches
+ * `ACTIVE` (ou `VERIFYING`) qui ne seront **jamais** reprises, puisque `startNext` ne regarde
+ * que les `PENDING` et que `retryFailed` ne relève que les `FAILED`. Le fichier resterait
+ * inachevé et invisible.
+ *
+ * @param {{tasks?: object[]}} queue
+ * @returns {object[]} les tâches orphelines (pour le dire à l'utilisateur, pas pour agir)
+ */
+export function listOrphans(queue) {
+  const tasks = Array.isArray(queue?.tasks) ? queue.tasks : [];
+  return tasks.filter((task) => task.state === 'ACTIVE' || task.state === 'VERIFYING');
+}
+
+/**
+ * Relève les tâches orphelines et les remet en attente.
+ *
+ * Les transitions empruntées sont celles que la machine à états autorise déjà (`D-036`) :
+ * `ACTIVE → PAUSED → PENDING` et `VERIFYING → FAILED → PENDING`. Aucune transition nouvelle
+ * n'est inventée pour l'occasion ; ce qui change est seulement **qui** décide — la reprise
+ * explicite, au démarrage, plutôt qu'un processus qui n'existe plus.
+ *
+ * @param {object} queue
+ * @param {number} [now]
+ * @returns {{queue: object, recovered: {id: number, url: string, from: string}[]}}
+ */
+export function recoverOrphans(queue, now = Date.now()) {
+  /** @type {{id: number, url: string, from: string}[]} */
+  const recovered = [];
+  let current = queue;
+  for (const task of listOrphans(queue)) {
+    const reason = 'interrompu brutalement — repris par `--reprendre`';
+    if (task.state === 'ACTIVE') {
+      current = transition(current, task.id, 'PAUSED', (entry) => ({ ...entry, updatedAt: now }));
+      current = transition(current, task.id, 'PENDING', (entry) => ({
+        ...entry, error: null, updatedAt: now, startedAt: null,
+      }));
+    } else {
+      current = transition(current, task.id, 'FAILED', (entry) => ({
+        ...entry, error: reason, updatedAt: now,
+      }));
+      current = transition(current, task.id, 'PENDING', (entry) => ({
+        ...entry, error: null, updatedAt: now, startedAt: null,
+      }));
+    }
+    recovered.push({ id: task.id, url: task.url, from: task.state });
+  }
+  return { queue: current, recovered };
+}
+
+/**
  * Remet les tâches en échec dans la file, pour une reprise explicite.
  *
  * Une reprise ne doit pas rejouer les tâches `DONE` (le fichier est déjà promu) : seules

@@ -296,3 +296,7 @@ export {
   parseSitemapDirectives,
   parseSitemapXml,
 } from './sitemap.js';
+
+export { DEFAULT_RESERVE_BYTES, checkSpace, estimateSpace, freeSpace, nearestExisting } from './diskspace.js';
+export { SIZE_UNITS, parseSize } from './size.js';
+export { isToolFile, verifyGrab, walkTree } from './verify.js';

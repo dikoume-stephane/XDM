@@ -11,7 +11,7 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 250 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 257 tests, sans dépendance (node --test)
 npm run audit                      # traçabilité : chaque exigence verte a un test qui existe
 npm run gate                       # porte G3 : site local + coupure réseau, comparaison disque/serveur
 npm run gate -- --pages 200 --max 200M   # profil de la porte : 200 pages, jusqu'à 200 Mo
@@ -23,6 +23,8 @@ node bin/xdm.js ftp://exemple.test/pub/fichier.zip [dossier]  # transport choisi
 node bin/xdm-grab.js <url> [dir] --essai     # plan complet, aucune écriture ni téléchargement
 node bin/xdm-grab.js <url> [dir] --sitemap --sous-domaines   # plans de site + sous-domaines
 node bin/xdm-grab.js --aide                  # options complètes (code 0), --version aussi
+node bin/xdm-grab.js <url> [dir] --verifier  # auditer une aspiration (file ↔ disque, code 1 si écart)
+node bin/xdm-grab.js <url> [dir] --taille-max 200M --espace-min 1G
 node bin/xdm-grab.js <url> [dir] --reecrire --rapport r.md   # liens locaux + rapport d'aspiration
 node bin/xdm-grab.js <url> [dir] --planifier 'lun-ven 01:00-06:00' --quota-octets 50000000
 node bin/xdm-media.js <playlist.m3u8> [dir]   # flux HLS : segments, init, assemblage facultatif
@@ -140,8 +142,8 @@ tools/                     collecte de preuves, triage, extractions
   17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
 - ✅ WP-20 → WP-27 terminés : moteur de morceaux, boucle de connexions, aspiration de site
   et CLI (`bin/xdm.js`, `bin/xdm-grab.js`), transports (proxys, FTP, PAC), médias (HLS,
-  DASH) ; **250 tests**, domaines A, B et D clos, domaine C à **13/14** (1 hors périmètre),
-  soit **70 exigences vertes sur 71** ; porte G3 franchie (200 pages, 205 Mio, coupure
+  DASH) ; **257 tests**, domaines A, B et D clos, domaine C à **13/14** (1 hors périmètre),
+  soit **74 exigences vertes sur 75** ; porte G3 franchie (200 pages, 205 Mio, coupure
   réseau absorbée).
 - ✅ WP-24/WP-25 : réécriture des liens (`--reecrire`, `D-053`, ajout XDM assumé), rapport
   d'aspiration (texte/JSON/CSV/Markdown, `--rapport`) et planification sans démon

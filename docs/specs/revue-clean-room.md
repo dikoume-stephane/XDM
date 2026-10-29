@@ -144,6 +144,7 @@ elles sont marquées ainsi.
 
 | Date | Changement |
 |---|---|
+| 2026-10-29 | v1.4 : `D-067`/`D-068` — 4 exigences (`EX-B-29`→`32`) ; **75 exigences, 74 vertes, 0 écart**, 257 tests. Deux fonctions redéfinies ont été retirées au profit des modules d'origine (`WORK_SUFFIX`, `PART_SUFFIX`), pour ne pas créer deux vérités |
 | 2026-10-29 | v1.3 : `D-065`/`D-066` — 5 exigences (`EX-B-24`→`28`) : plans de site, sous-domaines, reprise de l'exploration, interruption propre, aide/version ; **71 exigences, 70 vertes, 0 écart**, 250 tests |
 | 2026-10-29 | v1.2 : `D-063`/`D-064` — 4 exigences ajoutées (`EX-B-21`→`23`, `EX-C-14`) et `EX-B-15` étendue au diagnostic d'exploration ; **66 exigences, 65 vertes, 0 écart**, 240 tests. Chaque nouvelle ligne cite sa décision, pas un chemin de code |
 | 2026-10-29 | v1.1 : `D-059`→`D-062` — 6 exigences ajoutées (`EX-B-17`→`20`, `EX-C-12`/`13`) avec leur preuve et leur test, dans le format déjà audité ; **62 exigences, 61 vertes, 0 écart**, 233 tests. Aucun écart nouveau : les deux exigences de cookies et de transport citent leur décision, pas un chemin de code |

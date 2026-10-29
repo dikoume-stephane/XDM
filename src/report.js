@@ -254,10 +254,110 @@ export function toMarkdown(report) {
   return lines.join('\n');
 }
 
-/** Le rapport en objet, JSON, CSV ou Markdown. */
+/**
+ * Échappement HTML minimal mais complet pour du texte inséré.
+ *
+ * Une URL aspirée peut contenir `"`, `'`, `<`, `>` : un rapport ouvert dans un navigateur est
+ * une page web, donc du texte non échappé y devient du **balisage** — au mieux un rapport
+ * cassé, au pire une injection. Les cinq caractères sont échappés, `&` d'abord.
+ *
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Rapport en HTML **autonome** (aucune ressource externe, donc lisible hors ligne et
+ * archivable), avec les mêmes chiffres que les autres formats.
+ *
+ * @param {ReturnType<typeof buildReport>} report
+ * @returns {string}
+ */
+export function toHtml(report) {
+  const rows = report.entries.map((entry) => `<tr class="${escapeHtml(entry.state.toLowerCase())}">`
+    + `<td>${entry.id}</td><td>${escapeHtml(entry.state)}</td>`
+    + `<td><code>${escapeHtml(entry.url)}</code></td>`
+    + `<td><code>${escapeHtml(entry.target)}</code></td>`
+    + `<td>${entry.size === null ? '—' : escapeHtml(humanBytes(entry.size))}</td>`
+    + `<td>${entry.attempts}</td><td>${escapeHtml(entry.error ?? '')}</td></tr>`);
+
+  const diagnostic = report.diagnostics
+    ? `<h2>Exploration</h2>
+<ul>
+<li>Pages visitées : ${report.diagnostics.pagesVisited}</li>
+<li>Fichiers retenus : ${report.diagnostics.retained}</li>
+<li>Arrêt : ${escapeHtml(report.diagnostics.stopped)}</li>
+${report.diagnostics.delay > 0 ? `<li>Délai entre vagues : ${report.diagnostics.delay} s</li>` : ''}
+</ul>
+<table><thead><tr><th>Motif de rejet</th><th>Liens</th><th>Exemple</th></tr></thead><tbody>
+${Object.entries(report.diagnostics.skipped).map(([reason, count]) => `<tr><td>${escapeHtml(reason)}</td>`
+    + `<td>${count}</td><td><code>${escapeHtml((report.diagnostics.examples[reason] ?? [])[0] ?? '—')}</code></td></tr>`).join('\n')}
+</tbody></table>`
+    : '';
+
+  const errors = report.errors.length === 0 ? '' : `<h2>Échecs</h2>
+<table><thead><tr><th>URL</th><th>Message</th></tr></thead><tbody>
+${report.errors.map((error) => `<tr><td><code>${escapeHtml(error.url)}</code></td>`
+    + `<td>${escapeHtml(error.message)}</td></tr>`).join('\n')}
+</tbody></table>`;
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rapport d’aspiration — ${escapeHtml(report.url ?? 'site')}</title>
+<style>
+body { font-family: system-ui, sans-serif; margin: 2rem; color: #1a1a1a; }
+table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+th, td { border: 1px solid #ccc; padding: 0.25rem 0.5rem; text-align: left; }
+th { background: #f2f2f2; }
+tr.failed td { background: #fdecea; }
+tr.done td { background: #eef7ee; }
+code { font-size: 0.85rem; }
+dt { font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Rapport d’aspiration</h1>
+<dl>
+<dt>Site</dt><dd>${escapeHtml(report.url ?? '—')}</dd>
+<dt>Généré le</dt><dd>${escapeHtml(report.generatedAt)}</dd>
+<dt>Entrées du projet</dt><dd>${report.pages}</dd>
+<dt>Tâches</dt><dd>${report.total} (${report.done} terminées, ${report.failed} en échec)</dd>
+<dt>Progression</dt><dd>${report.progress === null ? '—' : `${report.progress} %`}</dd>
+<dt>Volume annoncé</dt><dd>${escapeHtml(humanBytes(report.bytes.known))}${report.bytes.unknown > 0 ? ` (+ ${report.bytes.unknown} de taille inconnue)` : ''}</dd>
+${report.durationMs === null ? '' : `<dt>Durée</dt><dd>${escapeHtml(humanDuration(report.durationMs))}</dd>`}
+</dl>
+<h2>États</h2>
+<table><thead><tr><th>État</th><th>Nombre</th></tr></thead><tbody>
+${Object.entries(report.counts).map(([state, count]) => `<tr><td>${escapeHtml(state)}</td><td>${count}</td></tr>`).join('\n')}
+</tbody></table>
+${diagnostic}
+${errors}
+<h2>Tâches</h2>
+<table><thead><tr><th>#</th><th>État</th><th>URL</th><th>Cible</th><th>Taille</th><th>Tentatives</th><th>Erreur</th></tr></thead>
+<tbody>
+${rows.join('\n')}
+</tbody></table>
+</body>
+</html>
+`;
+}
+
+/** Le rapport en objet, JSON, CSV, Markdown ou HTML. */
 export function formatReport(report, format = 'json') {
   if (format === 'json') return `${JSON.stringify(report, null, 2)}\n`;
   if (format === 'csv') return toCsv(report);
   if (format === 'markdown' || format === 'md') return toMarkdown(report);
-  throw new Error(`format de rapport inconnu : ${format} (attendu : json | csv | markdown)`);
+  if (format === 'html' || format === 'htm') return toHtml(report);
+  throw new Error(
+    `format de rapport inconnu : ${format} (attendu : json | csv | markdown | html)`,
+  );
 }

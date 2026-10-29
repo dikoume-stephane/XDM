@@ -1685,6 +1685,78 @@ connexion) ⇒ code **130**, message d'interruption, file relue avec **0 tâche 
 
 ---
 
+### D-067 — Ce qui peut mal tourner pendant une aspiration : arrêt brutal, taille, espace
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/grab-runner.js`, `src/size.js`, `src/diskspace.js`, `src/connection-loop.js`, `EX-B-29`→`EX-B-31`
+
+**Contexte — un défaut réel d'abord.** `D-066` garantit qu'un `Ctrl-C` ne laisse **aucune**
+tâche `ACTIVE`. Mais un `SIGKILL`, une coupure de courant ou un plantage n'ont pas cette
+politesse : la file sur disque garde alors des tâches `ACTIVE` (ou `VERIFYING`), et plus rien
+ne les reprend — `startNext` ne regarde que les `PENDING`, `retryFailed` ne relève que les
+`FAILED`. **Le fichier restait inachevé et invisible**, dossier plausible, file cohérente en
+apparence. C'est le genre de défaut qu'aucun test ne trouve tant qu'on n'écrit pas celui qui
+tue le processus.
+
+**Mesure avant décision.** L'ancien `retryFailed` sur une file `['ACTIVE', 'VERIFYING']` la
+rendait **inchangée** : 0 tâche candidate, `runQueue` terminé en 0 requête, code de sortie 0 —
+une « reprise » qui ne reprend rien et le dit avec le sourire.
+
+**Décision.**
+1. **`recoverOrphans`** relève ces tâches par les transitions **déjà autorisées** par la machine
+   à états (`D-036`) : `ACTIVE → PAUSED → PENDING`, `VERIFYING → FAILED → PENDING`, avec
+   `startedAt: null` et l'erreur effacée. Aucune transition nouvelle n'est inventée ; ce qui
+   change est **qui** décide — la reprise explicite, au lieu d'un processus mort. Le nombre de
+   tâches relevées est annoncé, et l'aide précise qu'une reprise suppose qu'aucune autre
+   exécution ne travaille dans le dossier.
+2. **`--taille-max`** : refus **après la sonde, avant le premier octet écrit**, avec la taille
+   réelle et le plafond (`TOO_LARGE`). Les tailles se lisent en unités **binaires** (`K` =
+   1 024, comme `humanBytes`) et une unité inconnue est **refusée** : un plafond silencieusement
+   à 1 000 au lieu de 1 024 serait un piège.
+3. **Espace disque** (`--espace-min`, défaut 64 Mio de réserve) : vérifié **avant la première
+   connexion**, sur le plus proche dossier existant (le dossier cible peut ne pas exister
+   encore). On lit `bavail × bsize` et non `bfree` : les blocs réservés au superutilisateur ne
+   sont pas écrits par un processus ordinaire, les promettre serait mentir. Le refus annonce
+   **combien d'octets libérer**, écrit projet et file (l'aspiration est planifiée, pas perdue),
+   et sort en code 1. Les fichiers de taille inconnue ne sont **pas** comptés zéro : ils sont
+   annoncés à part.
+
+**Mesures.** `T-B-40` : file `ACTIVE`/`VERIFYING` ⇒ 2 tâches relevées, `startedAt` nul, puis
+**2 `DONE`** au runner. `T-B-41` : 4 096 o demandés avec plafond 1 000 ⇒ `TOO_LARGE`, **aucun
+fichier partiel** ; sous le plafond, 4 096 o écrits ; `--taille-max 2K` ⇒ tâche en échec avec
+`fichier trop volumineux`. `T-B-42` : `statfs` factice ⇒ refus **sans aucune requête de
+fichier**, file en `PENDING`, `blocked: 'espace'` ; une tâche `DONE` n'est pas recomptée.
+
+---
+
+### D-068 — Vérifier ce qu'on croit avoir aspiré, et le montrer en HTML
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/verify.js`, `bin/xdm-grab.js`, `src/report.js`, `EX-B-32`
+
+**Contexte.** Une aspiration terminée peut être **fausse** sans que rien ne le dise : fichier
+supprimé à la main, restauration partielle, écriture tronquée. La file affirme `DONE` — elle
+décrit ce qui a été décidé, pas ce qui est sur le disque. Il manquait une commande pour poser
+la question, et le rapport manquait d'un format lisible hors d'un terminal.
+
+**Décision.**
+- **`--verifier`** compare **file et disque**, sans réseau : `missing` (`DONE` sans fichier),
+  `truncated` (taille ≠ annoncée), `partial` (fichier présent, tâche non terminée), `absent`
+  (ni fichier ni achèvement — le cas normal d'une aspiration partielle, listé pour que le
+  compte soit complet), `unmanaged` (fichiers hors file, avec les fichiers de l'outil exclus :
+  `queue.json`, `*.xdmspider.json`, `empty.html`, `*.xdm-part`, `*.xdm-part.json`). Code 1 sur
+  écart ; **rien n'est créé ni corrigé** — vérifier une aspiration absente ne doit pas la
+  fabriquer (`mkdir` n'est pas appelé avant ce chemin).
+- **Rapport HTML** (`--rapport x.html`) : autonome (aucune ressource externe, donc archivable),
+  mêmes chiffres que les autres formats, et **tout le texte échappé** — une URL peut contenir
+  `"`, `<`, `>`.
+
+**Mesures.** `T-B-43` : file de 4 tâches dont 3 `DONE` ⇒ `ok: 1`, `missing: ['perdu.zip']`,
+`truncated: [['sous/b.bin', 3, 2]]`, `absent: ['attente.zip']`, `unmanaged:
+['sous/inattendu.txt']` — `empty.html` **n'est pas** signalé ; dossier absent ⇒ `ok_: false` et
+l'`ENOENT` est rapporté plutôt que masqué ; la CLI rend `conforms: false` et **ne crée pas** le
+dossier vérifié. `T-B-44` : une URL `http://h/?q="<script>alert(1)</script>` et un message
+`<b>404</b>` ressortent **échappés**, aucune balise `<script>` dans le document, aucune
+ressource externe.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation

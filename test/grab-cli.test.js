@@ -97,6 +97,9 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
     dryRun: false,
     sitemap: false,
     subdomains: false,
+    maxSize: null,
+    minSpace: null,
+    verify: false,
     help: false,
     version: false,
     report: null,
@@ -113,7 +116,8 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
       robots: false, resume: false, output: 'texte',
       rewrite: false, include: [], exclude: [], noExclude: false, parallelisme: 1,
       delay: null, maxErrors: null, headers: {}, dryRun: false,
-      sitemap: false, subdomains: false, help: false, version: false,
+      sitemap: false, subdomains: false, maxSize: null, minSpace: null, verify: false,
+      help: false, version: false,
       report: null, window: null,
       quotaBytes: null, quotaTasks: null, attempts: 1, cookies: null,
     },
@@ -125,7 +129,8 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
       robots: true, resume: true, output: 'json',
       rewrite: false, include: [], exclude: [], noExclude: false, parallelisme: 1,
       delay: null, maxErrors: null, headers: {}, dryRun: false,
-      sitemap: false, subdomains: false, help: false, version: false,
+      sitemap: false, subdomains: false, maxSize: null, minSpace: null, verify: false,
+      help: false, version: false,
       report: null, window: null,
       quotaBytes: null, quotaTasks: null, attempts: 1, cookies: null,
     },
@@ -241,8 +246,8 @@ test('T-B-22 : sortie machine — le résumé JSON est le seul contenu de stdout
       );
       const summary = JSON.parse(stdout);
       assert.deepEqual(Object.keys(summary).sort(), [
-        'directory', 'done', 'dryRun', 'failed', 'interrupted', 'pages', 'report', 'retained',
-        'rewritten', 'started', 'tasks', 'url',
+        'blocked', 'directory', 'done', 'dryRun', 'failed', 'interrupted', 'pages', 'report',
+        'retained', 'rewritten', 'started', 'tasks', 'url',
       ]);
       assert.equal(summary.done, 2);
       assert.equal(summary.tasks, 2);
@@ -263,6 +268,7 @@ test('T-B-22 : sortie machine — le résumé JSON est le seul contenu de stdout
         started: true,
         dryRun: false,
         interrupted: false,
+        blocked: null,
         rewritten: 0,
         report: null,
       });

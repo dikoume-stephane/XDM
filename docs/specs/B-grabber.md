@@ -1,11 +1,11 @@
 # Fiche B — Grabber (aspiration de site)
 
 > **Domaine** : B (grabber) · **Lot** : `WP-11`/`WP-23` (`A-05`, deuxième fiche) · **Statut** : ✅ `clos`
-> (les 28 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
+> (les 32 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
 > **exploration** : choix XDM documentés depuis `D-041`, l'algorithme d'IDM n'étant pas dans
 > `IDMan.exe`)
-> **Dernière revue** : 2026-10-29 (v0.9 : plans de site et sous-domaines, reprise pendant
-> l'exploration (`D-065`), interruption propre et `--aide`/`--version` (`D-066`) — 28 exigences)
+> **Dernière revue** : 2026-10-29 (v0.10 : reprise après arrêt brutal, plafond de taille, espace
+> disque (`D-067`), vérification d'une aspiration et rapport HTML (`D-068`) — 32 exigences)
 > **Preuves** : annexes 11 (modèle de projet), 12 (grabber), 13 (filtres et artefacts) ;
 > `filters.json` ; décisions `D-032`, `D-033`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9`.
@@ -55,6 +55,10 @@ pouvoir reprendre une aspiration interrompue.
 | `EX-B-26` | `--tentatives` couvre **aussi l'exploration** : mêmes statuts transitoires, même `Retry-After`, même plafond que les téléchargements (`D-055`) ; reprises comptées (`retries`) ; sans reprise, le statut est remonté tel quel | **Décision** | `D-065` ; `src/retry.js`, `src/crawler.js` | `T-B-38` ✅ (503 puis 200, une reprise, `Retry-After: 2` respecté), `T-C-19` ✅ |
 | `EX-B-27` | **Interruption propre** : première interruption = arrêt coopératif (aucune nouvelle vague ni tâche, les travaux en vol finissent, projet/file/cookies sauvegardés, code **130**) ; seconde = sortie immédiate ; aucune tâche ne reste `ACTIVE` | **Décision** | `D-066` ; `src/grab-runner.js` (`shouldStop`), `bin/xdm-grab.js` | `T-B-39` ✅ (arrêt entre deux vagues), `T-C-20` ✅ (vrai SIGINT : code 130, file sans `ACTIVE`) |
 | `EX-B-28` | `--aide`/`-h` et `--version`/`-V` répondent **sans URL** et sortent en code **0**, pour les deux CLI, sans effet de bord | **Décision** | `D-066` ; `bin/xdm-grab.js`, `bin/xdm.js` | `T-C-21` ✅ |
+| `EX-B-29` | Un arrêt **brutal** (SIGKILL, coupure de courant) laisse des tâches `ACTIVE`/`VERIFYING` ; `--reprendre` les **relève** par les transitions déjà autorisées (`ACTIVE → PAUSED → PENDING`, `VERIFYING → FAILED → PENDING`), annonce combien, et remet `startedAt` à `null` | **Décision** | `D-067` ; `src/grab-runner.js` (`recoverOrphans`) | `T-B-40` ✅ : deux orphelines relevées puis exécutées, file saine non touchée |
+| `EX-B-30` | `--taille-max` refuse un fichier trop gros **après la sonde et avant tout octet écrit** (`TOO_LARGE` avec taille et plafond) ; les tailles se lisent en unités **binaires** (`K` = 1 024) et une unité inconnue est refusée, pas interprétée | **Décision** | `D-067` ; `src/size.js`, `src/connection-loop.js` | `T-B-41` ✅ : refus sans fichier partiel, téléchargement normal sous le plafond, `--taille-max 2K` met la tâche en échec avec la raison |
+| `EX-B-31` | Avant la première connexion, l'**espace disque** est vérifié (`statfs`, `bavail × bsize`), avec réserve (défaut 64 Mio, bornée à la moitié du volume) ; le refus annonce les octets à libérer, écrit projet et file, sort en code 1 ; les tailles inconnues sont annoncées séparément | **Décision** | `D-067` ; `src/diskspace.js` | `T-B-42` ✅ : `statfs` factice, refus sans aucune requête de fichier, file en `PENDING`, tâche `DONE` non recomptée |
+| `EX-B-32` | `--verifier` compare **la file au disque** sans réseau : manquants (`DONE` sans fichier), tronqués (taille ≠ annoncée), partiels, absents, fichiers hors file ; les fichiers de l'outil sont exclus ; code 1 sur écart ; rien n'est créé ni corrigé ; le rapport HTML est **autonome** et intégralement échappé | **Décision** | `D-068` ; `src/verify.js`, `src/report.js` | `T-B-43` ✅, `T-B-44` ✅ (injection `<script>` neutralisée) |
 
 ## 3. Modèle de données
 

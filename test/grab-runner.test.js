@@ -9,9 +9,14 @@ import {
   DEFAULT_CONCURRENCY,
   downloadTask,
   executeGrab,
+  listOrphans,
+  recoverOrphans,
+  retryFailed,
   runQueue,
 } from '../src/grab-runner.js';
-import { createProject, createQueue, addTask, loadProject, loadQueue } from '../src/index.js';
+import {
+  addTask, beginVerification, createProject, createQueue, loadProject, loadQueue, startNext,
+} from '../src/index.js';
 
 async function withTempDir(fn) {
   const dir = await mkdtemp(join(tmpdir(), 'xdm-runner-'));
@@ -218,4 +223,39 @@ test('T-B-01 : exécution complète — projet et file persistés, états des en
     assert.match(raw, /"termine"/);
     await writeFile(join(dir, 'sentinelle'), 'ok');
   });
+});
+
+test('T-B-40 : une tâche laissée ACTIVE par un arrêt brutal est reprise, jamais oubliée', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'xdm-orphan-'));
+  try {
+    // File telle qu'un SIGKILL la laisse : une tâche ACTIVE (démarrée il y a 5 min) et une
+    // VERIFYING. Aucune n'est `PENDING` : sans relève, elles resteraient à jamais en plan.
+    const base = createQueue({ maxActive: 2 });
+    let queue = addTask(base, { url: 'http://h/a.bin', target: join(dir, 'a.bin') }).queue;
+    queue = addTask(queue, { url: 'http://h/b.bin', target: join(dir, 'b.bin') }).queue;
+    queue = startNext(queue, Date.now() - 300_000).queue;
+    queue = startNext(queue, Date.now() - 200_000).queue;
+    queue = beginVerification(queue, queue.tasks[1].id);
+    assert.deepEqual(queue.tasks.map((task) => task.state), ['ACTIVE', 'VERIFYING']);
+
+    assert.deepEqual(listOrphans(queue).map((task) => task.id), [1, 2]);
+    const { queue: relevee, recovered } = recoverOrphans(queue);
+    assert.deepEqual(recovered.map((entry) => [entry.id, entry.from]), [[1, 'ACTIVE'], [2, 'VERIFYING']]);
+    assert.deepEqual(relevee.tasks.map((task) => task.state), ['PENDING', 'PENDING']);
+    assert.deepEqual(relevee.tasks.map((task) => task.startedAt), [null, null]);
+    assert.deepEqual(relevee.tasks.map((task) => task.error), [null, null]);
+
+    // Une file saine n'est pas touchée.
+    const saine = retryFailed(createQueue({}));
+    assert.deepEqual(recoverOrphans(saine), { queue: saine, recovered: [] });
+    assert.deepEqual(listOrphans({}), []);
+
+    // Et le résultat est exécutable : les deux tâches passent par le runner.
+    const outcome = await runQueue(relevee, {
+      runTask: async (task) => ({ target: task.target, size: 4, requests: 1 }),
+    });
+    assert.deepEqual(outcome.stats.counts.DONE, 2);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
