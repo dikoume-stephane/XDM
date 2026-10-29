@@ -1,10 +1,11 @@
 # Fiche B — Grabber (aspiration de site)
 
 > **Domaine** : B (grabber) · **Lot** : `WP-11`/`WP-23` (`A-05`, deuxième fiche) · **Statut** : ✅ `clos`
-> (les 13 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
+> (les 20 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
 > **exploration** : choix XDM documentés depuis `D-041`, l'algorithme d'IDM n'étant pas dans
 > `IDMan.exe`)
-> **Dernière revue** : 2026-10-28 (v0.6 : réécriture `D-053`, rapport, planification `D-054` — 16 exigences)
+> **Dernière revue** : 2026-10-29 (v0.7 : `robots.txt` RFC 9309 (`D-059`), `Crawl-delay` et élagage
+> (`D-060`), exploration parallèle bornée (`D-061`) — 20 exigences)
 > **Preuves** : annexes 11 (modèle de projet), 12 (grabber), 13 (filtres et artefacts) ;
 > `filters.json` ; décisions `D-032`, `D-033`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9`.
@@ -42,6 +43,10 @@ pouvoir reprendre une aspiration interrompue.
 | `EX-B-14` | Les pages et feuilles de style aspirées peuvent être **réécrites** vers les chemins locaux : attributs d'URL (`href`, `src`, `srcset`, …), `url()` et `@import` ; chemins relatifs ; `<script>`, `<style>`, `<pre>`, commentaires et références inconnues **intacts** | **Décision** (XDM, **sans précédent** dans la cible : aucun parseur HTML) | `Q-B-01` (annexe 12 §6) ; `D-053` ; `src/rewrite.js` | `T-B-26` ✅ : `./` pour soi-même, ancre et requête conservées, `srcset`, CSS, extension non réécrite ; mesure de bout en bout (site local) : 4 fichiers, **5 liens réécrits**, externe et cible 404 intacts. Pré-requis CLI : `--sans-exclusions --inclure '*'` (les pages sont exclues par défaut, `D-032`) |
 | `EX-B-15` | Un **rapport** d'aspiration est produit à la demande (texte, JSON, CSV, Markdown) : compteurs, tailles, durées, échecs et tentatives — **aucune valeur inventée** (progression inconnue ⇒ `n/a`, pas 0 %) | **Décision** (XDM ; IDM affiche des statistiques, format non observé) | `D-053` ; `src/report.js` | `T-B-27` ✅ : file vide, reprises, CSV exact, format refusé |
 | `EX-B-16` | La planification est un **recalcul à chaque exécution** : fenêtres locales (`lun-ven 01:00-06:00`, `ven-lun`, nuit `22:00-02:00`), quotas d'octets et de tâches ; hors fenêtre, rien n'est téléchargé (code 3) ; les tâches non retenues restent `PENDING` ; une taille inconnue est **reportée**, jamais budgétée à zéro | **Décision** (XDM : ni démon ni cron) | `D-054` ; `src/schedule.js` | `T-B-28` ✅ : `ven-lun`, traversée de minuit, ordre des candidates, quotas, `only` du runner |
+| `EX-B-17` | `robots.txt` est lu selon la **RFC 9309** : seules les règles du **groupe applicable** comptent (le groupe nommant notre produit l'emporte sur `*` ; groupes homonymes fusionnés), `*` et `$` sont les seuls métacaractères, la règle au motif le plus long décide, `Allow` gagne à longueur égale et une directive inconnue est ignorée sans erreur | **Décision** (précise `D-041`) | `D-059` ; `src/crawler.js` (`parseRobots`, `robotsRegExp`) | `T-B-29` ✅ : 13 cas (groupes, priorité, `$`, `*.pdf$` vs `.pdf.html`, directives inconnues) |
+| `EX-B-18` | L'exploration peut être **parallèle et bornée** : au plus `parallelisme` requêtes simultanées, vagues absorbées **dans l'ordre de la file** ; le résultat (pages, entrées retenues, motifs) est identique à celui de l'exploration en série | **Décision** | `D-061` ; `Q-B-05` ; `src/crawler.js` | `T-B-30` ✅ : pic mesuré ≤ 3 et ≥ 2 avec `parallelisme: 3`, sortie identique au série, `RangeError` sous 1 |
+| `EX-B-19` | `Crawl-delay` (extension hors RFC) est traité comme un **conseil borné** : lu pour le groupe applicable, ignoré s'il n'est pas un nombre fini positif, appliqué **entre deux vagues** — jamais avant la première ni après la dernière ; `--delai` explicite l'emporte toujours, `0` l'annule | **Décision** | `D-060` ; `src/crawler.js` (`parseCrawlDelay`) | `T-B-31` ✅ : groupe nommé, valeurs absurdes ignorées, attentes comptées, `--delai` prioritaire |
+| `EX-B-20` | `--exclure` **élague** le parcours : la branche n'est pas demandée et rien de ce qu'elle cite n'entre dans la file ; les exclusions **par défaut** (`*.html`, `*.jpg`…) ne font, elles, que trier les téléchargements — sinon `--inclure` fermerait l'exploration | **Décision** | `D-060` ; `D-032` ; `src/crawler.js` (`prune`) | `T-B-32` ✅ (aucune requête vers la branche), `T-C-14` ✅ (bout en bout, motif conservé dans le projet) |
 
 ## 3. Modèle de données
 

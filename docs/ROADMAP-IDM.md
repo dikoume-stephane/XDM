@@ -2,7 +2,7 @@
 
 > **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, SHA-256 `5f78da5a…2f11c9`.
 > **Projet** : XDM (dépôt `dikoume-stephane/XDM`), branche `arena/c3b095dd-xdm`.
-> **Version du plan** : **v1.3** — 2026-10-28 · **Révision** : à chaque jalon atteint.
+> **Version du plan** : **v1.4** — 2026-10-29 · **Révision** : à chaque jalon atteint.
 > **État** : P0–P3 **closes**, porte **G3 franchie** ; P4 close sauf `WP-30` (bloqué, VM
 > Windows) ; P5 bloquée (`A-09`). Détail : §7.
 > **Décisions liées** : [`JOURNAL.md`](JOURNAL.md) · **Preuves** : `analysis/idman/` ·
@@ -199,7 +199,8 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | **M3.7 — Domaines C+D** | 20 exigences, 19 vertes, 172 tests | D-045→D-052 | ✅ D 10/10, C 9/10 (1 hors périmètre) |
 | **M3.8 — Grabber complet** | 16 exigences du domaine B, **16 vertes**, 220 tests | D-053, D-054 | ✅ réécriture (ajout XDM), rapport, planification sans démon |
 | **M4 — Prototype (porte G3)** | 200 pages, 1 Ko → 200 Mo, coupure réseau | D-057 | ✅ **franchie** : 401/401 en une passe, 205,0 Mio, empreintes conformes |
-| **M3.9 — Traçabilité auditée** | 56 exigences, 55 vertes, 0 écart | D-056 | ✅ `npm run audit --strict` |
+| **M3.9 — Traçabilité auditée** | 62 exigences, 61 vertes, 0 écart | D-056 | ✅ `npm run audit --strict` |
+| **M3.10 — Parcours outillé** | `robots.txt` RFC 9309, élagage `--exclure`, `Crawl-delay`, exploration parallèle bornée, cookies persistants, FTP en CLI | D-059→D-062 | ✅ domaine B **20/20**, C **12/13**, 233 tests |
 | **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |
 
@@ -245,12 +246,13 @@ code, c'est une **preuve d'exécution de la cible** — impossible dans cet envi
 |---|---|---|
 | **P0** Cadrage | périmètre, décisions, hygiène | `JOURNAL` `D-001`→`D-019` ; `analysis/idman/00…08` |
 | **P1** Cartographie | anatomie, 422 classes, chaînes, protocoles, états de connexion | annexes 01–08 ; `classes.json`, `states.json`, `chunks.json` |
-| **P2** Spécifications | 4 fiches (A, B, C, D), **56 exigences**, matrice auditée | `docs/specs/`, `conformance.md` v1.8, `npm run audit` |
+| **P2** Spécifications | 4 fiches (A, B, C, D), **62 exigences**, matrice auditée | `docs/specs/`, `conformance.md` v1.9, `npm run audit` |
 | **P3** Reconstruction | moteur, file, transports, grabber, médias, CLI ; **porte G3 franchie** | `src/` (27 modules), `bin/` (3 CLI), `npm run gate` |
+| **P4** Parcours outillé | `robots.txt` RFC 9309, `--exclure` (élagage), `Crawl-delay`, `--paralleles`, `--cookies`, `xdm ftp://` | `D-059`→`D-062`, `EX-B-17`→`EX-B-20`, `EX-C-12`/`EX-C-13` |
 | **P4** Résilience + revue | `429`/`503`, coupures, `416`, boucles ; revue clean-room publiée | `D-055`, `D-056`, `revue-clean-room.md` |
 | **P5** Dynamique | **non commencée** — aucune VM Windows dans cet environnement | `A-09` |
 
-Chiffres au 2026-10-28 : **220 tests verts**, **231 exports**, **56 exigences (55 vertes,
+Chiffres au 2026-10-29 : **233 tests verts**, **236 exports**, **62 exigences (61 vertes,
 1 hors périmètre)**, **0 écart de traçabilité**, **29 documents `.md` sans lien cassé**,
 porte G3 à 200 pages / 205,0 Mio.
 
@@ -262,7 +264,8 @@ porte G3 à 200 pages / 205,0 Mio.
 | 2 | `P5` — validation dynamique (ordre des requêtes, temporisations, `robots.txt`) | ⛔ **bloqué** (même cause) | protocole déjà écrit : annexe 16, 6 phases |
 | 3 | `A-09-bis` — format binaire du `.gsd` | ⛔ **bloqué** : aucun échantillon | un fichier projet produit par IDM |
 | 4 | `A-02`/`WP-03` — décompilation | ⛔ **bloqué** : ni JVM ni CDN GitHub depuis ce sandbox (`D-019`) | `GHIDRA_INSTALL_DIR` hors sandbox |
-| 5 | `Q-B-02`/`Q-B-03`/`Q-B-04`/`Q-B-05` — `robots.txt`, défaut `nLevels`, rôle d'`empty.html`, parallélisme du crawl | 🟡 **sans effet** : tranchées par décision XDM, marquées comme telles | VM (même protocole) |
+| 5 | `Q-B-02`/`Q-B-03`/`Q-B-04`/`Q-B-05` — `robots.txt`, défaut `nLevels`, rôle d'`empty.html`, parallélisme du crawl | 🟡 **sans effet** : tranchées par décision XDM (`D-059`, `D-061`), marquées comme telles | VM (même protocole) |
+| 6 | `Q-B-06` — `Crawl-delay` : la cible le lit-elle, et l'applique-t-elle ? | 🟡 **sans effet** : XDM l'applique comme un conseil borné (`D-060`) | capture réseau d'une aspiration lente (annexe 16) |
 
 Aucune de ces cinq lignes ne bloque **le produit** : elles bloquent la **fidélité prouvée**.
 C'est la distinction que le projet tient depuis `D-041`, et elle est écrite noir sur blanc dans

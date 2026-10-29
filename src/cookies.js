@@ -6,14 +6,33 @@
  * domaine, chemin, expiration, `Secure`. Pas de `SameSite` (sans navigateur), pas de
  * `HttpOnly` côté client (nous *sommes* le client : la valeur est légitimement lisible).
  *
- * Le magasin est **en mémoire** : une aspiration est une session. La persistance des
- * cookies relèverait d'un secret à protéger (`D-004` : rien de sensible n'est stocké).
+ * Le magasin est **en mémoire par défaut** : une aspiration est une session. Il peut être
+ * enregistré **sur demande explicite** (`saveCookieJar`, `--cookies FICHIER`) pour qu'une
+ * reprise après interruption ne reperde pas l'authentification — auquel cas `D-062` fixe trois
+ * règles : seuls les cookies **persistants** sont écrits (un cookie de session n'a pas de date,
+ * le sauver reviendrait à prolonger une session que le serveur croyait close), le fichier est
+ * créé en `0600`, et rien d'autre que des couples `nom=valeur` n'y figure.
  *
  * @module cookies
  */
 
+import { readFile, rename, writeFile } from 'node:fs/promises';
+
 /** Durée d'un cookie sans `Max-Age` ni `Expires` : le temps de la session. */
 export const SESSION_COOKIE = -1;
+
+/** Erreur de magasin de cookies, porteuse d'un code stable (`D-062`). */
+export class CookieError extends Error {
+  /**
+   * @param {string} message
+   * @param {string} code
+   */
+  constructor(message, code) {
+    super(message);
+    this.name = 'CookieError';
+    this.code = code;
+  }
+}
 
 /**
  * Découpe un en-tête `Set-Cookie`.
@@ -216,4 +235,98 @@ export function withCookies(transport, jar) {
     if (response && response.headers) jar.store(url, response.headers);
     return response;
   };
+}
+
+/**
+ * Sérialise les cookies **persistants** d'un magasin.
+ *
+ * Un cookie de session (`expires === null`) n'est **pas** écrit : il n'a pas de date parce que
+ * le serveur veut qu'il meure avec la session ; le ressusciter au prochain démarrage serait une
+ * interprétation, pas une reprise (`D-062`).
+ *
+ * @param {ReturnType<typeof createCookieJar>} jar
+ * @param {number} [now]
+ * @returns {{version: 1, savedAt: number, cookies: object[]}}
+ */
+export function serializeCookieJar(jar, now = Date.now()) {
+  const cookies = jar.all()
+    .filter((cookie) => cookie.expires !== null && cookie.expires > now)
+    .map((cookie) => ({
+      name: cookie.name,
+      value: cookie.value,
+      domain: cookie.domain,
+      path: cookie.path,
+      expires: cookie.expires,
+      secure: cookie.secure === true,
+      hostOnly: cookie.hostOnly !== false,
+    }));
+  return { version: 1, savedAt: now, cookies };
+}
+
+/**
+ * Écrit le magasin sur disque, **en une fois** et en `0600`.
+ *
+ * L'écriture passe par un fichier temporaire puis `rename` : une coupure laisse l'ancien
+ * fichier intact, jamais un JSON tronqué qui ferait échouer la reprise suivante.
+ *
+ * @param {ReturnType<typeof createCookieJar>} jar
+ * @param {string} path
+ * @param {{now?: number}} [options]
+ * @returns {Promise<{path: string, saved: number}>}
+ */
+export async function saveCookieJar(jar, path, { now = Date.now() } = {}) {
+  const document = serializeCookieJar(jar, now);
+  const temporary = `${path}.tmp`;
+  await writeFile(temporary, `${JSON.stringify(document, null, 2)}\n`, { mode: 0o600 });
+  await rename(temporary, path);
+  return { path, saved: document.cookies.length };
+}
+
+/**
+ * Relit un magasin enregistré.
+ *
+ * Un fichier absent rend un magasin **vide** (première exécution), un fichier illisible lève :
+ * ignorer silencieusement un cookie corrompu reviendrait à s'authentifier avec n'importe quoi.
+ * Les cookies expirés depuis sont écartés à la relecture.
+ *
+ * @param {string} path
+ * @param {{now?: number, missingOk?: boolean}} [options]
+ * @returns {Promise<{jar: ReturnType<typeof createCookieJar>, loaded: number}>}
+ */
+export async function loadCookieJar(path, { now = Date.now(), missingOk = true } = {}) {
+  let text;
+  try {
+    text = await readFile(path, 'utf8');
+  } catch (error) {
+    if (missingOk && error?.code === 'ENOENT') {
+      return { jar: createCookieJar({ now: () => now }), loaded: 0 };
+    }
+    throw error;
+  }
+  let document;
+  try {
+    document = JSON.parse(text);
+  } catch {
+    throw new CookieError(`magasin de cookies illisible : ${path}`, 'COOKIE_FILE');
+  }
+  if (!document || document.version !== 1 || !Array.isArray(document.cookies)) {
+    throw new CookieError(`magasin de cookies inattendu : ${path}`, 'COOKIE_FILE');
+  }
+
+  const jar = createCookieJar({ now: () => now });
+  let loaded = 0;
+  for (const cookie of document.cookies) {
+    if (!cookie || typeof cookie.name !== 'string' || typeof cookie.value !== 'string') continue;
+    if (typeof cookie.domain !== 'string' || cookie.domain === '') continue;
+    if (typeof cookie.path !== 'string' || !cookie.path.startsWith('/')) continue;
+    if (!Number.isFinite(cookie.expires) || cookie.expires <= now) continue;
+    const url = `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`;
+    // On passe par le magasin lui-même : les règles de portée sont appliquées une seule fois.
+    jar.store(url, {
+      'set-cookie': `${cookie.name}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}; `
+        + `Expires=${new Date(cookie.expires).toUTCString()}${cookie.secure ? '; Secure' : ''}`,
+    });
+    loaded += 1;
+  }
+  return { jar, loaded };
 }

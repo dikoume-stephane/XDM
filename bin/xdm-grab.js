@@ -4,7 +4,8 @@
  * `WP-25` (`EX-B-15`/`EX-B-16`, `D-054`).
  *
  * `xdm-grab <url> [dossier] [--profondeur N] [--pages N] [--connexions N] [--sans-robots]
- *   [--reprendre] [--inclure MOTIF] [--sans-exclusions] [--reecrire] [--rapport F]
+ *   [--reprendre] [--inclure MOTIF] [--exclure MOTIF] [--sans-exclusions] [--paralleles N]
+ *   [--delai SECONDES] [--reecrire] [--rapport F]
  *   [--planifier « lun-ven 01:00-06:00 »] [--tentatives N]
  *   [--quota-octets N | --quota-taches N] [--sortie texte|json]`
  *
@@ -24,14 +25,17 @@ import { fetchText } from '../src/http-client.js';
 import {
   addFilter, createProject, loadProject, projectPath, saveProject, splitMotif,
 } from '../src/project.js';
+import { createCookieJar, loadCookieJar, saveCookieJar, withCookies } from '../src/cookies.js';
+import { defaultTransport } from '../src/http-client.js';
 import { buildReport, formatReport } from '../src/report.js';
 import { rewriteDocument, siteMapFromEntries } from '../src/rewrite.js';
 import { createSchedule, planRun } from '../src/schedule.js';
 import { createQueue, loadQueue, saveQueue } from '../src/task-queue.js';
 
 export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages N] [--connexions N] [--sans-robots]
-                   [--reprendre] [--inclure MOTIF] [--sans-exclusions] [--reecrire]
-                   [--rapport F] [--planifier FENÊTRE]
+                   [--reprendre] [--inclure MOTIF] [--exclure MOTIF] [--sans-exclusions]
+                   [--paralleles N] [--delai SECONDES]
+                   [--reecrire] [--rapport F] [--planifier FENÊTRE]
                    [--quota-octets N | --quota-taches N] [--tentatives N] [--sortie texte|json]
   --profondeur     niveaux visités (défaut 2)
   --pages          nombre maximal de pages visitées (défaut 2000)
@@ -39,6 +43,10 @@ export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages
   --sans-robots    ignorer robots.txt (déconseillé)
   --reprendre      reprendre le projet et la file déjà présents dans <dossier>, sans re-parcourir
   --inclure        motif à inclure, répétable (ex. « *.html »)
+  --exclure        motif à exclure, répétable — l'emporte sur l'inclusion (D-032)
+  --delai          secondes entre deux vagues de requêtes ; 0 pour ignorer le Crawl-delay
+                   du site, une valeur explicite l'emporte toujours sur celui-ci
+  --paralleles     pages explorées simultanément (défaut 1, déterministe)
   --sans-exclusions  vider les exclusions par défaut (D-032 : l'exclusion l'emporte sur
                    l'inclusion, donc --inclure « *.html » seul ne retient aucune page)
   --reecrire       réécrire les liens HTML/CSS vers les chemins locaux (choix XDM, D-053)
@@ -46,6 +54,8 @@ export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages
   --planifier      n'exécuter que dans la fenêtre donnée, ex. « lun-ven 01:00-06:00 »
   --quota-octets   budget d'octets pour cette exécution
   --quota-taches   nombre de tâches pour cette exécution
+  --cookies        magasin de cookies persistant (relu au démarrage, réécrit à la fin ;
+                   seuls les cookies datés sont conservés, fichier en 0600 — D-062)
   --tentatives     essais par tâche sur un statut transitoire (défaut 1 ; 429/503 respectent
                    l'en-tête Retry-After)
   --sortie         format du résumé : texte (défaut) ou json
@@ -73,12 +83,16 @@ export function parseArgs(argv) {
     output: 'texte',
     rewrite: false,
     include: [],
+    exclude: [],
     noExclude: false,
+    parallelisme: 1,
+    delay: null,
     report: null,
     window: null,
     quotaBytes: null,
     quotaTasks: null,
     attempts: 1,
+    cookies: null,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const argument = argv[i];
@@ -98,10 +112,26 @@ export function parseArgs(argv) {
     else if (argument === '--reprendre') options.resume = true;
     else if (argument === '--reecrire') options.rewrite = true;
     else if (argument === '--sans-exclusions') options.noExclude = true;
+    else if (argument === '--paralleles') options.parallelisme = value();
     else if (argument === '--inclure') {
       i += 1;
       if (!argv[i]) throw new Error(`--inclure attend un motif\n${USAGE}`);
       options.include.push(argv[i]);
+    }
+    else if (argument === '--exclure') {
+      i += 1;
+      if (!argv[i]) throw new Error(`--exclure attend un motif\n${USAGE}`);
+      options.exclude.push(argv[i]);
+    }
+    else if (argument === '--delai') {
+      i += 1;
+      const raw = argv[i];
+      if (raw === undefined) throw new Error(`--delai attend un nombre de secondes\n${USAGE}`);
+      const seconds = Number(raw);
+      if (!Number.isFinite(seconds) || seconds < 0) {
+        throw new Error(`valeur invalide pour --delai : ${raw}`);
+      }
+      options.delay = seconds;
     }
     else if (argument === '--rapport') {
       i += 1;
@@ -114,6 +144,11 @@ export function parseArgs(argv) {
     } else if (argument === '--quota-octets') options.quotaBytes = value();
     else if (argument === '--quota-taches') options.quotaTasks = value();
     else if (argument === '--tentatives') options.attempts = value();
+    else if (argument === '--cookies') {
+      i += 1;
+      if (!argv[i]) throw new Error(`--cookies attend un fichier\n${USAGE}`);
+      options.cookies = argv[i];
+    }
     else if (argument === '--sortie') {
       i += 1;
       const format = argv[i];
@@ -202,14 +237,34 @@ export function outputFormat(argv) {
  */
 export async function main(argv, {
   log = console.log,
-  fetchPage = (url) => fetchText(url),
-  downloadOptions = {},
+  fetchPage: injectedFetchPage = (url) => fetchText(url),
+  downloadOptions: injectedDownloadOptions = {},
   runTask,
 } = {}) {
   const options = parseArgs(argv);
+  let fetchPage = injectedFetchPage;
+  let downloadOptions = injectedDownloadOptions;
   const { url, directory, depth, maxPages, connections, robots, resume } = options;
   const rootDir = resolve(directory);
   await mkdir(rootDir, { recursive: true });
+
+  // `--cookies` : le magasin survit à l'interruption. Sans l'option, la session reste en
+  // mémoire — comportement historique, et le seul qui ne laisse rien sur le disque (`D-062`).
+  const cookiePath = options.cookies === null ? null : resolve(options.cookies);
+  const jar = cookiePath === null
+    ? createCookieJar()
+    : (await loadCookieJar(cookiePath)).jar;
+  if (cookiePath !== null) log(`cookies : ${jar.size()} cookie(s) relus depuis ${cookiePath}`);
+
+  // Le magasin sert **toujours** dans l'exécution courante : une session qui pose un cookie
+  // puis protège un fichier doit fonctionner sans option. `--cookies` n'ajoute que la
+  // **persistance** d'une exécution à l'autre (`D-062`).
+  const plainFetch = fetchPage;
+  fetchPage = async (url, init = {}) => {
+    const response = await plainFetch(url, { ...init, headers: jar.apply(url, init.headers ?? {}) });
+    if (response?.headers) jar.store(url, response.headers);
+    return response;
+  };
 
   /** @type {URL} */
   const parsed = new URL(url);
@@ -234,6 +289,9 @@ export async function main(argv, {
     // exclusions par défaut *avant* d'ajouter les inclusions.
     if (options.noExclude) project = { ...project, filters: { ...project.filters, exclude: [] } };
     for (const motif of options.include) project = addFilter(project, 'include', motif);
+    // L'exclusion est posée **après** la remise à zéro, sinon `--sans-exclusions --exclure x`
+    // perdrait x ; elle l'emporte sur l'inclusion au moment du tri (`D-032`).
+    for (const motif of options.exclude) project = addFilter(project, 'exclude', motif);
 
     log(`parcours de ${url} (profondeur ${depth}, ${maxPages} pages au plus)`);
     const found = await crawl(url, {
@@ -242,7 +300,13 @@ export async function main(argv, {
       maxPages,
       filters: filtersOf(project),
       robots,
+      parallelisme: options.parallelisme,
+      // `--exclure` élague : la branche n'est pas demandée, et rien de ce qu'elle cite
+      // n'entre dans la file (`D-060`).
+      prune: options.exclude,
+      delai: options.delay,
     });
+    if (found.delay > 0) log(`délai entre vagues : ${found.delay} s`);
     log(`${found.fetched} page(s) visitée(s), ${found.retained.length} fichier(s) retenu(s)`);
     plan = {
       ...(await prepareGrab({
@@ -257,6 +321,14 @@ export async function main(argv, {
   }
   // Reprise : une tâche laissée en échec (coupure, 404 passager) redevient candidate.
   if (resume) plan.queue = retryFailed(plan.queue);
+
+  /** Réécrit le magasin après une exécution, quel qu'en soit le résultat. */
+  const flushCookies = async () => {
+    if (cookiePath === null) return null;
+    const saved = await saveCookieJar(jar, cookiePath);
+    log(`cookies : ${saved.saved} cookie(s) conservés`);
+    return saved.path;
+  };
 
   // Planification (`WP-25`) : hors fenêtre, on ne télécharge rien et on le dit.
   // Une fenêtre **ou** un quota suffit à planifier : sans fenêtre, tout est ouvert.
@@ -279,6 +351,7 @@ export async function main(argv, {
     // Le plan est **persisté** même hors fenêtre : l'aspiration est planifiée, pas perdue.
     await saveProject(projectPath(rootDir, plan.project.name), plan.project);
     await saveQueue(rootDir, plan.queue);
+    await flushCookies();
     log(`hors fenêtre (${options.window}) — prochaine ouverture : ${planRunOutcome.waitUntil?.toISOString() ?? 'jamais'}`);
     return {
       project: plan.project,
@@ -294,6 +367,13 @@ export async function main(argv, {
       rewritten: 0,
     };
   }
+
+  // Les téléchargements doivent voir la même session que l'exploration, sinon un fichier
+  // protégé par cookie échoue alors que la page qui le cite vient d'être lue.
+  downloadOptions = {
+    transport: withCookies(defaultTransport, jar),
+    ...downloadOptions,
+  };
 
   // Tâche d'exécution : celle du test si elle existe, sinon le téléchargement réel avec
   // les options demandées, sinon le comportement par défaut du runner.
@@ -340,6 +420,8 @@ export async function main(argv, {
     }
     log(`liens réécrits : ${rewritten}`);
   }
+
+  await flushCookies();
 
   // Rapport (`WP-25`) : écrit sur disque, format déduit de l'extension.
   let reportPath = null;

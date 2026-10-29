@@ -137,6 +137,7 @@ export {
   extractLinks,
   isAllowed,
   isPageUrl,
+  parseCrawlDelay,
   parseRobots,
   robotsUrl,
   sameOrigin,
@@ -180,11 +181,15 @@ export {
 } from './media.js';
 
 export {
+  CookieError,
   createCookieJar,
   defaultPath,
   domainMatches,
+  loadCookieJar,
   parseSetCookie,
   pathMatches,
+  saveCookieJar,
+  serializeCookieJar,
   withCookies,
 } from './cookies.js';
 export { INDEX_WINDOW_BYTES, downloadDash } from './dash.js';

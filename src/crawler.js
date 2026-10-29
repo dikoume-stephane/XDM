@@ -125,17 +125,55 @@ export function extractLinks(html, pageUrl) {
 }
 
 /**
- * Analyse un `robots.txt` pour l'agent XDM (et le groupe `*`).
- * @param {string} text
+ * Compile un motif `robots.txt` en expression régulière.
+ *
+ * RFC 9309 §2.2.2 : `*` remplace **n'importe quelle suite** de caractères et `$` **ancre la
+ * fin** du motif. Le reste est littéral. Le motif porte sur `chemin + requête`, pas sur
+ * l'URL entière — un `robots.txt` ne parle jamais du schéma ni de l'hôte.
+ *
+ * @param {string} pattern
+ * @returns {RegExp}
+ */
+export function robotsRegExp(pattern) {
+  const anchored = pattern.endsWith('$');
+  const body = anchored ? pattern.slice(0, -1) : pattern;
+  const escaped = body.replace(/[.+^${}()|[\]\\?]/g, '\\$&').replace(/\*/g, '.*');
+  return new RegExp(`^${escaped}${anchored ? '$' : ''}`);
+}
+
+/** Jeton de produit d'un agent (`XDM/1.0 (+grabber)` → `xdm`). */
+function productToken(agent) {
+  return String(agent ?? '').split(/[\s/]/)[0].toLowerCase();
+}
+
+/**
+ * Lit un `robots.txt` et rend **les règles du groupe qui s'applique à notre agent**.
+ *
+ * Trois choix, tous explicites, parce que c'est exactement ce que la cible ne dit pas
+ * (`Q-B-02` : une seule chaîne `robots` dans le binaire, sémantique non établie) :
+ *
+ * 1. **Groupe le plus spécifique** : les groupes nommant notre produit (`XDM`) l'emportent
+ *    sur le groupe `*` ; plusieurs groupes du même nom sont **fusionnés** (RFC 9309 §2.2.1).
+ * 2. **Règle la plus longue** : sur `chemin + requête`, la règle dont le motif est le plus
+ *    long décide (RFC 9309 §2.2.2).
+ * 3. **À longueur égale, `Allow` gagne** — c'est le RFC 9309, et c'est aussi le sens
+ *    pratique : un administrateur qui écrit les deux veut autoriser l'exception.
+ *    (Comportement **changé** ici : la version précédente faisait gagner `Disallow`.)
+ *
+ * @param {string} text contenu du fichier
+ * @param {{agent?: string}} [options]
  * @returns {{pattern: string, allow: boolean}[]}
  */
-export function parseRobots(text) {
+export function parseRobots(text, { agent = 'XDM' } = {}) {
   if (typeof text !== 'string') return [];
-  /** @type {{pattern: string, allow: boolean}[]} */
-  const rules = [];
-  let applies = false;
-  let inGroup = false;
+  const ours = productToken(agent);
+
+  /** @type {{agents: string[], rules: {pattern: string, allow: boolean}[]}[]} */
+  const groups = [];
+  /** @type {{agents: string[], rules: {pattern: string, allow: boolean}[]} | null} */
+  let current = null;
   let lastWasAgent = false;
+
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.replace(/#.*$/, '').trim();
     if (line === '') continue;
@@ -143,36 +181,87 @@ export function parseRobots(text) {
     if (separator < 0) continue;
     const field = line.slice(0, separator).trim().toLowerCase();
     const value = line.slice(separator + 1).trim();
+
     if (field === 'user-agent') {
-      // Un nouveau bloc commence : les règles précédentes ne s'appliquent plus.
-      if (!lastWasAgent) applies = false;
+      // Des `User-agent` consécutifs forment **un** groupe (plusieurs agents, mêmes règles).
+      if (!lastWasAgent || current === null) {
+        current = { agents: [], rules: [] };
+        groups.push(current);
+      }
       lastWasAgent = true;
-      inGroup = true;
-      if (value === '*' || value.toLowerCase() === 'xdm') applies = true;
+      current.agents.push(productToken(value));
       continue;
     }
     lastWasAgent = false;
-    if (field === 'allow' || field === 'disallow') {
-      inGroup = true;
-      if (!applies || value === '') continue;
-      rules.push({ pattern: value, allow: field === 'allow' });
+
+    if ((field === 'allow' || field === 'disallow') && current !== null) {
+      // `Disallow:` vide n'interdit rien : la ligne est ignorée (RFC 9309 §2.2.2).
+      if (value === '') continue;
+      current.rules.push({ pattern: value, allow: field === 'allow' });
+    }
+    // `crawl-delay`, `sitemap`, `host`… ne sont pas des règles d'accès : ignorés, mais lus
+    // sans erreur — un `robots.txt` inconnu ne doit pas interrompre une aspiration.
+  }
+
+  const named = groups.filter((group) => group.agents.includes(ours));
+  const applicable = named.length > 0 ? named : groups.filter((group) => group.agents.includes('*'));
+  return applicable.flatMap((group) => group.rules);
+}
+
+/**
+ * Délai d'aspiration demandé par un `robots.txt`, en secondes.
+ *
+ * `Crawl-delay` n'est **pas** dans la RFC 9309 : c'est une extension historique, sans
+ * grammaire ni plafond. On la lit donc comme un **conseil borné** — un nombre fini de
+ * secondes, sinon `null` — et le choix d'obéir appartient à l'appelant (`--delai`).
+ * Le groupe retenu est le même que pour les règles, pour qu'un site ne puisse pas voir XDM
+ * suivre le délai de `*` tout en ignorant celui de `XDM`.
+ *
+ * @param {string} text
+ * @param {{agent?: string}} [options]
+ * @returns {number|null} secondes, ou `null` si le site n'en demande pas
+ */
+export function parseCrawlDelay(text, { agent = 'XDM' } = {}) {
+  if (typeof text !== 'string') return null;
+  const ours = productToken(agent);
+  /** @type {{agents: string[], delay: number|null}[]} */
+  const groups = [];
+  /** @type {{agents: string[], delay: number|null} | null} */
+  let current = null;
+  let lastWasAgent = false;
+
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.replace(/#.*$/, '').trim();
+    const separator = line.indexOf(':');
+    if (separator < 0) continue;
+    const field = line.slice(0, separator).trim().toLowerCase();
+    const value = line.slice(separator + 1).trim();
+    if (field === 'user-agent') {
+      if (!lastWasAgent || current === null) {
+        current = { agents: [], delay: null };
+        groups.push(current);
+      }
+      lastWasAgent = true;
+      current.agents.push(productToken(value));
+    } else if (field === 'crawl-delay' && current !== null) {
+      lastWasAgent = false;
+      const seconds = Number(value);
+      // Une valeur non finie ou négative est ignorée : on ne devine pas l'intention.
+      if (Number.isFinite(seconds) && seconds >= 0) current.delay = seconds;
+    } else {
+      lastWasAgent = false;
     }
   }
-  return rules;
+
+  const named = groups.filter((group) => group.agents.includes(ours));
+  const applicable = named.length > 0 ? named : groups.filter((group) => group.agents.includes('*'));
+  const delays = applicable.map((group) => group.delay).filter((delay) => delay !== null);
+  return delays.length === 0 ? null : Math.max(...delays);
 }
 
 /**
- * Traduit un motif `robots.txt` en expression régulière ancrée au début du chemin.
- * @param {string} pattern
- * @returns {RegExp}
- */
-function robotsRegExp(pattern) {
-  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
-  return new RegExp(`^${escaped}`);
-}
-
-/**
- * Une URL est-elle autorisée ? Règle la plus longue, `Disallow` prioritaire à égalité.
+ * Une URL est-elle autorisée par ces règles ?
+ *
  * @param {string} url
  * @param {{pattern: string, allow: boolean}[]} rules
  * @returns {boolean}
@@ -190,7 +279,7 @@ export function isAllowed(url, rules) {
   for (const rule of rules) {
     if (!robotsRegExp(rule.pattern).test(target)) continue;
     const length = rule.pattern.length;
-    if (best === null || length > best.length || (length === best.length && !rule.allow)) {
+    if (best === null || length > best.length || (length === best.length && rule.allow)) {
       best = { length, allow: rule.allow };
     }
   }
@@ -229,9 +318,17 @@ export function robotsUrl(url) {
  * client HTTP du moteur.
  *
  * @param {string} startUrl
+ * `parallelisme` borne le nombre de requêtes simultanées (`Q-B-05` : la cible ne dit pas si
+ * son crawl est parallèle ; XDM en fait un paramètre explicite). Le parcours reste **par
+ * vagues** : chaque vague prend au plus `parallelisme` URL dans la file, les interroge en
+ * parallèle, puis absorbe les résultats **dans l'ordre de la file** — l'ordre des pages, des
+ * entrées retenues et des motifs d'exclusion ne dépend donc pas du hasard du réseau.
+ *
  * @param {{fetchPage: (url: string) => Promise<{status: number, body: string}>,
  *   depth?: number, maxPages?: number, filters?: {include?: string[], exclude?: string[]},
- *   sameSite?: boolean, robots?: boolean, onPage?: (page: object) => void}} options
+ *   sameSite?: boolean, robots?: boolean, parallelisme?: number, prune?: string[],
+ *   delai?: number|null, sleep?: (ms: number) => Promise<void>,
+ *   onPage?: (page: object) => void}} options
  * @returns {Promise<{start: string, pages: object[], retained: object[], skipped: object[],
  *   errors: object[], fetched: number}>}
  */
@@ -242,6 +339,10 @@ export async function crawl(startUrl, {
   filters = {},
   sameSite = true,
   robots = true,
+  parallelisme = 1,
+  prune = [],
+  delai = null,
+  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   onPage = () => {},
 } = {}) {
   if (typeof fetchPage !== 'function') {
@@ -250,19 +351,32 @@ export async function crawl(startUrl, {
   const start = canonicalUrl(startUrl);
   if (start === null) throw new TypeError(`crawl : URL de départ invalide (${startUrl})`);
   if (!Number.isInteger(depth) || depth < 1) throw new RangeError('crawl : profondeur ≥ 1');
+  if (!Number.isInteger(parallelisme) || parallelisme < 1) {
+    throw new RangeError('crawl : `parallelisme` ≥ 1');
+  }
+  if (delai !== null && (!Number.isFinite(delai) || delai < 0)) {
+    throw new RangeError('crawl : `delai` ≥ 0 (secondes)');
+  }
 
   /** @type {{pattern: string, allow: boolean}[]} */
   let rules = [];
+  /** @type {number|null} */
+  let robotDelay = null;
   if (robots) {
     try {
       const response = await fetchPage(robotsUrl(start));
       if (response && response.status >= 200 && response.status < 300) {
         rules = parseRobots(response.body);
+        robotDelay = parseCrawlDelay(response.body);
       }
     } catch {
       rules = []; // robots.txt inaccessible ⇒ rien n'est interdit
     }
   }
+
+  // Le délai explicite (`--delai`) l'emporte sur celui du site : c'est le seul moyen de
+  // ralentir **davantage** que demandé, et de rester maître quand le site se tait.
+  const effectiveDelay = delai === null ? (robotDelay ?? 0) : delai;
 
   /** @type {object[]} */
   const pages = [];
@@ -276,44 +390,38 @@ export async function crawl(startUrl, {
   /** File FIFO : l'ordre de visite est celui des niveaux (`D-041`). */
   const queue = [{ url: start, depth: 1 }];
 
-  while (queue.length > 0 && pages.length < maxPages) {
-    const node = queue.shift();
-    if (visited.has(node.url)) continue;
-    visited.add(node.url);
-
-    if (robots && !isAllowed(node.url, rules)) {
-      skipped.push({ url: node.url, depth: node.depth, reason: 'robots.txt' });
-      continue;
+  /** Absorbe la réponse d'une page : pages, erreurs, liens retenus, file. */
+  const absorb = (node, outcome) => {
+    if (!outcome.ok) {
+      errors.push({
+        url: node.url,
+        status: 0,
+        message: String(outcome.error?.message ?? outcome.error),
+      });
+      return;
     }
-
-    // La page de départ est retenue **si les filtres la retiennent** — mais seulement quand
-    // une inclusion est déclarée : sans inclusion, le comportement historique (une page de
-    // départ n'est aspirée que si une autre page la lie) est conservé, car la racine n'a pas
-    // d'extension et échapperait aux exclusions par défaut (`*.html`).
-    if (node.depth === 1 && isPageUrl(node.url) && (filters.include ?? []).length > 0) {
-      const verdict = classifyLink(node.url, filters);
-      if (verdict.retained) retained.set(node.url, { url: node.url, depth: 0 });
-    }
-
-    let response;
-    try {
-      response = await fetchPage(node.url);
-    } catch (error) {
-      errors.push({ url: node.url, status: 0, message: String(error?.message ?? error) });
-      continue;
-    }
+    const response = outcome.response;
     const page = { url: node.url, depth: node.depth, status: response.status };
     pages.push(page);
     onPage(page);
 
     if (response.status < 200 || response.status >= 300) {
       errors.push({ url: node.url, status: response.status });
-      continue;
+      return;
     }
 
     for (const link of extractLinks(response.body, node.url)) {
       if (sameSite && !sameOrigin(link, start)) {
         skipped.push({ url: link, depth: node.depth + 1, reason: 'hors site' });
+        continue;
+      }
+      // **Élagage** : un motif d'élagage coupe la branche, il ne se contente pas de retenir
+      // le lien. C'est la différence avec une exclusion de téléchargement — une page exclue
+      // des téléchargements est souvent une page qu'on doit quand même parcourir pour
+      // atteindre ses voisines ; une branche élaguée n'est même pas demandée (`D-060`).
+      const pruned = prune.find((motif) => matchesMotif(motif, link));
+      if (pruned) {
+        skipped.push({ url: link, depth: node.depth + 1, reason: `élagage:${pruned}` });
         continue;
       }
       const verdict = classifyLink(link, filters);
@@ -326,6 +434,48 @@ export async function crawl(startUrl, {
         queue.push({ url: link, depth: node.depth + 1 });
       }
     }
+  };
+
+  /** Première vague : rien n'a encore été demandé, inutile d'attendre avant elle. */
+  let waveIndex = 0;
+
+  while (queue.length > 0 && pages.length < maxPages) {
+    // Constitution de la vague : robots.txt et dédoublonnage sont décidés ici, en série,
+    // pour qu'une URL ne soit jamais demandée deux fois même si deux vagues se chevauchent.
+    /** @type {{url: string, depth: number}[]} */
+    const wave = [];
+    while (wave.length < parallelisme && queue.length > 0 && pages.length + wave.length < maxPages) {
+      const node = queue.shift();
+      if (visited.has(node.url)) continue;
+      visited.add(node.url);
+
+      if (robots && !isAllowed(node.url, rules)) {
+        skipped.push({ url: node.url, depth: node.depth, reason: 'robots.txt' });
+        continue;
+      }
+
+      // La page de départ est retenue **si les filtres la retiennent** — mais seulement quand
+      // une inclusion est déclarée : sans inclusion, le comportement historique (une page de
+      // départ n'est aspirée que si une autre page la lie) est conservé, car la racine n'a pas
+      // d'extension et échapperait aux exclusions par défaut (`*.html`).
+      if (node.depth === 1 && isPageUrl(node.url) && (filters.include ?? []).length > 0) {
+        const verdict = classifyLink(node.url, filters);
+        if (verdict.retained) retained.set(node.url, { url: node.url, depth: 0 });
+      }
+      wave.push(node);
+    }
+    if (wave.length === 0) continue;
+
+    // `Crawl-delay` sépare **deux requêtes** : on attend donc entre deux vagues, jamais
+    // avant la première ni après la dernière (le crawl ne se prolonge pas d'un délai mort).
+    if (waveIndex > 0 && effectiveDelay > 0) await sleep(effectiveDelay * 1000);
+    waveIndex += 1;
+
+    const outcomes = await Promise.all(wave.map((node) => fetchPage(node.url).then(
+      (response) => ({ ok: true, response }),
+      (error) => ({ ok: false, error }),
+    )));
+    for (let index = 0; index < wave.length; index += 1) absorb(wave[index], outcomes[index]);
   }
 
   return {
@@ -335,5 +485,6 @@ export async function crawl(startUrl, {
     skipped,
     errors,
     fetched: pages.length,
+    delay: effectiveDelay,
   };
 }

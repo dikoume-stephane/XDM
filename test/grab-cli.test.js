@@ -88,20 +88,25 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
     output: 'texte',
     rewrite: false,
     include: [],
+    exclude: [],
     noExclude: false,
+    parallelisme: 1,
+    delay: null,
     report: null,
     window: null,
     quotaBytes: null,
     quotaTasks: null,
     attempts: 1,
+    cookies: null,
   });
   assert.deepEqual(
     parseArgs(['http://h/', 'dl', '--profondeur', '3', '--pages', '10', '--connexions', '2', '--sans-robots']),
     {
       url: 'http://h/', directory: 'dl', depth: 3, maxPages: 10, connections: 2,
       robots: false, resume: false, output: 'texte',
-      rewrite: false, include: [], noExclude: false, report: null, window: null,
-      quotaBytes: null, quotaTasks: null, attempts: 1,
+      rewrite: false, include: [], exclude: [], noExclude: false, parallelisme: 1,
+      delay: null, report: null, window: null,
+      quotaBytes: null, quotaTasks: null, attempts: 1, cookies: null,
     },
   );
   assert.deepEqual(
@@ -109,11 +114,25 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
     {
       url: 'http://h/', directory: '.', depth: 2, maxPages: 2000, connections: 4,
       robots: true, resume: true, output: 'json',
-      rewrite: false, include: [], noExclude: false, report: null, window: null,
-      quotaBytes: null, quotaTasks: null, attempts: 1,
+      rewrite: false, include: [], exclude: [], noExclude: false, parallelisme: 1,
+      delay: null, report: null, window: null,
+      quotaBytes: null, quotaTasks: null, attempts: 1, cookies: null,
     },
   );
   assert.throws(() => parseArgs(['http://h/', '--sortie', 'yaml']), /format de sortie inconnu/);
+  // `--exclure` est le miroir de `--inclure` ; `--delai` accepte un décimal, refuse le reste.
+  const filtres = parseArgs([
+    'http://h/', '--inclure', '*.html', '--exclure', '*/prive/*', '--exclure', '*.pdf',
+    '--delai', '0.5',
+  ]);
+  assert.deepEqual(filtres.include, ['*.html']);
+  assert.deepEqual(filtres.exclude, ['*/prive/*', '*.pdf']);
+  assert.equal(filtres.delay, 0.5);
+  assert.throws(() => parseArgs(['http://h/', '--exclure']), /--exclure attend un motif/);
+  assert.throws(() => parseArgs(['http://h/', '--delai', '-1']), /valeur invalide pour --delai/);
+  assert.throws(() => parseArgs(['http://h/', '--delai', 'vite']), /valeur invalide pour --delai/);
+  assert.match(USAGE, /--exclure/);
+  assert.match(USAGE, /--delai/);
   assert.match(USAGE, /--reprendre/);
   assert.deepEqual(
     {
@@ -127,6 +146,8 @@ test('T-B-08 : arguments de la CLI d’aspiration', () => {
   );
   assert.throws(() => parseArgs(['http://h/', '--rapport']), /--rapport attend un fichier/);
   assert.throws(() => parseArgs(['http://h/', '--planifier']), /--planifier attend une fenêtre/);
+  assert.equal(parseArgs(['http://h/', '--paralleles', '4']).parallelisme, 4);
+  assert.equal(parseArgs(['http://h/']).parallelisme, 1, 'série par défaut : reproductible');
   assert.throws(() => parseArgs([]), /usage/);
   assert.throws(() => parseArgs(['pas-une-url']), /URL invalide/);
   assert.throws(() => parseArgs(['http://h/', '--profondeur', '0']), /valeur invalide/);
@@ -403,6 +424,59 @@ test('T-B-20 : une ressource manquante produit un échec explicite, sans bloquer
     } finally {
       server.closeAllConnections?.();
       await new Promise((resolve) => server.close(resolve));
+    }
+  });
+});
+
+test('T-C-14 : `--exclure` retire une page du parcours et ses fichiers de la file', async () => {
+  // Site dédié : une page publique, une page « privée » liée depuis la racine.
+  const pages = {
+    '/': '<a href="/public/a.html">a</a><a href="/prive/b.html">b</a>',
+    '/public/a.html': '<a href="/fichiers/a.txt">a</a>',
+    '/prive/b.html': '<a href="/fichiers/b.txt">b</a>',
+  };
+  const files = { '/fichiers/a.txt': Buffer.from('A'), '/fichiers/b.txt': Buffer.from('B') };
+  const server = http.createServer((req, res) => {
+    const path = new URL(req.url, 'http://h').pathname;
+    const body = pages[path] ?? files[path];
+    if (!body) {
+      res.writeHead(404, { 'content-length': '0' });
+      res.end();
+      return;
+    }
+    const buffer = typeof body === 'string' ? Buffer.from(body) : body;
+    res.writeHead(200, { 'content-length': String(buffer.length) });
+    res.end(buffer);
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = /** @type {import('node:net').AddressInfo} */ (server.address());
+  const origin = `http://127.0.0.1:${port}`;
+
+  await withTempDir(async (dir) => {
+    try {
+      const result = await main(
+        // `--sans-exclusions` vide les masques par défaut, `--exclure` doit survivre à
+        // cette remise à zéro — sinon l'option serait silencieusement sans effet.
+        [`${origin}/`, dir, '--inclure', '*.html,*.txt', '--sans-exclusions',
+          '--exclure', '*/prive/*'],
+        { log: () => {} },
+      );
+      assert.equal(result.failed, 0);
+      const urls = (await loadQueue(dir)).tasks.map((task) => new URL(task.url).pathname).sort();
+      assert.deepEqual(urls, ['/fichiers/a.txt', '/public/a.html'],
+        'ni la page privée ni le fichier qu’elle cite ne sont aspirés');
+
+      // Le motif est conservé dans le projet : une reprise ne le perd pas.
+      const saved = JSON.parse(await readFile(join(dir, '127.0.0.1.xdmspider.json'), 'utf8'));
+      assert.ok(
+        saved.filters.exclude.some((filter) => filter.motif === '*/prive/*'),
+        'exclusion enregistrée dans le projet',
+      );
+    } finally {
+      await new Promise((resolve) => {
+        server.closeAllConnections?.();
+        server.close(resolve);
+      });
     }
   });
 });

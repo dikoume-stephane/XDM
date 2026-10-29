@@ -1436,6 +1436,119 @@ dans chaque fiche.
 
 ---
 
+### D-059 — `robots.txt` : lire la RFC 9309, pas « la première ligne qui parle de nous »
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/crawler.js`, `EX-B-17`
+
+**Contexte.** `parseRobots` existait **en deux exemplaires** dans `src/crawler.js` (lignes 132 et
+204) et retenait *toutes* les règles de *tous* les groupes, quel que soit l'agent. Conséquence
+mesurable : un `User-agent: XDM\nDisallow:` vide (qui n'interdit rien) n'annulait pas un
+`Disallow: /` écrit pour `*`, et un `Allow` de même longueur qu'un `Disallow` perdait. Les motifs
+`*` et `$` de la RFC n'étaient pas interprétés du tout.
+
+**Décision.** Le fichier est lu selon la RFC 9309 §2.2, avec trois choix explicités :
+1. **groupe applicable seulement** — les groupes nommant notre produit (`XDM`) l'emportent sur
+   `*`, et plusieurs groupes homonymes sont **fusionnés** ;
+2. **métacaractères** `*` (n'importe quelle suite, y compris `/`) et `$` (ancre de fin), le reste
+   littéral ; le motif porte sur `chemin + requête`, jamais sur l'hôte ;
+3. **règle la plus longue** ; à longueur égale, **`Allow` gagne**. C'est la RFC, et c'est le sens
+   pratique : un administrateur qui écrit les deux veut autoriser l'exception.
+
+**Changement assumé.** Le point 3 **change** le comportement précédent (`Disallow` gagnait à
+égalité). C'est noté ici parce qu'un `robots.txt` conçu pour l'ancien comportement serait suivi
+différemment — mesuré par `T-B-13` (mis à jour) et `T-B-29`.
+
+**Conséquence.** Un seul `parseRobots`, 13 cas de test (`T-B-29`) : groupe `XDM` prioritaire,
+fusion, `*.pdf$` qui n'interdit pas `manuel.pdf.html`, jeton de produit insensible à la version
+(`xdm/2.0`), `Crawl-delay`/`Sitemap` lu sans erreur. `EX-B-17` verte.
+
+---
+
+### D-060 — `--exclure` **élague**, `Crawl-delay` est un conseil borné
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/crawler.js`, `bin/xdm-grab.js`, `EX-B-19`, `EX-B-20`
+
+**Contexte.** Deux manques symétriques. (1) `--inclure` existait, `--exclure` non : un utilisateur
+ne pouvait pas dire « aspire ce site sauf cette branche ». (2) `Crawl-delay` était **lu et jeté**
+(`D-059`) — poliment, mais jeté.
+
+**Mesure avant décision.** `--exclure` a d'abord été branché comme un simple filtre du projet,
+c'est-à-dire comme les exclusions par défaut. Le test de bout en bout a montré que la page exclue
+**était quand même demandée** (`/prive/b.html`), et que le fichier qu'elle citait entrait dans la
+file : un filtre de **téléchargement** n'est pas un filtre de **parcours**.
+
+**Décision.** Deux notions distinctes, nommées :
+- **élagage** (`prune`) : les motifs de `--exclure` coupent la branche — le lien n'est ni retenu
+  ni demandé, donc rien de ce qu'il cite n'entre dans la file (raison `élagage:<motif>`) ;
+- **filtre de téléchargement** : les exclusions **par défaut** (`*.html`, `*.jpg`…) continuent de
+  ne trier que les entrées. Les transformer en élagage fermerait l'exploration : c'est le défaut
+  par défaut qui rend `--inclure` utile (`D-032`).
+
+Pour `Crawl-delay` : lu pour le **groupe applicable** (même règle que `D-059`), ignoré s'il n'est
+pas un nombre fini positif, appliqué **entre deux vagues** — jamais avant la première requête ni
+après la dernière. Un délai explicite (`--delai`, décimal accepté) l'emporte **toujours**,
+y compris `0` qui l'annule : le site est un conseil, l'utilisateur une consigne.
+
+**Conséquence.** `T-B-31` (délai : 3 s sur site muet à `*`, valeurs absurdes ignorées, attentes
+comptées : 2 attentes en série, 1 avec `parallelisme: 2`, `[1500]` pour `1,5`), `T-B-32` (aucune
+requête vers la branche élaguée ; le filtre seul laisse la page visitée), `T-C-14` (bout en bout :
+`/fichiers/b.txt` absent de la file, motif conservé dans `.xdmspider.json`). `EX-B-19`/`20` vertes.
+
+---
+
+### D-061 — Exploration parallèle **bornée**, mais sortie déterministe
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/crawler.js`, `bin/xdm-grab.js` (`--paralleles`), `EX-B-18`
+
+**Contexte.** `Q-B-05` (« le balayage de la cible est-il parallèle ? ») restera sans réponse : le
+moteur d'exploration n'est pas dans `IDMan.exe` (`D-041`). L'exploration XDM était donc
+**séquentielle par construction**, ce qui est sûr mais lent sur un site distant.
+
+**Décision.** Le parallélisme devient un **paramètre** (`parallelisme`, défaut `1`) et non un
+comportement caché. Le parcours reste **par vagues** : une vague prend au plus N URL dans la file,
+les interroge en parallèle, puis absorbe les réponses **dans l'ordre de la file**. L'ordre des
+pages, des entrées retenues et des motifs d'exclusion ne dépend donc pas du hasard du réseau.
+
+**Conséquence.** Avec `parallelisme: 3`, pic mesuré ≤ 3 **et** ≥ 2 (le parallélisme sert), et
+pages/entrées **identiques et dans le même ordre** qu'en série (`T-B-30`). `RangeError` sous 1.
+`--paralleles N` l'expose (défaut `1` : reproductible). `EX-B-18` verte.
+
+---
+
+### D-062 — Cookies persistants : opt-in, datés, `0600` — et utiles même sans l'option
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/cookies.js`, `bin/xdm-grab.js`, `bin/xdm.js`, `EX-C-12`, `EX-C-13`
+
+**Contexte.** Le magasin de cookies (`D-047`) vivait le temps d'un processus. Une aspiration
+interrompue puis reprise (`--reprendre`) reperdait donc l'authentification : les pages derrière un
+formulaire redevenaient `403`, alors que la file, elle, se reprenait correctement.
+
+**Décision.** `--cookies F` rend la persistance **explicite et optionnelle** :
+- **ce qui est écrit** : uniquement les cookies **datés** — un cookie de session n'a pas de date,
+  l'écrire serait inventer une durée de vie ;
+- **comment** : fichier temporaire dans le même dossier puis `rename` (jamais un fichier à moitié
+  réécrit), mode **`0600`** (un cookie est un secret de session), format versionné `{version: 1,
+  cookies: […]}` ;
+- **à la relecture** : fichier absent ⇒ magasin vide (première exécution, ce n'est pas une erreur) ;
+  JSON invalide ou version inconnue ⇒ `CookieError('COOKIE_FILE')`, on ne devine pas ; cookies
+  expirés écartés ; entrées incomplètes ignorées une par une.
+
+**Correction trouvée par le test.** Le magasin en mémoire n'était branché **que** si `--cookies`
+était présent : sans l'option, un site qui pose un cookie sur sa page d'accueil puis protège un
+fichier échouait en `403`. Le magasin sert désormais **toujours** dans l'exécution courante (pages
+*et* téléchargements, par le même transport) ; `--cookies` n'ajoute que la persistance. Sans
+l'option, rien n'est écrit sur le disque (vérifié).
+
+**Même lot — la CLI de téléchargement honore le schéma.** `bin/xdm.js` ne savait faire que HTTP :
+`ftp://` partait dans le moteur HTTP et échouait. Le schéma choisit maintenant le transport
+(`http`/`https` → moteur, `ftp` → `src/ftp.js`, donc la séquence observée `CWD`→`TYPE I`→`SIZE`→
+`REST`→`RETR`), et tout autre schéma (`mailto:`, `file:`, `data:`) est refusé **avant** tout accès
+réseau, avec la liste de ce qui est accepté. Une taille distante inconnue est dite, pas inventée :
+`taille distante : inconnue`.
+
+**Conséquence.** `T-C-12` (session exclue, `100600`, cookie expiré non rajeuni, fichier corrompu
+rejeté, reprise d'un téléchargement **sans** repasser par la page qui pose le cookie, rien d'écrit
+sans option), `T-C-13` (schéma inconnu refusé, séquence FTP réelle, `REST 1000` sur reprise,
+fichier final complet). `EX-C-12`/`EX-C-13` vertes.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation

@@ -9,6 +9,7 @@ import {
   extractLinks,
   isAllowed,
   canonicalUrl,
+  parseCrawlDelay,
   parseRobots,
   robotsUrl,
   sameOrigin,
@@ -63,7 +64,7 @@ test('T-B-08 : extraction des liens — href, src, dédoublonnage, schémas igno
   assert.deepEqual(extractLinks('', 'http://site.example/'), []);
 });
 
-test('T-B-13 : `robots.txt` — règle la plus longue, `Disallow` prioritaire', () => {
+test('T-B-13 : `robots.txt` — règle la plus longue, `Allow` à égalité (RFC 9309)', () => {
   const text = `
     User-agent: *
     Disallow: /prive
@@ -80,9 +81,11 @@ test('T-B-13 : `robots.txt` — règle la plus longue, `Disallow` prioritaire', 
   assert.equal(isAllowed('http://h/n-importe-quoi', []), true);
   assert.equal(robotsUrl('http://h/a/b?c=1'), 'http://h/robots.txt');
 
-  // Disallow l'emporte à longueur égale.
+  // À longueur égale, `Allow` l'emporte : c'est le RFC 9309 (§2.2.2), et le sens pratique —
+  // un administrateur qui écrit les deux veut autoriser l'exception. Changement assumé
+  // (`D-059`) : la version précédente faisait gagner `Disallow`.
   const tie = parseRobots('User-agent: *\nAllow: /x\nDisallow: /x\n');
-  assert.equal(isAllowed('http://h/x', tie), false);
+  assert.equal(isAllowed('http://h/x', tie), true);
 });
 
 test('T-B-03/T-B-05 : classement d’un lien par les filtres du projet', () => {
@@ -213,4 +216,233 @@ test('T-B-08 (erreurs) : arguments invalides refusés explicitement', async () =
     () => crawl('http://h/', { fetchPage: async () => ({ status: 200, body: '' }), depth: 0 }),
     /profondeur/,
   );
+});
+
+test('T-B-29 : `robots.txt` — groupes, jokers, ancre de fin et directives ignorées', () => {
+  const text = [
+    'User-agent: *',
+    'Disallow: /',
+    '',
+    'User-agent: XDM',
+    'User-agent: autre-robot',
+    'Disallow: /prive',
+    'Allow: /prive/public',
+    'Disallow: /*.pdf$',
+    'Disallow: /tmp/*/secret',
+    'Crawl-delay: 10',
+    'Sitemap: http://h/sitemap.xml',
+    '',
+    'User-agent: XDM',
+    'Disallow: /bannis',
+  ].join('\n');
+
+  const rules = parseRobots(text);
+  // Le groupe nommé l'emporte sur `*` : `/` reste donc explorable…
+  assert.equal(isAllowed('http://h/', rules), true, 'le groupe `*` ne s’applique pas');
+  // …mais les deux groupes `XDM` sont fusionnés (RFC 9309 §2.2.1).
+  assert.equal(isAllowed('http://h/bannis/x', rules), false, 'second groupe XDM fusionné');
+  assert.equal(isAllowed('http://h/prive/x', rules), false);
+  assert.equal(isAllowed('http://h/prive/public/page', rules), true);
+
+  // `$` ancre la fin : `*.pdf$` interdit `/a/b.pdf`, pas `/a/b.pdf.html`.
+  assert.equal(isAllowed('http://h/doc.pdf', rules), false);
+  assert.equal(isAllowed('http://h/doc.pdf.html', rules), true);
+  // `*` traverse les séparateurs de chemin.
+  assert.equal(isAllowed('http://h/tmp/a/b/secret', rules), false);
+  assert.equal(isAllowed('http://h/tmp/secret', rules), true, 'le motif exige le segment du milieu');
+
+  // Un `Disallow:` vide n'interdit rien, et les directives inconnues sont ignorées.
+  const empty = parseRobots('User-agent: *\nDisallow:\nCrawl-delay: 5\n');
+  assert.deepEqual(empty, []);
+  assert.equal(isAllowed('http://h/n-importe-quoi', empty), true);
+
+  // Aucun groupe ne nous nomme, aucun `*` : tout est permis.
+  const other = parseRobots('User-agent: googlebot\nDisallow: /\n');
+  assert.deepEqual(other, []);
+  assert.equal(isAllowed('http://h/x', other), true);
+
+  // Le jeton de produit ignore la version et la casse (`XDM/1.0 (+grabber)` → `xdm`).
+  const versioned = parseRobots('User-agent: xdm/2.0\nDisallow: /x\n', { agent: 'XDM/1.0 (+grabber)' });
+  assert.equal(isAllowed('http://h/x', versioned), false);
+
+  // La requête fait partie du chemin comparé (RFC 9309 §2.2.2).
+  const query = parseRobots('User-agent: *\nDisallow: /recherche?');
+  assert.equal(isAllowed('http://h/recherche?q=1', query), false);
+  assert.equal(isAllowed('http://h/recherche', query), true);
+
+  // Un motif est du texte, pas une expression régulière : les métacaractères sont littéraux.
+  const literal = parseRobots('User-agent: *\nDisallow: /a+b(c)');
+  assert.equal(isAllowed('http://h/a+b(c)/x', literal), false);
+  assert.equal(isAllowed('http://h/ab/x', literal), true);
+});
+
+test('T-B-30 : crawl parallèle borné — même résultat, ordre stable, plafond respecté', async () => {
+  // Un site en étoile : la racine mène à 6 pages, chacune à un fichier.
+  const routes = { 'http://p.example/': '' };
+  const links = [];
+  for (let i = 1; i <= 6; i += 1) {
+    routes[`http://p.example/n${i}.html`] = `<a href="/f${i}.bin">f</a>`;
+    links.push(`<a href="/n${i}.html">n${i}</a>`);
+  }
+  routes['http://p.example/'] = links.join('');
+
+  const runWith = async (parallelisme) => {
+    let active = 0;
+    let peak = 0;
+    const { fetchPage } = site(routes);
+    const result = await crawl('http://p.example/', {
+      depth: 2,
+      robots: false,
+      parallelisme,
+      fetchPage: async (url) => {
+        active += 1;
+        peak = Math.max(peak, active);
+        // Une latence variable : si l'ordre dépendait du hasard du réseau, il changerait ici.
+        await new Promise((resolve) => setTimeout(resolve, (url.length % 3) + 1));
+        try {
+          return await fetchPage(url);
+        } finally {
+          active -= 1;
+        }
+      },
+    });
+    return { result, peak };
+  };
+
+  const serial = await runWith(1);
+  assert.equal(serial.peak, 1, 'série : jamais deux requêtes à la fois');
+
+  const parallel = await runWith(3);
+  assert.ok(parallel.peak <= 3, `plafond respecté (pic observé : ${parallel.peak})`);
+  assert.ok(parallel.peak >= 2, `le parallélisme sert à quelque chose (pic : ${parallel.peak})`);
+
+  // Le résultat ne dépend pas du parallélisme : mêmes pages, même ordre, mêmes entrées.
+  assert.deepEqual(
+    parallel.result.pages.map((page) => [page.url, page.depth]),
+    serial.result.pages.map((page) => [page.url, page.depth]),
+  );
+  assert.deepEqual(
+    parallel.result.retained.map((entry) => entry.url),
+    serial.result.retained.map((entry) => entry.url),
+  );
+  assert.equal(new Set(parallel.result.pages.map((page) => page.url)).size, parallel.result.pages.length,
+    'aucune page demandée deux fois');
+
+  // Un plafond absurde est refusé, pas silencieusement corrigé.
+  await assert.rejects(
+    () => crawl('http://p.example/', { fetchPage: site(routes).fetchPage, parallelisme: 0 }),
+    /parallelisme/,
+  );
+});
+
+test('T-B-31 : `Crawl-delay` lu pour le bon groupe, appliqué entre les vagues seulement', async () => {
+  // Lecture : extension hors RFC, donc tolérante — mais jamais devinée.
+  const text = [
+    'User-agent: *',
+    'Crawl-delay: 5',
+    '',
+    'User-agent: XDM',
+    'Crawl-delay: 0.25',
+    'Disallow: /prive',
+  ].join('\n');
+  assert.equal(parseCrawlDelay(text), 0.25, 'le groupe nommé l’emporte sur `*`');
+  assert.equal(parseCrawlDelay('User-agent: *\nCrawl-delay: 7'), 7);
+  assert.equal(parseCrawlDelay('User-agent: XDM'), null, 'site muet ⇒ aucun délai');
+  assert.equal(parseCrawlDelay('User-agent: *\nCrawl-delay: -3'), null, 'valeur absurde ignorée');
+  assert.equal(parseCrawlDelay('User-agent: *\nCrawl-delay: jamais'), null);
+  assert.equal(parseCrawlDelay('User-agent: *\nCrawl-delay: 2\n\nUser-agent: XDM\nCrawl-delay: 9'),
+    9, 'groupes homonymes : le plus exigeant gagne');
+
+  const routes = {
+    'http://d.example/': '<a href="/a.html">a</a><a href="/b.html">b</a>',
+    'http://d.example/a.html': 'a',
+    'http://d.example/b.html': 'b',
+  };
+  const runWith = async (options) => {
+    const waits = [];
+    const { fetchPage } = site(routes, { robotsText: 'User-agent: XDM\nCrawl-delay: 3\n' });
+    const result = await crawl('http://d.example/', {
+      depth: 2,
+      fetchPage,
+      sleep: async (ms) => { waits.push(ms); },
+      ...options,
+    });
+    return { result, waits };
+  };
+
+  // Le site demande 3 s. En série, trois pages ⇒ trois vagues ⇒ deux attentes : le délai
+  // sépare deux requêtes, il n'est pas payé avant la première ni après la dernière.
+  const obey = await runWith({});
+  assert.equal(obey.result.delay, 3);
+  assert.deepEqual(obey.waits, [3000, 3000]);
+  assert.equal(obey.result.pages.length, 3);
+
+  // Avec deux requêtes en parallèle : deux vagues ⇒ une seule attente.
+  const bunched = await runWith({ parallelisme: 2 });
+  assert.deepEqual(bunched.waits, [3000]);
+  assert.equal(bunched.result.pages.length, 3);
+
+  // `delai: 0` est une décision explicite : on n'attend pas du tout.
+  const override = await runWith({ delai: 0 });
+  assert.equal(override.result.delay, 0);
+  assert.deepEqual(override.waits, []);
+
+  // Un délai explicite plus grand l'emporte aussi, et se compte en millisecondes.
+  const slower = await runWith({ delai: 1.5 });
+  assert.deepEqual(slower.waits, [1500, 1500], 'millisecondes, pas secondes');
+
+  // Sans `robots`, aucun délai n'est lu — mais un délai explicite reste honoré.
+  const { fetchPage } = site(routes, { robotsText: 'User-agent: *\nCrawl-delay: 9' });
+  const waits = [];
+  const withoutRobots = await crawl('http://d.example/', {
+    depth: 1,
+    robots: false,
+    fetchPage,
+    sleep: async (ms) => { waits.push(ms); },
+  });
+  assert.equal(withoutRobots.delay, 0);
+  assert.deepEqual(waits, []);
+
+  await assert.rejects(() => crawl('http://d.example/', {
+    fetchPage: site(routes).fetchPage,
+    delai: -1,
+  }), /delai/);
+});
+
+test('T-B-32 : l’élagage coupe la branche, le filtre d’exclusion ne fait que trier', async () => {
+  const routes = {
+    'http://e.example/': '<a href="/a.html">a</a><a href="/prive/b.html">b</a>',
+    'http://e.example/a.html': '<a href="/f/a.txt">a</a>',
+    'http://e.example/prive/b.html': '<a href="/f/b.txt">b</a>',
+    'http://e.example/f/a.txt': 'A',
+    'http://e.example/f/b.txt': 'B',
+  };
+  const filters = { include: ['*.html', '*.txt'], exclude: ['*/prive/*'] };
+
+  // Filtre seul : la page privée n'est pas retenue, mais elle est **parcourue** — donc son
+  // fichier est découvert. C'est le comportement historique, conservé.
+  const simple = await crawl('http://e.example/', { depth: 2, robots: false, fetchPage: site(routes).fetchPage, filters });
+  assert.ok(!simple.retained.some((entry) => entry.url.includes('/prive/')), 'page privée non retenue');
+  assert.ok(simple.retained.some((entry) => entry.url.endsWith('/f/b.txt')), 'fichier découvert quand même');
+
+  // Élagage : la branche n'est pas demandée du tout, et son fichier n'existe plus.
+  const requests = [];
+  const { fetchPage } = site(routes);
+  const pruned = await crawl('http://e.example/', {
+    depth: 2,
+    robots: false,
+    filters,
+    prune: ['*/prive/*'],
+    fetchPage: async (url) => {
+      requests.push(url);
+      return fetchPage(url);
+    },
+  });
+  assert.ok(!requests.some((url) => url.includes('/prive/')), 'aucune requête vers la branche élaguée');
+  assert.ok(!pruned.retained.some((entry) => entry.url.endsWith('/f/b.txt')));
+  assert.ok(pruned.skipped.some((entry) => entry.reason === 'élagage:*/prive/*'));
+  assert.deepEqual(pruned.retained.map((entry) => entry.url).sort(), [
+    'http://e.example/a.html',
+    'http://e.example/f/a.txt',
+  ]);
 });
