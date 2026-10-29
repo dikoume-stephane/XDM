@@ -7,15 +7,16 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-29 **v12** (`robots.txt` RFC 9309 `D-059`, `Crawl-delay` et
+- **Dernière revue** : 2026-10-29 **v13** (`robots.txt` RFC 9309 `D-059`, `Crawl-delay` et
   élagage `--exclure` `D-060`, exploration parallèle bornée `D-061`, cookies persistants et
-  transport par schéma `D-062`, parcours exact et borné `D-063`, essai et diagnostic `D-064` —
-  **7 exigences B** et **3 exigences C** ajoutées, **240 tests**, **238 exports**, porte G3
+  transport par schéma `D-062`, parcours exact et borné `D-063`, essai et diagnostic `D-064`,
+  plans de site / sous-domaines / reprise du parcours `D-065`, interruption et usage `D-066` —
+  **12 exigences B** et **3 exigences C** ajoutées, **250 tests**, **245 exports**, porte G3
   **franchie** ;
   plus ancien : annexe 15 v5 : fiches C et D implémentées ; annexe 16 v1 : protocole VM ;
   annexe 14 v0.7 : `A-11`/`A-13`, `D-030`/`D-031` ; annexe 13 v0.2 : `A-10`,
-  `D-032`/`D-033` ; **A, B et D clos, C à 13/14 (1 hors périmètre) : 66 exigences,
-  65 vertes, `D-034`→`D-064`,
+  `D-032`/`D-033` ; **A, B et D clos, C à 13/14 (1 hors périmètre) : 71 exigences,
+  70 vertes, `D-034`→`D-066`,
   traçabilité auditée (`npm run audit`), porte G3 franchie (`npm run gate`)**).
 
 ---
@@ -69,7 +70,8 @@
 | `src/http-client.js` | sonde et segments HTTP : `Range`, `If-Range`, redirections bornées, `identity`, inactivité 30 s | `D-038` | `T-A-08`, `T-A-15`→`T-A-17`, `T-A-25` |
 | `src/divergence.js` | fenêtres de recouvrement hachées en SHA-256, garde de divergence | `D-039` | `T-A-10` |
 | `src/connection-loop.js` | boucle de connexions : distribution, reprise, repli, 128 sockets | `D-039` | `T-A-01`, `T-A-08`, `T-A-10`, `T-A-13`, `T-A-25` |
-| `src/crawler.js` | aspiration : BFS par niveau (vagues bornées), URL canonique, `<base href>`, `robots.txt` RFC 9309, `Crawl-delay`, filtres et **élagage**, arrêt sur échecs consécutifs | `D-041`, `D-059`→`D-061`, `D-063` | `T-B-07`→`T-B-09`, `T-B-13`, `T-B-29`→`T-B-34` |
+| `src/crawler.js` | aspiration : BFS par niveau (vagues bornées), URL canonique, `<base href>`, `robots.txt` RFC 9309, `Crawl-delay`, filtres et **élagage**, arrêt sur échecs consécutifs, amorces, sous-domaines, reprise des statuts transitoires, interruption | `D-041`, `D-059`→`D-061`, `D-063`, `D-065`, `D-066` | `T-B-07`→`T-B-09`, `T-B-13`, `T-B-29`→`T-B-39` |
+| `src/sitemap.js` | plans de site : `<loc>` sans dépendance XML, directives `Sitemap:`, index un niveau, plafonds, découverte bornée | `D-065` | `T-C-17` |
 | `src/grabber.js` | aspiration : arborescence locale, collisions, `empty.html`, promotion en tâches ordinaires | `D-042` | `T-B-01`, `T-B-06`, `T-B-10`→`T-B-12` |
 | `src/headers.js` | en-têtes de requête : agent, `Accept`, `Referer`, deux politiques de compression | `D-049` | `T-C-02`, `T-C-05` |
 | `src/ftp.js` | client FTP passif : `CWD`→`TYPE I`→`SIZE`→`REST`→`RETR`, reprise, refus explicite, contrôle par tunnel | `D-050`, `D-052` | `T-C-06`, `T-C-07`, `T-C-09` |
@@ -81,16 +83,16 @@
 | `src/sidx.js` | boîtes MP4 et index `sidx` : plages exactes des sous-segments | `D-046` | `T-D-08` |
 | `src/media.js` | plan et téléchargement d'un flux HLS, assemblage facultatif | `D-046` | `T-D-02`→`T-D-06`, `T-D-10` |
 | `bin/xdm-media.js` | CLI de flux : playlist → segments → dossier assemblé | `D-046` | `T-D-03` |
-| `src/grab-runner.js` | exécution d'une file : états, échec isolé, concurrence, persistance, `only` (quota) | `D-043`, `D-054` | `T-A-07`, `T-A-22`, `T-B-01`, `T-B-28` |
+| `src/grab-runner.js` | exécution d'une file : états, échec isolé, concurrence, persistance, `only` (quota), `shouldStop` (interruption) | `D-043`, `D-054`, `D-066` | `T-A-07`, `T-A-22`, `T-B-01`, `T-B-28`, `T-C-20` |
 | `src/rewrite.js` | réécriture locale des liens HTML/CSS ; `<script>`, `<style>`, `<pre>` intacts | `D-053` | `T-B-26` |
 | `src/retry.js` | statuts transitoires : `retryable`, `Retry-After`, recul exponentiel plafonné | `D-055` | `T-C-11` |
 | `tools/audit-conformance.mjs` | audit de traçabilité : preuve, test existant, référence de module, totaux | `D-056` | `T-32` |
 | `tools/gate-g3.mjs` | porte G3 : site synthétique de 200 pages/200 Mo, coupure de socket, profils `--sans-plages` et `--saturer`, comparaison disque ↔ serveur par empreinte | `D-057` | `T-G3` |
 | `src/report.js` | rapport d'aspiration : texte, JSON, CSV (`;`), Markdown, **diagnostic d'exploration** (motifs de rejet comptés) | `D-053`, `D-064` | `T-B-27`, `T-B-35` |
 | `src/schedule.js` | fenêtres locales, traversée de minuit, quotas, plan d'exécution | `D-054` | `T-B-28` |
-| `bin/xdm-grab.js` | CLI d'aspiration : parcours → arborescence → file → téléchargements ; `--reprendre`, `--inclure`/`--exclure`, `--paralleles`, `--delai`, `--arret-erreurs`, `--entete`, `--essai`, `--cookies`, `--reecrire`, `--rapport`, `--planifier`, `--tentatives`, `--sortie json` | `D-043`, `D-044`, `D-053`→`D-055`, `D-059`→`D-064` | `T-B-10`, `T-B-20`→`T-B-22`, `T-B-26`→`T-B-35`, `T-C-14`→`T-C-16` |
-| `bin/xdm.js` | CLI : `xdm <url> [dossier]`, nom déduit de l'URL, **transport choisi par le schéma** (`http`/`https`/`ftp`), promotion finale | `D-037`, `D-040`, `D-062` | `T-A-14`, `T-C-13` |
-| `src/index.js` | barillet (238 exports) | `D-034` | — |
+| `bin/xdm-grab.js` | CLI d'aspiration : parcours → arborescence → file → téléchargements ; `--reprendre`, `--inclure`/`--exclure`, `--paralleles`, `--delai`, `--arret-erreurs`, `--entete`, `--essai`, `--sitemap`, `--sous-domaines`, `--cookies`, `--reecrire`, `--rapport`, `--planifier`, `--tentatives`, `--aide`, `--version`, `--sortie json` | `D-043`, `D-044`, `D-053`→`D-055`, `D-059`→`D-066` | `T-B-10`, `T-B-20`→`T-B-22`, `T-B-26`→`T-B-39`, `T-C-14`→`T-C-21` |
+| `bin/xdm.js` | CLI : `xdm <url> [dossier]`, nom déduit de l'URL, **transport choisi par le schéma** (`http`/`https`/`ftp`), promotion finale, `--aide`/`--version` | `D-037`, `D-040`, `D-062`, `D-066` | `T-A-14`, `T-C-13`, `T-C-21` |
+| `src/index.js` | barillet (245 exports) | `D-034` | — |
 
 **Règle** : une exigence ne passe au vert que si un test de `test/` la couvre ; le tableau de
 [`specs/conformance.md`](specs/conformance.md) fait foi, et il est **vérifié par outil** :

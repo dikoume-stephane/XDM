@@ -6,6 +6,7 @@
  * `xdm-grab <url> [dossier] [--profondeur N] [--pages N] [--connexions N] [--sans-robots]
  *   [--reprendre] [--inclure MOTIF] [--exclure MOTIF] [--sans-exclusions] [--paralleles N]
  *   [--delai SECONDES] [--arret-erreurs N] [--entete "Nom: valeur"] [--essai]
+ *   [--sitemap] [--sous-domaines] [--aide] [--version]
  *   [--reecrire] [--rapport F]
  *   [--planifier « lun-ven 01:00-06:00 »] [--tentatives N]
  *   [--quota-octets N | --quota-taches N] [--sortie texte|json]`
@@ -19,7 +20,7 @@
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
-import { crawl } from '../src/crawler.js';
+import { crawl, robotsUrl } from '../src/crawler.js';
 import { prepareGrab } from '../src/grabber.js';
 import { downloadTask, executeGrab, retryFailed } from '../src/grab-runner.js';
 import { fetchText } from '../src/http-client.js';
@@ -32,11 +33,15 @@ import { buildReport, formatReport, summarizeCrawl } from '../src/report.js';
 import { rewriteDocument, siteMapFromEntries } from '../src/rewrite.js';
 import { createSchedule, planRun } from '../src/schedule.js';
 import { createQueue, loadQueue, saveQueue } from '../src/task-queue.js';
+import { discoverSitemaps } from '../src/sitemap.js';
+
+/** Version annoncée par `--version` (celle du paquet). */
+export const VERSION = '0.1.0';
 
 export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages N] [--connexions N] [--sans-robots]
                    [--reprendre] [--inclure MOTIF] [--exclure MOTIF] [--sans-exclusions]
                    [--paralleles N] [--delai SECONDES] [--arret-erreurs N]
-                   [--entete "Nom: valeur"] [--essai]
+                   [--entete "Nom: valeur"] [--essai] [--sitemap] [--sous-domaines]
                    [--reecrire] [--rapport F] [--planifier FENÊTRE]
                    [--quota-octets N | --quota-taches N] [--tentatives N] [--sortie texte|json]
   --profondeur     niveaux visités (défaut 2)
@@ -54,6 +59,11 @@ export const USAGE = `usage : xdm-grab <url> [dossier] [--profondeur N] [--pages
                    If-Range) restent prioritaires
   --essai          parcourir et montrer le plan (pages, fichiers, volume) sans rien écrire
                    ni télécharger — le dossier cible n'est même pas créé
+  --sitemap        partir aussi des plans de site : directives « Sitemap: » du robots.txt,
+                   sinon /sitemap.xml ; les URL listées passent les mêmes contrôles
+  --sous-domaines  accepter les sous-domaines du site de départ (jamais un domaine tiers)
+  --aide, -h       afficher cette aide et sortir (code 0)
+  --version, -V    afficher la version et sortir (code 0)
   --paralleles     pages explorées simultanément (défaut 1, déterministe)
   --sans-exclusions  vider les exclusions par défaut (D-032 : l'exclusion l'emporte sur
                    l'inclusion, donc --inclure « *.html » seul ne retient aucune page)
@@ -98,6 +108,10 @@ export function parseArgs(argv) {
     maxErrors: null,
     headers: {},
     dryRun: false,
+    sitemap: false,
+    subdomains: false,
+    help: false,
+    version: false,
     report: null,
     window: null,
     quotaBytes: null,
@@ -136,6 +150,10 @@ export function parseArgs(argv) {
     }
     else if (argument === '--arret-erreurs') options.maxErrors = value();
     else if (argument === '--essai') options.dryRun = true;
+    else if (argument === '--sitemap') options.sitemap = true;
+    else if (argument === '--sous-domaines') options.subdomains = true;
+    else if (argument === '--aide' || argument === '-h') options.help = true;
+    else if (argument === '--version' || argument === '-V') options.version = true;
     else if (argument === '--entete') {
       i += 1;
       if (!argv[i]) throw new Error(`--entete attend « Nom: valeur »\n${USAGE}`);
@@ -258,6 +276,7 @@ export function summarize(result) {
     tasks: result.queue.tasks.length,
     started: result.started ?? true,
     dryRun: result.dryRun ?? false,
+    interrupted: result.interrupted ?? false,
     rewritten: result.rewritten ?? 0,
     report: result.report ?? null,
   };
@@ -277,7 +296,8 @@ export function outputFormat(argv) {
  * Point d'entrée testable.
  * @param {string[]} argv
  * @param {{log?: (line: string) => void, fetchPage?: (url: string) => Promise<object>,
- *   downloadOptions?: object, runTask?: (task: object) => Promise<object>}} [deps]
+ *   downloadOptions?: object, runTask?: (task: object) => Promise<object>,
+ *   signal?: {aborted: boolean}|null}} [deps]
  * @returns {Promise<{project: object, queue: object, pages: number, retained: number,
  *   done: number, failed: number, directory: string}>}
  */
@@ -288,7 +308,21 @@ export async function main(argv, {
   fetchPage: injectedFetchPage = (url, init = {}) => fetchText(url, { headers: init.headers ?? {} }),
   downloadOptions: injectedDownloadOptions = {},
   runTask,
+  signal = null,
 } = {}) {
+  // `--aide` et `--version` répondent **sans** exiger d'URL : demander de l'aide ne doit pas
+  // commencer par une erreur d'usage (et le cas est testé).
+  if (argv.includes('--version') || argv.includes('-V')) {
+    log(`xdm-grab ${VERSION} (Node ${process.version})`);
+    return { version: VERSION, project: null, queue: { tasks: [] }, pages: 0, retained: 0,
+      done: 0, failed: 0, directory: resolve(argv[1] ?? '.'), started: false };
+  }
+  if (argv.includes('--aide') || argv.includes('-h')) {
+    log(USAGE);
+    return { help: true, project: null, queue: { tasks: [] }, pages: 0, retained: 0,
+      done: 0, failed: 0, directory: resolve(argv[1] ?? '.'), started: false };
+  }
+
   const options = parseArgs(argv);
   let fetchPage = injectedFetchPage;
   let downloadOptions = injectedDownloadOptions;
@@ -354,6 +388,27 @@ export async function main(argv, {
     // perdrait x ; elle l'emporte sur l'inclusion au moment du tri (`D-032`).
     for (const motif of options.exclude) project = addFilter(project, 'exclude', motif);
 
+    // Plans de site (`D-065`) : lus **avant** le parcours, pour que leurs URL soient des
+    // amorces. Le `robots.txt` est lu ici s'il faut ses directives `Sitemap:` — et transmis
+    // au parcours pour ne pas le demander deux fois.
+    let seeds = [];
+    let robotsText = null;
+    if (options.sitemap) {
+      try {
+        const response = await fetchPage(robotsUrl(url));
+        if (response && response.status >= 200 && response.status < 300) robotsText = response.body;
+      } catch {
+        robotsText = null; // robots.txt absent : le plan de site reste cherché à la racine
+      }
+      const plans = await discoverSitemaps({ startUrl: url, fetchPage, robotsText });
+      seeds = plans.urls;
+      log(`plans de site : ${plans.sitemaps.length} consulté(s), ${seeds.length} URL`
+        + `${plans.truncated ? ' (plafond atteint)' : ''}`);
+      for (const failure of plans.failed) {
+        log(`  plan ignoré ${failure.url} : ${failure.reason}`);
+      }
+    }
+
     log(`parcours de ${url} (profondeur ${depth}, ${maxPages} pages au plus)`);
     const found = await crawl(url, {
       fetchPage,
@@ -367,8 +422,17 @@ export async function main(argv, {
       // n'entre dans la file (`D-060`).
       prune: options.exclude,
       delai: options.delay,
+      attempts: options.attempts,
+      seeds,
+      robotsText,
+      subdomains: options.subdomains,
+      signal,
     });
     if (found.delay > 0) log(`délai entre vagues : ${found.delay} s`);
+    if (found.retries > 0) log(`reprises pendant le parcours : ${found.retries}`);
+    if (found.seeds.offered > 0) {
+      log(`amorces : ${found.seeds.queued} retenue(s), ${found.seeds.rejected} écartée(s)`);
+    }
     log(`${found.fetched} page(s) visitée(s), ${found.retained.length} fichier(s) retenu(s)`);
     plan = {
       ...(await prepareGrab({
@@ -387,6 +451,29 @@ export async function main(argv, {
   // Reprise : une tâche laissée en échec (coupure, 404 passager) redevient candidate.
   if (resume) plan.queue = retryFailed(plan.queue);
 
+  // Interruption tombée pendant le parcours : le plan est **enregistré** (pour `--reprendre`)
+  // et rien n'est téléchargé. Sortir sans sauver laisserait un dossier à moitié écrit.
+  if (signal?.aborted) {
+    await saveProject(projectPath(rootDir, plan.project.name), plan.project);
+    await saveQueue(rootDir, plan.queue);
+    if (cookiePath !== null) await saveCookieJar(jar, cookiePath);
+    log(`interrompu pendant le parcours : ${plan.queue.tasks.length} tâche(s) enregistrée(s), rien n’a été téléchargé`);
+    return {
+      project: plan.project,
+      queue: plan.queue,
+      pages: plan.pages,
+      retained: plan.retained,
+      done: 0,
+      failed: 0,
+      directory: rootDir,
+      started: false,
+      interrupted: true,
+      stopped: plan.crawl?.stopped ?? 'interrompu',
+      report: null,
+      rewritten: 0,
+    };
+  }
+
   if (options.dryRun) {
     // Le plan est **montré**, pas exécuté : aucun fichier, aucun projet, aucune file.
     const tasks = plan.queue.tasks;
@@ -395,6 +482,12 @@ export async function main(argv, {
     if (tasks.length > 20) log(`  … et ${tasks.length - 20} autre(s)`);
     if (plan.crawl?.stopped && plan.crawl.stopped !== 'épuisement') {
       log(`essai : parcours arrêté par « ${plan.crawl.stopped} »`);
+    }
+    const diagnostics = summarizeCrawl(plan.crawl ?? null);
+    if (diagnostics && Object.keys(diagnostics.skipped).length > 0) {
+      const motifs = Object.entries(diagnostics.skipped)
+        .map(([reason, count]) => `${reason} × ${count}`).join(', ');
+      log(`essai : liens écartés — ${motifs}`);
     }
     if (options.report) log('essai : rapport non écrit (aucune écriture en mode essai)');
     return {
@@ -484,6 +577,8 @@ export async function main(argv, {
     concurrency: connections,
     only,
     maxAttempts: options.attempts,
+    // Ctrl-C : on termine les tâches en vol, on n'en démarre plus (`D-066`).
+    ...(signal ? { shouldStop: () => signal.aborted === true } : {}),
     ...(effectiveRunTask ? { runTask: effectiveRunTask } : {}),
   });
 
@@ -549,20 +644,43 @@ export async function main(argv, {
     waitUntil: null,
     report: reportPath,
     rewritten,
+    interrupted: signal?.aborted === true,
+    stopped: plan.crawl?.stopped ?? null,
   };
 }
 
 const invokedDirectly = process.argv[1] && import.meta.url === `file://${resolve(process.argv[1])}`;
 if (invokedDirectly) {
   const argv = process.argv.slice(2);
-  const json = outputFormat(argv) === 'json';
+  const demandes = argv.filter((argument) => ['--aide', '-h', '--version', '-V'].includes(argument));
+  const json = outputFormat(argv) === 'json' && demandes.length === 0;
   // En JSON, stdout ne contient que l'objet : la progression part sur stderr.
   const log = json ? (line) => console.error(line) : console.log;
-  main(argv, { log })
+
+  // Ctrl-C (`D-066`) : première interruption = arrêt coopératif (les tâches en vol finissent,
+  // la file est sauvegardée) ; seconde = sortie immédiate, pour ne pas piéger l'utilisateur
+  // dans une attente. `process.exit(130)` est la convention shell « tué par SIGINT ».
+  const signal = { aborted: false };
+  process.on('SIGINT', () => {
+    if (signal.aborted) process.exit(130);
+    signal.aborted = true;
+    console.error('xdm-grab : interruption demandée — fin de la tâche en cours ; '
+      + 'Ctrl-C à nouveau pour quitter tout de suite');
+  });
+
+  main(argv, { log, signal })
     .then((result) => {
       if (json) console.log(JSON.stringify(summarize(result)));
-      // Code 3 = « hors fenêtre de planification » : un essai n'est pas un rendez-vous manqué.
-      if (result.started === false && result.dryRun !== true) process.exitCode = 3;
+      if (result.interrupted) {
+        process.exitCode = 130;
+        console.error('xdm-grab : interrompu — la file et le projet sont à jour ; '
+          + '« --reprendre » continuera');
+        return;
+      }
+      // Code 3 = « hors fenêtre de planification » : un essai n'est pas un rendez-vous manqué,
+      // et une aide ou une version encore moins.
+      if (result.started === false && result.dryRun !== true
+        && result.help !== true && result.version === undefined) process.exitCode = 3;
     })
     .catch((error) => {
       const message = String(error?.message ?? error).trimEnd();

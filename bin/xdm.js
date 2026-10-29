@@ -22,10 +22,20 @@ import { download, DownloadError } from '../src/connection-loop.js';
 import { downloadFtp, parseFtpUrl } from '../src/ftp.js';
 import { fileNameFromUrl, targetPathFor } from '../src/promote.js';
 
-export const USAGE = `usage : xdm <url> [dossier] [--connexions N] [--morceau TAILLE] [--proxy URL]\n`;
+export const USAGE = `usage : xdm <url> [dossier] [--connexions N] [--morceau TAILLE] [--proxy URL]
+                   [--aide | --version]
+  --connexions     connexions parallèles (défaut 8)
+  --morceau        taille de morceau en octets (1–10 Mio)
+  --proxy          proxy HTTP pour le transfert
+  --aide, -h       afficher cette aide et sortir (code 0)
+  --version, -V    afficher la version et sortir (code 0)
+  le schéma de l'URL choisit le transport : http, https, ftp\n`;
 
 /** Schémas acceptés, et le transport associé. */
 export const SCHEMES = Object.freeze({ http: 'http', https: 'http', ftp: 'ftp' });
+
+/** Version annoncée par `--version` (celle du paquet). */
+export const VERSION = '0.1.0';
 
 /**
  * Analyse les arguments. Aucune dépendance : les options reconnues sont peu
@@ -109,13 +119,24 @@ function ftpFileName(url) {
  * @param {string[]} argv
  * @param {{log?: (line: string) => void, download?: typeof download,
  *   downloadFtp?: typeof downloadFtp}} [deps]
- * @returns {Promise<{target: string, size: number, requests: number}>}
+ * @returns {Promise<{target: string, size: number, requests: number}|null>} `null` pour
+ *   `--aide`/`--version` (rien n'a été téléchargé, et ce n'est pas une erreur)
  */
 export async function main(argv, {
   log = console.log,
   download: run = download,
   downloadFtp: runFtp = downloadFtp,
 } = {}) {
+  // `--aide`/`--version` répondent sans URL ni réseau : demander de l'aide ne commence pas
+  // par une erreur d'usage.
+  if (argv.includes('--version') || argv.includes('-V')) {
+    log(`xdm ${VERSION} (Node ${process.version})`);
+    return null;
+  }
+  if (argv.includes('--aide') || argv.includes('-h')) {
+    log(USAGE.trimEnd());
+    return null;
+  }
   const { url, directory, connections, chunkSize, proxy } = parseArgs(argv);
   const transport = transportFor(url);
 

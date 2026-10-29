@@ -11,6 +11,7 @@ import {
   canonicalUrl,
   documentBase,
   parseCrawlDelay,
+  sameSiteHost,
   parseRobots,
   robotsUrl,
   sameOrigin,
@@ -535,4 +536,142 @@ test('T-B-34 : un site en panne s’arrête après N échecs consécutifs', asyn
     () => crawl('http://y.example/', { fetchPage: site(mixed).fetchPage, maxErrors: 0 }),
     /maxErrors/,
   );
+});
+
+test('T-B-36 : `--sous-domaines` élargit au même parent, jamais à un tiers', () => {
+  assert.equal(sameSiteHost('a.example.test', 'b.example.test'), true);
+  assert.equal(sameSiteHost('www.example.test', 'example.test'), true);
+  assert.equal(sameSiteHost('example.test', 'example.test'), true);
+  // Un tiers n'est jamais « le même site », même s'il partage une fin de chaîne trompeuse.
+  assert.equal(sameSiteHost('example.test', 'autre.test'), false);
+  assert.equal(sameSiteHost('evil-example.test', 'example.test'), false);
+  assert.equal(sameSiteHost('example.test', 'example.test.autre.test'), false);
+
+  const routes = {
+    'http://a.example.test/': '<a href="http://b.example.test/x.html">b</a>'
+      + '<a href="http://autre.test/y.html">tiers</a>',
+    'http://b.example.test/x.html': 'x',
+    'http://autre.test/y.html': 'y',
+  };
+  // Comportement historique : tout ce qui n'est pas la même origine est « hors site ».
+  return crawl('http://a.example.test/', { depth: 2, robots: false, fetchPage: site(routes).fetchPage })
+    .then((strict) => {
+      assert.deepEqual(strict.retained.map((entry) => entry.url), []);
+      assert.equal(strict.skipped.filter((entry) => entry.reason === 'hors site').length, 2);
+      return crawl('http://a.example.test/', {
+        depth: 2, robots: false, subdomains: true, fetchPage: site(routes).fetchPage,
+      });
+    })
+    .then((large) => {
+      assert.deepEqual(large.pages.map((page) => page.url), [
+        'http://a.example.test/',
+        'http://b.example.test/x.html',
+      ], 'le sous-domaine est visité');
+      assert.deepEqual(large.skipped.filter((entry) => entry.reason === 'hors site')
+        .map((entry) => entry.url), ['http://autre.test/y.html'], 'le tiers reste dehors');
+    });
+});
+
+test('T-B-37 : les amorces (plan de site) sont visitées sans privilège', async () => {
+  const routes = {
+    'http://s.example/': '<a href="/liee.html">l</a>',
+    'http://s.example/liee.html': 'l',
+    'http://s.example/page-amorce.html': '<a href="/liee.html">l</a>',
+    'http://s.example/prive/orpheline.zip': 'ZIP',
+    'http://s.example/publique.zip': 'ZIP2',
+    'http://autre.example/loin.zip': 'X',
+  };
+  const result = await crawl('http://s.example/', {
+    depth: 1,
+    robots: false,
+    seeds: [
+      'http://s.example/publique.zip',
+      'http://s.example/page-amorce.html',
+      'http://s.example#fragment',
+      'http://autre.example/loin.zip',
+      'mailto:contact@s.example',
+    ],
+    fetchPage: site(routes).fetchPage,
+  });
+  assert.equal(result.seeds.offered, 5);
+  assert.equal(result.seeds.queued, 2, 'un fichier retenu, une page mise en file');
+  assert.equal(result.seeds.rejected, 3, 'doublon de départ, tiers et URL invalide écartés');
+  assert.ok(result.retained.some((entry) => entry.url === 'http://s.example/publique.zip'),
+    'une amorce fichier est retenue sans être visitée');
+  assert.ok(!result.pages.some((page) => page.url.endsWith('publique.zip')),
+    'un fichier n’est pas « visité » comme une page');
+  assert.ok(result.pages.some((page) => page.url === 'http://s.example/page-amorce.html'));
+  assert.ok(!result.retained.some((entry) => entry.url.startsWith('http://autre.example')));
+
+  // Une amorce interdite par `robots.txt` n'est pas visitée : même règle que les liens.
+  const blocked = await crawl('http://s.example/', {
+    depth: 1,
+    seeds: ['http://s.example/prive/orpheline.zip'],
+    fetchPage: site(routes, { robotsText: 'User-agent: *\nDisallow: /prive/\n' }).fetchPage,
+  });
+  assert.deepEqual(blocked.skipped.map((entry) => entry.reason), ['robots.txt']);
+  assert.equal(blocked.fetched, 1, 'seule la page de départ est lue');
+  assert.ok(!blocked.retained.some((entry) => entry.url.includes('/prive/')),
+    'une amorce interdite n’est pas retenue');
+  assert.equal(blocked.seeds.rejected, 1);
+});
+
+test('T-B-38 : `attempts` couvre aussi l’exploration (503 puis 200)', async () => {
+  let calls = 0;
+  const flaky = async (url) => {
+    if (url.endsWith('/robots.txt')) return { status: 404, body: '' };
+    if (url.endsWith('/instable.html')) {
+      calls += 1;
+      if (calls === 1) return { status: 503, body: '', headers: { 'retry-after': '2' } };
+      return { status: 200, body: 'contenu' };
+    }
+    return { status: 200, body: '<a href="/instable.html">i</a>' };
+  };
+  const waits = [];
+  const result = await crawl('http://f.example/', {
+    depth: 2,
+    attempts: 3,
+    fetchPage: flaky,
+    sleep: async (ms) => { waits.push(ms); },
+  });
+  assert.equal(result.errors.length, 0, 'le 503 passager est absorbé');
+  assert.equal(result.pages.length, 2);
+  assert.equal(result.retries, 1);
+  assert.deepEqual(waits, [2000], 'le Retry-After du serveur est respecté');
+
+  // Sans reprise, le même serveur fait perdre la page — et l'erreur est comptée.
+  calls = 0;
+  const once = await crawl('http://f.example/', { depth: 2, attempts: 1, fetchPage: flaky });
+  assert.deepEqual(once.errors.map((error) => error.status), [503]);
+  assert.equal(once.retries, 0, 'sans reprise, le statut est remonté tel quel');
+
+  await assert.rejects(
+    () => crawl('http://f.example/', { fetchPage: flaky, attempts: 0 }),
+    /attempts/,
+  );
+});
+
+test('T-B-39 : une interruption coopérative arrête les vagues suivantes', async () => {
+  const signal = { aborted: false };
+  const links = Array.from({ length: 5 }, (_, i) => `<a href="/p${i}.html">p${i}</a>`).join('');
+  const routes = { 'http://i.example/': links };
+  for (let i = 0; i < 5; i += 1) routes[`http://i.example/p${i}.html`] = `p${i}`;
+
+  const requests = [];
+  const { fetchPage } = site(routes);
+  const result = await crawl('http://i.example/', {
+    depth: 2,
+    robots: false,
+    signal,
+    fetchPage: async (url) => {
+      requests.push(url);
+      // L'interruption tombe au milieu du parcours, comme un Ctrl-C : la vague en cours va
+      // au bout, la suivante n'est pas entamée.
+      if (requests.length === 3) signal.aborted = true;
+      return fetchPage(url);
+    },
+  });
+  assert.equal(result.stopped, 'interrompu');
+  assert.equal(result.pages.length, 3, `pages lues : ${result.pages.length}`);
+  assert.equal(requests.length, 3, 'aucune requête après l’interruption');
 });

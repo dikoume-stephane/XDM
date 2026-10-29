@@ -31,6 +31,7 @@
  */
 
 import { matchesMotif } from './project.js';
+import { isRetryableStatus, planRetry } from './retry.js';
 
 /** Profondeur par défaut, en niveaux visités. */
 export const DEFAULT_DEPTH = 2;
@@ -85,6 +86,35 @@ export function sameOrigin(a, b) {
   } catch {
     return false;
   }
+}
+
+/**
+ * Deux hôtes appartiennent-ils au même **site** au sens large ?
+ *
+ * XDM n'embarque pas la *Public Suffix List*. La règle est donc **structurelle** : même hôte
+ * (après retrait de `www.`), hôte et son sous-domaine, ou **même parent** quand ce parent a au
+ * moins deux labels — `a.example.test`, `b.example.test` et `example.test` sont le même site ;
+ * `evil-example.test` et `example.test.autre.test` ne le sont pas.
+ *
+ * **Limite nommée** : si le parent commun est un suffixe public d'hébergement
+ * (`a.exemple-hote.co.uk` et `b.exemple-hote.co.uk`), XDM élargit au-delà du site, faute de
+ * table de suffixes publics. C'est pourquoi l'option est **opt-in** et jamais le défaut
+ * (`D-065`).
+ *
+ * @param {string} a
+ * @param {string} b
+ * @returns {boolean}
+ */
+export function sameSiteHost(a, b) {
+  const strip = (host) => String(host).toLowerCase().replace(/^www\./, '');
+  const left = strip(a);
+  const right = strip(b);
+  if (left === '' || right === '') return false;
+  if (left === right) return true;
+  if (left.endsWith(`.${right}`) || right.endsWith(`.${left}`)) return true;
+  const parent = (host) => host.split('.').slice(1).join('.');
+  const shared = parent(left);
+  return shared.includes('.') && shared === parent(right);
 }
 
 /**
@@ -370,8 +400,10 @@ export function robotsUrl(url) {
  *
  * @param {{fetchPage: (url: string) => Promise<{status: number, body: string}>,
  *   depth?: number, maxPages?: number, filters?: {include?: string[], exclude?: string[]},
- *   sameSite?: boolean, robots?: boolean, parallelisme?: number, prune?: string[],
- *   maxErrors?: number|null,
+ *   sameSite?: boolean, subdomains?: boolean, robots?: boolean, parallelisme?: number,
+ *   prune?: string[], maxErrors?: number|null, attempts?: number, seeds?: string[],
+ *   robotsText?: string|null,
+ *   signal?: {aborted: boolean}|null,
  *   delai?: number|null, sleep?: (ms: number) => Promise<void>,
  *   onPage?: (page: object) => void}} options
  * @returns {Promise<{start: string, pages: object[], retained: object[], skipped: object[],
@@ -383,10 +415,15 @@ export async function crawl(startUrl, {
   maxPages = DEFAULT_MAX_PAGES,
   filters = {},
   sameSite = true,
+  subdomains = false,
   robots = true,
   parallelisme = 1,
   prune = [],
   maxErrors = null,
+  attempts = 1,
+  seeds = [],
+  robotsText = null,
+  signal = null,
   delai = null,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   onPage = () => {},
@@ -406,6 +443,9 @@ export async function crawl(startUrl, {
   if (maxErrors !== null && (!Number.isInteger(maxErrors) || maxErrors < 1)) {
     throw new RangeError('crawl : `maxErrors` ≥ 1 (ou null)');
   }
+  if (!Number.isInteger(attempts) || attempts < 1) {
+    throw new RangeError('crawl : `attempts` ≥ 1');
+  }
 
   /** @type {{pattern: string, allow: boolean}[]} */
   let rules = [];
@@ -413,7 +453,11 @@ export async function crawl(startUrl, {
   let robotDelay = null;
   if (robots) {
     try {
-      const response = await fetchPage(robotsUrl(start));
+      // Un appelant qui a déjà lu le `robots.txt` (pour ses directives `Sitemap:`) le passe :
+      // relire le même fichier serait une requête de plus pour la même réponse.
+      const response = robotsText === null
+        ? await fetchPage(robotsUrl(start))
+        : { status: 200, body: robotsText };
       if (response && response.status >= 200 && response.status < 300) {
         rules = parseRobots(response.body);
         robotDelay = parseCrawlDelay(response.body);
@@ -438,9 +482,50 @@ export async function crawl(startUrl, {
   const visited = new Set();
   /** File FIFO : l'ordre de visite est celui des niveaux (`D-041`). */
   const queue = [{ url: start, depth: 1 }];
+  // **Amorces** (plans de site) : des URL que le parcours n'aurait pas rencontrées en suivant
+  // les liens. Elles sont visitées au même niveau que la page de départ, dans l'ordre fourni,
+  // et passent les mêmes contrôles (site, `robots.txt`, filtres, plafond) — une amorce n'a
+  // aucun privilège (`D-065`).
+  let seedsRejected = 0;
+  let seedsQueued = 0;
+  for (const raw of seeds) {
+    const seed = canonicalUrl(raw, start);
+    if (seed === null || seed === start || visited.has(seed)) {
+      seedsRejected += 1;
+      continue;
+    }
+    const inSite = !sameSite
+      || sameOrigin(seed, start)
+      || (subdomains && sameSiteHost(new URL(seed).hostname, new URL(start).hostname));
+    if (!inSite) { seedsRejected += 1; continue; }
+    // `robots.txt` s'applique aux amorces comme aux liens : un plan de site ne donne aucun
+    // droit supplémentaire. Le refus est **compté**, il ne passe pas en silence.
+    if (robots && !isAllowed(seed, rules)) {
+      skipped.push({ url: seed, depth: 1, reason: 'robots.txt' });
+      seedsRejected += 1;
+      continue;
+    }
+    // Une amorce **fichier** (ce que contient un plan de site) est retenue telle quelle : la
+    // mettre en file l'aurait fait « visiter » comme une page, sans jamais la télécharger.
+    // Une amorce **page** rejoint la file, et suit la même règle de rétention que la page de
+    // départ (retenue seulement si une inclusion est déclarée, `D-041`).
+    const verdict = classifyLink(seed, filters);
+    if (!verdict.retained) { seedsRejected += 1; continue; }
+    if (isPageUrl(seed)) {
+      if ((filters.include ?? []).length > 0 && !retained.has(seed)) {
+        retained.set(seed, { url: seed, depth: 1 });
+      }
+      queue.push({ url: seed, depth: 1 });
+    } else if (!retained.has(seed)) {
+      retained.set(seed, { url: seed, depth: 1 });
+    }
+    seedsQueued += 1;
+  }
 
   /** Échecs consécutifs (remis à zéro par une page lue) : garde-fou `maxErrors`. */
   let consecutiveErrors = 0;
+  /** Nombre de reprises réellement effectuées pendant le parcours (`attempts` > 1). */
+  let retries = 0;
 
   /** Absorbe la réponse d'une page : pages, erreurs, liens retenus, file. */
   const absorb = (node, outcome) => {
@@ -466,7 +551,12 @@ export async function crawl(startUrl, {
     consecutiveErrors = 0;
 
     for (const link of extractLinks(response.body, node.url)) {
-      if (sameSite && !sameOrigin(link, start)) {
+      // « hors site » reste le défaut : `--sous-domaines` élargit au **même parent**, jamais
+      // à un domaine tiers (`sameSiteHost`, `D-065`).
+      const insideSite = !sameSite
+        || sameOrigin(link, start)
+        || (subdomains && sameSiteHost(new URL(link).hostname, new URL(start).hostname));
+      if (!insideSite) {
         skipped.push({ url: link, depth: node.depth + 1, reason: 'hors site' });
         continue;
       }
@@ -494,10 +584,54 @@ export async function crawl(startUrl, {
   /** Première vague : rien n'a encore été demandé, inutile d'attendre avant elle. */
   let waveIndex = 0;
 
-  /** @type {'épuisement'|'plafond'|'erreurs'} */
+  /**
+   * Une page, avec reprise bornée des réponses transitoires (`D-065`).
+   *
+   * Le parcours ne rejouait rien : `--tentatives` ne couvrait que les téléchargements, si bien
+   * qu'un `503` passager pendant l'exploration faisait perdre une branche entière. La politique
+   * est celle de `src/retry.js` (`D-055`) : mêmes statuts, même `Retry-After`, même plafond —
+   * pas une seconde règle à côté de la première.
+   *
+   * @param {{url: string, depth: number}} node
+   */
+  const fetchWithRetry = async (node) => {
+    /** @type {{ok: boolean, response?: object, error?: unknown}|null} */
+    let lastOutcome = null;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const outcome = await fetchPage(node.url).then(
+        (response) => ({ ok: true, response }),
+        (error) => ({ ok: false, error }),
+      );
+      lastOutcome = outcome;
+      const retryable = !outcome.ok || isRetryableStatus(outcome.response?.status);
+      if (!retryable || attempt + 1 >= attempts) break;
+      const plan = outcome.ok
+        ? planRetry({
+          status: outcome.response.status,
+          headers: outcome.response.headers ?? {},
+          attempts: attempt,
+          maxAttempts: attempts,
+        })
+        // Une erreur réseau (coupure, DNS) vaut une reprise immédiate : il n'y a pas de
+        // statut à interpréter, et le recul exponentiel n'apporterait rien à un parcours.
+        : { retry: true, delayMs: 0 };
+      if (!plan.retry) break;
+      retries += 1;
+      if (plan.delayMs > 0) await sleep(plan.delayMs);
+    }
+    return lastOutcome;
+  };
+
+  /** @type {'épuisement'|'plafond'|'erreurs'|'interrompu'} */
   let stopReason = 'épuisement';
 
   while (queue.length > 0 && pages.length < maxPages) {
+    // Interruption demandée (Ctrl-C, `AbortSignal`) : on n'entame pas de nouvelle vague.
+    // Les vagues déjà lancées vont au bout, et la file sait ce qui reste à faire (`D-066`).
+    if (signal?.aborted) {
+      stopReason = 'interrompu';
+      break;
+    }
     // Arrêt sur échecs consécutifs : au-delà de `maxErrors`, on ne demande plus rien. Un
     // fichier manquant isolé ne déclenche rien (le compteur repart à zéro) ; un site qui
     // répond `500` à tout s'arrête au bout de N requêtes au lieu d'être martelé (`D-063`).
@@ -536,10 +670,7 @@ export async function crawl(startUrl, {
     if (waveIndex > 0 && effectiveDelay > 0) await sleep(effectiveDelay * 1000);
     waveIndex += 1;
 
-    const outcomes = await Promise.all(wave.map((node) => fetchPage(node.url).then(
-      (response) => ({ ok: true, response }),
-      (error) => ({ ok: false, error }),
-    )));
+    const outcomes = await Promise.all(wave.map((node) => fetchWithRetry(node)));
     for (let index = 0; index < wave.length; index += 1) absorb(wave[index], outcomes[index]);
   }
 
@@ -557,5 +688,11 @@ export async function crawl(startUrl, {
     delay: effectiveDelay,
     stopped: stopReason,
     consecutiveErrors,
+    retries,
+    seeds: {
+      offered: Array.isArray(seeds) ? seeds.length : 0,
+      queued: seedsQueued,
+      rejected: seedsRejected,
+    },
   };
 }

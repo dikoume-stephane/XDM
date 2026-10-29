@@ -1617,6 +1617,74 @@ verte, `EX-B-15` étendue.
 
 ---
 
+### D-065 — Plans de site, sous-domaines et reprise pendant l'exploration
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/sitemap.js`, `src/crawler.js`, `EX-B-24`, `EX-B-25`, `EX-B-26`
+
+**Contexte.** Trois manques du parcours, mesurés :
+
+1. **Ce que personne ne cite n'était jamais aspiré.** Un fichier publié uniquement dans un
+   `sitemap.xml` (archive, PDF, média) restait invisible : le parcours ne suit que les liens.
+   Pire, la directive `Sitemap:` du `robots.txt` était déjà **lue puis jetée** (`D-059`).
+2. **Un site sur plusieurs hôtes était tronqué.** `www.exemple.test` liant `cdn.exemple.test`
+   s'arrêtait à la frontière d'origine, sans que l'utilisateur puisse rien y changer.
+3. **`--tentatives` ne couvrait que les téléchargements.** Un `503` passager pendant
+   l'exploration faisait perdre une branche entière, sans reprise, alors que la politique
+   existait déjà (`src/retry.js`, `D-055`).
+
+**Décision.**
+- **`src/sitemap.js`** : lecture des plans de site sans dépendance XML (on extrait `<loc>`,
+  cinq entités prédéfinies, XML réel trop irrégulier pour un analyseur strict), directives
+  `Sitemap:` d'un `robots.txt`, index suivi **un seul niveau**, plafonds (`MAX_SITEMAPS = 8`,
+  `MAX_SITEMAP_URLS = 5000`), URL hors origine écartées. Un `404` sur `/sitemap.xml` n'est
+  **pas** une erreur : c'est l'absence de plan, et le dire ainsi évite un faux échec.
+- **Amorces** (`crawl({seeds})`) : les URL trouvées n'ont **aucun privilège** — mêmes filtres,
+  même `robots.txt`, même contrôle de site, même plafond. Une amorce **fichier** est retenue
+  directement (la mettre en file l'aurait « visitée » comme une page sans jamais la
+  télécharger) ; une amorce **page** rejoint la file. Une amorce refusée est comptée.
+- **`--sous-domaines`** (`sameSiteHost`) : même hôte, hôte et son sous-domaine, ou même parent
+  d'au moins deux labels. Opt-in, et **limite nommée** : sans *Public Suffix List*, XDM ne
+  distingue pas `a.hote-partage.co.uk` de `b.hote-partage.co.uk` ; l'option est donc un
+  élargissement demandé, jamais un défaut.
+- **`attempts` dans `crawl`** : la boucle de reprise utilise `isRetryableStatus`/`planRetry`
+  — mêmes statuts, même `Retry-After`, même plafond que la file. Une erreur réseau est rejouée
+  immédiatement (aucun statut à interpréter). Les reprises sont **comptées** (`retries`).
+
+**Mesures.** `T-C-17` : index de 20 plans ⇒ **8 consultés**, `truncated: true`, `404` signalé,
+format inconnu signalé, plafond d'URL à 4 respecté. `T-B-37` : 5 amorces ⇒ 2 retenues, 3
+écartées (doublon de départ, tiers, `mailto:`) ; une amorce interdite par `robots.txt` n'est
+pas retenue. `T-B-38` : 503 puis 200 ⇒ **0 erreur**, 2 pages, **1 reprise**, attente `2000 ms`
+(`Retry-After: 2`) ; sans reprise, l'erreur est remontée. `T-B-36` : `evil-example.test` et
+`example.test.autre.test` restent dehors. `T-C-18` : `--sitemap` fait passer de **1 à 2**
+fichiers aspirés (l'orphelin du plan est téléchargé, sans doublon pour le fichier cité).
+
+---
+
+### D-066 — Interruption propre et commandes d'usage
+**Statut** : appliquée · **Date** : 2026-10-29 · **Portée** : `src/grab-runner.js`, `bin/xdm-grab.js`, `bin/xdm.js`, `EX-B-27`, `EX-B-28`
+
+**Contexte.** Un `Ctrl-C` sur une aspiration de 205 Mio laissait deux questions sans réponse :
+les tâches en cours étaient-elles perdues, et une tâche pouvait-elle rester `ACTIVE` dans la
+file (donc jamais reprise) ? Aucun test ne couvrait le signal. Par ailleurs, `xdm-grab --aide`
+et `xdm --version` étaient des erreurs d'usage : demander de l'aide commençait par un code 2.
+
+**Décision.**
+- **Arrêt coopératif** : `runQueue({shouldStop})` et `crawl({signal})` n'entament **rien de
+  nouveau** quand l'interruption est demandée ; ce qui est en vol va au bout (couper une
+  écriture en cours laisserait un fichier tronqué pour rien). Projet, file et cookies sont
+  sauvegardés, le code de sortie est **130** (convention « tué par SIGINT »), et une **seconde**
+  interruption sort immédiatement — un utilisateur ne doit pas être piégé dans une attente.
+- **Rien ne reste `ACTIVE`** : c'est l'invariant testé, pas seulement le code de sortie.
+- **`--aide`/`-h` et `--version`/`-V`** : répondent sans URL et sans réseau, code **0**, pour
+  `xdm-grab` **et** `xdm` ; la version annoncée est celle du paquet (`0.1.0`).
+
+**Mesures.** `T-C-20` : vrai `SIGINT` sur une CLI enfant (4 fichiers, 150 ms chacun, une
+connexion) ⇒ code **130**, message d'interruption, file relue avec **0 tâche `ACTIVE`**, des
+`PENDING` restantes et `--reprendre` possible. `T-B-39` : interruption au milieu du parcours ⇒
+`stopped: 'interrompu'`, **3 requêtes** au total, aucune après le signal. `T-C-21` : `--version`
+⇒ `xdm-grab 0.1.0`, code 0 ; `--aide` liste `--sitemap` ; `xdm -h` code 0.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation

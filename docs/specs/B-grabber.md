@@ -1,11 +1,11 @@
 # Fiche B — Grabber (aspiration de site)
 
 > **Domaine** : B (grabber) · **Lot** : `WP-11`/`WP-23` (`A-05`, deuxième fiche) · **Statut** : ✅ `clos`
-> (les 23 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
+> (les 28 exigences sont **vertes** : modèle de projet, filtres, parcours, arborescence locale et promotion ;
 > **exploration** : choix XDM documentés depuis `D-041`, l'algorithme d'IDM n'étant pas dans
 > `IDMan.exe`)
-> **Dernière revue** : 2026-10-29 (v0.8 : `<base href>` et arrêt sur échecs consécutifs (`D-063`),
-> essai sans effet de bord et diagnostic du rapport (`D-064`) — 23 exigences)
+> **Dernière revue** : 2026-10-29 (v0.9 : plans de site et sous-domaines, reprise pendant
+> l'exploration (`D-065`), interruption propre et `--aide`/`--version` (`D-066`) — 28 exigences)
 > **Preuves** : annexes 11 (modèle de projet), 12 (grabber), 13 (filtres et artefacts) ;
 > `filters.json` ; décisions `D-032`, `D-033`.
 > **Cible** : `IDMan.exe` SHA-256 `5f78da5a…2f11c9`.
@@ -50,6 +50,11 @@ pouvoir reprendre une aspiration interrompue.
 | `EX-B-21` | Les liens **relatifs** se résolvent contre la base déclarée par la page (`<base href>`, première balise, base inexploitable ignorée) ; la balise elle-même ne devient jamais un lien à télécharger | **Décision** | `D-063` ; `src/crawler.js` (`documentBase`) | `T-B-33` ✅ : base absolue, relative, vide, `ftp:`, casse et retour à la ligne, fichier retenu **sous la base** |
 | `EX-B-22` | Le parcours **s'arrête** après N pages en échec **consécutif** (`--arret-erreurs`) et le dit (`stopped: 'erreurs'`) ; un échec isolé repart à zéro, une file vidée n'est pas un arrêt sur erreur, le plafond de pages est distingué (`stopped: 'plafond'`) | **Décision** | `D-063` ; `src/crawler.js` (`maxErrors`) | `T-B-34` ✅ : 7 requêtes sans garde-fou, 4 avec `maxErrors: 3`, échec isolé sans effet |
 | `EX-B-23` | `--essai` montre le **plan** — pages visitées, fichiers prévus, cibles, motif d'arrêt — **sans rien écrire** : dossier cible non créé, ni `empty.html`, ni projet, ni file, aucun téléchargement, code de sortie 0 ; `--sortie json` reste consommable | **Décision** | `D-064` ; `bin/xdm-grab.js` | `T-C-16` ✅ : `readdir` en `ENOENT` après coup, zéro requête de fichier, JSON exploitable |
+| `EX-B-24` | Les **plans de site** (opt-in `--sitemap`) sont lus : directives `Sitemap:` du `robots.txt` d'abord, sinon `/sitemap.xml` ; index suivi un seul niveau, plans et URL plafonnés, URL hors origine écartées ; leurs entrées deviennent des **amorces** soumises aux mêmes contrôles qu'un lien — une amorce fichier est retenue sans être visitée, une amorce interdite par `robots.txt` est refusée et comptée | **Décision** | `D-065` ; `src/sitemap.js` | `T-C-17` ✅ (index, repli, 404 non fatal, plafonds, format inconnu signalé), `T-B-37` ✅ (fichier retenu, page mise en file, doublon et tiers écartés) |
+| `EX-B-25` | `--sous-domaines` élargit le parcours au **même site** — même hôte, sous-domaine, ou même parent d'au moins deux labels — et **jamais** à un tiers ; désactivé par défaut, limite « pas de *Public Suffix List* » nommée | **Décision** | `D-065` ; `src/crawler.js` (`sameSiteHost`) | `T-B-36` ✅ (`a.`/`b.` du même parent acceptés, `evil-example.test` et `example.test.autre.test` refusés), `T-C-19` ✅ |
+| `EX-B-26` | `--tentatives` couvre **aussi l'exploration** : mêmes statuts transitoires, même `Retry-After`, même plafond que les téléchargements (`D-055`) ; reprises comptées (`retries`) ; sans reprise, le statut est remonté tel quel | **Décision** | `D-065` ; `src/retry.js`, `src/crawler.js` | `T-B-38` ✅ (503 puis 200, une reprise, `Retry-After: 2` respecté), `T-C-19` ✅ |
+| `EX-B-27` | **Interruption propre** : première interruption = arrêt coopératif (aucune nouvelle vague ni tâche, les travaux en vol finissent, projet/file/cookies sauvegardés, code **130**) ; seconde = sortie immédiate ; aucune tâche ne reste `ACTIVE` | **Décision** | `D-066` ; `src/grab-runner.js` (`shouldStop`), `bin/xdm-grab.js` | `T-B-39` ✅ (arrêt entre deux vagues), `T-C-20` ✅ (vrai SIGINT : code 130, file sans `ACTIVE`) |
+| `EX-B-28` | `--aide`/`-h` et `--version`/`-V` répondent **sans URL** et sortent en code **0**, pour les deux CLI, sans effet de bord | **Décision** | `D-066` ; `bin/xdm-grab.js`, `bin/xdm.js` | `T-C-21` ✅ |
 
 ## 3. Modèle de données
 

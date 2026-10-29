@@ -141,6 +141,7 @@ export {
   parseCrawlDelay,
   parseRobots,
   robotsUrl,
+  sameSiteHost,
   sameOrigin,
 } from './crawler.js';
 export {
@@ -286,3 +287,12 @@ export {
   planRetry,
   retryDelay,
 } from './retry.js';
+
+export {
+  MAX_SITEMAPS,
+  MAX_SITEMAP_URLS,
+  decodeXmlEntities,
+  discoverSitemaps,
+  parseSitemapDirectives,
+  parseSitemapXml,
+} from './sitemap.js';

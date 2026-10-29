@@ -2,7 +2,7 @@
 
 > **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, SHA-256 `5f78da5a…2f11c9`.
 > **Projet** : XDM (dépôt `dikoume-stephane/XDM`), branche `arena/c3b095dd-xdm`.
-> **Version du plan** : **v1.5** — 2026-10-29 · **Révision** : à chaque jalon atteint.
+> **Version du plan** : **v1.6** — 2026-10-29 · **Révision** : à chaque jalon atteint.
 > **État** : P0–P3 **closes**, porte **G3 franchie** ; P4 close sauf `WP-30` (bloqué, VM
 > Windows) ; P5 bloquée (`A-09`). Détail : §7.
 > **Décisions liées** : [`JOURNAL.md`](JOURNAL.md) · **Preuves** : `analysis/idman/` ·
@@ -199,9 +199,10 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | **M3.7 — Domaines C+D** | 20 exigences, 19 vertes, 172 tests | D-045→D-052 | ✅ D 10/10, C 9/10 (1 hors périmètre) |
 | **M3.8 — Grabber complet** | 16 exigences du domaine B, **16 vertes**, 220 tests | D-053, D-054 | ✅ réécriture (ajout XDM), rapport, planification sans démon |
 | **M4 — Prototype (porte G3)** | 200 pages, 1 Ko → 200 Mo, coupure réseau | D-057 | ✅ **franchie** : 401/401 en une passe, 205,0 Mio, empreintes conformes |
-| **M3.9 — Traçabilité auditée** | 66 exigences, 65 vertes, 0 écart | D-056 | ✅ `npm run audit --strict` |
+| **M3.9 — Traçabilité auditée** | 71 exigences, 70 vertes, 0 écart | D-056 | ✅ `npm run audit --strict` |
 | **M3.10 — Parcours outillé** | `robots.txt` RFC 9309, élagage `--exclure`, `Crawl-delay`, exploration parallèle bornée, cookies persistants, FTP en CLI | D-059→D-062 | ✅ domaine B **20/20**, C **12/13**, 233 tests |
 | **M3.11 — Parcours exact et borné** | `<base href>`, `--entete` (injection refusée), `--arret-erreurs`, `--essai`, diagnostic d'exploration dans le rapport | D-063, D-064 | ✅ domaine B **23/23**, C **13/14**, 240 tests |
+| **M3.12 — Ce que personne ne cite, et l'interruption** | plans de site → amorces, `--sous-domaines`, reprise pendant l'exploration, Ctrl-C propre (code 130), `--aide`/`--version` | D-065, D-066 | ✅ domaine B **28/28**, 250 tests |
 | **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |
 | **M5 — Conformance** | Comparaison IDM vs XDM documentée | M4 + VM | Porte G4 |
 
@@ -247,14 +248,15 @@ code, c'est une **preuve d'exécution de la cible** — impossible dans cet envi
 |---|---|---|
 | **P0** Cadrage | périmètre, décisions, hygiène | `JOURNAL` `D-001`→`D-019` ; `analysis/idman/00…08` |
 | **P1** Cartographie | anatomie, 422 classes, chaînes, protocoles, états de connexion | annexes 01–08 ; `classes.json`, `states.json`, `chunks.json` |
-| **P2** Spécifications | 4 fiches (A, B, C, D), **66 exigences**, matrice auditée | `docs/specs/`, `conformance.md` v1.10, `npm run audit` |
+| **P2** Spécifications | 4 fiches (A, B, C, D), **71 exigences**, matrice auditée | `docs/specs/`, `conformance.md` v1.11, `npm run audit` |
 | **P3** Reconstruction | moteur, file, transports, grabber, médias, CLI ; **porte G3 franchie** | `src/` (27 modules), `bin/` (3 CLI), `npm run gate` |
 | **P4** Parcours outillé | `robots.txt` RFC 9309, `--exclure` (élagage), `Crawl-delay`, `--paralleles`, `--cookies`, `xdm ftp://` | `D-059`→`D-062`, `EX-B-17`→`EX-B-20`, `EX-C-12`/`EX-C-13` |
 | **P4** Parcours exact | `<base href>`, `--entete`, `--arret-erreurs`, `--essai`, diagnostic du rapport | `D-063`, `D-064`, `EX-B-21`→`EX-B-23`, `EX-C-14` |
+| **P4** Parcours complet et interruptible | plans de site, sous-domaines, reprise de l'exploration, Ctrl-C propre, aide/version | `D-065`, `D-066`, `EX-B-24`→`EX-B-28` |
 | **P4** Résilience + revue | `429`/`503`, coupures, `416`, boucles ; revue clean-room publiée | `D-055`, `D-056`, `revue-clean-room.md` |
 | **P5** Dynamique | **non commencée** — aucune VM Windows dans cet environnement | `A-09` |
 
-Chiffres au 2026-10-29 : **240 tests verts**, **238 exports**, **66 exigences (65 vertes,
+Chiffres au 2026-10-29 : **250 tests verts**, **245 exports**, **71 exigences (70 vertes,
 1 hors périmètre)**, **0 écart de traçabilité**, **29 documents `.md` sans lien cassé**,
 porte G3 à 200 pages / 205,0 Mio.
 

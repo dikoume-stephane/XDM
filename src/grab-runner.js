@@ -102,6 +102,7 @@ export async function runQueue(queue, {
   maxAttempts = DEFAULT_MAX_ATTEMPTS,
   sleep = defaultSleep,
   maxDelayMs = MAX_BACKOFF_MS,
+  shouldStop = null,
   onEvent = () => {},
 } = {}) {
   if (typeof runTask !== 'function') throw new TypeError('runQueue : `runTask` requis');
@@ -127,6 +128,10 @@ export async function runQueue(queue, {
 
   const launch = () => {
     while (inFlight.size < concurrency) {
+      // Arrêt coopératif (`D-066`) : on ne démarre plus de tâche, mais celles qui sont en
+      // vol vont au bout — couper une écriture en cours laisserait un fichier tronqué pour
+      // rien gagné. La file reste cohérente (`PENDING` pour le reste).
+      if (shouldStop?.()) return;
       const { queue: next, started } = startNext(current, Date.now(), accept);
       if (!started) return;
       current = next;
@@ -205,6 +210,7 @@ export async function executeGrab({
   concurrency = DEFAULT_CONCURRENCY,
   only = null,
   maxAttempts = DEFAULT_MAX_ATTEMPTS,
+  shouldStop = null,
   onEvent,
 }) {
   const outcome = await runQueue(queue, {
@@ -212,6 +218,7 @@ export async function executeGrab({
     concurrency,
     only,
     maxAttempts,
+    ...(shouldStop ? { shouldStop } : {}),
     ...(onEvent ? { onEvent } : {}),
   });
 

@@ -1,13 +1,13 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.10 — **Dernière revue** : 2026-10-29
+> **Statut** : ✅ v1.11 — **Dernière revue** : 2026-10-29
 > **Vérification** : `node tools/audit-conformance.mjs --strict` (6 contrôles) — la matrice
 > est auditée, pas seulement rédigée : voir `revue-clean-room.md`.
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
 > fonde et le **test** qui la vérifiera. Aucune ligne d'implémentation ne référence une
 > exigence absente de ce fichier.
 > **Sources** : `docs/specs/A-moteur-de-telechargement.md` (v0.7),
-> `docs/specs/B-grabber.md` (v0.8), annexes 12 à 16 ; fiches C et D dans l'annexe 15.
+> `docs/specs/B-grabber.md` (v0.9), annexes 12 à 16 ; fiches C et D dans l'annexe 15.
 > **Rappel** : « preuve » ne veut pas dire « comportement validé ». Une exigence
 > **Hypothèse** n'a pas de preuve et ne peut pas être marquée conforme.
 
@@ -72,12 +72,17 @@ promotion (`T-A-25`, `T-A-19`, `T-A-12`). Aucune exigence
 | `EX-B-17` `robots.txt` lu selon la RFC 9309 : règles du **seul groupe applicable** (le groupe nommant notre produit l'emporte sur `*`, groupes homonymes fusionnés), `*` et `$` du motif, règle la plus longue, `Allow` gagne à longueur égale, directives inconnues ignorées sans erreur | **Décision** (`D-059`, précise `D-041`) | `D-059` ; `src/crawler.js` (`parseRobots`, `robotsRegExp`) | `T-B-29` | **vert** (13 cas) |
 | `EX-B-18` exploration **parallèle bornée** : au plus `parallelisme` requêtes simultanées, parcours par vagues absorbées dans l'ordre de la file, résultat identique à l'exploration en série | **Décision** (`D-061`) | `D-061` ; `Q-B-05` ; `src/crawler.js` (`crawl`) | `T-B-30` | **vert** (pic ≤ 3 et ≥ 2, même sortie qu'en série) |
 | `EX-B-19` `Crawl-delay` : lu pour le groupe applicable, borné à un nombre fini de secondes, appliqué **entre deux vagues** ; un délai explicite (`--delai`, y compris `0`) l'emporte toujours | **Décision** (`D-060`) | `D-060` ; `src/crawler.js` (`parseCrawlDelay`) | `T-B-31` | **vert** |
+| `EX-B-24` **plans de site** (opt-in) : directives `Sitemap:` du `robots.txt` d'abord, sinon `/sitemap.xml` ; index suivi **un seul niveau**, plans et URL **plafonnés** ; seules les URL de la même origine sont retenues ; les URL trouvées sont des **amorces** soumises aux mêmes contrôles (`robots.txt`, filtres, site, plafond) — une amorce fichier est retenue sans être « visitée » | **Décision** (`D-065`) | `D-065` ; `src/sitemap.js` | `T-C-17`, `T-B-37` | **vert** |
+| `EX-B-25` `--sous-domaines` élargit le parcours au **même site** (même hôte, sous-domaine, même parent d'au moins deux labels), jamais à un domaine tiers ; opt-in, et la limite « pas de *Public Suffix List* » est nommée | **Décision** (`D-065`) | `D-065` ; `src/crawler.js` (`sameSiteHost`) | `T-B-36`, `T-C-19` | **vert** |
+| `EX-B-26` `--tentatives` couvre **aussi l'exploration** : mêmes statuts transitoires et même `Retry-After` que les téléchargements (`D-055`), reprises comptées, aucune seconde politique | **Décision** (`D-065`) | `D-065` ; `src/retry.js`, `src/crawler.js` | `T-B-38`, `T-C-19` | **vert** |
+| `EX-B-27` **interruption propre** (Ctrl-C) : arrêt coopératif — les tâches en vol finissent, les autres restent `PENDING`, projet/file/cookies sauvegardés, code **130**, seconde interruption = sortie immédiate ; aucune tâche laissée `ACTIVE` | **Décision** (`D-066`) | `D-066` ; `src/grab-runner.js` (`shouldStop`), `bin/xdm-grab.js` | `T-B-39`, `T-C-20` | **vert** |
+| `EX-B-28` `--aide`/`--version` répondent **sans URL** et sortent en code **0** (les deux CLI), sans effet de bord | **Décision** (`D-066`) | `D-066` ; `bin/xdm-grab.js`, `bin/xdm.js` | `T-C-21` | **vert** |
 | `EX-B-21` les liens relatifs se résolvent contre la **base déclarée** (`<base href>`, première balise, base inexploitable ignorée) ; la balise ne devient jamais un lien à télécharger | **Décision** (`D-063`) | `D-063` ; `src/crawler.js` (`documentBase`) | `T-B-33` | **vert** |
 | `EX-B-22` le parcours **s'arrête** après N pages en échec **consécutif** (`--arret-erreurs`), et le dit (`stopped: 'erreurs'`) ; un échec isolé ne déclenche rien, une file vidée n'est pas un arrêt sur erreur | **Décision** (`D-063`) | `D-063` ; `src/crawler.js` (`maxErrors`) | `T-B-34` | **vert** |
 | `EX-B-23` `--essai` montre le **plan** (pages, fichiers, cibles, arrêt) sans rien écrire ni télécharger : dossier cible non créé, ni `empty.html`, ni projet, ni file, code de sortie 0 ; `--sortie json` reste consommable | **Décision** (`D-064`) | `D-064` ; `bin/xdm-grab.js` | `T-C-16` | **vert** |
 | `EX-B-20` `--exclure` **élague** la branche : un lien élagué n'est ni retenu ni demandé, donc rien de ce qu'il cite n'entre dans la file ; l'exclusion par défaut, elle, continue de ne trier que les téléchargements | **Décision** (`D-060`) | `D-060` ; `D-032` ; `src/crawler.js` (`prune`) | `T-B-32`, `T-C-14` | **vert** |
 
-**Couverture** : 23 exigences, **23 vertes** (`npm test`, 240 cas) — domaine B **clos**.
+**Couverture** : 28 exigences, **28 vertes** (`npm test`, 250 cas) — domaine B **clos**.
 `Q-B-01` est close comme non instruite dans ce module (annexe 12 §6) : l'exploration et
 l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`,
 `src/grabber.js`, `D-041`/`D-042`).
@@ -98,6 +103,8 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 | essai sans effet de bord (`--essai`) | `bin/xdm-grab.js` | `T-C-16` |
 | en-têtes personnalisés pages + fichiers (`--entete`) | `bin/xdm-grab.js` (`parseHeader`) | `T-C-15` |
 | diagnostic d'exploration dans le rapport | `src/report.js` (`summarizeCrawl`) | `T-B-35` |
+| plans de site → amorces du parcours | `src/sitemap.js`, `bin/xdm-grab.js` (`--sitemap`) | `T-C-17`, `T-B-37` |
+| interruption propre (Ctrl-C) | `src/grab-runner.js` (`shouldStop`), `bin/xdm-grab.js` | `T-B-39`, `T-C-20` |
 | cookies de session partagés exploration ↔ téléchargements, persistés sur demande | `src/cookies.js`, `bin/xdm-grab.js` (`--cookies`) | `T-C-12` |
 | élagage d'une branche par `--exclure` | `src/crawler.js` (`prune`), `bin/xdm-grab.js` | `T-B-32`, `T-C-14` |
 
@@ -191,6 +198,7 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 
 | Date | Changement |
 |---|---|
+| 2026-10-29 | v1.11 : `D-065`/`D-066` — plans de site et amorces (`EX-B-24`), `--sous-domaines` (`EX-B-25`), reprise pendant l'exploration (`EX-B-26`), interruption propre (`EX-B-27`), aide et version (`EX-B-28`) ; domaine B **28/28**, C **13/14** ; 250 tests, total **70 vertes / 71** |
 | 2026-10-29 | v1.10 : `D-063`/`D-064` — `<base href>` (`EX-B-21`), arrêt sur échecs consécutifs (`EX-B-22`), essai sans effet de bord (`EX-B-23`), en-têtes personnalisés (`EX-C-14`), diagnostic d'exploration dans le rapport (`EX-B-15` étendue) ; domaine B **23/23**, C **13/14** ; 240 tests, total **65 vertes / 66** |
 | 2026-10-29 | v1.9 : `D-059`→`D-062` — `robots.txt` RFC 9309 (`EX-B-17`), exploration parallèle bornée (`EX-B-18`), `Crawl-delay` et élagage `--exclure` (`EX-B-19`, `EX-B-20`), cookies persistants (`EX-C-12`), transport choisi par le schéma (`EX-C-13`) ; domaine B **20/20**, domaine C **12/13** (1 hors périmètre) ; 233 tests, total **61 vertes / 62** |
 | 2026-10-28 | v1.8 : `D-056` — la matrice est **auditée** (`tools/audit-conformance.mjs`) : 5 écarts réels corrigés (domaine B clos avec 4 lignes « bloqué », `T-B-07` inexistant, `EX-C-08` citant `T-C-08`, 3 preuves qui étaient des chemins de code, 2 modules sans référence) ; `EX-B-15`/`16`, `EX-C-11`, `EX-D-10` citent désormais leur décision ; 220 tests, total **55 vertes / 56** |
