@@ -9,11 +9,13 @@
 > portes **G4** (comparaison IDM ↔ XDM) et **G5** (hypothèses P0 tranchées). Ce guide les rend
 > exécutables chez vous, et dit exactement quoi me renvoyer.
 >
-> **État au moment d'écrire** : 351 tests verts, 101 exigences (100 vertes, 1 hors périmètre),
-> 89 décisions, 34 lots dont 30 clos. Les **quatre** lots restants sont ceux de ce guide.
-> Deux chantiers restent par ailleurs **faisables sans vous** et ne sont pas faits : la pause
-> coopérative d'un transfert (il faut un `AbortSignal` traversant `src/connection-loop.js`) et
-> la police embarquée de l'interface — voir `docs/ROADMAP-IDM.md` §7.3.
+> **État au moment d'écrire** : **361 tests verts**, **103 exigences** (102 vertes, 1 hors
+> périmètre), **92 décisions**, **38 lots dont 34 clos**. Les **quatre** lots bloqués sont ceux
+> de ce guide (§3 à §6). Deux chantiers qui étaient « faisables sans vous » sont terminés depuis :
+> la **pause/reprise** coopérative d'un transfert (`D-090`) et la **police embarquée**
+> (`D-091`, 24 Kio de WOFF2 servis par le serveur local, aucune requête vers un CDN). Il ne
+> reste donc **plus aucun chantier réalisable dans la sandbox** : ce que ce guide ne peut pas
+> faire, la signature d'un installeur, demande un certificat — voir §8 bis.
 
 ---
 
@@ -27,9 +29,11 @@
 | **`WP-42`** | Quels sont les vrais débits et les vrais seuils d'IDM ? | grille de mesures CSV | `analysis/dynamique/wp42/` |
 | **`A-09-bis`** | Quel est le format binaire d'un `.gsd` ? | un projet `.gsd` produit par IDM + un dump hexadécimal | `analysis/idman/echantillons/` |
 | **`A-02`** | Que dit le code décompilé des zones non lues ? | réponses aux `Q-*` géographiques | `analysis/idman/` |
+| **Distribution** | XDM s'installe-t-il proprement sur un PC vierge, avec une icône et une signature ? | un installeur signé + la preuve de signature | `analysis/distribution/` |
 
-Les trois premières lignes suffisent à franchir **G4** et **G5**. Les trois dernières sont du
-bonus qui lève des questions restées ouvertes faute d'outil.
+Les trois premières lignes suffisent à franchir **G4** et **G5**. Les trois suivantes sont du
+bonus qui lève des questions restées ouvertes faute d'outil. La dernière ne débloque aucune
+porte : elle transforme un paquet en **logiciel distribuable**.
 
 ### Trois règles qui ne se négocient pas
 
@@ -59,7 +63,7 @@ bonus qui lève des questions restées ouvertes faute d'outil.
 | Outil | Version conseillée | Pourquoi |
 |---|---|---|
 | Git for Windows | 2.4x | récupérer le dépôt XDM |
-| Node.js LTS | 22.x | faire tourner XDM et ses 351 tests |
+| Node.js LTS | 22.x | faire tourner XDM et ses 361 tests |
 | Python | 3.12 | `tools/idman_*.py` (analyse du binaire) |
 | 7-Zip | 24.x | extraire les ressources, produire les archives |
 | **IDM** | la vôtre | c'est la cible |
@@ -68,6 +72,9 @@ bonus qui lève des questions restées ouvertes faute d'outil.
 | Frida (`pip install frida-tools`) | 16.x | `WP-40` : appels WinINet, arguments |
 | Ghidra | 12.x | `A-02` (facultatif) |
 | `clumsy` | 0.3 | `WP-42` : latence et pertes réseau |
+| NVDA | dernière | §2 : lecture d'écran réelle |
+| ImageMagick | 7.x | §8 bis : icône `.ico` depuis le SVG |
+| Windows SDK (`signtool`) | 10.x | §8 bis : signature de l'installeur |
 
 ### 1.3 Vérifier que la VM est propre
 
@@ -88,7 +95,7 @@ C'est la première preuve utile : **XDM est un produit, pas un dépôt**.
 git clone https://github.com/dikoume-stephane/XDM.git
 cd XDM
 npm install                      # installe REA (dev) — aucune dépendance d'exécution
-npm test                         # attendu : 351 tests, 0 échec
+npm test                         # attendu : 361 tests, 0 échec
 node tools/audit-conformance.mjs --strict   # attendu : « Aucun écart de traçabilité. »
 ```
 
@@ -119,6 +126,19 @@ npm run desktop            # ouvre la fenêtre XDM
 de téléchargements), *Affichage*, *Aide* ; un téléchargement lancé depuis l'écran
 « Téléchargements » apparaît dans l'historique avec son code de sortie.
 
+**Deux vérifications qui n'ont pas pu être faites ici (5 min)**
+
+1. **Les fontes viennent bien du serveur local.** Ouvrez `http://127.0.0.1:8100/`, puis
+   `F12` → *Réseau* → rechargez : deux requêtes `plus-jakarta-sans-latin-*.woff2` doivent
+   venir de `127.0.0.1`, et **aucune** requête ne doit partir vers un domaine externe
+   (`fonts.googleapis.com`, `fonts.gstatic.com`, un CDN). C'est `EX-E-11` : la page ne dépend
+   d'aucun réseau.
+2. **La pause ne fabrique pas un échec.** Prenez un fichier de quelques dizaines de Mo,
+   lancez-le, cliquez sur *Suspendre* en cours de transfert, puis *Reprendre*. Attendu :
+   l'état passe à *Suspendu* (pas *Échec*), le journal ne contient aucune erreur, le fichier
+   `.xdm-part` reste sur disque, et la reprise repart du bon octet (la barre ne repart pas de
+   zéro). C'est `D-090`.
+
 **Points de vigilance Windows**
 
 - Si `npm test` échoue sur des chemins, vérifiez que vous êtes dans `XDM\` et non dans un
@@ -126,7 +146,7 @@ de téléchargements), *Affichage*, *Aide* ; un téléchargement lancé depuis l
 - Un antivirus peut bloquer l'écoute sur un port local : autorisez `node.exe` en réseau privé.
 - L'interface écoute **127.0.0.1** par défaut. Avec `--hote 0.0.0.0`, un jeton est exigé et
   affiché au démarrage (`D-088`) : c'est voulu.
-- **Note à me renvoyer** : si `npm test` ne donne pas exactement 350/350, la sortie complète
+- **Note à me renvoyer** : si `npm test` ne donne pas exactement 361/361, la sortie complète
   est plus utile que « ça marche pas ».
 
 ---
@@ -358,6 +378,135 @@ Les scripts `tools/idman_*.py` s'exécutent ensuite comme dans `docs/REA.md` (an
 
 ---
 
+## 8 bis. Paquet, icône et signature (1 h)
+
+C'est la **seule** étape de ce guide qui ne débloque aucune porte : elle transforme un
+paquet en logiciel distribuable. `tools/empaqueter.mjs` prépare déjà l'arborescence exacte
+(52 fichiers, ~590 Kio, manifeste SHA-256) ; il manque trois choses qui exigent Windows :
+une **icône**, un **installeur**, une **signature**.
+
+### 8 bis.1 L'icône
+
+Le SVG existe (`desktop/ressources/icone.svg`), mais Windows veut un `.ico` multi-résolutions
+et Electron veut un PNG pour la barre des tâches. `desktop/main.js` charge
+`desktop/icone.png` **s'il existe** — le déposer suffit, aucun code à changer.
+
+```powershell
+cd XDM\desktop
+magick -background none -density 512 ressources\icone.svg -resize 512x512 icone.png
+magick -background none -density 512 ressources\icone.svg -define icon:auto-resize=256,128,64,48,32,16 ressources\xdm.ico
+Get-Item icone.png, ressources\xdm.ico | Select-Object Name, Length
+```
+
+Attendu : un PNG carré de 512 px, un `.ico` de quelques dizaines de Kio. Relancez
+`npm run desktop` : l'icône apparaît dans la barre des tâches et dans Alt+Tab.
+
+### 8 bis.2 Le paquet
+
+```powershell
+cd XDM
+node tools/empaqueter.mjs --version 0.1.0
+Get-Content dist\xdm-0.1.0\manifeste.json | Select-String '"fichiers"'
+```
+
+Attendu : `52 fichiers`, un total d'environ `590 Kio`, **zéro** entrée contenant `cible/`,
+`test/` ou `analysis/`. Le manifeste permet de revérifier chaque fichier après transport :
+
+```powershell
+Get-FileHash dist\xdm-0.1.0\src\manager.js -Algorithm SHA256
+```
+
+La valeur doit être identique à celle du manifeste. Si elle diffère, le paquet a été modifié
+en route — c'est exactement à quoi sert ce fichier.
+
+### 8 bis.3 L'installeur
+
+Deux chemins, selon ce que vous voulez prouver.
+
+**Chemin court (10 min) — archive portable.** Suffisant pour installer XDM sur un PC sans
+droits d'administration :
+
+```powershell
+Compress-Archive -Path dist\xdm-0.1.0\* -DestinationPath dist\XDM-0.1.0-portable.zip
+```
+
+L'utilisateur décompresse, lance `npm run desktop:install` une fois, puis `npm run desktop`.
+
+**Chemin complet (30 min) — installeur NSIS.** Il faut `electron-builder`, qui est une
+dépendance **de distribution**, pas du socle :
+
+```powershell
+cd desktop
+npm install --no-save electron-builder
+npx electron-builder --win nsis --x64 --config.productName=XDM `
+  --config.directories.output=..\dist\installeur `
+  --config.win.icon=ressources\xdm.ico
+```
+
+Attendu : `dist\installeur\XDM Setup 0.1.0.exe`. **Vérifiez qu'il ne contient pas `cible/`** :
+l'installeur embarque le `dist/xdm-<version>` produit en 8 bis.2, pas le dépôt.
+
+### 8 bis.4 La signature
+
+Un installeur non signé déclenche SmartScreen et un avertissement d'éditeur inconnu. La
+signature exige un **certificat de signature de code** — c'est la seule chose que ce dépôt ne
+peut pas fournir.
+
+**Avec un certificat commercial ou d'entreprise** (`.pfx`) :
+
+```powershell
+$env:CERT = "C:\chemin\certificat.pfx"
+& "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" sign `
+  /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /f $env:CERT /p "<mot de passe>" `
+  "dist\installeur\XDM Setup 0.1.0.exe"
+```
+
+**Sans certificat — pour un test interne uniquement** (le certificat auto-signé ne supprime
+pas l'avertissement SmartScreen, il le rend *explicable*) :
+
+```powershell
+$cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=XDM (test interne)" `
+  -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(1)
+Export-PfxCertificate -Cert $cert -FilePath .\xdm-test.pfx -Password (Read-Host -AsSecureString)
+signtool sign /fd SHA256 /f .\xdm-test.pfx "dist\installeur\XDM Setup 0.1.0.exe"
+```
+
+**Vérification, dans les deux cas** :
+
+```powershell
+Get-AuthenticodeSignature "dist\installeur\XDM Setup 0.1.0.exe" | Format-List Status, StatusMessage, SignerCertificate
+Get-FileHash "dist\installeur\XDM Setup 0.1.0.exe" -Algorithm SHA256
+```
+
+Attendu avec un certificat valide : `Status: Valid`, un signataire nommé, et un horodatage
+(`TimeStamperCertificate` non nul). `Status: NotSigned` signifie que la commande a échoué sur
+un chemin ou un mot de passe — ce n'est jamais un problème de SmartScreen.
+
+> **Ne m'envoyez jamais le `.pfx`, son mot de passe, ni le certificat privé.** Seuls la sortie
+> de `Get-AuthenticodeSignature`, le SHA-256 de l'installeur et une capture d'écran de l'icône
+> sont utiles (voir 8 bis.5).
+
+### 8 bis.5 Ce que vous déposez
+
+```
+analysis/distribution/
+├── manifeste.json            # copie de dist/xdm-0.1.0/manifeste.json
+├── signature.txt             # sortie de Get-AuthenticodeSignature | Out-File
+├── empreinte.txt             # SHA-256 de l'installeur et du .zip
+├── icone.png                 # capture d'écran : barre des tâches + démarrer
+└── notes.md                  # 5 lignes : chemin choisi (portable/NSIS), certificat (commercial/interne/aucun), écarts
+```
+
+**Ce que j'en fais** : `D-089` passe de « paquet préparé » à « paquet distribué », la roadmap
+gagne un lot de distribution, et le README cesse de dire « installeur signé : à faire sur une
+machine de distribution ». Aucune de ces pièces ne contient de secret : relisez-les avant de
+les déposer.
+
+**Si vous n'avez pas de certificat** : faites 8 bis.1 à 8 bis.3 et déposez `notes.md` en
+disant « pas de certificat ». Un paquet portable vérifié vaut mieux qu'une signature inventée.
+
+---
+
 ## 9. Ce que vous me renvoyez, et comment je l'intègre
 
 ```
@@ -378,7 +527,16 @@ analysis/dynamique/
 analysis/idman/echantillons/
 ├── *.gsd
 └── gsd-dump.txt
+analysis/distribution/
+├── manifeste.json
+├── signature.txt
+├── empreinte.txt
+├── icone.png
+└── notes.md
 ```
+
+Les quatre dossiers `analysis/dynamique/wp*` et `analysis/distribution/` ont chacun un
+`README.md` qui rappelle ce qu'ils attendent et ce qu'ils refusent.
 
 **Ce que j'en fais** : mise à jour des annexes concernées, `H-*` passent de « ouverte » à
 « observée / infirmée », `WP-30`/`WP-40`→`WP-42` passent à clos, **G4** et **G5** sont
@@ -397,7 +555,9 @@ node tools/audit-conformance.mjs --strict
 
 - [ ] VM Windows créée, instantané `avant-idm` pris
 - [ ] IDM installé (licence ou essai), aucune modification de licence
-- [ ] `npm test` → 351/351 · `audit-conformance --strict` → aucun écart
+- [ ] `npm test` → 361/361 · `audit-conformance --strict` → aucun écart
+- [ ] Fontes servies par `127.0.0.1`, aucune requête externe (onglet Réseau)
+- [ ] Suspension puis reprise d'un transfert : état *Suspendu*, reprise au bon octet
 - [ ] Fenêtre XDM ouverte (`npm run desktop`) — **première confirmation visuelle** de `WP-53`
 - [ ] Parcours NVDA fait, notes déposées (`analysis/dynamique/accessibilite.md`)
 - [ ] Site témoin servi sur `127.0.0.1:8123`, réglages du serveur notés
@@ -409,6 +569,11 @@ node tools/audit-conformance.mjs --strict
 - [ ] 10 fiches `H-*.md` remplies, verdict explicite
 - [ ] `mesures.csv` rempli (7 scénarios × 3)
 - [ ] `.gsd` récupéré + dump hexadécimal
+- [ ] Icône produite (`icone.png`, `xdm.ico`), visible dans la barre des tâches
+- [ ] Paquet refait, manifeste comparé, aucun fichier de `cible/` ni de `test/`
+- [ ] Installeur (portable ou NSIS) produit, SHA-256 noté
+- [ ] Signature vérifiée (`Status: Valid`) **ou** `notes.md` disant « pas de certificat »
+- [ ] Aucun `.pfx`, aucun mot de passe, aucune clé privée déposés
 - [ ] Tout déposé sous `analysis/dynamique/`, rien de confidentiel, aucun binaire d'IDM
 
 ---

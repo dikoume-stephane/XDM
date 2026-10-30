@@ -310,7 +310,7 @@ la **piste B du guide de test** (`docs/GUIDE-TEST.md`) et du **guide Windows** (
 
 | # | Chantier | Pourquoi ce n'est pas fait | Effort |
 |---|---|---|---|
-| 1 | **Installeur signé et icône `.ico`** | exige un certificat de signature, un compte de distribution et une machine Windows : `docs/GUIDE-WINDOWS.md` §8 donne le mode opératoire complet | hors dépôt |
+| 1 | **Installeur signé et icône `.ico`** | exige un certificat de signature, un compte de distribution et une machine Windows : `docs/GUIDE-WINDOWS.md` §8 bis donne le mode opératoire complet | hors dépôt |
 
 La fiche `E-*.md` a été écrite (`WP-60`) et la police embarquée livrée (`WP-59`) : il ne reste
 plus **aucun** chantier faisable dans cette sandbox. La ligne restante ne bloque pas **le

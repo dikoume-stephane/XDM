@@ -183,7 +183,7 @@ tools/                     collecte de preuves, triage, extractions
   arborescence de distribution (52 fichiers, 590 Kio) avec un manifeste SHA-256 par fichier ;
   `cible/`, `test/`, `analysis/`, `tools/` et les dossiers de téléchargement n'y entrent
   jamais (`D-089`, `EX-E-09`). L'installeur signé reste à faire sur une machine de
-  distribution : `docs/GUIDE-WINDOWS.md` §8.
+  distribution : `docs/GUIDE-WINDOWS.md` §8 bis.
 - ✅ WP-57 : **guide Windows** — `docs/GUIDE-WINDOWS.md` : les quatre lots bloqués
   (`WP-30`, `WP-40`, `WP-41`, `WP-42`) deviennent exécutables chez un tiers, avec le site
   témoin à construire, les filtres Process Monitor, le hook Frida, la grille de mesures et
