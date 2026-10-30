@@ -184,7 +184,7 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | WP-53 | ✅ **Clos** (`D-086`) — **coquille de bureau Electron** : `src/desktop-shell.js` (fenêtre `contextIsolation`/`sandbox`/sans Node, menu natif Fichier-Affichage-Aide adapté à la plateforme, serveur local sur port éphémère, arrêt avec la fenêtre, liens externes renvoyés au navigateur du système), `desktop/main.js` (colle Electron : verrou d'instance unique), `desktop/package.json` (Electron en `devDependencies`, hors du socle) ; **338 tests**, `EX-E-04`→`06` ; ⚠️ **non vérifié ici** : ouverture réelle de la fenêtre (aucun affichage) → `docs/GUIDE-WINDOWS.md` |
 | WP-54 | ✅ **Clos** (`D-087`) — **parité du Site Grabber avec la CLI** : motifs `inclure`/`exclure` validés (motif vide refusé), sous-domaines, explorations simultanées bornées à 8, réécriture des liens des pages et CSS téléchargées (confort, jamais bloquante) ; le gabarit « médias seulement » du projet IDM n'est plus appliqué à une aspiration de site ; motifs écrits dans le projet et affichés sous l'adresse ; **343 tests**, `EX-E-07` |
 | WP-55 | ✅ **Clos** (`D-088`) — **jeton d'accès à l'interface** : `src/acces.js` (tirage 192 bits, `timingSafeEqual`, trois présentations, cookie `HttpOnly` `SameSite=Strict`), garde sur l'API et sur la page, `--jeton` et tirage automatique hors boucle locale ; **348 tests**, `EX-E-08` |
-| WP-56 | ✅ **Clos** (`D-089`) — **paquet de bureau préparé** : `tools/empaqueter.mjs` (liste blanche `src/`+`bin/`+`desktop/`, manifeste SHA-256, `cible/` exclue, sortie hors dépôt), `desktop/ressources/icone.svg` ; **350 tests**, paquet réel 52 fichiers / 590 Kio, `EX-E-09` |
+| WP-56 | ✅ **Clos** (`D-089`) — **paquet de bureau préparé** : `tools/empaqueter.mjs` (liste blanche `src/`+`bin/`+`desktop/`, manifeste SHA-256, `cible/` exclue, sortie hors dépôt), `desktop/ressources/icone.svg` ; **351 tests**, paquet réel 52 fichiers / 590 Kio, `EX-E-09` |
 | WP-57 | ✅ **Clos** — **guide Windows** (`docs/GUIDE-WINDOWS.md`) : mode opératoire des quatre lots bloqués (`WP-30`, `WP-40`→`WP-42`), site témoin à construire, site de test local, filtres Process Monitor, hook Frida WinINet, grille `mesures.csv`, format de restitution ; outil `tools/comparer-aspirations.mjs` fourni |
 | WP-50 | ✅ **Clos** (`D-079`→`D-083`) — bornes numériques refusées (`EX-A-25`), code de sortie d'une aspiration (`EX-B-39`), conformité de vérification (`EX-B-40`), compte de cookies (`EX-B-41`), `--aide`/`--version` des trois CLI (`EX-B-28`) ; **286 tests**, **92 exigences / 91 vertes**, plus le **guide de test** et son banc d'essai |
 
@@ -284,7 +284,7 @@ code, c'est une **preuve d'exécution de la cible** — impossible dans cet envi
 | **P4** Résilience + revue | `429`/`503`, coupures, `416`, boucles ; revue clean-room publiée | `D-055`, `D-056`, `revue-clean-room.md` |
 | **P5** Dynamique | **non commencée** — aucune VM Windows dans cet environnement | `A-09` |
 
-Chiffres au 2026-10-30 : **350 tests verts** (52 fichiers), **43 modules** (`src/` + `bin/`), **101 exigences
+Chiffres au 2026-10-30 : **351 tests verts** (52 fichiers), **43 modules** (`src/` + `bin/`), **101 exigences
 (100 vertes, 1 hors périmètre)**, **89 décisions**, **0 écart de traçabilité**, **32 documents
 `.md` sans lien cassé**, porte G3 à 200 pages / 205,0 Mio ; **30 lots sur 34** clos, les **quatre** restants
 (`WP-30`, `WP-40`→`WP-42`) exigent une VM Windows + un IDM licite — c'est exactement l'objet de

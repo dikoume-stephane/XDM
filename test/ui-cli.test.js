@@ -95,3 +95,10 @@ test('T-E-19 : hors boucle locale, xdm-ui tire un jeton ; en local, il n’en im
   await main(['--hote', '127.0.0.1'], { log: (l) => lignes.push(l), demarrer: faux, lire });
   assert.equal(recus[2].jeton, null, 'sur la boucle locale, pas de jeton imposé');
 });
+
+test('T-E-19 : un jeton base64url commençant par un tiret reste une valeur', () => {
+  // Constaté en essai réel : `--jeton -IAStIU0a7qq` était refusé comme un drapeau.
+  const options = parseArgs(['--jeton', '-IAStIU0a7qq']);
+  assert.equal(options.jeton, '-IAStIU0a7qq');
+  assert.throws(() => parseArgs(['--jeton', '--port']), /--jeton attend une valeur/);
+});

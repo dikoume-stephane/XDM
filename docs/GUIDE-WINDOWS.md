@@ -9,7 +9,7 @@
 > portes **G4** (comparaison IDM ↔ XDM) et **G5** (hypothèses P0 tranchées). Ce guide les rend
 > exécutables chez vous, et dit exactement quoi me renvoyer.
 >
-> **État au moment d'écrire** : 350 tests verts, 101 exigences (100 vertes, 1 hors périmètre),
+> **État au moment d'écrire** : 351 tests verts, 101 exigences (100 vertes, 1 hors périmètre),
 > 89 décisions, 34 lots dont 30 clos. Les **quatre** lots restants sont ceux de ce guide.
 > Deux chantiers restent par ailleurs **faisables sans vous** et ne sont pas faits : la pause
 > coopérative d'un transfert (il faut un `AbortSignal` traversant `src/connection-loop.js`) et
@@ -59,7 +59,7 @@ bonus qui lève des questions restées ouvertes faute d'outil.
 | Outil | Version conseillée | Pourquoi |
 |---|---|---|
 | Git for Windows | 2.4x | récupérer le dépôt XDM |
-| Node.js LTS | 22.x | faire tourner XDM et ses 350 tests |
+| Node.js LTS | 22.x | faire tourner XDM et ses 351 tests |
 | Python | 3.12 | `tools/idman_*.py` (analyse du binaire) |
 | 7-Zip | 24.x | extraire les ressources, produire les archives |
 | **IDM** | la vôtre | c'est la cible |
@@ -88,7 +88,7 @@ C'est la première preuve utile : **XDM est un produit, pas un dépôt**.
 git clone https://github.com/dikoume-stephane/XDM.git
 cd XDM
 npm install                      # installe REA (dev) — aucune dépendance d'exécution
-npm test                         # attendu : 350 tests, 0 échec
+npm test                         # attendu : 351 tests, 0 échec
 node tools/audit-conformance.mjs --strict   # attendu : « Aucun écart de traçabilité. »
 ```
 
@@ -397,7 +397,7 @@ node tools/audit-conformance.mjs --strict
 
 - [ ] VM Windows créée, instantané `avant-idm` pris
 - [ ] IDM installé (licence ou essai), aucune modification de licence
-- [ ] `npm test` → 350/350 · `audit-conformance --strict` → aucun écart
+- [ ] `npm test` → 351/351 · `audit-conformance --strict` → aucun écart
 - [ ] Fenêtre XDM ouverte (`npm run desktop`) — **première confirmation visuelle** de `WP-53`
 - [ ] Parcours NVDA fait, notes déposées (`analysis/dynamique/accessibilite.md`)
 - [ ] Site témoin servi sur `127.0.0.1:8123`, réglages du serveur notés

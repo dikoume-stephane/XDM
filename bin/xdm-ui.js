@@ -88,7 +88,9 @@ export function parseArgs(argv) {
     }
     if (textes.has(argument)) {
       const valeur = argv[i + 1];
-      if (valeur === undefined || valeur.startsWith('-')) {
+      // Un jeton base64url peut commencer par `-` : on ne refuse que ce qui ressemble à une
+      // option (`--…`), sinon une valeur légitime serait prise pour un drapeau.
+      if (valeur === undefined || valeur.startsWith('--')) {
         throw new TypeError(`${argument} attend une valeur`);
       }
       options[textes.get(argument)] = valeur;
