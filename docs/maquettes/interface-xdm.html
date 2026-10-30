@@ -1,0 +1,1090 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XDM — maquette de l'interface de bureau</title>
+<style>
+  /* ------------------------------------------------------------------ *
+   * Maquette statique — aucune requête réseau, aucune donnée réelle.    *
+   * Le but est de valider les ÉCRANS et l'ENCHAÎNEMENT, pas le pixel.   *
+   * ------------------------------------------------------------------ */
+  :root {
+    --fond: #eef1f6;
+    --surface: #ffffff;
+    --surface-2: #f7f9fc;
+    --bord: #dfe5ee;
+    --bord-fort: #c9d3e2;
+    --texte: #101828;
+    --texte-2: #55637a;
+    --texte-3: #8592a6;
+    --accent: #2b5cff;
+    --accent-doux: #e8eeff;
+    --ok: #0f9d58;
+    --ok-doux: #e3f6ec;
+    --attention: #c77700;
+    --attention-doux: #fdf1dc;
+    --danger: #d0342c;
+    --danger-doux: #fdeaea;
+    --rayon: 10px;
+    --ombre: 0 1px 2px rgba(16, 24, 40, .06), 0 12px 32px rgba(16, 24, 40, .10);
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 28px 24px 56px;
+    background:
+      radial-gradient(1200px 500px at 20% -10%, #dfe7ff 0%, transparent 60%),
+      var(--fond);
+    color: var(--texte);
+    font: 14px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- En-tête de la maquette (hors application) ---------- */
+
+  .entete-maquette {
+    max-width: 1560px;
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .entete-maquette h1 { margin: 0; font-size: 20px; letter-spacing: -.2px; }
+  .entete-maquette p { margin: 4px 0 0; color: var(--texte-2); font-size: 13px; }
+  .etiquettes { display: flex; gap: 8px; flex-wrap: wrap; }
+  .etiquette {
+    font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+    background: #fff; border: 1px solid var(--bord-fort); color: var(--texte-2);
+  }
+  .etiquette.accent { background: var(--accent-doux); border-color: #c3d2ff; color: #1c47d6; }
+
+  /* ---------- Disposition : fenêtre + notes de revue ---------- */
+
+  .scene {
+    max-width: 1560px; margin: 0 auto;
+    display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 22px;
+    align-items: start;
+  }
+  @media (max-width: 1180px) { .scene { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ---------- La fenêtre d'application ---------- */
+
+  .fenetre {
+    background: var(--surface);
+    border: 1px solid var(--bord-fort);
+    border-radius: 12px;
+    box-shadow: var(--ombre);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    min-height: 760px;
+  }
+
+  .barre-titre {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    background: linear-gradient(#fbfcfe, #f1f4f9);
+    border-bottom: 1px solid var(--bord);
+    font-size: 12.5px; color: var(--texte-2);
+  }
+  .barre-titre .logo {
+    width: 18px; height: 18px; border-radius: 5px;
+    background: linear-gradient(135deg, var(--accent), #7a5cff);
+    color: #fff; font-size: 11px; font-weight: 700;
+    display: grid; place-items: center;
+  }
+  .barre-titre b { color: var(--texte); font-weight: 600; }
+  .boutons-fenetre { margin-left: auto; display: flex; gap: 14px; color: var(--texte-3); font-size: 13px; }
+
+  .barre-menu {
+    display: flex; gap: 18px; padding: 7px 14px;
+    border-bottom: 1px solid var(--bord);
+    font-size: 13px; color: var(--texte-2);
+    background: var(--surface);
+  }
+  .barre-menu span { cursor: default; }
+  .barre-menu span:hover { color: var(--texte); }
+
+  .corps { display: grid; grid-template-columns: 208px minmax(0, 1fr); flex: 1; min-height: 0; }
+
+  /* ---------- Navigation latérale ---------- */
+
+  .nav {
+    border-right: 1px solid var(--bord);
+    background: var(--surface-2);
+    padding: 14px 10px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .nav-titre {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--texte-3); font-weight: 700; padding: 6px 10px 8px;
+  }
+  .nav button {
+    all: unset; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px;
+    color: var(--texte-2); font-size: 13.5px; font-weight: 500;
+  }
+  .nav button .picto { width: 16px; text-align: center; opacity: .8; font-size: 14px; }
+  .nav button:hover { background: #eaefF8; color: var(--texte); }
+  .nav button[aria-selected="true"] {
+    background: var(--accent-doux); color: #1c3fb8; font-weight: 600;
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .nav .compte {
+    margin-left: auto; font: 600 11px/1 var(--mono);
+    background: #dce4f7; color: #2b3f6b; padding: 3px 6px; border-radius: 999px;
+  }
+  .nav button[aria-selected="true"] .compte { background: #fff; color: #1c3fb8; }
+  .nav .compte.alerte { background: var(--danger-doux); color: var(--danger); }
+
+  .nav-bas { margin-top: auto; padding: 10px; border-top: 1px solid var(--bord); color: var(--texte-3); font-size: 11.5px; }
+
+  /* ---------- Zone principale ---------- */
+
+  .contenu { padding: 0; min-width: 0; display: flex; flex-direction: column; }
+  .ecran { display: none; flex: 1; min-width: 0; flex-direction: column; }
+  .ecran.actif { display: flex; }
+
+  .entete-ecran {
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid var(--bord);
+    display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+  }
+  .entete-ecran h2 { margin: 0; font-size: 16.5px; letter-spacing: -.2px; }
+  .entete-ecran p { margin: 3px 0 0; color: var(--texte-2); font-size: 12.5px; }
+  .entete-ecran .actions { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* ---------- Contrôles ---------- */
+
+  .btn {
+    all: unset; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 12px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    border: 1px solid var(--bord-fort); background: #fff; color: var(--texte);
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--surface-2); }
+  .btn.primaire { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primaire:hover { filter: brightness(1.06); }
+  .btn.discret { border-color: transparent; background: transparent; color: var(--texte-2); }
+  .btn.discret:hover { background: var(--surface-2); color: var(--texte); }
+  .btn.danger { color: var(--danger); border-color: #f0c4c1; background: #fff; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn .fleche { font-size: 11px; opacity: .7; }
+
+  .champ { display: flex; flex-direction: column; gap: 5px; }
+  .champ label { font-size: 12px; font-weight: 600; color: var(--texte-2); }
+  .champ .aide { font-size: 11.5px; color: var(--texte-3); }
+  .champ input[type="text"], .champ input[type="number"], .champ select {
+    font: inherit; font-size: 13px; padding: 8px 10px;
+    border: 1px solid var(--bord-fort); border-radius: 8px; background: #fff; color: var(--texte);
+    width: 100%;
+  }
+  .champ input:focus, .champ select:focus { outline: 2px solid #bcd0ff; border-color: var(--accent); }
+
+  .segments { display: inline-flex; border: 1px solid var(--bord-fort); border-radius: 8px; overflow: hidden; }
+  .segments button {
+    all: unset; cursor: pointer; padding: 7px 13px; font-size: 13px; font-weight: 600;
+    color: var(--texte-2); background: #fff; border-right: 1px solid var(--bord);
+  }
+  .segments button:last-child { border-right: 0; }
+  .segments button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+  .case { display: flex; align-items: flex-start; gap: 9px; padding: 3px 0; cursor: pointer; }
+  .case input { margin: 3px 0 0; accent-color: var(--accent); width: 15px; height: 15px; }
+  .case .libelle { font-size: 13px; }
+  .case .sous { display: block; font-size: 11.5px; color: var(--texte-3); }
+
+  .puce {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--bord); color: var(--texte-2);
+  }
+  .puce .x { color: var(--texte-3); font-size: 11px; }
+  .puce.ajout { border-style: dashed; color: var(--texte-3); cursor: pointer; }
+
+  /* ---------- Barres et tableaux ---------- */
+
+  .jauge { height: 6px; border-radius: 999px; background: #e7ecf5; overflow: hidden; }
+  .jauge > i { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+  .jauge.ok > i { background: var(--ok); }
+  .jauge.attention > i { background: var(--attention); }
+  .jauge.danger > i { background: var(--danger); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    position: sticky; top: 0; z-index: 1;
+    text-align: left; font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--texte-3); font-weight: 700;
+    padding: 9px 14px; background: var(--surface-2); border-bottom: 1px solid var(--bord);
+    white-space: nowrap;
+  }
+  tbody td { padding: 10px 14px; border-bottom: 1px solid #eef1f6; vertical-align: middle; }
+  tbody tr:hover { background: #fafcff; }
+  tbody tr.selection { background: var(--accent-doux); box-shadow: inset 2px 0 0 var(--accent); }
+  .nom { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .nom .ico { width: 23px; height: 27px; border-radius: 5px; background: #eef2fa; border: 1px solid var(--bord); display: grid; place-items: center; font-size: 10px; font-weight: 700; color: var(--texte-2); flex: none; }
+  .nom .txt { min-width: 0; }
+  .nom .txt b { display: block; font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nom .txt span { display: block; font-size: 11px; color: var(--texte-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .num { font: 500 12.5px/1.4 var(--mono); color: var(--texte-2); white-space: nowrap; }
+  .droite { text-align: right; }
+
+  .statut { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .statut::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .statut.en-cours { color: var(--accent); }
+  .statut.termine { color: var(--ok); }
+  .statut.pause { color: var(--attention); }
+  .statut.echec { color: var(--danger); }
+  .statut.attente { color: var(--texte-3); }
+
+  .progression-cellule { display: flex; align-items: center; gap: 9px; min-width: 150px; }
+  .progression-cellule .jauge { flex: 1; }
+  .progression-cellule .pct { font: 600 11.5px/1 var(--mono); color: var(--texte-2); width: 34px; text-align: right; }
+
+  /* ---------- Blocs et cartes ---------- */
+
+  .zone { padding: 16px 20px; }
+  .zone + .zone { border-top: 1px solid var(--bord); }
+  .grille-2 { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .grille-2 { grid-template-columns: minmax(0, 1fr); } }
+
+  .carte {
+    background: var(--surface); border: 1px solid var(--bord); border-radius: var(--rayon);
+    padding: 14px 15px;
+  }
+  .carte h3 { margin: 0 0 10px; font-size: 13px; letter-spacing: .01em; }
+  .carte h3 .sous { font-weight: 500; color: var(--texte-3); font-size: 11.5px; margin-left: 6px; }
+
+  .liste-def { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 12.5px; }
+  .liste-def dt { color: var(--texte-3); }
+  .liste-def dd { margin: 0; text-align: right; font-family: var(--mono); font-size: 12px; }
+
+  /* ---------- Carte des morceaux ---------- */
+
+  .morceaux { display: flex; gap: 2px; flex-wrap: wrap; margin-top: 8px; }
+  .morceaux i { width: 11px; height: 15px; border-radius: 2px; background: #e7ecf5; }
+  .morceaux i.fait { background: var(--accent); }
+  .morceaux i.encours { background: repeating-linear-gradient(45deg, var(--accent), var(--accent) 3px, #9db4ff 3px, #9db4ff 6px); }
+  .legende-morceaux { display: flex; gap: 14px; margin-top: 9px; font-size: 11px; color: var(--texte-3); }
+  .legende-morceaux span { display: inline-flex; align-items: center; gap: 5px; }
+  .legende-morceaux b { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  /* ---------- Assistant (aspiration) ---------- */
+
+  .etapes { display: flex; gap: 8px; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--bord); background: var(--surface-2); }
+  .etape { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--texte-3); font-weight: 600; }
+  .etape .rond { width: 21px; height: 21px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; background: #fff; border: 1px solid var(--bord-fort); color: var(--texte-3); }
+  .etape.actif { color: var(--texte); }
+  .etape.actif .rond { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .etape.fait .rond { background: var(--ok-doux); border-color: #b6e3c9; color: var(--ok); }
+  .etape + .etape::before { content: "›"; color: var(--bord-fort); margin-right: 8px; font-size: 15px; }
+
+  .formulaire { display: grid; gap: 15px; }
+  .ligne-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+
+  .estimation { background: linear-gradient(180deg, #f7f9ff, #fff); border: 1px solid #d9e2ff; }
+  .estimation .grand { font-size: 22px; font-weight: 700; letter-spacing: -.5px; }
+  .estimation .detail { color: var(--texte-2); font-size: 12.5px; margin-top: 2px; }
+  .estimation hr { border: 0; border-top: 1px solid var(--bord); margin: 12px 0; }
+
+  /* ---------- Journal / événements ---------- */
+
+  .journal {
+    font: 12px/1.7 var(--mono); background: #0f172a; color: #cbd5e1;
+    border-radius: var(--rayon); padding: 12px 14px; max-height: 214px; overflow: auto;
+  }
+  .journal div { white-space: pre-wrap; }
+  .journal .h { color: #7f8ea3; }
+  .journal .ok { color: #6ee7a8; }
+  .journal .warn { color: #fbbf24; }
+  .journal .err { color: #fb9a94; }
+  .journal .info { color: #93b4ff; }
+
+  /* ---------- Compteurs ---------- */
+
+  .compteurs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  @media (max-width: 760px) { .compteurs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .compteur { border: 1px solid var(--bord); border-radius: var(--rayon); padding: 10px 12px; background: #fff; }
+  .compteur .v { font-size: 19px; font-weight: 700; letter-spacing: -.4px; }
+  .compteur .l { font-size: 11.5px; color: var(--texte-3); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+  .compteur.ok { background: var(--ok-doux); border-color: #bfe6cf; }
+  .compteur.ok .v { color: #0b7a44; }
+  .compteur.danger { background: var(--danger-doux); border-color: #f3c9c6; }
+  .compteur.danger .v { color: var(--danger); }
+
+  /* ---------- Bandereau de résultat ---------- */
+
+  .bandereau { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: var(--rayon); font-size: 13px; font-weight: 600; }
+  .bandereau.ko { background: var(--danger-doux); border: 1px solid #f3c9c6; color: #9c2b24; }
+  .bandereau.ok { background: var(--ok-doux); border: 1px solid #bfe6cf; color: #0b6b3c; }
+  .bandereau .code { margin-left: auto; font: 600 11.5px/1 var(--mono); background: #fff; border: 1px solid currentColor; border-radius: 999px; padding: 4px 9px; }
+
+  /* ---------- Étiquettes d'anomalie ---------- */
+
+  .code-anomalie {
+    font: 700 10.5px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase;
+    padding: 4px 7px; border-radius: 5px; white-space: nowrap;
+  }
+  .code-anomalie.manquant { background: var(--danger-doux); color: #a32a22; }
+  .code-anomalie.echec { background: #fdeceb; color: #b3302a; }
+  .code-anomalie.tronque { background: var(--attention-doux); color: #8a5300; }
+  .code-anomalie.hors { background: #eef1f6; color: #4b586e; }
+  .code-anomalie.partiel { background: var(--attention-doux); color: #8a5300; }
+
+  /* ---------- Barre d'état ---------- */
+
+  .barre-etat {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 7px 14px; border-top: 1px solid var(--bord);
+    background: var(--surface-2); font-size: 11.5px; color: var(--texte-3);
+  }
+  .barre-etat .pousse { margin-left: auto; }
+  .barre-etat .temoin { display: inline-flex; align-items: center; gap: 6px; color: var(--texte-2); }
+  .barre-etat .temoin::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+
+  /* ---------- Notes de revue (colonne de droite) ---------- */
+
+  .notes { display: none; }
+  .notes.actif { display: block; }
+  .notes .carte-notes {
+    background: #fff; border: 1px solid var(--bord-fort); border-radius: 12px; padding: 15px 16px;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04); position: sticky; top: 20px;
+  }
+  .notes h3 { margin: 0 0 4px; font-size: 13px; }
+  .notes .intro { margin: 0 0 12px; font-size: 12px; color: var(--texte-2); }
+  .notes ol { margin: 0; padding-left: 0; list-style: none; counter-reset: n; display: grid; gap: 11px; }
+  .notes li { counter-increment: n; position: relative; padding-left: 26px; font-size: 12.2px; color: var(--texte-2); }
+  .notes li::before {
+    content: counter(n); position: absolute; left: 0; top: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent-doux); color: #1c3fb8; font: 700 10.5px/18px var(--mono); text-align: center;
+  }
+  .notes li b { color: var(--texte); }
+  .notes li code { font: 500 11px/1.4 var(--mono); background: #f1f4f9; padding: 1px 4px; border-radius: 4px; color: #38507a; }
+  .notes .pied { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--bord); font-size: 11.5px; color: var(--texte-3); }
+
+  /* ---------- Pastilles de renvoi dans la maquette ---------- */
+
+  .renvoi {
+    display: inline-grid; place-items: center;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font: 700 10px/1 var(--mono);
+    vertical-align: 2px; margin-left: 4px;
+  }
+
+  .pied-maquette {
+    max-width: 1560px; margin: 22px auto 0; color: var(--texte-3); font-size: 12px;
+    display: flex; gap: 18px; flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="entete-maquette">
+  <div>
+    <h1>XDM — maquette de l'interface de bureau</h1>
+    <p>Version 1 · 5 écrans · à valider avant écriture du code. Aucun téléchargement, aucune requête réseau.</p>
+  </div>
+  <div class="etiquettes">
+    <span class="etiquette accent">Maquette statique</span>
+    <span class="etiquette">Electron · coque locale</span>
+    <span class="etiquette">Données fictives</span>
+  </div>
+</div>
+
+<div class="scene">
+
+  <!-- ============================ FENÊTRE ============================ -->
+  <div class="fenetre" role="img" aria-label="Maquette de la fenêtre principale de XDM">
+
+    <div class="barre-titre">
+      <span class="logo">X</span>
+      <span><b>XDM</b> — Gestionnaire de téléchargements et aspirateur de site</span>
+      <span class="boutons-fenetre"><span>—</span><span>▢</span><span>✕</span></span>
+    </div>
+
+    <div class="barre-menu">
+      <span>Fichier</span><span>Édition</span><span>Affichage</span><span>Outils</span><span>Aide</span>
+    </div>
+
+    <div class="corps">
+
+      <nav class="nav" aria-label="Navigation principale">
+        <div class="nav-titre">Téléchargements</div>
+        <button data-ecran="telechargements" aria-selected="true">
+          <span class="picto">↓</span> Tous <span class="compte">3</span>
+        </button>
+        <button data-ecran="en-cours">
+          <span class="picto">◔</span> Aspiration <span class="compte">1</span>
+        </button>
+        <button data-ecran="verification">
+          <span class="picto">✓</span> Vérification <span class="compte alerte">2</span>
+        </button>
+
+        <div class="nav-titre" style="margin-top:12px">Nouveau</div>
+        <button data-ecran="telechargements">
+          <span class="picto">+</span> Adresse ou fichier
+        </button>
+        <button data-ecran="aspiration">
+          <span class="picto">⌘</span> Aspirer un site
+        </button>
+
+        <div class="nav-titre" style="margin-top:12px">Système</div>
+        <button data-ecran="reglages">
+          <span class="picto">⚙</span> Réglages
+        </button>
+
+        <div class="nav-bas">
+          8 connexions · 12,4 Mio/s<br>
+          dossier : <span style="font-family:var(--mono)">~/Téléchargements</span>
+        </div>
+      </nav>
+
+      <div class="contenu">
+
+        <!-- ==================== ÉCRAN 1 · TÉLÉCHARGEMENTS ==================== -->
+        <section class="ecran actif" id="ecran-telechargements">
+          <div class="entete-ecran">
+            <div>
+              <h2>Téléchargements</h2>
+              <p>3 en cours, 1 en pause, 1 en échec. Les plages sont reprises automatiquement après une coupure.</p>
+            </div>
+            <div class="actions">
+              <button class="btn"><span>＋</span> Nouvelle adresse</button>
+              <button class="btn">Reprendre</button>
+              <button class="btn danger">Arrêter<span class="renvoi">3</span></button>
+            </div>
+          </div>
+
+          <div class="zone" style="padding-bottom:0">
+            <div class="compteurs" style="margin-bottom:14px">
+              <div class="compteur"><div class="v">14,2 Mio/s</div><div class="l">Débit total</div></div>
+              <div class="compteur"><div class="v">3</div><div class="l">En cours</div></div>
+              <div class="compteur ok"><div class="v">128</div><div class="l">Terminés</div></div>
+              <div class="compteur danger"><div class="v">1</div><div class="l">En échec<span class="renvoi">2</span></div></div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:0; border-top:1px solid var(--bord); flex:1; min-height:0">
+
+            <div style="overflow:auto; max-height:430px">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:46%">Nom</th>
+                    <th class="droite">Taille</th>
+                    <th>Progression<span class="renvoi">1</span></th>
+                    <th class="droite">Restant</th>
+                    <th>État</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="selection">
+                    <td>
+                      <div class="nom">
+                        <span class="ico">GZ</span>
+                        <span class="txt">
+                          <b>archive-2026.tar.gz</b>
+                          <span>mirror.exemple.org/archive-2026.tar.gz</span>
+                        </span>
+                      </div>
+                    </td>
+                    <td class="num droite">512 Mio</td>
+                    <td><div class="progression-cellule"><div class="jauge"><i style="width:68%"></i></div><span class="pct">68 %</span></div></td>
+                    <td class="num droite">0:14</td>
+                    <td><span class="statut en-cours">8 conn.</span></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="nom">
+                        <span class="ico">MP4</span>
+                        <span class="txt">
+                          <b>video-4k.mp4</b>
+                          <span>cdn.exemple.net/v/4k/master.mp4</span>
+                        </span>
+                      </div>
+                    </td>
+                    <td class="num droite">1,2 Gio</td>
+                    <td><div class="progression-cellule"><div class="jauge"><i style="width:34%"></i></div><span class="pct">34 %</span></div></td>
+                    <td class="num droite">1:52</td>
+                    <td><span class="statut en-cours">4 conn.</span></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="nom">
+                        <span class="ico">PDF</span>
+                        <span class="txt">
+                          <b>rapport-annuel.pdf</b>
+                          <span>intranet.local/docs/rapport-annuel.pdf</span>
+                        </span>
+                      </div>
+                    </td>
+                    <td class="num droite">2,4 Mio</td>
+                    <td><div class="progression-cellule"><div class="jauge ok"><i style="width:100%"></i></div><span class="pct">100 %</span></div></td>
+                    <td class="num droite">—</td>
+                    <td><span class="statut termine">Terminé</span></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="nom">
+                        <span class="ico">ZIP</span>
+                        <span class="txt">
+                          <b>drivers.zip</b>
+                          <span>support.exemple.com/drivers.zip</span>
+                        </span>
+                      </div>
+                    </td>
+                    <td class="num droite">84 Mio</td>
+                    <td><div class="progression-cellule"><div class="jauge attention"><i style="width:22%"></i></div><span class="pct">22 %</span></div></td>
+                    <td class="num droite">en pause</td>
+                    <td><span class="statut pause">En pause</span></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="nom">
+                        <span class="ico">BIN</span>
+                        <span class="txt">
+                          <b>patch-2.1.bin</b>
+                          <span>secure.exemple.org/patch-2.1.bin</span>
+                        </span>
+                      </div>
+                    </td>
+                    <td class="num droite">37 Mio</td>
+                    <td><div class="progression-cellule"><div class="jauge danger"><i style="width:0%"></i></div><span class="pct">0 %</span></div></td>
+                    <td class="num droite">—</td>
+                    <td><span class="statut echec">Échec 401<span class="renvoi">2</span></span></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="nom">
+                        <span class="ico">TS</span>
+                        <span class="txt">
+                          <b>flux-live</b>
+                          <span>tv.exemple.fr/live/index.m3u8 · 214 segments</span>
+                        </span>
+                      </div>
+                    </td>
+                    <td class="num droite">—</td>
+                    <td><div class="progression-cellule"><div class="jauge"><i style="width:56%"></i></div><span class="pct">56 %</span></div></td>
+                    <td class="num droite">0:31</td>
+                    <td><span class="statut en-cours">Flux HLS</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Panneau de détail -->
+            <aside style="border-left:1px solid var(--bord); background:var(--surface-2); padding:14px 15px; overflow:auto; max-height:430px">
+              <h3 style="margin:0 0 3px; font-size:13.5px">archive-2026.tar.gz</h3>
+              <div style="font-size:11.5px; color:var(--texte-3); word-break:break-all; margin-bottom:12px">
+                https://mirror.exemple.org/archive-2026.tar.gz
+              </div>
+
+              <div class="carte" style="padding:11px 12px; margin-bottom:12px">
+                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px">
+                  <b style="font-size:12.5px">Morceaux<span class="renvoi">4</span></b>
+                  <span class="num">348 Mio / 512 Mio</span>
+                </div>
+                <div class="morceaux" aria-hidden="true">
+                  <i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i>
+                  <i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i>
+                  <i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i>
+                  <i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i>
+                  <i class="encours"></i><i class="encours"></i><i class="encours"></i><i class="encours"></i><i></i>
+                  <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div class="legende-morceaux">
+                  <span><b style="background:var(--accent)"></b> clos</span>
+                  <span><b style="background:linear-gradient(45deg,var(--accent),#9db4ff)"></b> en cours</span>
+                  <span><b style="background:#e7ecf5"></b> à venir</span>
+                </div>
+              </div>
+
+              <dl class="liste-def" style="margin-bottom:14px">
+                <dt>Statut</dt><dd>en cours</dd>
+                <dt>Connexions</dt><dd>8 / 8</dd>
+                <dt>Morceau</dt><dd>2 Mio</dd>
+                <dt>Débit</dt><dd>9,8 Mio/s</dd>
+                <dt>Reprises</dt><dd>1 <span class="renvoi">3</span></dd>
+                <dt>En-têtes</dt><dd>2</dd>
+                <dt>Cookies</dt><dd>1</dd>
+              </dl>
+
+              <div style="display:flex; gap:7px; flex-wrap:wrap">
+                <button class="btn" style="padding:5px 9px; font-size:12px">Pause</button>
+                <button class="btn" style="padding:5px 9px; font-size:12px">Ouvrir le dossier</button>
+                <button class="btn discret" style="padding:5px 9px; font-size:12px">Détails…</button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- ==================== ÉCRAN 2 · ASPIRATION (ASSISTANT) ==================== -->
+        <section class="ecran" id="ecran-aspiration">
+          <div class="entete-ecran">
+            <div>
+              <h2>Aspirer un site</h2>
+              <p>Le plan est calculé avant tout téléchargement : pages, fichiers, taille estimée, ce qui sera écarté.</p>
+            </div>
+            <div class="actions">
+              <button class="btn discret">Annuler</button>
+            </div>
+          </div>
+
+          <div class="etapes">
+            <div class="etape actif"><span class="rond">1</span> Adresse et portée</div>
+            <div class="etape"><span class="rond">2</span> Fichiers à retenir</div>
+            <div class="etape"><span class="rond">3</span> Rythme et planning</div>
+          </div>
+
+          <div class="zone" style="flex:1; overflow:auto">
+            <div class="grille-2">
+              <div class="formulaire">
+
+                <div class="champ">
+                  <label for="url-site">Adresse de départ</label>
+                  <input id="url-site" type="text" value="https://doc.exemple.org/" spellcheck="false">
+                  <span class="aide">Les liens relatifs seront résolus contre cette page ; un sous-domaine reste hors périmètre sauf option cochée.</span>
+                </div>
+
+                <div class="ligne-form">
+                  <div class="champ">
+                    <label for="dossier">Dossier de destination<span class="renvoi">1</span></label>
+                    <input id="dossier" type="text" value="~/Aspirations/doc.exemple.org">
+                  </div>
+                  <div class="champ">
+                    <label>Profondeur<span class="renvoi">2</span></label>
+                    <div class="segments" role="group">
+                      <button aria-pressed="false">1</button>
+                      <button aria-pressed="true">2</button>
+                      <button aria-pressed="false">3</button>
+                      <button aria-pressed="false">4</button>
+                      <button aria-pressed="false">5</button>
+                    </div>
+                    <span class="aide">2 niveaux : la page d'accueil et ce qu'elle cite directement.</span>
+                  </div>
+                </div>
+
+                <div class="ligne-form">
+                  <div class="champ">
+                    <label for="pages">Pages au plus</label>
+                    <input id="pages" type="number" value="200">
+                  </div>
+                  <div class="champ">
+                    <label for="paralleles">Pages explorées en parallèle</label>
+                    <input id="paralleles" type="number" value="3">
+                    <span class="aide">1 = parcours strictement déterministe.</span>
+                  </div>
+                </div>
+
+                <div class="champ">
+                  <label>Filtres<span class="renvoi">3</span></label>
+                  <div style="display:flex; gap:6px; flex-wrap:wrap; padding:7px 9px; border:1px solid var(--bord-fort); border-radius:8px; background:#fff">
+                    <span class="puce">*.pdf <span class="x">×</span></span>
+                    <span class="puce">*.zip <span class="x">×</span></span>
+                    <span class="puce">*.html <span class="x">×</span></span>
+                    <span class="puce ajout">+ ajouter un motif</span>
+                  </div>
+                  <span class="aide">L'inclusion l'emporte sur l'exclusion par défaut : <span style="font-family:var(--mono)">*.mp4</span> et <span style="font-family:var(--mono)">*.avi</span> sont écartés sauf si vous les ajoutez.</span>
+                </div>
+
+                <div style="display:grid; gap:7px; margin-top:2px">
+                  <label class="case"><input type="checkbox" checked><span class="libelle">Respecter <span style="font-family:var(--mono)">robots.txt</span><span class="sous">Groupe applicable, <span style="font-family:var(--mono)">Crawl-delay</span> borné ; jamais un domaine tiers.</span></span></label>
+                  <label class="case"><input type="checkbox"><span class="libelle">Étendre aux sous-domaines du même site</span></label>
+                  <label class="case"><input type="checkbox" checked><span class="libelle">Réécrire les liens vers les chemins locaux<span class="sous">La copie reste navigable hors ligne ; les blocs <span style="font-family:var(--mono)">&lt;script&gt;</span> et <span style="font-family:var(--mono)">&lt;style&gt;</span> sont laissés intacts.</span></span></label>
+                  <label class="case"><input type="checkbox" checked><span class="libelle">Ne pas retélécharger ce qui n'a pas changé<span class="sous">Un <span style="font-family:var(--mono)">304</span> laisse le fichier local intact et compte comme terminé.</span></span></label>
+                </div>
+              </div>
+
+              <!-- Panneau d'estimation -->
+              <div class="carte estimation">
+                <h3>Estimation avant lancement <span class="sous">calculée, pas devinée</span></h3>
+                <div class="grand">≈ 47 fichiers · 312 Mio</div>
+                <div class="detail">12 pages explorées · 3 écarts prévus (1 hors site, 2 exclus par filtre)</div>
+                <hr>
+                <dl class="liste-def">
+                  <dt>Durée estimée</dt><dd>≈ 12 min</dd>
+                  <dt>Connexions</dt><dd>8</dd>
+                  <dt>Espace libre requis</dt><dd>376 Mio</dd>
+                  <dt>Déjà présents</dt><dd>4 fichiers</dd>
+                </dl>
+                <hr>
+                <div style="display:grid; gap:8px">
+                  <button class="btn">Tester le plan sans rien écrire<span class="renvoi">4</span></button>
+                  <button class="btn primaire">Lancer l'aspiration <span class="fleche">→</span></button>
+                </div>
+                <div class="aide" style="margin-top:9px; font-size:11px; color:var(--texte-3)">
+                  Le test affiche le plan complet (pages, fichiers, cibles, arrêt éventuel) sans créer de dossier ni écrire un octet.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== ÉCRAN 3 · ASPIRATION EN COURS ==================== -->
+        <section class="ecran" id="ecran-en-cours">
+          <div class="entete-ecran">
+            <div>
+              <h2>Aspiration — doc.exemple.org</h2>
+              <p>Démarrée il y a 4 min 12 s · profondeur 2 · 200 pages au plus</p>
+            </div>
+            <div class="actions">
+              <button class="btn">Pause</button>
+              <button class="btn danger">Arrêter<span class="renvoi">1</span></button>
+              <button class="btn discret">Ouvrir le dossier</button>
+            </div>
+          </div>
+
+          <div class="zone" style="padding-bottom:12px">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px">
+              <b style="font-size:13px">31 fichiers sur 47</b>
+              <span class="num">148 Mio / 312 Mio · 66 % · 6,2 Mio/s</span>
+            </div>
+            <div class="jauge" style="height:9px"><i style="width:66%"></i></div>
+
+            <div class="compteurs" style="margin-top:14px">
+              <div class="compteur ok"><div class="v">31</div><div class="l">Terminés</div></div>
+              <div class="compteur"><div class="v">2</div><div class="l">En cours</div></div>
+              <div class="compteur"><div class="v">14</div><div class="l">En attente</div></div>
+              <div class="compteur danger"><div class="v">1</div><div class="l">En échec<span class="renvoi">2</span></div></div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:minmax(0,1fr) 340px; border-top:1px solid var(--bord); flex:1; min-height:0">
+
+            <div style="overflow:auto; max-height:360px">
+              <table>
+                <thead><tr><th>Fichier</th><th class="droite">Taille</th><th>État</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="nom"><span class="ico">PDF</span><span class="txt"><b>guide/installation.pdf</b><span>doc.exemple.org/guide/installation.pdf</span></span></div></td><td class="num droite">8,2 Mio</td><td><span class="statut termine">Terminé</span></td></tr>
+                  <tr><td><div class="nom"><span class="ico">PDF</span><span class="txt"><b>guide/migration.pdf</b><span>doc.exemple.org/guide/migration.pdf</span></span></div></td><td class="num droite">6,1 Mio</td><td><span class="statut termine">Terminé</span></td></tr>
+                  <tr><td><div class="nom"><span class="ico">PNG</span><span class="txt"><b>img/schema-reseau.png</b><span>doc.exemple.org/img/schema-reseau.png</span></span></div></td><td class="num droite">1,4 Mio</td><td><span class="statut en-cours">68 %</span></td></tr>
+                  <tr><td><div class="nom"><span class="ico">ZIP</span><span class="txt"><b>telechargements/exemples.zip</b><span>doc.exemple.org/telechargements/exemples.zip</span></span></div></td><td class="num droite">142 Mio</td><td><span class="statut en-cours">41 %</span></td></tr>
+                  <tr><td><div class="nom"><span class="ico">PDF</span><span class="txt"><b>archive/rapport-2019.pdf</b><span>doc.exemple.org/archive/rapport-2019.pdf</span></span></div></td><td class="num droite">3,8 Mio</td><td><span class="statut echec">Échec 503</span></td></tr>
+                  <tr><td><div class="nom"><span class="ico">HTML</span><span class="txt"><b>index.html</b><span>page réécrite · 42 liens locaux</span></span></div></td><td class="num droite">64 Kio</td><td><span class="statut termine">Terminé</span></td></tr>
+                  <tr><td><div class="nom"><span class="ico">PDF</span><span class="txt"><b>faq.pdf</b><span>doc.exemple.org/faq.pdf</span></span></div></td><td class="num droite">2,2 Mio</td><td><span class="statut attente">En attente</span></td></tr>
+                  <tr><td><div class="nom"><span class="ico">PNG</span><span class="txt"><b>img/logo.png</b><span>doc.exemple.org/img/logo.png</span></span></div></td><td class="num droite">24 Kio</td><td><span class="statut attente">En attente</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <aside style="border-left:1px solid var(--bord); background:var(--surface-2); padding:13px 14px; overflow:auto; max-height:360px">
+              <h3 style="margin:0 0 8px; font-size:12.5px">Journal du parcours<span class="renvoi">3</span></h3>
+              <div class="journal">
+                <div class="h">04:12  niveau 0 · 1 page</div>
+                <div><span class="ok">✓</span> GET /  200  12 ms</div>
+                <div class="h">04:12  niveau 1 · 14 pages</div>
+                <div><span class="ok">✓</span> GET /guide/  200</div>
+                <div><span class="ok">✓</span> GET /faq  200</div>
+                <div><span class="warn">⊘</span> GET /prive/  robots.txt</div>
+                <div><span class="warn">⊘</span> GET /blog/   hors site</div>
+                <div><span class="info">↻</span> GET /archive/rapport-2019.pdf  503</div>
+                <div><span class="err">✕</span> échec après 2 essais</div>
+                <div class="h">04:13  niveau 2 · 32 pages</div>
+                <div><span class="ok">✓</span> 14 fichier(s) retenus</div>
+                <div class="h">04:14  téléchargement</div>
+                <div><span class="ok">✓</span> installation.pdf  8,2 Mio</div>
+                <div><span class="info">◔</span> exemples.zip  41 %  4 conn.</div>
+              </div>
+              <div style="margin-top:11px; font-size:11.5px; color:var(--texte-3)">
+                Diagnostic : 1 page écartée par <span style="font-family:var(--mono)">robots.txt</span>, 1 hors site, 2 fichiers exclus par filtre.
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- ==================== ÉCRAN 4 · VÉRIFICATION ==================== -->
+        <section class="ecran" id="ecran-verification">
+          <div class="entete-ecran">
+            <div>
+              <h2>Vérification</h2>
+              <p>Comparaison entre la file de tâches et le disque. Aucun accès réseau, aucune correction.</p>
+            </div>
+            <div class="actions">
+              <button class="btn">Choisir un dossier…</button>
+              <button class="btn">Exporter le rapport <span class="fleche">▾</span></button>
+            </div>
+          </div>
+
+          <div class="zone" style="padding-bottom:12px">
+            <div style="font-size:12px; color:var(--texte-3); font-family:var(--mono); margin-bottom:10px">
+              ~/Aspirations/doc.exemple.org · 47 tâches · vérifié à 04:31
+            </div>
+
+            <div class="bandereau ko">
+              <span>Écart détecté — 2 anomalies</span>
+              <span class="code">code de sortie 1<span class="renvoi">1</span></span>
+            </div>
+
+            <div class="compteurs" style="margin-top:12px">
+              <div class="compteur ok"><div class="v">45</div><div class="l">Conformes</div></div>
+              <div class="compteur danger"><div class="v">1</div><div class="l">Manquant</div></div>
+              <div class="compteur danger"><div class="v">1</div><div class="l">En échec<span class="renvoi">2</span></div></div>
+              <div class="compteur"><div class="v">311,8 Mio</div><div class="l">Sur disque</div></div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--bord); flex:1; overflow:auto; max-height:330px">
+            <table>
+              <thead><tr><th style="width:120px">Anomalie</th><th>Chemin</th><th class="droite">Attendu</th><th class="droite">Trouvé</th><th>Détail</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="code-anomalie manquant">Manquant</span></td>
+                  <td class="num">guide/avance/annexe-c.pdf</td>
+                  <td class="num droite">4,1 Mio</td>
+                  <td class="num droite">—</td>
+                  <td style="color:var(--texte-2); font-size:12.5px">tâche terminée, fichier absent du disque</td>
+                </tr>
+                <tr>
+                  <td><span class="code-anomalie echec">Échec</span></td>
+                  <td class="num">archive/rapport-2019.pdf</td>
+                  <td class="num droite">3,8 Mio</td>
+                  <td class="num droite">—</td>
+                  <td style="color:var(--texte-2); font-size:12.5px">503 après 2 essais · rejouable par « Reprendre »</td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="padding:12px 16px; font-size:12px; color:var(--texte-3); border-top:1px solid #eef1f6">
+              Une tâche simplement « pas encore lancée » n'est <b>pas</b> listée : une aspiration interrompue n'est pas une aspiration fautive.
+              Les fichiers hors file sont signalés à part, sans faire échouer la vérification.
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== ÉCRAN 5 · RÉGLAGES ==================== -->
+        <section class="ecran" id="ecran-reglages">
+          <div class="entete-ecran">
+            <div>
+              <h2>Réglages</h2>
+              <p>Les valeurs par défaut du moteur. Chacune est bornée : une valeur hors bornes est refusée, jamais corrigée en silence.</p>
+            </div>
+            <div class="actions">
+              <button class="btn discret">Rétablir</button>
+              <button class="btn primaire">Enregistrer</button>
+            </div>
+          </div>
+
+          <div class="zone" style="flex:1; overflow:auto">
+            <div class="grille-2" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+
+              <div class="carte">
+                <h3>Moteur de téléchargement</h3>
+                <div class="formulaire">
+                  <div class="champ">
+                    <label for="conn">Connexions simultanées</label>
+                    <div class="segments" role="group">
+                      <button aria-pressed="false">1</button>
+                      <button aria-pressed="false">2</button>
+                      <button aria-pressed="false">4</button>
+                      <button aria-pressed="true">8</button>
+                      <button aria-pressed="false">16</button>
+                      <button aria-pressed="false">32</button>
+                    </div>
+                    <span class="aide">1 à 128. Au-delà de 8, le serveur peut limiter ou refuser.</span>
+                  </div>
+                  <div class="champ">
+                    <label for="morceau">Taille d'un morceau</label>
+                    <select id="morceau">
+                      <option>1 Mio</option>
+                      <option>2 Mio</option>
+                      <option selected>4 Mio</option>
+                      <option>10 Mio</option>
+                    </select>
+                    <span class="aide">1 à 10 Mio. En dessous, un avertissement signale un découpage trop fin.</span>
+                  </div>
+                  <label class="case"><input type="checkbox" checked><span class="libelle">Reprendre automatiquement un téléchargement interrompu<span class="sous">La carte des morceaux est relue ; une carte d'une autre URL est refusée et la raison est affichée.</span></span></label>
+                  <label class="case"><input type="checkbox" checked><span class="libelle">Conserver les cookies de session d'un téléchargement à l'autre<span class="sous">Fichier local protégé, seuls les cookies datés sont écrits.</span></span></label>
+                </div>
+              </div>
+
+              <div class="carte">
+                <h3>Réseau et aspiration</h3>
+                <div class="formulaire">
+                  <div class="champ">
+                    <label for="proxy">Proxy</label>
+                    <select id="proxy">
+                      <option>Aucun (connexion directe)</option>
+                      <option>Configuration système</option>
+                      <option>Manuel…</option>
+                    </select>
+                  </div>
+                  <div class="champ">
+                    <label for="agent">Identification envoyée aux sites</label>
+                    <input id="agent" type="text" value="XDM/0.1 (+grabber)" spellcheck="false">
+                  </div>
+                  <div class="ligne-form">
+                    <div class="champ">
+                      <label for="delai">Délai entre deux vagues</label>
+                      <input id="delai" type="number" value="0">
+                      <span class="aide">secondes ; 0 = aucune attente imposée.</span>
+                    </div>
+                    <div class="champ">
+                      <label for="taille-max">Taille maximale par fichier</label>
+                      <input id="taille-max" type="text" value="2 Gio">
+                    </div>
+                  </div>
+                  <label class="case"><input type="checkbox" checked><span class="libelle">Vérifier l'espace disque avant de commencer<span class="sous">Refus annoncé avec les octets à libérer, avant la première connexion.</span></span></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="carte" style="margin-top:16px">
+              <h3>Apparence et comportement</h3>
+              <div class="ligne-form">
+                <div class="champ">
+                  <label>Thème</label>
+                  <div class="segments"><button aria-pressed="true">Clair</button><button aria-pressed="false">Sombre</button><button aria-pressed="false">Système</button></div>
+                </div>
+                <div class="champ">
+                  <label for="langue">Langue</label>
+                  <select id="langue"><option selected>Français</option><option>English</option></select>
+                </div>
+                <div class="champ">
+                  <label for="dossier-defaut">Dossier par défaut</label>
+                  <input id="dossier-defaut" type="text" value="~/Téléchargements">
+                </div>
+              </div>
+              <label class="case" style="margin-top:10px"><input type="checkbox" checked><span class="libelle">Réduire dans la zone de notification pendant un transfert<span class="sous">Une icône indique l'avancement ; aucun démarrage automatique avec le système n'est proposé.</span></span></label>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <div class="barre-etat">
+      <span class="temoin">Prêt</span>
+      <span>3 téléchargements · 1 aspiration</span>
+      <span class="pousse">8 connexions · 12,4 Mio/s</span>
+      <span>v0.1.0</span>
+    </div>
+  </div>
+
+  <!-- ============================ NOTES DE REVUE ============================ -->
+  <div class="notes actif" id="notes-telechargements">
+    <div class="carte-notes">
+      <h3>Écran 1 — Téléchargements</h3>
+      <p class="intro">La vue par défaut : ce que fait l'outil en continu.</p>
+      <ol>
+        <li><b>Progression par connexion</b>, pas seulement globale : elle vient de <code>onProgress({done, total})</code> du moteur, déjà branché.</li>
+        <li><b>L'échec est visible et nommé</b> (« 401 »), pas un point rouge muet : le statut HTTP réel remonte du client.</li>
+        <li><b>Arrêter</b> déclenche l'arrêt coopératif : les tâches en vol finissent, l'état est sauvegardé, code 130. Une seconde pression quitte tout de suite.</li>
+        <li><b>Carte des morceaux</b> : représentation directe de la structure interne (liste d'intervalles). Sert au diagnostic : on voit où ça bloque.</li>
+      </ol>
+      <div class="pied">Aucun contrôle de cet écran ne demande de code métier nouveau : tout existe déjà en ligne de commande.</div>
+    </div>
+  </div>
+
+  <div class="notes" id="notes-aspiration">
+    <div class="carte-notes">
+      <h3>Écran 2 — Aspirer un site</h3>
+      <p class="intro">L'assistant, en trois étapes. C'est le cœur du produit.</p>
+      <ol>
+        <li><b>Dossier proposé automatiquement</b> à partir de l'hôte : une aspiration ne se mélange pas avec une autre.</li>
+        <li><b>Profondeur 1 à 5</b> : la valeur par défaut de la cible (2) est reprise ; le sens de chaque niveau est écrit sous le contrôle.</li>
+        <li><b>Filtres en pastilles</b> : l'exclusion des médias lourds reste par défaut, et la règle « l'inclusion l'emporte » est affichée — c'est la source d'erreur n°1 en pratique.</li>
+        <li><b>Tester le plan</b> avant de lancer : montre pages, fichiers, cibles et arrêt éventuel, sans créer un dossier ni écrire un octet.</li>
+      </ol>
+      <div class="pied">Le panneau d'estimation est calculé par le même code que l'exécution : pas de second algorithme qui divergerait.</div>
+    </div>
+  </div>
+
+  <div class="notes" id="notes-en-cours">
+    <div class="carte-notes">
+      <h3>Écran 3 — Aspiration en cours</h3>
+      <p class="intro">Le suivi : ce qui avance, ce qui a été écarté, et pourquoi.</p>
+      <ol>
+        <li><b>Arrêter</b> ici aussi : file et projet restent cohérents, « Reprendre » continue exactement où l'on s'est arrêté.</li>
+        <li><b>Un échec n'arrête pas l'aspiration</b> ; il est compté à part et rejouable. Le code de sortie dira 1 à la fin, jamais 0.</li>
+        <li><b>Journal du parcours</b> : chaque page demandée, chaque rejet avec son motif (<code>robots.txt</code>, hors site, filtre). C'est le diagnostic, pas une décoration.</li>
+      </ol>
+      <div class="pied">Les événements arrivent déjà un par un (<code>start</code>, <code>done</code>, <code>failed</code>, <code>retry</code>) : l'interface les affiche sans les réinventer.</div>
+    </div>
+  </div>
+
+  <div class="notes" id="notes-verification">
+    <div class="carte-notes">
+      <h3>Écran 4 — Vérification</h3>
+      <p class="intro">« L'aspiration est-elle vraiment sur le disque ? » — sans réseau.</p>
+      <ol>
+        <li><b>Le code de sortie est affiché</b>, parce qu'il est le contrat pour les scripts : 1 = écart.</li>
+        <li><b>Échec ≠ en attente</b> : une tâche tentée et ratée est un écart ; une tâche jamais lancée ne l'est pas. La distinction est visible dans l'interface.</li>
+        <li><b>Export</b> vers les quatre formats déjà produits par le moteur (JSON, CSV, Markdown, HTML autonome).</li>
+        <li><b>Rien n'est corrigé</b> par la vérification : elle constate. Le bouton qui répare s'appelle « Reprendre » et vit ailleurs.</li>
+      </ol>
+      <div class="pied">La vérification ne touche pas au réseau : elle compare la file au disque, point.</div>
+    </div>
+  </div>
+
+  <div class="notes" id="notes-reglages">
+    <div class="carte-notes">
+      <h3>Écran 5 — Réglages</h3>
+      <p class="intro">Peu d'options, toutes bornées et explicitées.</p>
+      <ol>
+        <li><b>Bornes affichées</b> sous chaque contrôle (1–128 connexions, 1–10 Mio par morceau) : une valeur hors bornes est refusée avec la valeur reçue, jamais corrigée en silence.</li>
+        <li><b>Pas de démarrage automatique</b> proposé, pas de télémétrie : ce sont des choix de conception, pas des oublis.</li>
+        <li><b>Zone de notification</b> seulement pendant un transfert.</li>
+      </ol>
+      <div class="pied">Ces réglages correspondent aux options de la CLI : une seule source de vérité, deux façades.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="pied-maquette">
+  <span>Maquette statique — aucune requête réseau, aucune donnée réelle.</span>
+  <span>Police système · aucune dépendance · thème clair</span>
+  <span>À valider : hiérarchie des écrans, vocabulaire, enchaînement assistant → suivi → vérification</span>
+</div>
+
+<script>
+  // Navigation entre écrans — la seule logique de cette maquette.
+  const boutons = document.querySelectorAll('.nav button[data-ecran]');
+  const ecrans = document.querySelectorAll('.ecran');
+  const notes = document.querySelectorAll('.notes');
+
+  function afficher(id) {
+    for (const ecran of ecrans) ecran.classList.toggle('actif', ecran.id === `ecran-${id}`);
+    for (const bloc of notes) bloc.classList.toggle('actif', bloc.id === `notes-${id}`);
+    for (const bouton of boutons) {
+      const cible = bouton.dataset.ecran;
+      const actif = cible === id
+        || (id === 'telechargements' && cible === 'telechargements');
+      bouton.setAttribute('aria-selected', String(actif));
+    }
+  }
+
+  for (const bouton of boutons) {
+    bouton.addEventListener('click', () => afficher(bouton.dataset.ecran));
+  }
+
+  // Le panneau de détail suit la ligne sélectionnée (illustration seulement).
+  for (const ligne of document.querySelectorAll('tbody tr')) {
+    ligne.addEventListener('click', () => {
+      const table = ligne.closest('table');
+      for (const autre of table.querySelectorAll('tbody tr')) autre.classList.remove('selection');
+      ligne.classList.add('selection');
+    });
+  }
+
+  // Segments (profondeur, connexions, thème) : un seul actif.
+  for (const groupe of document.querySelectorAll('.segments')) {
+    for (const bouton of groupe.querySelectorAll('button')) {
+      bouton.addEventListener('click', () => {
+        for (const autre of groupe.querySelectorAll('button')) autre.setAttribute('aria-pressed', 'false');
+        bouton.setAttribute('aria-pressed', 'true');
+      });
+    }
+  }
+</script>
+</body>
+</html>
