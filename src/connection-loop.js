@@ -110,7 +110,41 @@ export function planWorkers(connections, chunkCount, maxSockets = MAX_SOCKETS) {
  *   skip?: number}} options `skip` : octets de recouvrement à ne **pas** réécrire
  * @returns {Promise<{written: number, resumeAt: number, head: Uint8Array, tail: Uint8Array}>}
  */
-async function pumpSegment(stream, { work, offset, limit, idleMs, hashes, skip = 0 }) {
+/**
+ * Refuse de continuer si l'appelant a demandé l'arrêt.
+ *
+ * L'erreur porte un code stable (`ANNULE`) : le gestionnaire peut alors distinguer une
+ * suspension volontaire d'un échec réseau, et ne pas la compter comme une erreur (`D-090`).
+ *
+ * @param {AbortSignal|null} signal
+ */
+function verifierAnnulation(signal) {
+  if (signal?.aborted) {
+    throw new DownloadError('téléchargement interrompu', 'ANNULE', { raison: String(signal.reason ?? '') });
+  }
+}
+
+/**
+ * Attend une promesse, mais rend une erreur `ANNULE` si l'arrêt est survenu entre-temps.
+ *
+ * Une requête détruite rejette avec une erreur de socket ; la convertir ici évite de
+ * laisser fuir un `ECONNRESET` là où l'utilisateur a simplement appuyé sur « suspendre ».
+ *
+ * @template T
+ * @param {Promise<T>} promesse
+ * @param {AbortSignal|null} signal
+ * @returns {Promise<T>}
+ */
+async function avecAnnulation(promesse, signal) {
+  try {
+    return await promesse;
+  } catch (error) {
+    verifierAnnulation(signal);
+    throw error;
+  }
+}
+
+async function pumpSegment(stream, { work, offset, limit, idleMs, hashes, skip = 0, signal = null, onBytes = null }) {
   const iterator = stream[Symbol.asyncIterator]();
   let written = 0;
   let tail = new Uint8Array(0);
@@ -118,6 +152,9 @@ async function pumpSegment(stream, { work, offset, limit, idleMs, hashes, skip =
   let head = new Uint8Array(0);
   let remainingSkip = skip;
   while (written < limit) {
+    // Une promesse d'inactivité peut se résoudre après l'arrêt : on vérifie à chaque tour
+    // plutôt qu'une seule fois au début.
+    verifierAnnulation(signal);
     /** @type {ReturnType<typeof setTimeout> | undefined} */
     let timer;
     const idle = new Promise((_, reject) => {
@@ -170,6 +207,9 @@ async function pumpSegment(stream, { work, offset, limit, idleMs, hashes, skip =
       await work.writeAt(slice, offset + written + done);
     }
     written += received.byteLength;
+    // Progression **pendant** un flux continu (`D-090`) : sans ce rappel, un téléchargement
+    // à une seule connexion restait à « 0 octet reçu » jusqu'à la fin.
+    if (onBytes) onBytes(written);
   }
   if (typeof iterator.return === 'function') await iterator.return(undefined).catch(() => {});
   return {
@@ -212,18 +252,21 @@ export async function download(url, target, {
   headers = {},
   ifModifiedSince = null,
   onProgress = () => {},
+  signal = null,
 } = {}) {
   // En-têtes de l'appelant (`D-069`) : ils partent avec la sonde **et** avec chaque plage.
   // Les envoyer à l'un et pas aux autres donnerait une sonde autorisée et des morceaux
   // refusés — le pire des deux mondes, et un diagnostic incompréhensible.
   const callerHeaders = { ...headers };
-  const capabilities = await probe(url, {
+  verifierAnnulation(signal);
+  const capabilities = await avecAnnulation(probe(url, {
     ...(transport ? { transport } : {}),
+    ...(signal ? { signal } : {}),
     headers: {
       ...callerHeaders,
       ...(ifModifiedSince ? { 'if-modified-since': new Date(ifModifiedSince).toUTCString() } : {}),
     },
-  });
+  }), signal);
   // `304` (`D-070`) : le fichier distant n'a pas changé depuis la version locale. Rien n'est
   // ouvert, rien n'est écrit : c'est un succès, pas un échec silencieux.
   if (capabilities.notModified) {
@@ -330,15 +373,17 @@ export async function download(url, target, {
       for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
         stats.attempts += 1;
         const requestFrom = requestStart(cursor, overlap);
-        const segment = await openSegment(
+        verifierAnnulation(signal);
+        const segment = await avecAnnulation(openSegment(
           capabilities.finalUrl,
           { start: requestFrom, size: interval.end - requestFrom },
           {
             ...(transport ? { transport } : {}),
             ifRange: validator,
             headers: callerHeaders,
+            ...(signal ? { signal } : {}),
           },
-        );
+        ), signal);
         stats.requests += 1;
 
         // Une reprise qui reçoit `200` alors qu'elle demandait une plage au milieu du
@@ -360,6 +405,8 @@ export async function download(url, target, {
             limit: size,
             idleMs,
             hashes,
+            signal,
+            onBytes: (ecrit) => onProgress({ done: ecrit, total: size }),
           });
           if (outcome.written !== size) {
             throw new DownloadError(
@@ -385,6 +432,12 @@ export async function download(url, target, {
             idleMs,
             hashes,
             skip: cursor - requestFrom,
+            signal,
+            // Progression vivante : morceaux déjà clos + octets du morceau en cours.
+            onBytes: (ecrit) => onProgress({
+              done: Math.min(size, progress(map).downloaded + ecrit),
+              total: size,
+            }),
           });
         } catch (error) {
           // Une inactivité (`IDLE_TIMEOUT`) et une coupure de socket (`SEGMENT_FAILED`) sont

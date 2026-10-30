@@ -77,6 +77,7 @@ function pastille(etat) {
   const modeles = {
     attente: ['horloge', 'attente', 'En attente'],
     en_cours: ['download', 'actif', 'En cours'],
+    suspendu: ['pause', 'attente', 'Suspendu'],
     termine: ['check', 'termine', 'Terminé'],
     echec: ['alerte', 'echec', 'Échec'],
   };
@@ -239,19 +240,32 @@ function ligneTache(tache) {
     progression.append(el('span', { classe: 'pct', texte: '—' }));
   }
 
-  const actions = tache.etat === 'attente'
-    ? el('button', {
-        classe: 'btn-ico',
-        type: 'button',
-        'aria-label': `Retirer ${tache.nom} de la file`,
-        'data-retirer': tache.id,
-      }, [icone('croix', 'ico ico-sm')])
-    : el('button', {
-        classe: 'btn-ico',
-        type: 'button',
-        'aria-label': `Détail de ${tache.nom}`,
-        'data-detail': tache.id,
-      }, [icone('points', 'ico ico-sm')]);
+  // Trois gestes seulement, et chacun seulement quand il a un sens : on ne propose pas
+  // « suspendre » une tâche finie, ni « retirer » un transfert en cours (`D-090`).
+  const bouton = (libelle, attribut, iconeNom) =>
+    el('button', {
+      classe: 'btn-ico',
+      type: 'button',
+      'aria-label': `${libelle} ${tache.nom}`,
+      [attribut]: tache.id,
+    }, [icone(iconeNom, 'ico ico-sm')]);
+
+  const actions = (() => {
+    if (tache.etat === 'attente') return bouton('Retirer de la file', 'data-retirer', 'croix');
+    if (tache.etat === 'en_cours') {
+      return el('span', { classe: 'actions' }, [
+        bouton('Suspendre', 'data-suspendre', 'pause'),
+        bouton('Détail de', 'data-detail', 'points'),
+      ]);
+    }
+    if (tache.etat === 'suspendu') {
+      return el('span', { classe: 'actions' }, [
+        bouton('Reprendre', 'data-reprendre', 'play'),
+        bouton('Retirer', 'data-retirer', 'croix'),
+      ]);
+    }
+    return bouton('Détail de', 'data-detail', 'points');
+  })();
 
   return el('tr', {}, [
     el('td', {}, [nom]),
@@ -580,7 +594,7 @@ function brancherFlux() {
     $('#etat-derniere').textContent = `dernier événement ${heure(evenement.date)}`;
   };
 
-  for (const type of ['ajout', 'demarrage', 'progression', 'termine', 'echec', 'retrait']) {
+  for (const type of ['ajout', 'demarrage', 'progression', 'termine', 'echec', 'retrait', 'suspendu', 'attente']) {
     source.addEventListener(type, surTache(type));
   }
 
@@ -631,6 +645,24 @@ async function demarrerFile() {
   try {
     await api('/api/demarrer', { method: 'POST' });
     annoncer('File démarrée.');
+  } catch (erreur) {
+    afficherErreur(erreur.message);
+  }
+}
+
+async function suspendreTache(id) {
+  try {
+    await api(`/api/taches/${encodeURIComponent(id)}/suspendre`, { method: 'POST' });
+    annoncer('Transfert suspendu — la reprise repartira des octets déjà reçus.');
+  } catch (erreur) {
+    afficherErreur(erreur.message);
+  }
+}
+
+async function reprendreTache(id) {
+  try {
+    await api(`/api/taches/${encodeURIComponent(id)}/reprendre`, { method: 'POST' });
+    annoncer('Transfert remis en file.');
   } catch (erreur) {
     afficherErreur(erreur.message);
   }
@@ -728,8 +760,18 @@ function cabler() {
   });
 
   document.addEventListener('click', (evenement) => {
-    const cible = evenement.target.closest('[data-retirer]');
-    if (cible) retirerTache(cible.dataset.retirer);
+    const retirer = evenement.target.closest('[data-retirer]');
+    if (retirer) {
+      retirerTache(retirer.dataset.retirer);
+      return;
+    }
+    const suspendre = evenement.target.closest('[data-suspendre]');
+    if (suspendre) {
+      suspendreTache(suspendre.dataset.suspendre);
+      return;
+    }
+    const reprendre = evenement.target.closest('[data-reprendre]');
+    if (reprendre) reprendreTache(reprendre.dataset.reprendre);
   });
 
   $('#btn-copier-journal').addEventListener('click', async () => {

@@ -186,6 +186,7 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | WP-55 | ✅ **Clos** (`D-088`) — **jeton d'accès à l'interface** : `src/acces.js` (tirage 192 bits, `timingSafeEqual`, trois présentations, cookie `HttpOnly` `SameSite=Strict`), garde sur l'API et sur la page, `--jeton` et tirage automatique hors boucle locale ; **348 tests**, `EX-E-08` |
 | WP-56 | ✅ **Clos** (`D-089`) — **paquet de bureau préparé** : `tools/empaqueter.mjs` (liste blanche `src/`+`bin/`+`desktop/`, manifeste SHA-256, `cible/` exclue, sortie hors dépôt), `desktop/ressources/icone.svg` ; **351 tests**, paquet réel 52 fichiers / 590 Kio, `EX-E-09` |
 | WP-57 | ✅ **Clos** — **guide Windows** (`docs/GUIDE-WINDOWS.md`) : mode opératoire des quatre lots bloqués (`WP-30`, `WP-40`→`WP-42`), site témoin à construire, site de test local, filtres Process Monitor, hook Frida WinINet, grille `mesures.csv`, format de restitution ; outil `tools/comparer-aspirations.mjs` fourni |
+| WP-58 | ✅ **Clos** (`D-090`) — **suspension et reprise** : `AbortSignal` traversant `src/connection-loop.js` (sonde, plages, lecture, transport), `suspendre`/`reprendre` dans `src/manager.js` et l'API, fichier partiel conservé, reprise exacte ; progression annoncée pendant un flux mono-connexion ; **356 tests**, `EX-E-10` |
 | WP-50 | ✅ **Clos** (`D-079`→`D-083`) — bornes numériques refusées (`EX-A-25`), code de sortie d'une aspiration (`EX-B-39`), conformité de vérification (`EX-B-40`), compte de cookies (`EX-B-41`), `--aide`/`--version` des trois CLI (`EX-B-28`) ; **286 tests**, **92 exigences / 91 vertes**, plus le **guide de test** et son banc d'essai |
 
 ---
@@ -284,9 +285,9 @@ code, c'est une **preuve d'exécution de la cible** — impossible dans cet envi
 | **P4** Résilience + revue | `429`/`503`, coupures, `416`, boucles ; revue clean-room publiée | `D-055`, `D-056`, `revue-clean-room.md` |
 | **P5** Dynamique | **non commencée** — aucune VM Windows dans cet environnement | `A-09` |
 
-Chiffres au 2026-10-30 : **351 tests verts** (52 fichiers), **43 modules** (`src/` + `bin/`), **101 exigences
-(100 vertes, 1 hors périmètre)**, **89 décisions**, **0 écart de traçabilité**, **32 documents
-`.md` sans lien cassé**, porte G3 à 200 pages / 205,0 Mio ; **30 lots sur 34** clos, les **quatre** restants
+Chiffres au 2026-10-30 : **356 tests verts** (52 fichiers), **43 modules** (`src/` + `bin/`), **102 exigences
+(101 vertes, 1 hors périmètre)**, **90 décisions**, **0 écart de traçabilité**, **32 documents
+`.md` sans lien cassé**, porte G3 à 200 pages / 205,0 Mio ; **31 lots sur 35** clos, les **quatre** restants
 (`WP-30`, `WP-40`→`WP-42`) exigent une VM Windows + un IDM licite — c'est exactement l'objet de
 la **piste B du guide de test** (`docs/GUIDE-TEST.md`) et du **guide Windows** (`docs/GUIDE-WINDOWS.md`), qui contient le mode opératoire complet.
 
@@ -305,10 +306,9 @@ la **piste B du guide de test** (`docs/GUIDE-TEST.md`) et du **guide Windows** (
 
 | # | Chantier | Pourquoi ce n'est pas fait | Effort |
 |---|---|---|---|
-| 1 | **Pause / annulation coopérative d'un transfert** | demande un `AbortSignal` traversant `src/connection-loop.js` (sonde, plages, reprise) et une transition d'état dans la file ; aujourd'hui l'interface ne sait retirer qu'une tâche **en attente**, et le dit | 1 lot |
-| 2 | **Police embarquée (WOFF2) et test de charge de la liste** | la pile système évite une dépendance de 200 Kio et un CDN absent ; le test de charge demande un navigateur, absent de cet environnement | 0,5 lot |
-| 3 | **Installeur signé et icône `.ico`** | exige un certificat de signature et une machine de distribution : `docs/GUIDE-WINDOWS.md` §8 | hors dépôt |
-| 4 | **Fiche de spécification dédiée du domaine E** | les 9 exigences d'interface vivent dans la matrice, pas dans une fiche `E-*.md` comme A/B/C/D | 0,5 lot |
+| 1 | **Police embarquée (WOFF2) et test de charge de la liste** | la pile système évite une dépendance de 200 Kio et un CDN absent ; le test de charge demande un navigateur, absent de cet environnement | 0,5 lot |
+| 2 | **Installeur signé et icône `.ico`** | exige un certificat de signature et une machine de distribution : `docs/GUIDE-WINDOWS.md` §8 | hors dépôt |
+| 3 | **Fiche de spécification dédiée du domaine E** | les 9 exigences d'interface vivent dans la matrice, pas dans une fiche `E-*.md` comme A/B/C/D | 0,5 lot |
 
 Aucune de ces cinq lignes ne bloque **le produit** : elles bloquent la **fidélité prouvée**.
 C'est la distinction que le projet tient depuis `D-041`, et elle est écrite noir sur blanc dans

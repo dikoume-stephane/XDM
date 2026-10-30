@@ -220,18 +220,39 @@ export function planConnections(capabilities, { maxConnections = 8, chunkCount =
  * @param {{method?: string, headers?: Record<string, string>}} [options]
  * @returns {Promise<{status: number, headers: Record<string, string>, stream: import('node:stream').Readable}>}
  */
-export function defaultTransport(url, { method = 'GET', headers = {} } = {}) {
+export function defaultTransport(url, { method = 'GET', headers = {}, signal = null } = {}) {
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      const erreur = new Error('requête annulée avant envoi');
+      erreur.code = 'ANNULE';
+      reject(erreur);
+      return;
+    }
     const target = new URL(url);
     const lib = target.protocol === 'https:' ? https : http;
+    /** Retire l'écouteur d'annulation : une requête finie ne doit plus être détruite. */
+    let detacher = () => {};
     const request = lib.request(target, { method, headers }, (response) => {
+      detacher();
       resolve({
         status: response.statusCode ?? 0,
         headers: normalizeHeaders(response.headers),
         stream: response,
       });
     });
-    request.on('error', reject);
+    if (signal) {
+      const surAnnulation = () => {
+        const erreur = new Error('requête annulée');
+        erreur.code = 'ANNULE';
+        request.destroy(erreur);
+      };
+      signal.addEventListener('abort', surAnnulation, { once: true });
+      detacher = () => signal.removeEventListener('abort', surAnnulation);
+    }
+    request.on('error', (erreur) => {
+      detacher();
+      reject(erreur);
+    });
     request.end();
   });
 }
@@ -261,6 +282,7 @@ export async function probe(url, {
   transport = defaultTransport,
   headers = {},
   maxRedirects = MAX_REDIRECTS,
+  signal = null,
 } = {}) {
   let current = assertUrlLength(url);
   let redirects = 0;
@@ -269,6 +291,7 @@ export async function probe(url, {
       method: 'GET',
       // Sonder avec une plage d'un octet : `206` prouve le support, `200` le nie.
       headers: { ...BASE_HEADERS, range: 'bytes=0-0', ...headers },
+      ...(signal ? { signal } : {}),
     });
     const responseHeaders = normalizeHeaders(response.headers);
     drain(response.stream);
@@ -354,11 +377,16 @@ export async function openSegment(url, chunk, {
   transport = defaultTransport,
   ifRange = null,
   headers = {},
+  signal = null,
 } = {}) {
   const range = chunkRangeHeader(chunk);
   const sent = { ...BASE_HEADERS, ...headers, range };
   if (ifRange) sent['if-range'] = ifRange;
-  const response = await transport(assertUrlLength(url), { method: 'GET', headers: sent });
+  const response = await transport(assertUrlLength(url), {
+    method: 'GET',
+    headers: sent,
+    ...(signal ? { signal } : {}),
+  });
   const responseHeaders = normalizeHeaders(response.headers);
   const ranged = response.status === 206 && parseContentRange(responseHeaders['content-range']) !== null;
   // Le corps n'est **pas** drainé ici : un `200` en réponse à une plage est le

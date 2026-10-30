@@ -279,6 +279,10 @@ export function createManager({
     tache.etat = 'en_cours';
     tache.debut = maintenant();
     tache.erreur = null;
+    // Un contrôleur par exécution : suspendre une tâche annule **ses** requêtes, pas celles
+    // des autres. Le moteur accepte le signal depuis `D-090`.
+    const controleur = new AbortController();
+    tache._controleur = controleur;
     journaliser('info', `démarrage : ${tache.nom}`, { tache: tache.id });
     publier({ type: 'demarrage', tache: vue(tache) });
 
@@ -294,6 +298,7 @@ export function createManager({
       const resultat = await telecharger(tache.url, tache.cible, {
         connections: connexions,
         promote: true,
+        signal: controleur.signal,
         onProgress: ({ done, total }) => {
           const instant = maintenant();
           tache.fait = done;
@@ -330,6 +335,24 @@ export function createManager({
       publier({ type: 'termine', tache: vue(tache) });
       archiver(tache);
     } catch (error) {
+      // Une suspension n'est pas un échec : le fichier partiel reste sur disque, prêt à
+      // reprendre. La compter comme une erreur ferait passer une décision de l'utilisateur
+      // pour une panne (`D-090`).
+      if (controleur.signal.aborted || (error && error.code === 'ANNULE')) {
+        tache.etat = 'suspendu';
+        tache.codeSortie = null;
+        tache.fin = null;
+        tache.vitesse = 0;
+        tache.erreur = null;
+        tache._controleur = null;
+        journaliser(
+          'attention',
+          `${tache.nom} suspendu — ${humanBytes(tache.fait)} déjà reçus, la reprise repartira de là`,
+          { tache: tache.id },
+        );
+        publier({ type: 'suspendu', tache: vue(tache) });
+        return;
+      }
       tache.etat = 'echec';
       tache.codeSortie = 1;
       tache.fin = maintenant();
@@ -398,10 +421,54 @@ export function createManager({
    * n'a pas d'interruption coopérative (`D-084`).
    * @param {string} id
    */
+  /**
+   * Suspend une tâche : en attente, elle quitte la file ; en cours, ses requêtes sont annulées
+   * et le fichier partiel reste sur disque.
+   *
+   * @param {string} id
+   */
+  function suspendre(id) {
+    const tache = taches.find((t) => t.id === id);
+    if (!tache) throw new ManagerError(`tâche inconnue : ${id}`, 'TACHE_INCONNUE', { id });
+    if (tache.etat === 'en_cours') {
+      tache._controleur?.abort('suspendu');
+      return vue(tache);
+    }
+    if (tache.etat === 'attente') {
+      tache.etat = 'suspendu';
+      journaliser('attention', `${tache.nom} suspendu avant démarrage`, { tache: tache.id });
+      publier({ type: 'suspendu', tache: vue(tache) });
+      return vue(tache);
+    }
+    throw new ManagerError(`tâche ${id} non suspendable dans l'état ${tache.etat}`, 'ETAT_INVALIDE', { id, etat: tache.etat });
+  }
+
+  /**
+   * Remet une tâche suspendue en file. La reprise lit le fichier partiel : elle ne
+   * retélécharge pas ce qui est déjà là.
+   *
+   * @param {string} id
+   */
+  function reprendre(id) {
+    const tache = taches.find((t) => t.id === id);
+    if (!tache) throw new ManagerError(`tâche inconnue : ${id}`, 'TACHE_INCONNUE', { id });
+    if (tache.etat !== 'suspendu') {
+      throw new ManagerError(`tâche ${id} non suspendue (${tache.etat})`, 'ETAT_INVALIDE', { id, etat: tache.etat });
+    }
+    tache.etat = 'attente';
+    tache.erreur = null;
+    journaliser('info', `${tache.nom} repris depuis ${humanBytes(tache.fait)}`, { tache: tache.id });
+    publier({ type: 'attente', tache: vue(tache) });
+    pomper();
+    return vue(tache);
+  }
+
   function retirer(id) {
     const tache = taches.find((t) => t.id === id);
     if (!tache) throw new ManagerError(`tâche inconnue : ${id}`, 'TACHE_INCONNUE', { id });
-    if (tache.etat !== 'attente') {
+    // Une tâche suspendue est retirable : ses octets partiels ont déjà été conservés, et
+    // refuser le retrait obligerait à reprendre un transfert qu'on ne veut plus.
+    if (tache.etat !== 'attente' && tache.etat !== 'suspendu') {
       throw new ManagerError(`tâche ${id} non retirable dans l'état ${tache.etat}`, 'TACHE_ACTIVE', { id, etat: tache.etat });
     }
     taches.splice(taches.indexOf(tache), 1);
@@ -446,10 +513,12 @@ export function createManager({
   function compteurs() {
     const enAttente = taches.filter((t) => t.etat === 'attente').length;
     const enCours = taches.filter((t) => t.etat === 'en_cours').length;
+    const suspendues = taches.filter((t) => t.etat === 'suspendu').length;
     const debits = taches.reduce((total, t) => total + (t.etat === 'en_cours' ? t.vitesse : 0), 0);
     return {
       attente: enAttente,
       enCours,
+      suspendu: suspendues,
       historique: historique.length,
       debit: debits,
       journal: journal.length,
@@ -651,6 +720,8 @@ export function createManager({
   return {
     ajouter,
     demarrer,
+    suspendre,
+    reprendre,
     retirer,
     etat,
     compteurs,

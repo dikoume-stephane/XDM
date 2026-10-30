@@ -284,6 +284,16 @@ export function createUiServer({
         return json(res, 405, { erreur: { code: 'METHODE_REFUSEE' } });
       }
 
+      // Suspension et reprise : deux gestes, deux routes — un `PATCH` générique obligerait
+      // l'appelant à décrire l'état visé, que le gestionnaire décide de toute façon.
+      const action = /^\/api\/taches\/([^/]+)\/(suspendre|reprendre)$/.exec(chemin);
+      if (action) {
+        if (methode !== 'POST') return json(res, 405, { erreur: { code: 'METHODE_REFUSEE' } });
+        const id = decodeURIComponent(action[1]);
+        const tache = action[2] === 'suspendre' ? gestionnaire.suspendre(id) : gestionnaire.reprendre(id);
+        return json(res, 200, { tache });
+      }
+
       if (chemin === '/api/demarrer') {
         if (methode !== 'POST') return json(res, 405, { erreur: { code: 'METHODE_REFUSEE' } });
         // On ne bloque pas la réponse : l'interface suit l'avancement par SSE.

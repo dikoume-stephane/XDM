@@ -2186,6 +2186,42 @@ par une décision.
 
 ---
 
+### D-090 — Suspendre n'est pas échouer
+**Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `src/connection-loop.js`, `src/manager.js`, `src/ui-server.js`, `src/ui/app.js`, `EX-E-10`
+
+**Contexte.** L'interface affichait une limite honnête mais pauvre : « seules les tâches en
+attente sont retirables », parce que `src/connection-loop.js` n'exposait aucun `AbortSignal`.
+Un transfert de 2 Gio lançait par erreur ne pouvait donc être arrêté qu'en tuant le processus —
+et le fichier partiel, correctement écrit, devenait inutilisable en pratique.
+
+**Options.** (a) Tuer le processus et reprendre au prochain lancement — brutal, invérifiable,
+et l'interface ne peut pas le faire. (b) Ajouter `AbortSignal` de bout en bout. (c) Compter une
+suspension comme un échec et laisser la file rejouer — confond une décision de l'utilisateur
+avec une panne.
+
+**Décision.** **(b)**, avec cinq règles.
+
+1. **Le signal traverse le moteur.** `probe`, `openSegment` et la lecture des flux le
+   reçoivent ; `defaultTransport` détruit la requête en cours, ce qui coupe aussi une socket
+   silencieuse.
+2. **Une suspension n'est pas un échec.** Le gestionnaire distingue `ANNULE` d'une erreur
+   réseau : état `suspendu`, pas d'entrée d'historique, pas de niveau « erreur » au journal,
+   pas de code de sortie. Le fichier partiel reste sur disque, prêt pour la reprise.
+3. **Deux gestes, deux routes.** `POST /api/taches/:id/suspendre` et `…/reprendre` ; reprendre
+   une tâche qui n'est pas suspendue est un `400 ETAT_INVALIDE`, pas un silence.
+4. **On peut retirer une tâche suspendue.** Refuser le retrait obligerait à reprendre un
+   transfert qu'on ne veut plus.
+5. **La progression ne ment plus.** Un transfert à une seule connexion restait à « 0 octet
+   reçu » jusqu'à la fin, la progression n'étant calculée qu'aux morceaux clos. `pumpSegment`
+   signale désormais les octets au fil de l'eau (défaut trouvé par le test `T-E-22`).
+
+**Mesures.** 5 tests (`test/suspension.test.js`, `T-E-21` moteur, `T-E-22` gestionnaire et API) :
+signal déjà annulé ⇒ aucune écriture ; annulation en cours ⇒ `.part` conservé puis reprise
+**identique octet pour octet** ; suspension en attente et en cours ; refus explicite. Suite
+complète à **356 tests verts**, domaine E à **10 exigences / 10 vertes**, matrice v1.22.
+
+---
+
 ### D-089 — Un paquet se prépare ici, un installeur se signe ailleurs
 **Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `tools/empaqueter.mjs`, `desktop/`, `EX-E-09`
 
