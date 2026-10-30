@@ -8,3 +8,4 @@ __pycache__/
 *.pyc
 # Dossier de téléchargement par défaut de l'interface (xdm-ui)
 telechargements/
+dist/

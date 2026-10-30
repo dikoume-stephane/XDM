@@ -11,7 +11,7 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 348 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 350 tests, sans dépendance (node --test)
 npm run desktop                    # application de bureau (Electron ; voir npm run desktop:install)
 npm run audit                      # traçabilité : chaque exigence verte a un test qui existe
 npm run gate                       # porte G3 : site local + coupure réseau, comparaison disque/serveur
@@ -119,6 +119,7 @@ détection de divergence, promotion atomique — pilotée par la CLI. Reste le g
 | Installation et usage de REA | [`docs/REA.md`](docs/REA.md) |
 | Maquette de l'interface de bureau (7 écrans, v2) | [`docs/maquettes/interface-xdm-v2.html`](docs/maquettes/interface-xdm-v2.html) |
 | Décisions d'interface et application du skill UI | [`docs/maquettes/SKILL-ui-ux-pro-max.md`](docs/maquettes/SKILL-ui-ux-pro-max.md) |
+| **Guide Windows** — exécuter chez soi ce qui est bloqué ici (VM, IDM, captures) | [`docs/GUIDE-WINDOWS.md`](docs/GUIDE-WINDOWS.md) |
 
 ## Structure
 
@@ -156,8 +157,8 @@ tools/                     collecte de preuves, triage, extractions
   17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
 - ✅ WP-20 → WP-27 terminés : moteur de morceaux, boucle de connexions, aspiration de site
   et CLI (`bin/xdm.js`, `bin/xdm-grab.js`), transports (proxys, FTP, PAC), médias (HLS,
-  DASH) ; **348 tests**, domaines A, B, D et E clos, domaine C à **14/15** (1 hors périmètre),
-  soit **99 exigences vertes sur 100** ; porte G3 franchie (200 pages, 205 Mio, coupure
+  DASH) ; **350 tests**, domaines A, B, D et E clos, domaine C à **14/15** (1 hors périmètre),
+  soit **100 exigences vertes sur 101** ; porte G3 franchie (200 pages, 205 Mio, coupure
   réseau absorbée).
 - ✅ WP-43/WP-44 : en-têtes personnalisés (`--entete`, validation unique partagée par les
   deux CLI, envoyés à la sonde **et** à chaque plage) et aspiration incrémentale
@@ -168,8 +169,17 @@ tools/                     collecte de preuves, triage, extractions
   `sandbox`, `nodeIntegration: false`), menu natif Fichier/Affichage/Aide, serveur local
   sur port éphémère lié à la vie de la fenêtre, instance unique, liens externes renvoyés
   au navigateur du système. Electron reste hors du socle (`desktop/package.json`,
-  `D-086`) : les 348 tests tournent sans lui. Ouverture réelle de la fenêtre à vérifier
+  `D-086`) : les 350 tests tournent sans lui. Ouverture réelle de la fenêtre à vérifier
   sur une machine à écran (`docs/GUIDE-WINDOWS.md`).
+- ✅ WP-56 : **paquet de bureau préparé** — `node tools/empaqueter.mjs` produit une
+  arborescence de distribution (52 fichiers, 590 Kio) avec un manifeste SHA-256 par fichier ;
+  `cible/`, `test/`, `analysis/`, `tools/` et les dossiers de téléchargement n'y entrent
+  jamais (`D-089`, `EX-E-09`). L'installeur signé reste à faire sur une machine de
+  distribution : `docs/GUIDE-WINDOWS.md` §8.
+- ✅ WP-57 : **guide Windows** — `docs/GUIDE-WINDOWS.md` : les quatre lots bloqués
+  (`WP-30`, `WP-40`, `WP-41`, `WP-42`) deviennent exécutables chez un tiers, avec le site
+  témoin à construire, les filtres Process Monitor, le hook Frida, la grille de mesures et
+  le format de restitution.
 - ✅ WP-55 : **l'interface exposée porte un jeton** — hors boucle locale, `xdm-ui` tire un
   jeton de 192 bits, l'affiche une fois et l'exige pour l'API comme pour la page ;
   comparaison à temps constant, échange `?jeton=` contre un cookie `HttpOnly` pour que

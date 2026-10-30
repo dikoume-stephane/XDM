@@ -2186,6 +2186,39 @@ par une décision.
 
 ---
 
+### D-089 — Un paquet se prépare ici, un installeur se signe ailleurs
+**Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `tools/empaqueter.mjs`, `desktop/`, `EX-E-09`
+
+**Contexte.** Electron est installé (`WP-53`), l'interface fonctionne (`WP-51`/`WP-52`), et rien
+ne disait **ce qui** devait partir dans une application distribuée. Sans liste explicite, deux
+erreurs sont certaines : embarquer `cible/IDMan.exe` (un binaire de l'éditeur, que le projet
+s'interdit de redistribuer) ou oublier `desktop/main.js` (l'application ne démarre pas).
+
+**Options.** (a) Ajouter `electron-builder` et un script de publication — dépendance lourde,
+et un installeur signé ne se fabrique pas sans certificat. (b) Ne rien faire. (c) Un outil
+**local**, sans dépendance, qui prépare l'arborescence et la pèse ; l'empaquetage final reste
+la tâche de l'outil choisi sur la machine de distribution.
+
+**Décision.** **(c)**, avec trois règles.
+
+1. **Une liste blanche, jamais un filtre.** `INCLUS` et `FICHIERS_INCLUS` nomment ce qui part ;
+   `EXCLUS` nomme ce qui ne part jamais. Une règle par défaut (« tout sauf… ») laisserait
+   entrer le premier dossier inconnu.
+2. **Un manifeste qui se vérifie.** Chaque fichier est inscrit avec sa taille et son SHA-256 :
+   un paquet livré se recomparc à `manifeste.json`.
+3. **La sortie est un artefact.** `dist/` est ignoré par Git ; la sortie ne peut pas être le
+   dépôt lui-même (`SORTIE_INVALIDE`), ce qui aurait produit une copie récursive de soi.
+
+**Ce que ce lot ne fait pas, et ne prétend pas faire.** Aucun installeur, aucune signature,
+aucune icône binaire : la source vectorielle `desktop/ressources/icone.svg` est fournie, la
+génération d'images n'étant pas disponible dans cet environnement. Les étapes Windows
+(conversion en `.ico`, `electron-builder`, signature) sont écrites dans `docs/GUIDE-WINDOWS.md`.
+
+**Mesures.** 2 tests (`T-E-20`), paquet réel de **52 fichiers / 590 Kio**, sans `cible/` ni
+`test/`. `EX-E-09` verte, domaine E à **9 exigences / 9 vertes**.
+
+---
+
 ### D-088 — L'interface exposée porte une serrure, pas un mot de passe
 **Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `src/acces.js`, `src/ui-server.js`, `bin/xdm-ui.js`, `EX-E-08`
 
