@@ -1,6 +1,6 @@
 # Fiche E — Interface (application de bureau, serveur local, jeton)
 
-> **Domaine** : E (interface) · **Lot** : `WP-60` · **Statut** : ✅ `clos` (les 14 exigences sont
+> **Domaine** : E (interface) · **Lot** : `WP-60` · **Statut** : ✅ `clos` (les 11 exigences sont
 > **vertes** : coquille Electron, serveur local, réglages, jeton, paquet, suspension, police
 > embarquée) · **Dernière revue** : 2026-10-30
 > **Preuves** : décisions `D-084`→`D-091` ; `src/manager.js`, `src/ui-server.js`,
@@ -60,7 +60,7 @@ machine au réseau par accident ni afficher un chiffre que le moteur ne peut pas
 | `EX-E-10` | Suspendre n'est pas échouer ; reprise au bon octet ; progression vivante | **Décision** | `D-090` | `T-E-21`, `T-E-22` |
 | `EX-E-11` | Aucune ressource distante ; journal et historique bornés ; charge mesurée | **Décision** | `D-091` | `T-E-23` |
 
-**Règle de lecture** : ces 14 exigences sont toutes **Décision**. Aucune n'est *Observé*,
+**Règle de lecture** : ces 11 exigences sont toutes **Décision**. Aucune n'est *Observé*,
 parce qu'aucune ne vient du binaire de la cible. La matrice `conformance.md` applique la même
 règle : une exigence « Hypothèse » ne peut pas être verte.
 
