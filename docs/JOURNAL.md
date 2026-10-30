@@ -2189,7 +2189,8 @@ par une décision.
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
-**Statut** : **ouverte** · **Bloque** : WP-10+ (pas avant)
+**Statut** : ✅ **close** — tranchée par `D-034` (Node 22 + ES modules + JSDoc, zéro dépendance),
+qui porte la décision et ses raisons ; cette entrée reste comme trace de la question posée.
 
 Options esquissées : (a) Java/Kotlin si le projet XDM l'est déjà ; (b) Rust
 (moteur + CLI, performant, sûr, mais plus long) ; (c) TypeScript/Node (rapide, mais
