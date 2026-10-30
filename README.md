@@ -113,6 +113,8 @@ détection de divergence, promotion atomique — pilotée par la CLI. Reste le g
 | Fiche B — grabber / aspiration de site (brouillon, `A-05`) | [`docs/specs/B-grabber.md`](docs/specs/B-grabber.md) |
 | Matrice de conformité exigence → preuve → test (`WP-12`) | [`docs/specs/conformance.md`](docs/specs/conformance.md) |
 | Installation et usage de REA | [`docs/REA.md`](docs/REA.md) |
+| Maquette de l'interface de bureau (7 écrans, v2) | [`docs/maquettes/interface-xdm-v2.html`](docs/maquettes/interface-xdm-v2.html) |
+| Décisions d'interface et application du skill UI | [`docs/maquettes/SKILL-ui-ux-pro-max.md`](docs/maquettes/SKILL-ui-ux-pro-max.md) |
 
 ## Structure
 
@@ -120,7 +122,7 @@ détection de divergence, promotion atomique — pilotée par la CLI. Reste le g
 src/                       socle XDM (ESM, zéro dépendance)
 test/                      tests de spécification (node --test)
 cible/IDMan.exe            cible d'analyse (fournie sur main)
-docs/                      journal, roadmap, index mémoire, specs, doc REA
+docs/                      journal, roadmap, index mémoire, specs, doc REA, maquettes
 analysis/idman/            annexes de mémoire (00 → 16) + triage.json + classes.json
 analysis/raw/              bundles Evidence + extractions brutes (non versionnés)
 samples/demo-electron-app  app témoin pour valider REA

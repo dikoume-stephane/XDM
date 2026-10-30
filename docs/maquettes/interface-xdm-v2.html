@@ -1,0 +1,2032 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>XDM — maquette de l'interface de bureau (v2)</title>
+<style>
+  /* ==================================================================
+   * Maquette v2 — refaite selon le skill « ui-ux-pro-max » 2.15.0
+   * (commit 28b3b8d). Journal des requêtes et règles appliquées :
+   * docs/maquettes/SKILL-ui-ux-pro-max.md
+   *
+   * Décisions issues du skill :
+   *  - Style      : Flat Design (pas de dégradé, pas d'ombre portée,
+   *                 survol par couleur/opacité, transitions 150–200 ms)
+   *  - Palette    : teal #0D9488 / accent orange #EA580C / fond #F0FDFA
+   *  - Typo       : Plus Jakarta Sans, base 16 px, interligne 1.5
+   *  - Icônes     : SVG inline (jamais d'emoji), trait 1.75, 24×24
+   *  - A11y       : focus visible, contraste ≥ 4,5:1, couleur jamais
+   *                 seule, prefers-reduced-motion, cibles ≥ 24 px
+   * ================================================================== */
+
+  /* ---------- Jetons : couleurs sémantiques (thème clair) ---------- */
+  :root {
+    color-scheme: light;
+
+    --c-primaire: #0D9488;
+    --c-primaire-texte: #0F766E; /* 5,5:1 sur blanc — le teal de marque ne tient que 3,7:1 */
+    --c-sur-primaire: #000000;
+    --c-primaire-doux: #CCFBF1;
+    --c-accent: #EA580C;
+    --c-sur-accent: #000000;
+
+    --c-fond: #F0FDFA;
+    --c-surface: #FFFFFF;
+    --c-surface-2: #F4FBFA;
+    --c-surface-3: #E8F1F4;
+    --c-texte: #134E4A;
+    --c-texte-2: #475569;
+    --c-texte-3: #5D6B7A;
+
+    --c-bord: #99F6E4;          /* séparateurs décoratifs */
+    --c-bord-controle: #0F766E; /* bordure de champ : 5,0:1 sur le fond */
+    --c-anneau: #0D9488;        /* anneau de focus : 3,5:1 sur le fond */
+
+    --c-succes: #146C34;
+    --c-attention: #B45309;
+    --c-danger: #C81E1E;
+    --c-succes-doux: #E7F6EC;
+    --c-attention-doux: #FDF2E2;
+    --c-danger-doux: #FDECEC;
+
+    /* Échelle d'espacement : rythme 4/8 */
+    --e-1: 4px;  --e-2: 8px;  --e-3: 12px; --e-4: 16px;
+    --e-5: 24px; --e-6: 32px; --e-7: 48px; --e-8: 64px;
+
+    /* Échelle de rayons et de plans */
+    --r-1: 6px; --r-2: 8px; --r-3: 12px; --r-pilule: 999px;
+    --z-collant: 10; --z-menu: 20; --z-modale: 30; --z-infobulle: 50;
+
+    /* Mouvement : une durée courte, deux courbes */
+    --d-rapide: 150ms;
+    --d-standard: 180ms;
+    --courbe: cubic-bezier(.2, .8, .3, 1);
+
+    --police: "Plus Jakarta Sans", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+
+    --largeur-note: 360px;
+  }
+
+  /* ---------- Jetons : thème sombre ---------- */
+  [data-theme="sombre"] {
+    color-scheme: dark;
+
+    --c-primaire: #14B8A6;
+    --c-primaire-texte: #2DD4BF;
+    --c-sur-primaire: #000000;
+    --c-primaire-doux: #0B3B37;
+    --c-accent: #F97316;
+    --c-sur-accent: #000000;
+
+    --c-fond: #04211F;
+    --c-surface: #0A2E2B;
+    --c-surface-2: #0E3733;
+    --c-surface-3: #134441;
+    --c-texte: #E6FFFA;
+    --c-texte-2: #BBD9D4;
+    --c-texte-3: #9FBEB9;
+
+    --c-bord: #1E5A54;
+    --c-bord-controle: #2DD4BF;
+    --c-anneau: #2DD4BF;
+
+    --c-succes: #4ADE80;
+    --c-attention: #FBBF24;
+    --c-danger: #F87171;
+    --c-succes-doux: #0C3A28;
+    --c-attention-doux: #3A2A0B;
+    --c-danger-doux: #3D1717;
+  }
+
+  /* ---------- Base ---------- */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { font-size: 16px; }
+
+  body {
+    margin: 0;
+    padding: var(--e-5) var(--e-4) var(--e-8);
+    background: var(--c-fond);
+    color: var(--c-texte);
+    font-family: var(--police);
+    font-size: 1rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4 { margin: 0; line-height: 1.25; letter-spacing: -.01em; }
+  h1 { font-size: 1.25rem; font-weight: 700; }
+  h2 { font-size: 1.0625rem; font-weight: 700; }
+  h3 { font-size: .9375rem; font-weight: 600; }
+  h4 { font-size: .875rem; font-weight: 600; }
+
+  p { margin: 0; }
+
+  :where(a) { color: var(--c-primaire-texte); }
+
+  /* Focus visible : anneau de 2 px + décalage, sur *tout* contrôle */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--c-anneau);
+    outline-offset: 2px;
+    border-radius: var(--r-1);
+  }
+
+  /* L'attribut hidden doit gagner contre display:grid/flex des composants */
+  [hidden] { display: none !important; }
+
+  /* Lien d'évitement : premier élément focusable de la page */
+  .evitement {
+    position: absolute; left: var(--e-4); top: -100px;
+    z-index: var(--z-infobulle);
+    background: var(--c-surface); color: var(--c-texte);
+    padding: var(--e-2) var(--e-3); border-radius: var(--r-2);
+    border: 1px solid var(--c-bord-controle);
+    font-size: .875rem; font-weight: 600; text-decoration: none;
+    transition: top var(--d-rapide) var(--courbe);
+  }
+  .evitement:focus { top: var(--e-3); }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* Icônes : SVG inline uniquement, jamais d'emoji */
+  .ico {
+    width: 18px; height: 18px; flex: none;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+    vertical-align: -3px;
+  }
+  .ico-lg { width: 22px; height: 22px; }
+  .ico-sm { width: 14px; height: 14px; }
+
+  /* ==================================================================
+   *  Cadre de la page de maquette (hors application)
+   * ================================================================== */
+
+  .entete-page {
+    max-width: 1640px; margin: 0 auto var(--e-5);
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: var(--e-4); flex-wrap: wrap;
+  }
+  .entete-page .titre-bloc { display: grid; gap: var(--e-1); }
+  .entete-page p { color: var(--c-texte-2); font-size: .875rem; max-width: 68ch; }
+  .entete-page .actions-page { display: flex; gap: var(--e-2); align-items: center; flex-wrap: wrap; }
+
+  .etiquette {
+    display: inline-flex; align-items: center; gap: var(--e-1);
+    font-size: .75rem; font-weight: 600;
+    padding: var(--e-1) var(--e-2);
+    border-radius: var(--r-pilule);
+    background: var(--c-surface);
+    border: 1px solid var(--c-bord);
+    color: var(--c-texte-2);
+  }
+  .etiquette.primaire { background: var(--c-primaire-doux); border-color: var(--c-bord); color: var(--c-texte); }
+
+  .scene {
+    max-width: 1640px; margin: 0 auto;
+    display: grid; grid-template-columns: minmax(0, 1fr) var(--largeur-note);
+    gap: var(--e-5); align-items: start;
+  }
+  @media (max-width: 1240px) { .scene { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ==================================================================
+   *  Fenêtre d'application
+   * ================================================================== */
+
+  .fenetre {
+    background: var(--c-surface);
+    border: 1px solid var(--c-bord);
+    border-radius: var(--r-3);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    min-height: 820px;
+  }
+
+  .barre-titre {
+    display: flex; align-items: center; gap: var(--e-2);
+    padding: var(--e-2) var(--e-3);
+    border-bottom: 1px solid var(--c-bord);
+    background: var(--c-surface-2);
+    font-size: .8125rem; color: var(--c-texte-2);
+  }
+  .barre-titre .logo {
+    width: 22px; height: 22px; border-radius: var(--r-1);
+    background: var(--c-primaire); color: var(--c-sur-primaire);
+    display: grid; place-items: center;
+    font-weight: 700; font-size: .75rem; letter-spacing: -.02em;
+  }
+  .barre-titre strong { color: var(--c-texte); font-weight: 700; }
+  .barre-titre .sep { color: var(--c-texte-3); }
+  .barre-titre .outils { margin-left: auto; display: flex; align-items: center; gap: var(--e-1); }
+  .bouton-fenetre {
+    width: 28px; height: 28px; display: grid; place-items: center;
+    border: 0; background: transparent; color: var(--c-texte-3);
+    border-radius: var(--r-1); cursor: pointer;
+    transition: background var(--d-rapide) var(--courbe), color var(--d-rapide) var(--courbe);
+  }
+  .bouton-fenetre:hover { background: var(--c-surface-3); color: var(--c-texte); }
+  .bouton-fenetre[aria-pressed="true"] { background: var(--c-primaire-doux); color: var(--c-texte); }
+
+  .barre-menu {
+    display: flex; align-items: center; gap: var(--e-1);
+    padding: var(--e-1) var(--e-3);
+    border-bottom: 1px solid var(--c-bord);
+    background: var(--c-surface);
+    font-size: .8125rem;
+  }
+  .barre-menu button {
+    border: 0; background: transparent; color: var(--c-texte-2);
+    font: inherit; padding: var(--e-1) var(--e-2); border-radius: var(--r-1);
+    cursor: pointer;
+    transition: background var(--d-rapide) var(--courbe), color var(--d-rapide) var(--courbe);
+  }
+  .barre-menu button:hover { background: var(--c-surface-3); color: var(--c-texte); }
+
+  .corps { display: grid; grid-template-columns: 236px minmax(0, 1fr); flex: 1; min-height: 0; }
+  @media (max-width: 900px) { .corps { grid-template-columns: 1fr; } }
+
+  /* ---------- Navigation latérale ---------- */
+
+  .nav {
+    border-right: 1px solid var(--c-bord);
+    background: var(--c-surface-2);
+    padding: var(--e-3) var(--e-2);
+    display: flex; flex-direction: column; gap: var(--e-1);
+    min-width: 0;
+  }
+  .nav-groupe {
+    font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--c-texte-3);
+    padding: var(--e-2) var(--e-2) var(--e-1);
+  }
+  .nav-lien {
+    display: flex; align-items: center; gap: var(--e-2);
+    width: 100%; min-height: 40px;
+    padding: var(--e-2);
+    border: 1px solid transparent; border-radius: var(--r-2);
+    background: transparent; color: var(--c-texte-2);
+    font: inherit; font-size: .875rem; font-weight: 500; text-align: left;
+    cursor: pointer;
+    transition: background var(--d-rapide) var(--courbe), color var(--d-rapide) var(--courbe);
+  }
+  .nav-lien:hover { background: var(--c-surface-3); color: var(--c-texte); }
+  .nav-lien[aria-current="page"] {
+    background: var(--c-primaire-doux); color: var(--c-texte); font-weight: 600;
+    border-color: var(--c-bord);
+  }
+  .nav-lien[aria-current="page"] .ico { color: var(--c-primaire-texte); }
+  .nav-compte {
+    margin-left: auto;
+    font: 600 .6875rem/1 var(--mono);
+    background: var(--c-surface-3); color: var(--c-texte-2);
+    padding: var(--e-1) var(--e-2); border-radius: var(--r-pilule);
+  }
+  .nav-lien[aria-current="page"] .nav-compte { background: var(--c-surface); color: var(--c-texte); }
+  .nav-compte.alerte { background: var(--c-danger-doux); color: var(--c-danger); }
+
+  .nav-pied {
+    margin-top: auto; padding: var(--e-3) var(--e-2) var(--e-1);
+    border-top: 1px solid var(--c-bord);
+    color: var(--c-texte-3); font-size: .75rem; line-height: 1.6;
+  }
+  .nav-pied b { color: var(--c-texte-2); font-weight: 600; }
+
+  /* ---------- Zone de contenu ---------- */
+
+  .contenu { min-width: 0; display: flex; flex-direction: column; }
+  .ecran { display: none; flex: 1; min-width: 0; flex-direction: column; }
+  .ecran.actif { display: flex; }
+
+  .entete-ecran {
+    padding: var(--e-4) var(--e-5) var(--e-3);
+    border-bottom: 1px solid var(--c-bord);
+    display: flex; align-items: flex-start; gap: var(--e-4); flex-wrap: wrap;
+  }
+  .entete-ecran .bloc { display: grid; gap: var(--e-1); min-width: 0; }
+  .entete-ecran p { color: var(--c-texte-2); font-size: .8125rem; }
+  .entete-ecran .actions { margin-left: auto; display: flex; gap: var(--e-2); align-items: center; flex-wrap: wrap; }
+
+  .zone { padding: var(--e-4) var(--e-5); }
+  .zone + .zone { border-top: 1px solid var(--c-bord); }
+  .zone-serrée { padding: var(--e-3) var(--e-4); }
+
+  /* ---------- Boutons ---------- */
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--e-1);
+    min-height: 36px; padding: var(--e-2) var(--e-3);
+    border: 1px solid var(--c-bord-controle); border-radius: var(--r-2);
+    background: var(--c-surface); color: var(--c-texte);
+    font: inherit; font-size: .875rem; font-weight: 600;
+    text-decoration: none; white-space: nowrap; cursor: pointer;
+    transition: background var(--d-rapide) var(--courbe), border-color var(--d-rapide) var(--courbe), color var(--d-rapide) var(--courbe), opacity var(--d-rapide) var(--courbe);
+  }
+  .btn:hover { background: var(--c-surface-3); }
+  .btn:active { opacity: .85; }
+  .btn.principal {
+    background: var(--c-primaire); border-color: var(--c-primaire); color: var(--c-sur-primaire);
+  }
+  .btn.principal:hover { background: var(--c-primaire); opacity: .9; }
+  .btn.discret { border-color: transparent; background: transparent; color: var(--c-texte-2); }
+  .btn.discret:hover { background: var(--c-surface-3); color: var(--c-texte); }
+  .btn.danger { border-color: var(--c-danger); color: var(--c-danger); background: var(--c-surface); }
+  .btn.danger:hover { background: var(--c-danger-doux); }
+  .btn[disabled], .btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+  .btn[disabled]:hover { background: var(--c-surface); }
+
+  .btn-ico {
+    display: inline-grid; place-items: center;
+    width: 36px; height: 36px; padding: 0;
+    border: 1px solid transparent; border-radius: var(--r-2);
+    background: transparent; color: var(--c-texte-2); cursor: pointer;
+    transition: background var(--d-rapide) var(--courbe), color var(--d-rapide) var(--courbe);
+  }
+  .btn-ico:hover { background: var(--c-surface-3); color: var(--c-texte); }
+
+  /* ---------- Champs ---------- */
+
+  .champ { display: grid; gap: var(--e-1); min-width: 0; }
+  .champ label, .champ .etiquette-champ {
+    font-size: .8125rem; font-weight: 600; color: var(--c-texte-2);
+  }
+  .champ .aide { font-size: .75rem; color: var(--c-texte-3); line-height: 1.5; }
+  .champ input[type="text"], .champ input[type="number"], .champ input[type="search"], .champ select {
+    font: inherit; font-size: .875rem;
+    min-height: 38px; padding: var(--e-2) var(--e-3);
+    width: 100%;
+    border: 1px solid var(--c-bord-controle); border-radius: var(--r-2);
+    background: var(--c-surface); color: var(--c-texte);
+    transition: border-color var(--d-rapide) var(--courbe);
+  }
+  .champ input::placeholder { color: var(--c-texte-3); }
+  .champ input:hover, .champ select:hover { border-color: var(--c-primaire); }
+
+  .champ-erreur { border-color: var(--c-danger) !important; }
+  .message-erreur {
+    display: flex; align-items: center; gap: var(--e-1);
+    color: var(--c-danger); font-size: .75rem; font-weight: 600;
+  }
+
+  .groupe-segmente {
+    display: inline-flex; border: 1px solid var(--c-bord-controle);
+    border-radius: var(--r-2); overflow: hidden; background: var(--c-surface);
+  }
+  .groupe-segmente button {
+    border: 0; border-right: 1px solid var(--c-bord);
+    background: transparent; color: var(--c-texte-2);
+    font: inherit; font-size: .8125rem; font-weight: 600;
+    min-width: 40px; min-height: 34px; padding: var(--e-1) var(--e-2);
+    cursor: pointer;
+    transition: background var(--d-rapide) var(--courbe), color var(--d-rapide) var(--courbe);
+  }
+  .groupe-segmente button:last-child { border-right: 0; }
+  .groupe-segmente button:hover { background: var(--c-surface-3); color: var(--c-texte); }
+  .groupe-segmente button[aria-pressed="true"] {
+    background: var(--c-primaire); color: var(--c-sur-primaire);
+  }
+
+  .case {
+    display: flex; align-items: flex-start; gap: var(--e-2);
+    padding: var(--e-1) 0; cursor: pointer;
+    font-size: .875rem;
+  }
+  .case input { width: 16px; height: 16px; margin: 3px 0 0; accent-color: var(--c-primaire); flex: none; }
+  .case .sous { display: block; font-size: .75rem; color: var(--c-texte-3); line-height: 1.5; }
+
+  /* ---------- Pastilles / puces ---------- */
+
+  .puce {
+    display: inline-flex; align-items: center; gap: var(--e-1);
+    font-size: .75rem; font-weight: 600;
+    padding: var(--e-1) var(--e-2);
+    border-radius: var(--r-pilule);
+    background: var(--c-surface-3); color: var(--c-texte-2);
+    border: 1px solid transparent;
+    white-space: nowrap; max-width: 100%;
+  }
+  .puce .retirer {
+    display: inline-grid; place-items: center;
+    width: 16px; height: 16px; border: 0; padding: 0;
+    border-radius: var(--r-pilule); background: transparent;
+    color: inherit; cursor: pointer; opacity: .75;
+    transition: opacity var(--d-rapide) var(--courbe);
+  }
+  .puce .retirer:hover { opacity: 1; }
+  .puce.ajout {
+    border: 1px dashed var(--c-bord-controle); background: transparent;
+    color: var(--c-texte-2); cursor: pointer;
+  }
+  .puce.ajout:hover { background: var(--c-surface-3); }
+
+  .zone-pastilles {
+    display: flex; flex-wrap: wrap; gap: var(--e-1);
+    padding: var(--e-2);
+    border: 1px solid var(--c-bord-controle); border-radius: var(--r-2);
+    background: var(--c-surface);
+  }
+
+  /* ---------- Cartes et blocs ---------- */
+
+  .carte {
+    border: 1px solid var(--c-bord); border-radius: var(--r-3);
+    background: var(--c-surface); padding: var(--e-3) var(--e-4);
+  }
+  .carte > h3 { margin-bottom: var(--e-3); }
+  .carte .sous-titre { font-size: .75rem; color: var(--c-texte-3); font-weight: 500; }
+
+  .grille-2 { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: var(--e-4); align-items: start; }
+  @media (max-width: 1000px) { .grille-2 { grid-template-columns: minmax(0, 1fr); } }
+
+  .liste-def { display: grid; grid-template-columns: auto 1fr; gap: var(--e-1) var(--e-3); font-size: .8125rem; margin: 0; }
+  .liste-def dt { color: var(--c-texte-3); }
+  .liste-def dd { margin: 0; text-align: right; font-family: var(--mono); font-size: .75rem; color: var(--c-texte-2); }
+
+  /* ---------- Jauge ---------- */
+
+  .jauge { height: 6px; border-radius: var(--r-pilule); background: var(--c-surface-3); overflow: hidden; }
+  .jauge > span { display: block; height: 100%; border-radius: var(--r-pilule); background: var(--c-primaire); }
+  .jauge.succes > span { background: var(--c-succes); }
+  .jauge.attention > span { background: var(--c-attention); }
+  .jauge.danger > span { background: var(--c-danger); }
+
+  /* ---------- Tableaux ---------- */
+
+  .enveloppe-table { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
+  caption { text-align: left; padding: 0 0 var(--e-2); color: var(--c-texte-3); font-size: .75rem; }
+  thead th {
+    position: sticky; top: 0; z-index: var(--z-collant);
+    text-align: left; white-space: nowrap;
+    font-size: .6875rem; letter-spacing: .07em; text-transform: uppercase;
+    font-weight: 700; color: var(--c-texte-3);
+    padding: var(--e-2) var(--e-3);
+    background: var(--c-surface-2);
+    border-bottom: 1px solid var(--c-bord);
+  }
+  tbody td { padding: var(--e-2) var(--e-3); border-bottom: 1px solid var(--c-bord); vertical-align: middle; }
+  tbody tr { transition: background var(--d-rapide) var(--courbe); }
+  tbody tr:hover { background: var(--c-surface-2); }
+  tbody tr[aria-selected="true"] {
+    background: var(--c-primaire-doux);
+    box-shadow: inset 3px 0 0 var(--c-primaire);
+  }
+  td.droite, th.droite { text-align: right; }
+  .num { font-family: var(--mono); font-size: .75rem; color: var(--c-texte-2); white-space: nowrap; }
+
+  .cellule-nom { display: flex; align-items: center; gap: var(--e-2); min-width: 0; }
+  .cellule-nom .type {
+    width: 30px; height: 30px; flex: none;
+    display: grid; place-items: center;
+    border-radius: var(--r-1);
+    background: var(--c-surface-3); color: var(--c-texte-2);
+    font-size: .5625rem; font-weight: 700; letter-spacing: .02em;
+  }
+  .cellule-nom .txt { min-width: 0; }
+  .cellule-nom .txt b {
+    display: block; font-weight: 600; font-size: .8125rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .cellule-nom .txt span {
+    display: block; font-size: .6875rem; color: var(--c-texte-3);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .cellule-progression { display: flex; align-items: center; gap: var(--e-2); min-width: 132px; }
+  .cellule-progression .jauge { flex: 1; }
+  .cellule-progression .pct { font-family: var(--mono); font-size: .6875rem; font-weight: 600; width: 36px; text-align: right; color: var(--c-texte-2); }
+
+  /* ---------- États : jamais la couleur seule ---------- */
+
+  .etat {
+    display: inline-flex; align-items: center; gap: var(--e-1);
+    font-size: .75rem; font-weight: 600; white-space: nowrap;
+  }
+  .etat .ico { width: 14px; height: 14px; }
+  .etat.actif { color: var(--c-primaire-texte); }
+  .etat.termine { color: var(--c-succes); }
+  .etat.attente { color: var(--c-texte-3); }
+  .etat.pause { color: var(--c-attention); }
+  .etat.echec { color: var(--c-danger); }
+
+  .code-anomalie {
+    display: inline-flex; align-items: center;
+    font: 700 .625rem/1 var(--mono); letter-spacing: .06em; text-transform: uppercase;
+    padding: var(--e-1) var(--e-2); border-radius: var(--r-1);
+  }
+  .code-anomalie.manquant { background: var(--c-danger-doux); color: var(--c-danger); }
+  .code-anomalie.tronque { background: var(--c-attention-doux); color: var(--c-attention); }
+  .code-anomalie.echec { background: var(--c-danger-doux); color: var(--c-danger); }
+  .code-anomalie.hors { background: var(--c-surface-3); color: var(--c-texte-2); }
+
+  /* ---------- Compteurs ---------- */
+
+  .compteurs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--e-2); }
+  @media (max-width: 780px) { .compteurs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .compteur {
+    border: 1px solid var(--c-bord); border-radius: var(--r-2);
+    background: var(--c-surface); padding: var(--e-2) var(--e-3);
+    display: grid; gap: 2px; min-width: 0;
+  }
+  .compteur .valeur { font-size: 1.25rem; font-weight: 700; letter-spacing: -.02em; }
+  .compteur .libelle {
+    font-size: .6875rem; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--c-texte-3);
+    display: flex; align-items: center; gap: var(--e-1);
+  }
+  .compteur.succes { background: var(--c-succes-doux); border-color: var(--c-bord); }
+  .compteur.succes .valeur { color: var(--c-succes); }
+  .compteur.danger { background: var(--c-danger-doux); border-color: var(--c-bord); }
+  .compteur.danger .valeur { color: var(--c-danger); }
+
+  /* ---------- Bandeau ---------- */
+
+  .bandeau {
+    display: flex; align-items: center; gap: var(--e-2);
+    padding: var(--e-2) var(--e-3); border-radius: var(--r-2);
+    font-size: .8125rem; font-weight: 600;
+    border: 1px solid var(--c-bord);
+  }
+  .bandeau.danger { background: var(--c-danger-doux); border-color: var(--c-danger); color: var(--c-danger); }
+  .bandeau.succes { background: var(--c-succes-doux); border-color: var(--c-succes); color: var(--c-succes); }
+  .bandeau .pousse { margin-left: auto; }
+  .bandeau .code-sortie {
+    font: 700 .6875rem/1 var(--mono);
+    background: var(--c-surface); border: 1px solid currentColor;
+    border-radius: var(--r-pilule); padding: var(--e-1) var(--e-2);
+  }
+
+  /* ---------- Barre d'outils de liste ---------- */
+
+  .barre-outils {
+    display: flex; align-items: center; gap: var(--e-2); flex-wrap: wrap;
+    padding: var(--e-2) var(--e-5);
+    border-bottom: 1px solid var(--c-bord);
+    background: var(--c-surface);
+  }
+  .recherche { position: relative; min-width: 240px; flex: 1 1 240px; max-width: 380px; }
+  .recherche .ico { position: absolute; left: var(--e-2); top: 50%; transform: translateY(-50%); color: var(--c-texte-3); pointer-events: none; }
+  .recherche input { padding-left: calc(var(--e-2) * 2 + 18px); }
+
+  .filtres { display: flex; gap: var(--e-1); flex-wrap: wrap; }
+  .bascule {
+    display: inline-flex; align-items: center; gap: var(--e-1);
+    min-height: 32px; padding: var(--e-1) var(--e-3);
+    border: 1px solid var(--c-bord); border-radius: var(--r-pilule);
+    background: var(--c-surface); color: var(--c-texte-2);
+    font: inherit; font-size: .75rem; font-weight: 600; cursor: pointer;
+    transition: background var(--d-rapide) var(--courbe), color var(--d-rapide) var(--courbe), border-color var(--d-rapide) var(--courbe);
+  }
+  .bascule:hover { background: var(--c-surface-3); color: var(--c-texte); }
+  .bascule[aria-pressed="true"] { background: var(--c-primaire-doux); border-color: var(--c-primaire); color: var(--c-texte); }
+
+  /* ---------- Barre de sélection multiple ---------- */
+
+  .barre-selection {
+    display: flex; align-items: center; gap: var(--e-2); flex-wrap: wrap;
+    padding: var(--e-2) var(--e-5);
+    background: var(--c-primaire-doux);
+    border-bottom: 1px solid var(--c-bord);
+    font-size: .8125rem; font-weight: 600;
+  }
+  .barre-selection .pousse { margin-left: auto; display: flex; gap: var(--e-2); }
+
+  /* ---------- Journal (flux d'événements) ---------- */
+
+  .flux { display: grid; gap: 0; font-size: .8125rem; }
+  .evenement {
+    display: grid;
+    grid-template-columns: 84px 92px 1fr auto;
+    gap: var(--e-3); align-items: baseline;
+    padding: var(--e-2) var(--e-5);
+    border-bottom: 1px solid var(--c-bord);
+  }
+  .evenement:hover { background: var(--c-surface-2); }
+  .evenement .heure { font-family: var(--mono); font-size: .6875rem; color: var(--c-texte-3); }
+  .evenement .source {
+    font-family: var(--mono); font-size: .6875rem; color: var(--c-texte-2);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .evenement .message { min-width: 0; }
+  .evenement .message code { font-family: var(--mono); font-size: .75rem; color: var(--c-texte-2); }
+  .evenement .niveau { display: inline-flex; align-items: center; gap: var(--e-1); font-size: .6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .evenement .niveau.info { color: var(--c-primaire-texte); }
+  .evenement .niveau.succes { color: var(--c-succes); }
+  .evenement .niveau.attention { color: var(--c-attention); }
+  .evenement .niveau.erreur { color: var(--c-danger); }
+  @media (max-width: 860px) {
+    .evenement { grid-template-columns: 72px 1fr; grid-template-areas: "heure niveau" "source source" "message message"; }
+  }
+
+  /* ---------- Carte des morceaux ---------- */
+
+  .morceaux { display: flex; gap: 2px; flex-wrap: wrap; margin-top: var(--e-2); }
+  .morceaux i { width: 10px; height: 14px; border-radius: 2px; background: var(--c-surface-3); }
+  .morceaux i.fait { background: var(--c-primaire); }
+  .morceaux i.encours { background: var(--c-accent); }
+  .legende { display: flex; gap: var(--e-3); margin-top: var(--e-2); font-size: .6875rem; color: var(--c-texte-3); flex-wrap: wrap; }
+  .legende span { display: inline-flex; align-items: center; gap: var(--e-1); }
+  .legende b { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  /* ---------- Étapes (assistant) ---------- */
+
+  .etapes {
+    display: flex; align-items: center; gap: var(--e-2); flex-wrap: wrap;
+    padding: var(--e-3) var(--e-5);
+    border-bottom: 1px solid var(--c-bord);
+    background: var(--c-surface-2);
+    list-style: none; margin: 0;
+  }
+  .etape { display: flex; align-items: center; gap: var(--e-2); font-size: .8125rem; font-weight: 600; color: var(--c-texte-3); }
+  .etape .rond {
+    width: 22px; height: 22px; border-radius: var(--r-pilule);
+    display: grid; place-items: center;
+    font: 700 .6875rem/1 var(--mono);
+    background: var(--c-surface); border: 1px solid var(--c-bord-controle); color: var(--c-texte-2);
+  }
+  .etape.actif { color: var(--c-texte); }
+  .etape.actif .rond { background: var(--c-primaire); border-color: var(--c-primaire); color: var(--c-sur-primaire); }
+  .etape.fait { color: var(--c-texte-2); }
+  .etape.fait .rond { background: var(--c-succes-doux); border-color: var(--c-succes); color: var(--c-succes); }
+  .etape + .etape::before { content: "›"; color: var(--c-texte-3); font-size: 1rem; margin-right: var(--e-1); }
+
+  /* ---------- Formulaires ---------- */
+
+  .formulaire { display: grid; gap: var(--e-4); }
+  .ligne-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--e-3); }
+
+  .estimation { border-color: var(--c-primaire); }
+  .estimation .grand { font-size: 1.375rem; font-weight: 700; letter-spacing: -.02em; }
+  .estimation .detail { color: var(--c-texte-2); font-size: .8125rem; margin-top: var(--e-1); }
+  .estimation hr { border: 0; border-top: 1px solid var(--c-bord); margin: var(--e-3) 0; }
+
+  /* ---------- État vide ---------- */
+
+  .vide {
+    display: grid; gap: var(--e-2); justify-items: center; text-align: center;
+    padding: var(--e-7) var(--e-4);
+    color: var(--c-texte-2);
+  }
+  .vide .rond {
+    width: 48px; height: 48px; border-radius: var(--r-pilule);
+    display: grid; place-items: center;
+    background: var(--c-surface-3); color: var(--c-texte-2);
+    margin-bottom: var(--e-1);
+  }
+  .vide h3 { color: var(--c-texte); }
+  .vide p { font-size: .875rem; max-width: 46ch; }
+  .vide .actions { display: flex; gap: var(--e-2); margin-top: var(--e-1); flex-wrap: wrap; justify-content: center; }
+
+  /* ---------- Barre d'état ---------- */
+
+  .barre-etat {
+    display: flex; align-items: center; gap: var(--e-3); flex-wrap: wrap;
+    padding: var(--e-2) var(--e-4);
+    border-top: 1px solid var(--c-bord);
+    background: var(--c-surface-2);
+    font-size: .75rem; color: var(--c-texte-3);
+  }
+  .barre-etat .pousse { margin-left: auto; }
+  .barre-etat .temoin { display: inline-flex; align-items: center; gap: var(--e-1); color: var(--c-texte-2); font-weight: 600; }
+  .barre-etat .temoin .ico { width: 13px; height: 13px; color: var(--c-succes); }
+
+  /* ---------- Panneau latéral (détail) ---------- */
+
+  .panneau {
+    border-left: 1px solid var(--c-bord);
+    background: var(--c-surface-2);
+    padding: var(--e-3) var(--e-4);
+    overflow: auto;
+    min-width: 0;
+  }
+  .panneau h3 { margin-bottom: var(--e-1); }
+  .panneau .url {
+    font-family: var(--mono); font-size: .6875rem; color: var(--c-texte-3);
+    word-break: break-all; margin-bottom: var(--e-3);
+  }
+  .panneau .actions { display: flex; gap: var(--e-1); flex-wrap: wrap; margin-top: var(--e-3); }
+
+  .vue-2-colonnes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 330px;
+    flex: 1; min-height: 0;
+  }
+  @media (max-width: 980px) { .vue-2-colonnes { grid-template-columns: minmax(0, 1fr); } }
+  .defilement { overflow: auto; min-height: 0; }
+
+  /* ---------- Colonne de notes de revue ---------- */
+
+  .notes { display: none; }
+  .notes.actif { display: block; }
+  .notes .carte-note {
+    border: 1px solid var(--c-bord); border-radius: var(--r-3);
+    background: var(--c-surface); padding: var(--e-4);
+    position: sticky; top: var(--e-5);
+  }
+  .notes h2 { margin-bottom: var(--e-1); }
+  .notes .intro { margin: 0 0 var(--e-3); font-size: .8125rem; color: var(--c-texte-2); }
+  .notes ol { margin: 0; padding: 0; list-style: none; counter-reset: n; display: grid; gap: var(--e-2); }
+  .notes li {
+    counter-increment: n; position: relative; padding-left: 28px;
+    font-size: .8125rem; color: var(--c-texte-2); line-height: 1.55;
+  }
+  .notes li::before {
+    content: counter(n); position: absolute; left: 0; top: 1px;
+    width: 19px; height: 19px; border-radius: var(--r-pilule);
+    background: var(--c-primaire-doux); color: var(--c-texte);
+    font: 700 .6875rem/19px var(--mono); text-align: center;
+  }
+  .notes li b { color: var(--c-texte); }
+  .notes li code, .notes li .ref { font-family: var(--mono); font-size: .6875rem; background: var(--c-surface-3); padding: 1px 4px; border-radius: var(--r-1); color: var(--c-texte-2); }
+  .notes .pied { margin-top: var(--e-3); padding-top: var(--e-3); border-top: 1px solid var(--c-bord); font-size: .75rem; color: var(--c-texte-3); }
+
+  /* Renvoi ①②③ dans la maquette */
+  .renvoi {
+    display: inline-grid; place-items: center;
+    width: 17px; height: 17px; border-radius: var(--r-pilule);
+    background: var(--c-primaire); color: var(--c-sur-primaire);
+    font: 700 .625rem/1 var(--mono);
+    vertical-align: 2px; margin-left: var(--e-1);
+  }
+
+  .pied-page {
+    max-width: 1640px; margin: var(--e-5) auto 0;
+    color: var(--c-texte-3); font-size: .75rem;
+    display: flex; gap: var(--e-4); flex-wrap: wrap;
+  }
+
+  /* ---------- Mouvement réduit ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<a class="evitement" href="#contenu-principal">Aller au contenu principal</a>
+
+<!-- ================== Sprite d'icônes : SVG, jamais d'emoji ================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></symbol>
+    <symbol id="i-liste" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M8 5h11M8 12h11M8 19h11M4 5h.01M4 12h.01M4 19h.01"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3Z"/></symbol>
+    <symbol id="i-horloge" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-journal" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-bouclier" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.5 3 7.6 7 9 4-1.4 7-4.5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-reglage" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 11a2 2 0 1 1 0 4 1.7 1.7 0 0 0-1.6 1Z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-croix" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5-12-7.5Z"/></symbol>
+    <symbol id="i-alerte" viewBox="0 0 24 24"><path d="M10.3 4.3 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-chevron-bas" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-recherche" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></symbol>
+    <symbol id="i-dossier" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></symbol>
+    <symbol id="i-externe" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></symbol>
+    <symbol id="i-filtre" viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z"/></symbol>
+    <symbol id="i-calendrier" viewBox="0 0 24 24"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-disque" viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><path d="M7 15h4M15 9h2"/></symbol>
+    <symbol id="i-lune" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></symbol>
+    <symbol id="i-soleil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+    <symbol id="i-points" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+    <symbol id="i-tri" viewBox="0 0 24 24"><path d="M7 9h10l-5 6-5-6Z"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></symbol>
+  </defs>
+</svg>
+
+<div class="entete-page" role="region" aria-label="À propos de cette maquette">
+  <div class="titre-bloc">
+    <h1>XDM — maquette de l'interface de bureau <span class="etiquette primaire">v2</span></h1>
+    <p>
+      7 écrans, refaits selon le skill <strong>ui-ux-pro-max 2.15.0</strong> : style Flat Design,
+      palette teal/orange, icônes SVG, contraste vérifié, focus visible, mouvement réduit respecté.
+      Contenu fictif, aucune requête réseau.
+    </p>
+  </div>
+  <div class="actions-page">
+    <span class="etiquette">Téléchargements · Site Grabber · Journal</span>
+    <button class="btn" type="button" id="bascule-theme" aria-pressed="false">
+      <svg class="ico ico-sm" aria-hidden="true"><use href="#i-lune"/></svg>
+      <span>Thème sombre</span>
+    </button>
+  </div>
+</div>
+
+<div class="scene">
+
+  <!-- ============================= FENÊTRE ============================= -->
+  <div class="fenetre">
+
+    <header class="barre-titre">
+      <span class="logo" aria-hidden="true">X</span>
+      <span><strong>XDM</strong></span>
+      <span class="sep" aria-hidden="true">·</span>
+      <span id="titre-fenetre">Téléchargements</span>
+      <div class="outils">
+        <button class="bouton-fenetre" type="button" aria-label="Réduire" aria-hidden="false">
+          <svg class="ico ico-sm" aria-hidden="true"><path d="M5 12h14"/></svg>
+        </button>
+        <button class="bouton-fenetre" type="button" aria-label="Agrandir">
+          <svg class="ico ico-sm" aria-hidden="true"><path d="M5 5h14v14H5z"/></svg>
+        </button>
+        <button class="bouton-fenetre" type="button" aria-label="Fermer">
+          <svg class="ico ico-sm" aria-hidden="true"><use href="#i-croix"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <nav class="barre-menu" aria-label="Menu de l'application">
+      <button type="button">Fichier</button>
+      <button type="button">Édition</button>
+      <button type="button">Affichage</button>
+      <button type="button">Outils</button>
+      <button type="button">Aide</button>
+    </nav>
+
+    <div class="corps">
+
+      <!-- ---------------------- Navigation ---------------------- -->
+      <nav class="nav" aria-label="Navigation principale">
+        <div class="nav-groupe" id="groupe-telechargements">Téléchargements</div>
+        <button class="nav-lien" type="button" data-ecran="telechargements" aria-current="page" aria-describedby="groupe-telechargements">
+          <svg class="ico" aria-hidden="true"><use href="#i-download"/></svg>
+          <span>Téléchargements</span>
+          <span class="nav-compte" aria-label="3 en cours">3</span>
+        </button>
+        <button class="nav-lien" type="button" data-ecran="file">
+          <svg class="ico" aria-hidden="true"><use href="#i-file"/></svg>
+          <span>File d'attente</span>
+          <span class="nav-compte" aria-label="14 en attente">14</span>
+        </button>
+
+        <div class="nav-groupe" id="groupe-site">Site Grabber</div>
+        <button class="nav-lien" type="button" data-ecran="grabber" aria-describedby="groupe-site">
+          <svg class="ico" aria-hidden="true"><use href="#i-globe"/></svg>
+          <span>Site Grabber</span>
+          <span class="nav-compte" aria-label="1 aspiration en cours">1</span>
+        </button>
+        <button class="nav-lien" type="button" data-ecran="verification">
+          <svg class="ico" aria-hidden="true"><use href="#i-bouclier"/></svg>
+          <span>Vérification</span>
+          <span class="nav-compte alerte" aria-label="2 anomalies">2</span>
+        </button>
+
+        <div class="nav-groupe" id="groupe-suivi">Suivi</div>
+        <button class="nav-lien" type="button" data-ecran="historique" aria-describedby="groupe-suivi">
+          <svg class="ico" aria-hidden="true"><use href="#i-horloge"/></svg>
+          <span>Historique</span>
+          <span class="nav-compte" aria-label="128 entrées">128</span>
+        </button>
+        <button class="nav-lien" type="button" data-ecran="journal">
+          <svg class="ico" aria-hidden="true"><use href="#i-journal"/></svg>
+          <span>Journal</span>
+        </button>
+
+        <div class="nav-groupe" id="groupe-systeme">Système</div>
+        <button class="nav-lien" type="button" data-ecran="reglages" aria-describedby="groupe-systeme">
+          <svg class="ico" aria-hidden="true"><use href="#i-reglage"/></svg>
+          <span>Réglages</span>
+        </button>
+
+        <div class="nav-pied">
+          <b>8</b> connexions · <b>12,4 Mio/s</b><br>
+          <span style="font-family:var(--mono)">~/Téléchargements</span>
+        </div>
+      </nav>
+
+      <main class="contenu" id="contenu-principal" tabindex="-1">
+        <!-- =================== 1. TÉLÉCHARGEMENTS =================== -->
+        <section class="ecran actif" id="ecran-telechargements" aria-labelledby="t-tel">
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-tel">Téléchargements</h2>
+              <p>3 transferts en cours, 12,4 Mio/s cumulés, 14 tâches en file d'attente.</p>
+            </div>
+            <div class="actions">
+              <div class="groupe-segmente" role="group" aria-label="Vue de la liste">
+                <button type="button" aria-pressed="true">Liste</button>
+                <button type="button" aria-pressed="false">Détail</button>
+              </div>
+              <button class="btn" type="button">
+                <svg class="ico ico-sm" aria-hidden="true"><use href="#i-plus"/></svg>
+                Ajouter une URL
+              </button>
+              <button class="btn principal" type="button">
+                <svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg>
+                Tout reprendre
+              </button>
+            </div>
+          </div>
+
+          <div class="barre-outils">
+            <div class="recherche">
+              <svg class="ico" aria-hidden="true"><use href="#i-recherche"/></svg>
+              <label class="sr-only" for="q-tel">Rechercher un téléchargement</label>
+              <input id="q-tel" type="search" placeholder="Rechercher un nom ou une URL…">
+            </div>
+            <div class="filtres" role="group" aria-label="Filtrer par état">
+              <button class="bascule" type="button" aria-pressed="true">Tous <span class="num">6</span></button>
+              <button class="bascule" type="button" aria-pressed="false">En cours <span class="num">3</span></button>
+              <button class="bascule" type="button" aria-pressed="false">En pause <span class="num">1</span></button>
+              <button class="bascule" type="button" aria-pressed="false">Terminés <span class="num">2</span></button>
+            </div>
+            <button class="btn discret" type="button" style="margin-left:auto">
+              <svg class="ico ico-sm" aria-hidden="true"><use href="#i-filtre"/></svg>
+              Plus de filtres
+            </button>
+          </div>
+
+          <div class="barre-selection">
+            <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
+            <span>1 élément sélectionné</span>
+            <span class="pousse">
+              <button class="btn" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-pause"/></svg> Mettre en pause</button>
+              <button class="btn" type="button">Priorité haute</button>
+              <button class="btn danger" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-croix"/></svg> Retirer</button>
+            </span>
+          </div>
+
+          <div class="vue-2-colonnes">
+            <div class="defilement">
+              <div class="enveloppe-table">
+                <table>
+                  <caption class="sr-only">Liste des téléchargements, 6 éléments</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col" style="width:36px"><span class="sr-only">Sélection</span></th>
+                      <th scope="col" aria-sort="ascending">
+                        Nom
+                        <svg class="ico ico-sm" aria-hidden="true" style="vertical-align:-2px"><use href="#i-tri"/></svg>
+                      </th>
+                      <th scope="col">État</th>
+                      <th scope="col" style="min-width:170px">Progression</th>
+                      <th scope="col" class="droite">Taille</th>
+                      <th scope="col" class="droite">Vitesse</th>
+                      <th scope="col" class="droite">Reste</th>
+                      <th scope="col" style="width:44px"><span class="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr aria-selected="true">
+                      <td><input type="checkbox" checked aria-label="Sélectionner ubuntu-24.04.1-desktop-amd64.iso"></td>
+                      <td>
+                        <div class="cellule-nom">
+                          <span class="type" aria-hidden="true">ISO</span>
+                          <span class="txt"><b>ubuntu-24.04.1-desktop-amd64.iso</b><span>releases.ubuntu.com · 8 connexions</span></span>
+                        </div>
+                      </td>
+                      <td><span class="etat actif"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg> En cours</span></td>
+                      <td>
+                        <div class="cellule-progression">
+                          <div class="jauge" role="progressbar" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100" aria-label="Progression de ubuntu-24.04.1"><span style="width:62%"></span></div>
+                          <span class="pct">62 %</span>
+                        </div>
+                      </td>
+                      <td class="droite num">5,7 Gio</td>
+                      <td class="droite num">6,1 Mio/s</td>
+                      <td class="droite num">≈ 14 min</td>
+                      <td><button class="btn-ico" type="button" aria-label="Actions pour ubuntu-24.04.1"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-points"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" aria-label="Sélectionner blender-4.2.5"></td>
+                      <td>
+                        <div class="cellule-nom">
+                          <span class="type" aria-hidden="true">XZ</span>
+                          <span class="txt"><b>blender-4.2.5-linux-x64.tar.xz</b><span>download.blender.org · 4 connexions</span></span>
+                        </div>
+                      </td>
+                      <td><span class="etat actif"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg> En cours</span></td>
+                      <td>
+                        <div class="cellule-progression">
+                          <div class="jauge" role="progressbar" aria-valuenow="38" aria-valuemin="0" aria-valuemax="100" aria-label="Progression de blender-4.2.5"><span style="width:38%"></span></div>
+                          <span class="pct">38 %</span>
+                        </div>
+                      </td>
+                      <td class="droite num">312 Mio</td>
+                      <td class="droite num">4,3 Mio/s</td>
+                      <td class="droite num">≈ 1 min</td>
+                      <td><button class="btn-ico" type="button" aria-label="Actions pour blender-4.2.5"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-points"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" aria-label="Sélectionner podcast-ep-42.mp3"></td>
+                      <td>
+                        <div class="cellule-nom">
+                          <span class="type" aria-hidden="true">MP3</span>
+                          <span class="txt"><b>podcast-ep-42.mp3</b><span>media.exemple.fr · 2 connexions</span></span>
+                        </div>
+                      </td>
+                      <td><span class="etat actif"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg> En cours</span></td>
+                      <td>
+                        <div class="cellule-progression">
+                          <div class="jauge" role="progressbar" aria-valuenow="87" aria-valuemin="0" aria-valuemax="100" aria-label="Progression de podcast-ep-42"><span style="width:87%"></span></div>
+                          <span class="pct">87 %</span>
+                        </div>
+                      </td>
+                      <td class="droite num">84,0 Mio</td>
+                      <td class="droite num">2,0 Mio/s</td>
+                      <td class="droite num">≈ 6 s</td>
+                      <td><button class="btn-ico" type="button" aria-label="Actions pour podcast-ep-42"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-points"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" aria-label="Sélectionner dataset-imagenet-val"></td>
+                      <td>
+                        <div class="cellule-nom">
+                          <span class="type" aria-hidden="true">TAR</span>
+                          <span class="txt"><b>dataset-imagenet-val.tar</b><span>jeu de données interne · interrompu à 41 %</span></span>
+                        </div>
+                      </td>
+                      <td><span class="etat pause"><svg class="ico" aria-hidden="true"><use href="#i-pause"/></svg> En pause</span></td>
+                      <td>
+                        <div class="cellule-progression">
+                          <div class="jauge attention" role="progressbar" aria-valuenow="41" aria-valuemin="0" aria-valuemax="100" aria-label="Progression de dataset-imagenet-val"><span style="width:41%"></span></div>
+                          <span class="pct">41 %</span>
+                        </div>
+                      </td>
+                      <td class="droite num">6,8 Gio</td>
+                      <td class="droite num">—</td>
+                      <td class="droite num">—</td>
+                      <td><button class="btn-ico" type="button" aria-label="Actions pour dataset-imagenet-val"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-points"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" aria-label="Sélectionner rapport-annuel-2025"></td>
+                      <td>
+                        <div class="cellule-nom">
+                          <span class="type" aria-hidden="true">PDF</span>
+                          <span class="txt"><b>rapport-annuel-2025.pdf</b><span>intranet.exemple.fr · terminé à 14:02</span></span>
+                        </div>
+                      </td>
+                      <td><span class="etat termine"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Terminé</span></td>
+                      <td>
+                        <div class="cellule-progression">
+                          <div class="jauge succes" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Progression de rapport-annuel-2025"><span style="width:100%"></span></div>
+                          <span class="pct">100 %</span>
+                        </div>
+                      </td>
+                      <td class="droite num">12,4 Mio</td>
+                      <td class="droite num">—</td>
+                      <td class="droite num">—</td>
+                      <td><button class="btn-ico" type="button" aria-label="Actions pour rapport-annuel-2025"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-points"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" aria-label="Sélectionner archive-logs-2025-09"></td>
+                      <td>
+                        <div class="cellule-nom">
+                          <span class="type" aria-hidden="true">ZIP</span>
+                          <span class="txt"><b>archive-logs-2025-09.zip</b><span>intranet.exemple.fr · terminé à 13:58</span></span>
+                        </div>
+                      </td>
+                      <td><span class="etat termine"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Terminé</span></td>
+                      <td>
+                        <div class="cellule-progression">
+                          <div class="jauge succes" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Progression de archive-logs-2025-09"><span style="width:100%"></span></div>
+                          <span class="pct">100 %</span>
+                        </div>
+                      </td>
+                      <td class="droite num">248 Mio</td>
+                      <td class="droite num">—</td>
+                      <td class="droite num">—</td>
+                      <td><button class="btn-ico" type="button" aria-label="Actions pour archive-logs-2025-09"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-points"/></svg></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <aside class="panneau" aria-label="Détail de l'élément sélectionné">
+              <h3>ubuntu-24.04.1-desktop-amd64.iso</h3>
+              <div class="url">https://releases.ubuntu.com/24.04.1/ubuntu-24.04.1-desktop-amd64.iso</div>
+
+              <dl class="liste-def">
+                <dt>Taille</dt><dd>5,7 Gio</dd>
+                <dt>Téléchargé</dt><dd>3,5 Gio</dd>
+                <dt>Morceaux</dt><dd>18 / 29</dd>
+                <dt>Connexions</dt><dd>8</dd>
+                <dt>Débit</dt><dd>6,1 Mio/s</dd>
+                <dt>Reste</dt><dd>≈ 14 min</dd>
+                <dt>Reprise</dt><dd>oui (206)</dd>
+              </dl>
+
+              <div class="morceaux" aria-hidden="true">
+                <i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i>
+                <i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i>
+                <i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i>
+                <i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="encours"></i><i></i>
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <div class="legende">
+                <span><b style="background:var(--c-primaire)"></b> reçu</span>
+                <span><b style="background:var(--c-accent)"></b> en cours</span>
+                <span><b style="background:var(--c-surface-3)"></b> à venir</span>
+              </div>
+
+              <div class="actions">
+                <button class="btn" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-pause"/></svg> Pause</button>
+                <button class="btn discret" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-dossier"/></svg> Dossier</button>
+                <button class="btn discret" type="button">Copier l'URL</button>
+              </div>
+
+              <div class="carte" style="margin-top:var(--e-4)">
+                <h4 style="margin-bottom:var(--e-2)">Derniers événements</h4>
+                <dl class="liste-def">
+                  <dt>14:07:12</dt><dd style="font-family:var(--police)">reprise 206</dd>
+                  <dt>14:06:58</dt><dd style="font-family:var(--police)">connexion 8/8</dd>
+                  <dt>14:06:41</dt><dd style="font-family:var(--police)">nouveau morceau</dd>
+                </dl>
+                <button class="btn discret" type="button" style="margin-top:var(--e-2);padding-left:0">Ouvrir le journal <svg class="ico ico-sm" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- =================== 2. SITE GRABBER =================== -->
+        <section class="ecran" id="ecran-grabber" aria-labelledby="t-grab" hidden>
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-grab">Site Grabber</h2>
+              <p>Copie locale d'un site, dans le périmètre déclaré. Une aspiration est en cours sur <code style="font-family:var(--mono);font-size:.75rem">exemple.fr</code>.</p>
+            </div>
+            <div class="actions">
+              <button class="btn" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-horloge"/></svg> Aspirations</button>
+              <button class="btn principal" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-globe"/></svg> Lancer l'aspiration</button>
+            </div>
+          </div>
+
+          <ol class="etapes">
+            <li class="etape fait"><span class="rond" aria-hidden="true">1</span> Adresse</li>
+            <li class="etape actif" aria-current="step"><span class="rond" aria-hidden="true">2</span> Périmètre</li>
+            <li class="etape"><span class="rond" aria-hidden="true">3</span> Lancement</li>
+          </ol>
+
+          <div class="zone" style="display:grid;gap:var(--e-4)">
+            <div class="grille-2">
+              <div class="carte formulaire">
+                <h3>Adresse de départ</h3>
+                <div class="champ">
+                  <label for="url-depart">URL</label>
+                  <input id="url-depart" type="text" value="https://exemple.fr/" spellcheck="false">
+                  <span class="aide">Schémas acceptés : http, https. Le site reste la seule cible contactée.</span>
+                </div>
+
+                <h3>Périmètre</h3>
+                <div class="ligne-form">
+                  <div class="champ">
+                    <label for="profondeur">Profondeur</label>
+                    <select id="profondeur">
+                      <option>1 niveau</option>
+                      <option selected>2 niveaux</option>
+                      <option>3 niveaux</option>
+                      <option>Illimité (déconseillé)</option>
+                    </select>
+                  </div>
+                  <div class="champ">
+                    <label for="pages">Pages maximum</label>
+                    <input id="pages" type="number" value="500">
+                    <span class="aide">Arrêt propre au seuil atteint.</span>
+                  </div>
+                </div>
+
+                <div class="champ">
+                  <span class="etiquette-champ">Extensions conservées</span>
+                  <div class="zone-pastilles">
+                    <span class="puce">.html <button class="retirer" type="button" aria-label="Retirer .html"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-croix"/></svg></button></span>
+                    <span class="puce">.css <button class="retirer" type="button" aria-label="Retirer .css"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-croix"/></svg></button></span>
+                    <span class="puce">.js <button class="retirer" type="button" aria-label="Retirer .js"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-croix"/></svg></button></span>
+                    <span class="puce">.png <button class="retirer" type="button" aria-label="Retirer .png"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-croix"/></svg></button></span>
+                    <span class="puce">.svg <button class="retirer" type="button" aria-label="Retirer .svg"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-croix"/></svg></button></span>
+                    <button class="puce ajout" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-plus"/></svg> Ajouter</button>
+                  </div>
+                </div>
+
+                <div style="display:grid;gap:var(--e-1)">
+                  <label class="case"><input type="checkbox" checked> <span>Rester sur le même domaine <span class="sous">Les liens sortants sont notés mais non suivis.</span></span></label>
+                  <label class="case"><input type="checkbox" checked> <span>Réécrire les liens pour la copie locale <span class="sous">Les URL absolues deviennent des chemins relatifs.</span></span></label>
+                  <label class="case"><input type="checkbox" checked disabled> <span>Respecter <code style="font-family:var(--mono)">robots.txt</code> <span class="sous">Toujours actif : aucune exception n'est prévue par le gel D-004.</span></span></label>
+                </div>
+              </div>
+
+              <div style="display:grid;gap:var(--e-3)">
+                <div class="carte estimation">
+                  <h3>Estimation avant lancement</h3>
+                  <div class="grand">≈ 184 pages</div>
+                  <div class="detail">et 612 ressources, ≈ 240 Mio, ≈ 4 min à 2 requêtes/s.</div>
+                  <hr>
+                  <dl class="liste-def">
+                    <dt>Domaine</dt><dd>exemple.fr</dd>
+                    <dt>Hors périmètre</dt><dd>37 liens</dd>
+                    <dt>Exclus par robots</dt><dd>4 URL</dd>
+                    <dt>Profondeur</dt><dd>2</dd>
+                  </dl>
+                  <button class="btn" type="button" style="margin-top:var(--e-3);width:100%">
+                    <svg class="ico ico-sm" aria-hidden="true"><use href="#i-recherche"/></svg>
+                    Analyser sans télécharger
+                  </button>
+                </div>
+
+                <div class="carte">
+                  <h3>Politesse</h3>
+                  <dl class="liste-def">
+                    <dt>Délai entre requêtes</dt><dd>500 ms</dd>
+                    <dt>User-Agent</dt><dd>XDM/1.0</dd>
+                    <dt>Connexions</dt><dd>2</dd>
+                  </dl>
+                  <p class="aide" style="margin-top:var(--e-2)">Aucun contournement de limitation, aucun cookie extrait, aucun appel aux serveurs de l'éditeur (D-004).</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================== 3. FILE D'ATTENTE =================== -->
+        <section class="ecran" id="ecran-file" aria-labelledby="t-file" hidden>
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-file">File d'attente</h2>
+              <p>14 tâches en attente, exécutées dans l'ordre. Reprise automatique dans 22 min.</p>
+            </div>
+            <div class="actions">
+              <button class="btn" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-pause"/></svg> Suspendre la file</button>
+              <button class="btn principal" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg> Démarrer maintenant</button>
+            </div>
+          </div>
+
+          <div class="barre-outils">
+            <div class="recherche">
+              <svg class="ico" aria-hidden="true"><use href="#i-recherche"/></svg>
+              <label class="sr-only" for="q-file">Rechercher dans la file</label>
+              <input id="q-file" type="search" placeholder="Filtrer les 14 tâches…">
+            </div>
+            <span class="etiquette"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-horloge"/></svg> Fenêtre 01:00 – 07:00</span>
+            <span class="etiquette">Plafond 4 simultanés</span>
+            <span class="pousse" style="margin-left:auto">
+              <button class="btn discret" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-filtre"/></svg> Priorité</button>
+              <button class="btn discret" type="button">Tout retirer</button>
+            </span>
+          </div>
+
+          <div class="defilement">
+            <div class="enveloppe-table">
+              <table>
+                <caption class="sr-only">Tâches en attente, ordre de passage</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" style="width:52px" class="droite">Ordre</th>
+                    <th scope="col">Tâche</th>
+                    <th scope="col">Demandée le</th>
+                    <th scope="col" class="droite">Taille</th>
+                    <th scope="col">Priorité</th>
+                    <th scope="col" style="width:150px">Réordonner</th>
+                    <th scope="col" style="width:44px"><span class="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="droite num">1</td>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">DEB</span><span class="txt"><b>libreoffice-24.8.deb</b><span>download.documentfoundation.org</span></span></div></td>
+                    <td class="num">14:09</td>
+                    <td class="droite num">182 Mio</td>
+                    <td><span class="puce" style="background:var(--c-danger-doux);color:var(--c-danger)">Haute</span></td>
+                    <td>
+                      <button class="btn-ico" type="button" aria-label="Monter libreoffice-24.8"><svg class="ico ico-sm" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
+                      <button class="btn-ico" type="button" aria-label="Descendre libreoffice-24.8" disabled><svg class="ico ico-sm" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+                    </td>
+                    <td><button class="btn-ico" type="button" aria-label="Actions pour libreoffice-24.8"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-points"/></svg></button></td>
+                  </tr>
+                  <tr>
+                    <td class="droite num">2</td>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">PDF</span><span class="txt"><b>manuel-utilisateur.pdf</b><span>docs.exemple.fr</span></span></div></td>
+                    <td class="num">14:09</td>
+                    <td class="droite num">8,2 Mio</td>
+                    <td><span class="puce">Normale</span></td>
+                    <td>
+                      <button class="btn-ico" type="button" aria-label="Monter manuel-utilisateur"><svg class="ico ico-sm" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
+                      <button class="btn-ico" type="button" aria-label="Descendre manuel-utilisateur"><svg class="ico ico-sm" aria-hidden="true"><path d="m6 9 6 6-6-6"/></svg></button>
+                    </td>
+                    <td><button class="btn-ico" type="button" aria-label="Actions pour manuel-utilisateur"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-points"/></svg></button></td>
+                  </tr>
+                  <tr>
+                    <td class="droite num">3</td>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">MP4</span><span class="txt"><b>cours-reseaux-04.mp4</b><span>media.univ.exemple.fr</span></span></div></td>
+                    <td class="num">14:10</td>
+                    <td class="droite num">1,4 Gio</td>
+                    <td><span class="puce" style="background:var(--c-attention-doux);color:var(--c-attention)">Basse</span></td>
+                    <td>
+                      <button class="btn-ico" type="button" aria-label="Monter cours-reseaux-04"><svg class="ico ico-sm" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
+                      <button class="btn-ico" type="button" aria-label="Descendre cours-reseaux-04"><svg class="ico ico-sm" aria-hidden="true"><path d="m6 9 6 6-6-6"/></svg></button>
+                    </td>
+                    <td><button class="btn-ico" type="button" aria-label="Actions pour cours-reseaux-04"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-points"/></svg></button></td>
+                  </tr>
+                  <tr>
+                    <td class="droite num">4</td>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">ZIP</span><span class="txt"><b>jeu-donnees-v3.zip</b><span>partage.exemple.fr</span></span></div></td>
+                    <td class="num">14:11</td>
+                    <td class="droite num">2,1 Gio</td>
+                    <td><span class="puce">Normale</span></td>
+                    <td>
+                      <button class="btn-ico" type="button" aria-label="Monter jeu-donnees-v3"><svg class="ico ico-sm" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
+                      <button class="btn-ico" type="button" aria-label="Descendre jeu-donnees-v3"><svg class="ico ico-sm" aria-hidden="true"><path d="m6 9 6 6-6-6"/></svg></button>
+                    </td>
+                    <td><button class="btn-ico" type="button" aria-label="Actions pour jeu-donnees-v3"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-points"/></svg></button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style="padding:0 var(--e-5) var(--e-2)">
+              <p class="aide" style="font-size:.75rem;color:var(--c-texte-3)">
+                10 autres tâches ne sont pas affichées.
+                <button class="btn discret" type="button" style="min-height:28px;padding:0 var(--e-1)">Afficher tout</button>
+              </p>
+            </div>
+
+            <div class="zone" style="border-top:1px solid var(--c-bord)">
+              <div class="vide">
+                <span class="rond" aria-hidden="true"><svg class="ico ico-lg" aria-hidden="true"><use href="#i-check"/></svg></span>
+                <h3>Rien de terminé dans la file</h3>
+                <p>Une tâche quitte la file dès qu'elle est finie : son résultat part dans l'historique. La file ne contient donc que ce qui reste à faire.</p>
+                <div class="actions">
+                  <button class="btn" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-horloge"/></svg> Ouvrir l'historique</button>
+                  <button class="btn discret" type="button">Régler la planification</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================== 4. JOURNAL =================== -->
+        <section class="ecran" id="ecran-journal" aria-labelledby="t-journal" hidden>
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-journal">Journal</h2>
+              <p>Flux d'exécution en direct, une ligne par événement. Rien n'est envoyé ailleurs qu'à ce fichier local.</p>
+            </div>
+            <div class="actions">
+              <button class="btn" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-disque"/></svg> Enregistrer le journal</button>
+              <button class="btn discret" type="button">Copier</button>
+              <button class="btn discret" type="button">Vider</button>
+            </div>
+          </div>
+
+          <div class="barre-outils">
+            <div class="filtres" role="group" aria-label="Niveau de journalisation">
+              <button class="bascule" type="button" aria-pressed="true">Tout</button>
+              <button class="bascule" type="button" aria-pressed="false">Info</button>
+              <button class="bascule" type="button" aria-pressed="true">Avertissements</button>
+              <button class="bascule" type="button" aria-pressed="true">Erreurs</button>
+            </div>
+            <button class="bascule" type="button" aria-pressed="true" style="margin-left:auto">
+              <svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg> Défilement auto
+            </button>
+            <span class="etiquette" style="font-family:var(--mono)">journal-2026-10-30.log</span>
+          </div>
+
+          <p class="sr-only" role="status" aria-live="polite">3 nouveaux événements depuis la dernière lecture.</p>
+
+          <div class="flux">
+            <div class="evenement">
+              <span class="heure">14:07:12</span>
+              <span class="source">xdm/torrent</span>
+              <span class="message">reprise du morceau 19 via <code>Range: bytes=…</code> → <code>206 Partial Content</code></span>
+              <span class="niveau info"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-info"/></svg> info</span>
+            </div>
+            <div class="evenement">
+              <span class="heure">14:07:03</span>
+              <span class="source">grabber</span>
+              <span class="message">page ignorée par <code>robots.txt</code> : <code>/prive/</code></span>
+              <span class="niveau attention"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-alerte"/></svg> avert.</span>
+            </div>
+            <div class="evenement">
+              <span class="heure">14:06:58</span>
+              <span class="source">xdm/torrent</span>
+              <span class="message">8 connexions ouvertes sur <code>releases.ubuntu.com</code></span>
+              <span class="niveau info"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-info"/></svg> info</span>
+            </div>
+            <div class="evenement">
+              <span class="heure">14:06:41</span>
+              <span class="source">xdm</span>
+              <span class="message">fichier temporaire écrit avec les droits <code>0600</code></span>
+              <span class="niveau info"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-info"/></svg> info</span>
+            </div>
+            <div class="evenement">
+              <span class="heure">14:02:07</span>
+              <span class="source">xdm</span>
+              <span class="message">rapport-annuel-2025.pdf terminé — 12,4 Mio en 41 s (301 Kio/s)</span>
+              <span class="niveau succes"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> succès</span>
+            </div>
+            <div class="evenement">
+              <span class="heure">14:01:52</span>
+              <span class="source">verifier</span>
+              <span class="message">2 anomalies : 1 fichier manquant, 1 taille différente de <code>Content-Length</code></span>
+              <span class="niveau erreur"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-alerte"/></svg> erreur</span>
+            </div>
+            <div class="evenement">
+              <span class="heure">14:01:40</span>
+              <span class="source">xdm</span>
+              <span class="message">nouvelle tentative 2/3 après délai de 2 s (503 du serveur)</span>
+              <span class="niveau attention"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-alerte"/></svg> avert.</span>
+            </div>
+            <div class="evenement">
+              <span class="heure">14:01:12</span>
+              <span class="source">xdm</span>
+              <span class="message">en-tête <code>Accept-Ranges: bytes</code> — reprise possible</span>
+              <span class="niveau info"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-info"/></svg> info</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================== 5. HISTORIQUE =================== -->
+        <section class="ecran" id="ecran-historique" aria-labelledby="t-hist" hidden>
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-hist">Historique</h2>
+              <p>128 entrées conservées (30 jours). Chaque entrée garde son verdict et son code de sortie.</p>
+            </div>
+            <div class="actions">
+              <button class="btn" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-doc"/></svg> Exporter en CSV</button>
+              <button class="btn discret" type="button">Purger…</button>
+            </div>
+          </div>
+
+          <div class="zone zone-serrée" style="border-bottom:1px solid var(--c-bord)">
+            <div class="compteurs">
+              <div class="compteur"><span class="libelle">Entrées</span><span class="valeur">128</span></div>
+              <div class="compteur succes"><span class="libelle"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> Réussies</span><span class="valeur">119</span></div>
+              <div class="compteur danger"><span class="libelle"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-alerte"/></svg> En échec</span><span class="valeur">7</span></div>
+              <div class="compteur"><span class="libelle"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-horloge"/></svg> Interrompues</span><span class="valeur">2</span></div>
+            </div>
+          </div>
+
+          <div class="barre-outils">
+            <div class="recherche">
+              <svg class="ico" aria-hidden="true"><use href="#i-recherche"/></svg>
+              <label class="sr-only" for="q-hist">Rechercher dans l'historique</label>
+              <input id="q-hist" type="search" placeholder="Nom, domaine, code de sortie…">
+            </div>
+            <span class="etiquette"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-calendrier"/></svg> 30 derniers jours</span>
+            <div class="filtres" role="group" aria-label="Filtrer par résultat">
+              <button class="bascule" type="button" aria-pressed="true">Tout</button>
+              <button class="bascule" type="button" aria-pressed="false">Réussies</button>
+              <button class="bascule" type="button" aria-pressed="false">En échec</button>
+            </div>
+            <button class="btn discret" type="button" id="demo-vide" style="margin-left:auto">Voir l'état sans résultat</button>
+          </div>
+
+          <div class="defilement" id="hist-liste">
+            <div class="enveloppe-table">
+              <table>
+                <caption class="sr-only">Historique des 128 dernières opérations</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" aria-sort="descending">Date</th>
+                    <th scope="col">Opération</th>
+                    <th scope="col">Type</th>
+                    <th scope="col" class="droite">Taille</th>
+                    <th scope="col" class="droite">Durée</th>
+                    <th scope="col">Résultat</th>
+                    <th scope="col" class="droite">Code</th>
+                    <th scope="col" style="width:120px"><span class="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="num">30/10 14:02</td>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">PDF</span><span class="txt"><b>rapport-annuel-2025.pdf</b><span>intranet.exemple.fr</span></span></div></td>
+                    <td>Téléchargement</td>
+                    <td class="droite num">12,4 Mio</td>
+                    <td class="droite num">41 s</td>
+                    <td><span class="etat termine"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Terminé</span></td>
+                    <td class="droite num">0</td>
+                    <td>
+                      <button class="btn-ico" type="button" aria-label="Relancer rapport-annuel-2025"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg></button>
+                      <button class="btn-ico" type="button" aria-label="Ouvrir le dossier de rapport-annuel-2025"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-dossier"/></svg></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="num">30/10 14:01</td>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">MP4</span><span class="txt"><b>extrait-conference.mp4</b><span>media.exemple.fr</span></span></div></td>
+                    <td>Téléchargement</td>
+                    <td class="droite num">—</td>
+                    <td class="droite num">2 s</td>
+                    <td><span class="etat echec"><svg class="ico" aria-hidden="true"><use href="#i-alerte"/></svg> Échec</span></td>
+                    <td class="droite num">1</td>
+                    <td>
+                      <button class="btn-ico" type="button" aria-label="Relancer extrait-conference"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg></button>
+                      <button class="btn-ico" type="button" aria-label="Détail de l'erreur pour extrait-conference"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-info"/></svg></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="num">30/10 13:58</td>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">ZIP</span><span class="txt"><b>archive-logs-2025-09.zip</b><span>intranet.exemple.fr</span></span></div></td>
+                    <td>Téléchargement</td>
+                    <td class="droite num">248 Mio</td>
+                    <td class="droite num">6 min</td>
+                    <td><span class="etat termine"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Terminé</span></td>
+                    <td class="droite num">0</td>
+                    <td>
+                      <button class="btn-ico" type="button" aria-label="Relancer archive-logs-2025-09"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg></button>
+                      <button class="btn-ico" type="button" aria-label="Ouvrir le dossier de archive-logs-2025-09"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-dossier"/></svg></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="num">30/10 12:40</td>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">WEB</span><span class="txt"><b>exemple.fr (184 pages)</b><span>aspiration</span></span></div></td>
+                    <td>Site Grabber</td>
+                    <td class="droite num">240 Mio</td>
+                    <td class="droite num">4 min</td>
+                    <td><span class="etat termine"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Terminé</span></td>
+                    <td class="droite num">0</td>
+                    <td>
+                      <button class="btn-ico" type="button" aria-label="Relancer l'aspiration exemple.fr"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg></button>
+                      <button class="btn-ico" type="button" aria-label="Ouvrir le dossier de l'aspiration exemple.fr"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-dossier"/></svg></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="num">30/10 11:15</td>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">WEB</span><span class="txt"><b>vieux.exemple.fr (62 pages)</b><span>aspiration</span></span></div></td>
+                    <td>Site Grabber</td>
+                    <td class="droite num">31 Mio</td>
+                    <td class="droite num">1 min</td>
+                    <td><span class="etat echec"><svg class="ico" aria-hidden="true"><use href="#i-alerte"/></svg> Échec</span></td>
+                    <td class="droite num">2</td>
+                    <td>
+                      <button class="btn-ico" type="button" aria-label="Relancer l'aspiration vieux.exemple.fr"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg></button>
+                      <button class="btn-ico" type="button" aria-label="Détail de l'erreur pour vieux.exemple.fr"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-info"/></svg></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="num">30/10 09:02</td>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">ISO</span><span class="txt"><b>debian-12.7-amd64.iso</b><span>cdimage.debian.org</span></span></div></td>
+                    <td>Téléchargement</td>
+                    <td class="droite num">3,9 Gio</td>
+                    <td class="droite num">—</td>
+                    <td><span class="etat pause"><svg class="ico" aria-hidden="true"><use href="#i-horloge"/></svg> Interrompu</span></td>
+                    <td class="droite num">130</td>
+                    <td>
+                      <button class="btn-ico" type="button" aria-label="Relancer debian-12.7-amd64"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg></button>
+                      <button class="btn-ico" type="button" aria-label="Ouvrir le dossier de debian-12.7-amd64"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-dossier"/></svg></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <nav class="barre-outils" style="border-top:1px solid var(--c-bord);border-bottom:0" aria-label="Pagination de l'historique">
+              <span class="num" style="color:var(--c-texte-3)">1–6 sur 128</span>
+              <span style="margin-left:auto;display:flex;gap:var(--e-2);align-items:center">
+                <button class="btn" type="button" disabled><svg class="ico ico-sm" aria-hidden="true"><use href="#i-chevron"/></svg> Précédent</button>
+                <button class="btn" type="button">Suivant <svg class="ico ico-sm" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+              </span>
+            </nav>
+          </div>
+
+          <div class="vide" id="hist-vide" hidden style="border-top:1px solid var(--c-bord)">
+            <span class="rond" aria-hidden="true"><svg class="ico ico-lg" aria-hidden="true"><use href="#i-recherche"/></svg></span>
+            <h3>Aucun résultat pour « debian-13 »</h3>
+            <p>Vérifiez l'orthographe, élargissez la période, ou retirez le filtre « En échec » : 7 entrées en échec existent sur 30 jours.</p>
+            <div class="actions">
+              <button class="btn principal" type="button" id="demo-retour">Effacer les filtres</button>
+              <button class="btn discret" type="button">Chercher « debian »</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================== 6. VÉRIFICATION =================== -->
+        <section class="ecran" id="ecran-verification" aria-labelledby="t-verif" hidden>
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-verif">Vérification</h2>
+              <p>Contrôle de la copie locale contre le serveur : taille annoncée, plage acceptée, présence des fichiers.</p>
+            </div>
+            <div class="actions">
+              <button class="btn" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-dossier"/></svg> Choisir un dossier</button>
+              <button class="btn principal" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-bouclier"/></svg> Vérifier</button>
+            </div>
+          </div>
+
+          <div class="zone" style="display:grid;gap:var(--e-3)">
+            <div class="bandeau danger" role="alert">
+              <svg class="ico" aria-hidden="true"><use href="#i-alerte"/></svg>
+              <span>2 anomalies bloquantes sur 84 fichiers vérifiés.</span>
+              <span class="pousse code-sortie" title="Code de sortie de la CLI">code 3</span>
+            </div>
+
+            <div class="compteurs">
+              <div class="compteur"><span class="libelle">Vérifiés</span><span class="valeur">84</span></div>
+              <div class="compteur succes"><span class="libelle"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> Conformes</span><span class="valeur">80</span></div>
+              <div class="compteur danger"><span class="libelle">Manquants</span><span class="valeur">1</span></div>
+              <div class="compteur"><span class="libelle">Tronqués / hors périmètre</span><span class="valeur">3</span></div>
+            </div>
+          </div>
+
+          <div class="barre-outils">
+            <div class="filtres" role="group" aria-label="Filtrer les résultats">
+              <button class="bascule" type="button" aria-pressed="true">Tout <span class="num">84</span></button>
+              <button class="bascule" type="button" aria-pressed="true">Anomalies <span class="num">4</span></button>
+              <button class="bascule" type="button" aria-pressed="false">Conformes <span class="num">80</span></button>
+            </div>
+            <span class="pousse" style="margin-left:auto;display:flex;gap:var(--e-2)">
+              <button class="btn discret" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-doc"/></svg> Rapport HTML</button>
+              <button class="btn discret" type="button">CSV</button>
+            </span>
+          </div>
+
+          <div class="defilement">
+            <div class="enveloppe-table">
+              <table>
+                <caption class="sr-only">Résultats de la vérification, 4 anomalies</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Fichier</th>
+                    <th scope="col">Anomalie</th>
+                    <th scope="col" class="droite">Attendu</th>
+                    <th scope="col" class="droite">Observé</th>
+                    <th scope="col">Détail</th>
+                    <th scope="col" style="width:44px"><span class="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">ISO</span><span class="txt"><b>ubuntu-24.04.1-desktop-amd64.iso</b><span>releases.ubuntu.com</span></span></div></td>
+                    <td><span class="code-anomalie manquant">manquant</span></td>
+                    <td class="droite num">5,7 Gio</td>
+                    <td class="droite num">0 o</td>
+                    <td>fichier absent du dossier cible</td>
+                    <td><button class="btn-ico" type="button" aria-label="Relancer ubuntu-24.04.1"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg></button></td>
+                  </tr>
+                  <tr>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">MP3</span><span class="txt"><b>podcast-ep-42.mp3</b><span>media.exemple.fr</span></span></div></td>
+                    <td><span class="code-anomalie tronque">tronqué</span></td>
+                    <td class="droite num">84,0 Mio</td>
+                    <td class="droite num">71,2 Mio</td>
+                    <td>taille locale &lt; <code style="font-family:var(--mono)">Content-Length</code></td>
+                    <td><button class="btn-ico" type="button" aria-label="Reprendre podcast-ep-42"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-download"/></svg></button></td>
+                  </tr>
+                  <tr>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">ZIP</span><span class="txt"><b>jeu-donnees-v3.zip</b><span>partage.exemple.fr</span></span></div></td>
+                    <td><span class="code-anomalie echec">échec</span></td>
+                    <td class="droite num">2,1 Gio</td>
+                    <td class="droite num">—</td>
+                    <td>serveur : <code style="font-family:var(--mono)">503</code> après 3 tentatives</td>
+                    <td><button class="btn-ico" type="button" aria-label="Relancer jeu-donnees-v3"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg></button></td>
+                  </tr>
+                  <tr>
+                    <td><div class="cellule-nom"><span class="type" aria-hidden="true">WEB</span><span class="txt"><b>exemple.fr/plan.html</b><span>aspiration</span></span></div></td>
+                    <td><span class="code-anomalie hors">hors périmètre</span></td>
+                    <td class="droite num">—</td>
+                    <td class="droite num">14,2 Kio</td>
+                    <td>lien sortant, non aspiré par choix de périmètre</td>
+                    <td><button class="btn-ico" type="button" aria-label="Voir le périmètre de exemple.fr"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-info"/></svg></button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================== 7. RÉGLAGES =================== -->
+        <section class="ecran" id="ecran-reglages" aria-labelledby="t-reg" hidden>
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-reg">Réglages</h2>
+              <p>Préférences locales, enregistrées dans le profil de l'utilisateur. Aucune synchronisation distante.</p>
+            </div>
+            <div class="actions">
+              <button class="btn discret" type="button">Rétablir les valeurs par défaut</button>
+              <button class="btn principal" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> Enregistrer</button>
+            </div>
+          </div>
+
+          <div class="defilement">
+            <div class="zone" style="display:grid;gap:var(--e-4)">
+
+              <div class="carte formulaire">
+                <h3>Apparence</h3>
+                <div class="ligne-form">
+                  <div class="champ">
+                    <span class="etiquette-champ" id="lbl-theme">Thème</span>
+                    <div class="groupe-segmente" role="group" aria-labelledby="lbl-theme">
+                      <button type="button" aria-pressed="false">Clair</button>
+                      <button type="button" aria-pressed="false">Sombre</button>
+                      <button type="button" aria-pressed="true">Système</button>
+                    </div>
+                    <span class="aide">Suit le réglage du système. Le choix manuel est conservé.</span>
+                  </div>
+                  <div class="champ">
+                    <label for="densite">Densité</label>
+                    <select id="densite">
+                      <option>Confortable</option>
+                      <option selected>Compacte (tableaux)</option>
+                    </select>
+                  </div>
+                </div>
+                <label class="case"><input type="checkbox" checked> <span>Réduire les animations <span class="sous">Suit aussi <code style="font-family:var(--mono)">prefers-reduced-motion</code> du système.</span></span></label>
+              </div>
+
+              <div class="carte formulaire">
+                <h3>Réseau</h3>
+                <div class="ligne-form">
+                  <div class="champ">
+                    <label for="connexions">Connexions simultanées</label>
+                    <input id="connexions" type="number" value="8" min="1" max="32">
+                  </div>
+                  <div class="champ">
+                    <label for="delai">Délai d'inactivité (s)</label>
+                    <input id="delai" type="number" value="30">
+                  </div>
+                  <div class="champ">
+                    <label for="proxy">Proxy</label>
+                    <input id="proxy" class="champ-erreur" type="text" value="http://proxy:8080" aria-invalid="true" aria-describedby="err-proxy">
+                    <span class="message-erreur" id="err-proxy"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-alerte"/></svg> Le port doit être compris entre 1024 et 65535.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="carte formulaire">
+                <h3>Téléchargements</h3>
+                <div class="ligne-form">
+                  <div class="champ">
+                    <label for="dossier">Dossier de destination</label>
+                    <input id="dossier" type="text" value="~/Téléchargements" spellcheck="false">
+                    <span class="aide">Les fichiers temporaires y sont créés avec les droits 0600.</span>
+                  </div>
+                  <div class="champ">
+                    <label for="nommage">Modèle de nommage</label>
+                    <input id="nommage" type="text" value="{nom}-{date}" spellcheck="false">
+                  </div>
+                </div>
+                <div style="display:grid;gap:var(--e-1)">
+                  <label class="case"><input type="checkbox" checked> <span>Reprendre automatiquement après une coupure <span class="sous">Utilise les requêtes <code style="font-family:var(--mono)">Range</code> quand le serveur répond 206.</span></span></label>
+                  <label class="case"><input type="checkbox"> <span>Écrire un journal détaillé par tâche <span class="sous">Fichier unique, 30 jours de rétention.</span></span></label>
+                </div>
+              </div>
+
+              <div class="carte formulaire">
+                <h3>Site Grabber</h3>
+                <div class="ligne-form">
+                  <div class="champ">
+                    <label for="prof-defaut">Profondeur par défaut</label>
+                    <select id="prof-defaut"><option>1 niveau</option><option selected>2 niveaux</option><option>3 niveaux</option></select>
+                  </div>
+                  <div class="champ">
+                    <label for="politesse">Délai entre requêtes (ms)</label>
+                    <input id="politesse" type="number" value="500">
+                  </div>
+                </div>
+                <label class="case"><input type="checkbox" checked disabled> <span>Respecter <code style="font-family:var(--mono)">robots.txt</code> <span class="sous">Réglage verrouillé par la décision D-004 : pas de contournement possible depuis l'interface.</span></span></label>
+              </div>
+
+              <div class="carte">
+                <h3>À propos</h3>
+                <dl class="liste-def">
+                  <dt>XDM</dt><dd>1.0.0 — maquette</dd>
+                  <dt>Skill appliqué</dt><dd>ui-ux-pro-max 2.15.0</dd>
+                  <dt>Journal local</dt><dd>journal-2026-10-30.log</dd>
+                  <dt>Profil</dt><dd>~/.config/xdm</dd>
+                </dl>
+                <p class="aide" style="margin-top:var(--e-2)">Interface de démonstration : les valeurs sont fictives et rien n'est écrit sur le disque.</p>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <div class="barre-etat" role="region" aria-label="Barre d'état de l'application">
+      <span class="temoin"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Serveur joignable</span>
+      <span>8 connexions · 12,4 Mio/s</span>
+      <span>3 en cours · 14 en attente</span>
+      <span class="pousse">journal-2026-10-30.log · 1,2 Mio</span>
+      <span>v1.0.0</span>
+    </div>
+  </div>
+
+  <!-- ========================== NOTES DE REVUE ========================== -->
+  <aside class="notes actif" data-note="telechargements" aria-label="Notes de revue, écran Téléchargements">
+    <div class="carte-note">
+      <h2>Notes — Téléchargements</h2>
+      <p class="intro">Ce qui a changé par rapport à la v1 et pourquoi.</p>
+      <ol>
+        <li><b>Palette du design system.</b> Teal <span class="ref">#0D9488</span> et accent <span class="ref">#EA580C</span> remplacent le bleu ad hoc de la v1 : le skill interdit les couleurs hors jetons.</li>
+        <li><b>Icônes SVG.</b> Le sprite <span class="ref">&lt;symbol&gt;</span> remplace les emoji et caractères Unicode, conformément à la règle <i>no-emoji-icons</i>.</li>
+        <li><b>État jamais porté par la couleur seule.</b> Chaque état a une icône et un mot : « En cours », « En pause », « Terminé ».</li>
+        <li><b>Progression accessible.</b> <span class="ref">role="progressbar"</span> + <span class="ref">aria-valuenow</span> sur chaque jauge, pour que la valeur soit annoncée.</li>
+        <li><b>Cibles ≥ 24 px</b> (36 px pour les boutons, 40 px pour les liens de navigation), conformément à <i>web-target-size</i> ; 44 px visés sur les actions tactiles.</li>
+        <li><b>Focus visible</b> partout : anneau de 2 px, décalé, contrasté 3,5:1 sur le fond.</li>
+        <li><b>Tableau dans un conteneur défilant</b> (<span class="ref">overflow-x:auto</span>) plutôt qu'un débordement de page.</li>
+      </ol>
+      <p class="pied">Valeurs fictives. Aucune police distante, aucune requête réseau : le rendu doit rester identique hors ligne, dans une iframe sans réseau.</p>
+    </div>
+  </aside>
+
+  <aside class="notes" data-note="grabber" aria-label="Notes de revue, écran Site Grabber">
+    <div class="carte-note">
+      <h2>Notes — Site Grabber</h2>
+      <p class="intro">Un formulaire qui montre le coût avant de lancer.</p>
+      <ol>
+        <li><b>Périmètre explicite.</b> Profondeur, plafond de pages, extensions : le skill demande de prévenir plutôt que d'expliquer après coup.</li>
+        <li><b>Estimation avant action.</b> Pages, volume et durée estimés ; le bouton « Analyser sans télécharger » sépare l'analyse de l'aspiration.</li>
+        <li><b>Étapes visibles</b> (Adresse → Périmètre → Lancement) avec <span class="ref">aria-current="step"</span> : critère <i>escape-routes</i> pour un flux en plusieurs étapes.</li>
+        <li><b>Champ verrouillé et expliqué.</b> <span class="ref">robots.txt</span> reste coché et désactivé, avec la raison (D-004) écrite sous le contrôle.</li>
+        <li><b>Pastilles avec bouton de retrait nommé</b> et cible propre : pas d'action uniquement au survol.</li>
+        <li><b>Politesse affichée</b> : délai entre requêtes, User-Agent, nombre de connexions — visibles avant le lancement.</li>
+      </ol>
+      <p class="pied">Le texte « aucun cookie extrait, aucun appel aux serveurs de l'éditeur » est une contrainte de produit, pas une décoration.</p>
+    </div>
+  </aside>
+
+  <aside class="notes" data-note="file" aria-label="Notes de revue, écran File d'attente">
+    <div class="carte-note">
+      <h2>Notes — File d'attente <span class="etiquette primaire">nouveau</span></h2>
+      <p class="intro">Écran demandé en plus des cinq de la v1.</p>
+      <ol>
+        <li><b>Séparer l'attente du transfert.</b> Les téléchargements montrent ce qui bouge ; la file montre ce qui attend, dans l'ordre.</li>
+        <li><b>Réordonner sans glisser.</b> Deux boutons « Monter / Descendre » nommés par tâche : alternative clavier exigée par <i>dragging-alternative</i>.</li>
+        <li><b>Ordre lisible</b> en première colonne, priorité à côté : l'information utile n'est pas cachée dans un menu.</li>
+        <li><b>États vides utiles.</b> « Rien de terminé dans la file » explique le modèle (une tâche finie part dans l'historique) et propose deux actions.</li>
+        <li><b>Contexte de planification</b> affiché en puces : fenêtre horaire et plafond de simultanéité.</li>
+      </ol>
+      <p class="pied">Total de 14 tâches annoncé une seule fois, en en-tête, pour éviter de répéter un compteur faux.</p>
+    </div>
+  </aside>
+
+  <aside class="notes" data-note="journal" aria-label="Notes de revue, écran Journal">
+    <div class="carte-note">
+      <h2>Notes — Journal</h2>
+      <p class="intro">Section renommée : « Vérification » devient « Journal » côté suivi.</p>
+      <ol>
+        <li><b>Une ligne par événement</b> : heure, source, message, niveau. Le niveau porte un mot et une icône, pas seulement une couleur.</li>
+        <li><b>Zone live discrète</b> : <span class="ref">role="status" aria-live="polite"</span> annonce les nouveaux événements sans voler le focus.</li>
+        <li><b>Défilement automatique désactivable</b> (<span class="ref">aria-pressed</span>) : condition <i>auto-rotation-controls</i> pour un contenu qui bouge.</li>
+        <li><b>Filtres par niveau</b> en bascules, avec état pressé explicite.</li>
+        <li><b>Rien ne part ailleurs</b> : le journal est un fichier local, la mention le dit.</li>
+        <li><b>Monospace pour l'horodatage</b> et les codes HTTP, pour aligner les colonnes à l'œil.</li>
+      </ol>
+      <p class="pied">Sous 860 px, la grille de l'événement passe en trois lignes plutôt que d'écraser le message.</p>
+    </div>
+  </aside>
+
+  <aside class="notes" data-note="historique" aria-label="Notes de revue, écran Historique">
+    <div class="carte-note">
+      <h2>Notes — Historique <span class="etiquette primaire">nouveau</span></h2>
+      <p class="intro">Second écran ajouté : la mémoire des opérations.</p>
+      <ol>
+        <li><b>Compteurs d'abord</b> : 128 entrées, 119 réussies, 7 en échec, 2 interrompues — l'état du système avant la liste.</li>
+        <li><b>Code de sortie conservé</b> (0, 1, 2, 130) en colonne : parité avec la CLI, l'interface ne réinvente pas les verdicts.</li>
+        <li><b>« Aucun résultat » utile</b> : le bouton de la barre d'outils montre l'état vide — message, cause probable, deux suggestions.</li>
+        <li><b>Pagination annoncée</b> (« 1–6 sur 128 ») et bouton précédent désactivé quand il n'y a rien avant.</li>
+        <li><b>Actions nommées</b> : chaque bouton icône a un <span class="ref">aria-label</span> qui cite l'élément concerné.</li>
+        <li><b>Export CSV</b> en action secondaire, purge en texte discret pour ne pas inviter au clic destructeur.</li>
+      </ol>
+      <p class="pied">L'état vide est atteignable en un clic : une maquette doit montrer ce qu'elle affirme, pas seulement l'état idéal.</p>
+    </div>
+  </aside>
+
+  <aside class="notes" data-note="verification" aria-label="Notes de revue, écran Vérification">
+    <div class="carte-note">
+      <h2>Notes — Vérification</h2>
+      <p class="intro">Le contrôle de la copie locale contre le serveur.</p>
+      <ol>
+        <li><b>Verdict en bandeau</b> avec 4 px de marge de lecture, icône, texte et <span class="ref">role="alert"</span> : pas une couleur seule.</li>
+        <li><b>Quatre natures d'anomalie</b> avec un libellé propre : manquant, tronqué, échec, hors périmètre. Chacune a son style, pas seulement sa teinte.</li>
+        <li><b>Attendu / observé / détail</b> en trois colonnes : la preuve reste lisible sans ouvrir de fenêtre.</li>
+        <li><b>Code de sortie 3</b> rappelé dans le bandeau pour faire le lien avec la CLI.</li>
+        <li><b>Rapport exportable</b> HTML et CSV, les deux formats déjà produits par le module de rapport.</li>
+        <li><b>Action par ligne</b> : relancer ce qui manque, reprendre ce qui est tronqué.</li>
+      </ol>
+      <p class="pied">Aucune suppression automatique : l'écran propose, il ne décide pas à la place de l'utilisateur.</p>
+    </div>
+  </aside>
+
+  <aside class="notes" data-note="reglages" aria-label="Notes de revue, écran Réglages">
+    <div class="carte-note">
+      <h2>Notes — Réglages</h2>
+      <p class="intro">Les préférences qui pilotent les six autres écrans.</p>
+      <ol>
+        <li><b>Thème clair / sombre / système</b> en groupe segmenté : le sombre est un jeu de jetons, pas un filtre CSS.</li>
+        <li><b>Erreur de champ montrée</b> : bordure, icône, message relié par <span class="ref">aria-describedby</span> et <span class="ref">aria-invalid</span>.</li>
+        <li><b>Un champ = un libellé</b>, jamais un texte d'exemple en guise de libellé.</li>
+        <li><b>Réglage verrouillé expliqué</b> : <span class="ref">robots.txt</span> ne se désactive pas, la raison est écrite dessous.</li>
+        <li><b>Bloc « À propos »</b> : version, skill appliqué, chemins du profil et du journal. Utile au support.</li>
+      </ol>
+      <p class="pied">Aucun réglage ne demande de redémarrage : la maquette évite les promesses qu'un socle Electron ne tiendrait pas.</p>
+    </div>
+  </aside>
+
+</div>
+
+<footer class="pied-page">
+  <span>XDM — maquette v2 · 7 écrans · contenu fictif · aucune requête réseau</span>
+  <span>Skill : ui-ux-pro-max 2.15.0 (commit 28b3b8d) · rules : accessibility, touch, performance</span>
+  <span>Rendu cible : Electron / Chromium — testé aussi à 375, 768, 1024 et 1440 px</span>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var racine = document.documentElement;
+  var ecrans = Array.prototype.slice.call(document.querySelectorAll(".ecran"));
+  var notes = Array.prototype.slice.call(document.querySelectorAll(".notes"));
+  var liens = Array.prototype.slice.call(document.querySelectorAll(".nav-lien[data-ecran]"));
+  var titre = document.getElementById("titre-fenetre");
+  var contenu = document.getElementById("contenu-principal");
+
+  function afficher(nom) {
+    ecrans.forEach(function (e) {
+      var actif = e.id === "ecran-" + nom;
+      e.classList.toggle("actif", actif);
+      if (actif) { e.removeAttribute("hidden"); } else { e.setAttribute("hidden", ""); }
+    });
+    notes.forEach(function (n) {
+      n.classList.toggle("actif", n.getAttribute("data-note") === nom);
+    });
+    liens.forEach(function (l) {
+      if (l.getAttribute("data-ecran") === nom) {
+        l.setAttribute("aria-current", "page");
+      } else {
+        l.removeAttribute("aria-current");
+      }
+    });
+    var cible = document.getElementById("ecran-" + nom);
+    var entete = cible ? cible.querySelector("h2") : null;
+    if (titre) { titre.textContent = entete ? entete.textContent : "XDM"; }
+  }
+
+  liens.forEach(function (lien) {
+    lien.addEventListener("click", function () {
+      afficher(lien.getAttribute("data-ecran"));
+      if (contenu) { contenu.focus({ preventScroll: true }); }
+    });
+  });
+
+  /* Bascule de thème : clair <-> sombre, jetons sémantiques seulement */
+  var bascule = document.getElementById("bascule-theme");
+  if (bascule) {
+    bascule.addEventListener("click", function () {
+      var sombre = racine.getAttribute("data-theme") === "sombre";
+      if (sombre) {
+        racine.removeAttribute("data-theme");
+      } else {
+        racine.setAttribute("data-theme", "sombre");
+      }
+      bascule.setAttribute("aria-pressed", sombre ? "false" : "true");
+      bascule.querySelector("span").textContent = sombre ? "Thème sombre" : "Thème clair";
+      var ico = bascule.querySelector("use");
+      if (ico) { ico.setAttribute("href", sombre ? "#i-lune" : "#i-soleil"); }
+    });
+  }
+
+  /* États vides de démonstration : Historique sans résultat */
+  var demo = document.getElementById("demo-vide");
+  var liste = document.getElementById("hist-liste");
+  var vide = document.getElementById("hist-vide");
+  var retour = document.getElementById("demo-retour");
+
+  function montrerVide(oui) {
+    if (!liste || !vide) { return; }
+    liste.hidden = oui;
+    vide.hidden = !oui;
+    if (demo) { demo.textContent = oui ? "Revenir aux résultats" : "Voir l'état sans résultat"; }
+    if (oui) { vide.querySelector("button").focus({ preventScroll: true }); }
+  }
+  if (demo) { demo.addEventListener("click", function () { montrerVide(vide.hidden); }); }
+  if (retour) { retour.addEventListener("click", function () { montrerVide(false); if (demo) { demo.focus(); } }); }
+
+  /* Boutons à état pressé (filtres, groupes segmentés) : bascule simple */
+  Array.prototype.forEach.call(
+    document.querySelectorAll(".bascule, .groupe-segmente button"),
+    function (b) {
+      b.addEventListener("click", function () {
+        var groupe = b.closest(".groupe-segmente");
+        if (groupe && groupe.getAttribute("role") === "group") {
+          Array.prototype.forEach.call(groupe.querySelectorAll("button"), function (autre) {
+            autre.setAttribute("aria-pressed", autre === b ? "true" : "false");
+          });
+          return;
+        }
+        b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true");
+      });
+    }
+  );
+})();
+</script>
+</body>
+</html>
