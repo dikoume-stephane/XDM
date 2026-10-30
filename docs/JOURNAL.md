@@ -2186,6 +2186,41 @@ par une décision.
 
 ---
 
+### D-088 — L'interface exposée porte une serrure, pas un mot de passe
+**Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `src/acces.js`, `src/ui-server.js`, `bin/xdm-ui.js`, `EX-E-08`
+
+**Contexte.** `D-084` écoute sur la boucle locale par défaut et laisse `--hote 0.0.0.0` comme
+échappatoire assumée — nécessaire aux environnements d'aperçu, où le port est proxifié. Mais
+une interface qui **fait télécharger n'importe quelle URL** sans contrôle, jointe par le réseau,
+est un outil offert à qui trouve l'adresse. Le compromis « local par défaut » ne protège plus
+dès que l'échappatoire est utilisée.
+
+**Options.** (a) Supprimer `--hote` — on perd l'aperçu et les essais. (b) Comptes et mots de
+passe — stockage de secrets, pages de gestion, pour un outil mono-utilisateur. (c) Un **jeton
+de session** tiré au lancement, valable pour ce processus seulement.
+
+**Décision.** **(c)**, avec quatre règles.
+
+1. **Tiré, pas choisi.** 24 octets de `crypto.randomBytes` (base64url), affichés une seule fois
+   au démarrage. Rien n'est écrit sur disque : un jeton perdu se retrouve en relançant.
+2. **Comparé à temps constant.** `timingSafeEqual` sur des tampons de même longueur, pour ne
+   pas laisser fuir un préfixe par le temps de réponse.
+3. **Trois présentations, une vérité.** `Authorization: Bearer`, `x-jeton` (pratique pour
+   `curl`) ou `?jeton=`. Ce dernier est un **échange** : le serveur répond `303` vers la même
+   page avec un cookie `HttpOnly` `SameSite=Strict`, pour que le jeton ne traîne ni dans
+   l'historique du navigateur ni dans les journaux d'un proxy — et pour que `EventSource`, qui
+   ne sait pas poser d'en-tête, continue de recevoir les événements.
+4. **La serrure se voit.** Sans jeton valide, l'API répond `401` `JETON_REQUIS` avec
+   `WWW-Authenticate: Bearer` et la page devient un formulaire de connexion. Sur la boucle
+   locale, aucun jeton n'est imposé : `D-084` reste vrai là où il suffisait.
+
+**Mesures.** 4 tests (`T-E-17` jeton et lecture, `T-E-18` refus et échange de cookie, `T-E-19`
+CLI), `EX-E-08` verte, domaine E à **8 exigences / 8 vertes**, matrice v1.20. Le jeton n'est
+**jamais** journalisé : le journal de l'interface reste lisible par un tiers sans lui livrer la
+clé.
+
+---
+
 ### D-087 — Le Site Grabber de l'interface vaut la CLI, ou il n'existe pas
 **Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `src/aspiration.js`, `src/manager.js`, `src/ui-server.js`, `EX-E-07`
 

@@ -32,6 +32,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, normalize as normalise, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { cookieDeJeton, extraireJeton, jetonValide } from './acces.js';
 import { createManager, ManagerError } from './manager.js';
 import { ecrireReglages, lireReglages, ReglagesError, validerReglages } from './reglages.js';
 import { VerificationError } from './verification.js';
@@ -141,6 +142,49 @@ async function servirFichier(res, racine, chemin) {
 }
 
 /**
+ * Page de connexion minimale, servie à la place de l'interface quand le jeton manque.
+ *
+ * Elle ne dit pas si le jeton fourni était faux : le dire n'aiderait qu'à le deviner.
+ *
+ * @param {import('node:http').ServerResponse} res
+ * @param {string} chemin
+ */
+function pageConnexion(res, chemin) {
+  const suite = chemin === '/' ? '/' : chemin;
+  const corps = `<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>XDM — accès protégé</title>
+<style>
+:root{color-scheme:light dark}
+body{margin:0;min-height:100vh;display:grid;place-items:center;font:16px/1.5 system-ui,sans-serif;background:#F0FDFA;color:#134E4A}
+main{max-width:32rem;padding:2rem;background:#fff;border:1px solid #99F6E4;border-radius:12px}
+h1{font-size:1.25rem;margin:0 0 .5rem}
+p{color:#3F5F5B;margin:.25rem 0 1.25rem}
+label{display:block;font-weight:600;font-size:.8125rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem}
+input{width:100%;box-sizing:border-box;padding:.625rem .75rem;border:1px solid #99F6E4;border-radius:8px;font:inherit}
+button{margin-top:1rem;width:100%;padding:.7rem;border:0;border-radius:8px;background:#0D9488;color:#04211F;font:inherit;font-weight:600;cursor:pointer}
+code{background:#E8F1F4;padding:.1rem .3rem;border-radius:4px;font-size:.875em}
+</style></head>
+<body><main>
+<h1 id="titre">XDM — accès protégé</h1>
+<p>Cette interface écoute au-delà de la boucle locale : un jeton est requis. Il a été affiché au démarrage de <code>xdm-ui</code>.</p>
+<form method="get" action="${suite}">
+  <label for="jeton">Jeton d’accès</label>
+  <input id="jeton" name="jeton" type="password" autocomplete="off" required>
+  <button type="submit">Ouvrir l’interface</button>
+</form>
+</main></body></html>`;
+  res.writeHead(401, {
+    'content-type': 'text/html; charset=utf-8',
+    'content-length': Buffer.byteLength(corps),
+    'cache-control': 'no-store',
+    'www-authenticate': 'Bearer',
+  });
+  res.end(corps);
+}
+
+/**
  * Crée le serveur de l'interface.
  *
  * @param {{
@@ -149,6 +193,8 @@ async function servirFichier(res, racine, chemin) {
  *   dossier?: string,
  *   connexions?: number,
  *   maxActifs?: number,
+ *   jeton?: string|null,
+ *   jetonEnQuery?: boolean,
  * }} [options]
  */
 export function createUiServer({
@@ -159,6 +205,9 @@ export function createUiServer({
   maxActifs,
   reglages = null,
   ecrire = ecrireReglages,
+  // Sans jeton, le serveur se comporte comme avant (`D-084`) : c'est le mode par défaut sur
+  // la boucle locale. Avec, chaque route de données et la page elle-même exigent le secret.
+  jeton = null,
 } = {}) {
   const gestionnaire =
     manager ??
@@ -178,6 +227,35 @@ export function createUiServer({
     const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
     const chemin = url.pathname;
     const methode = req.method ?? 'GET';
+
+    // ---------- Accès ----------
+    // Le jeton protège **tout** : les données et la page (la coquille d'interface sait déjà
+    // tout ce que le serveur sait faire). Les fichiers `style.css`/`app.js` restent servis
+    // sans jeton : ils ne contiennent aucune donnée et la page de connexion en a besoin.
+    if (jeton) {
+      // Une arrivée par `?jeton=` est un premier contact : on échange le secret contre un
+      // cookie, puis on redirige pour que le jeton ne reste ni dans l'historique du
+      // navigateur ni dans les journaux du proxy. Ce cas est traité **avant** la
+      // validation, sinon la requête serait servie avec le jeton encore dans l'URL.
+      const parametre = url.searchParams.get('jeton');
+      if (parametre !== null && jetonValide(parametre, jeton)) {
+        res.writeHead(303, { location: chemin, 'set-cookie': cookieDeJeton(jeton) });
+        res.end();
+        return undefined;
+      }
+      const fourni = extraireJeton({ headers: req.headers, url });
+      if (!jetonValide(fourni, jeton)) {
+        if (chemin.startsWith('/api/')) {
+          res.writeHead(401, {
+            'content-type': 'application/json; charset=utf-8',
+            'www-authenticate': 'Bearer',
+            'cache-control': 'no-store',
+          });
+          return res.end(JSON.stringify({ erreur: { code: 'JETON_REQUIS', message: 'jeton d’accès requis' } }));
+        }
+        return pageConnexion(res, chemin);
+      }
+    }
 
     try {
       // ---------- API ----------

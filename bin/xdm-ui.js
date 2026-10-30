@@ -20,6 +20,7 @@
 
 import { resolve } from 'node:path';
 
+import { estBoucleLocale, genererJeton } from '../src/acces.js';
 import { cheminParDefaut, lireReglages } from '../src/reglages.js';
 import { startUiServer } from '../src/ui-server.js';
 import { VERSION } from '../src/version.js';
@@ -31,6 +32,7 @@ export const USAGE = `usage : xdm-ui [--port N] [--hote ADRESSE] [--dossier DIR]
   --connexions  connexions parallèles par téléchargement (défaut 4)
   --actifs      téléchargements simultanés (défaut 2)
   --reglages    fichier de réglages JSON (défaut ~/.config/xdm/reglages.json)
+  --jeton       jeton d'accès (défaut : tiré au lancement si --hote sort de la boucle locale)
   --aide, -h    afficher cette aide et sortir (code 0)
   --version, -V afficher la version et sortir (code 0)
 `;
@@ -56,6 +58,7 @@ export function parseArgs(argv) {
     ['--hote', 'hote'],
     ['--dossier', 'dossier'],
     ['--reglages', 'reglages'],
+    ['--jeton', 'jeton'],
   ]);
   for (let i = 0; i < argv.length; i += 1) {
     const argument = argv[i];
@@ -134,6 +137,12 @@ export async function main(argv, {
   const connexions = explicite('connexions') ? options.connexions : enregistres?.connexions ?? options.connexions;
   const actifs = explicite('actifs') ? options.actifs : enregistres?.maxActifs ?? options.actifs;
 
+  // Hors de la boucle locale, l'interface est joignable par le réseau : elle n'ouvre pas
+  // sans jeton (`D-088`). Sur la boucle locale, le jeton reste optionnel — l'imposer
+  // partout ferait payer à tout le monde le prix d'une exposition choisie.
+  const autoJeton = !estBoucleLocale(options.hote);
+  const jeton = options.jeton ?? (autoJeton ? genererJeton() : null);
+
   const serveur = await demarrer({
     port: options.port,
     hote: options.hote,
@@ -141,12 +150,17 @@ export async function main(argv, {
     connexions,
     maxActifs: actifs,
     reglages: enregistres,
+    jeton,
   });
   log(`interface : ${serveur.url}`);
   log(`dossier   : ${dossier}`);
   if (enregistres) log(`reglages  : ${enregistres.chemin ?? chemin}${enregistres.existe ? '' : ' (absent, valeurs par défaut)'}`);
+  if (jeton) {
+    log(`jeton     : ${jeton}${autoJeton && !options.jeton ? ' (tiré au lancement, valable pour ce processus)' : ''}`);
+    log(`ouvrir    : ${serveur.url}?jeton=${encodeURIComponent(jeton)}`);
+  }
   if (options.hote === '0.0.0.0') {
-    log('attention : écoute sur 0.0.0.0 — toute machine du réseau peut piloter cette interface');
+    log('attention : écoute sur 0.0.0.0 — le jeton ci-dessus est la seule serrure');
   }
   return serveur;
 }

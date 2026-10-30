@@ -7,7 +7,10 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-30 **v21** — lot `WP-54` : **parité du Site Grabber**
+- **Dernière revue** : 2026-10-30 **v22** — lot `WP-55` : **jeton d'accès** à l'interface
+  exposée (`src/acces.js`, `D-088`, `EX-E-08`) — **348 tests**, **100 exigences, 99 vertes**,
+  **88 décisions**.
+  Précédent (v21) : lot `WP-54` : **parité du Site Grabber**
   (`inclure`/`exclure`, sous-domaines, explorations simultanées, réécriture des liens,
   `D-087`, `EX-E-07`) — **343 tests**, **99 exigences, 98 vertes**, **87 décisions**.
   Précédent (v20) : lot `WP-53` : **coquille de bureau Electron**

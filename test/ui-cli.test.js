@@ -74,3 +74,24 @@ test('WP-51 : une écoute sur 0.0.0.0 est annoncée comme une exposition', async
   });
   assert.ok(lignes.some((l) => /attention : écoute sur 0\.0\.0\.0/.test(l)));
 });
+
+test('T-E-19 : hors boucle locale, xdm-ui tire un jeton ; en local, il n’en impose pas', async () => {
+  const lignes = [];
+  const recus = [];
+  const faux = async (options) => {
+    recus.push(options);
+    return { url: 'http://127.0.0.1:8100/', fermer: async () => {} };
+  };
+  const lire = async () => null;
+
+  await main(['--hote', '0.0.0.0', '--jeton', 'secret-explicite'], { log: (l) => lignes.push(l), demarrer: faux, lire });
+  assert.equal(recus[0].jeton, 'secret-explicite');
+
+  await main(['--hote', '0.0.0.0'], { log: (l) => lignes.push(l), demarrer: faux, lire });
+  assert.equal(typeof recus[1].jeton, 'string');
+  assert.ok(recus[1].jeton.length >= 32, 'un jeton est tiré quand l’interface sort de la machine');
+  assert.match(lignes.join('\n'), /ouvrir\s+: http:\/\/127\.0\.0\.1:8100\/\?jeton=/);
+
+  await main(['--hote', '127.0.0.1'], { log: (l) => lignes.push(l), demarrer: faux, lire });
+  assert.equal(recus[2].jeton, null, 'sur la boucle locale, pas de jeton imposé');
+});
