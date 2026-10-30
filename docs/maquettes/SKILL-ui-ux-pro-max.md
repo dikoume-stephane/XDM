@@ -116,6 +116,16 @@ Trois valeurs ont été corrigées à cause de ces mesures : `--c-succes` est pa
 (4,49:1, juste sous le seuil) à `#146C34`, `--c-danger` de `#DC2626` (4,23:1 sur son fond doux)
 à `#C81E1E`, et le teal de texte a été séparé du teal de marque.
 
+## 5 bis. De la maquette à l'application
+
+La feuille de style de la maquette a été reprise **telle quelle** dans
+`src/ui/style.css` : l'interface livrée par `xdm-ui` a donc exactement l'apparence validée.
+Le balisage, lui, a été réécrit : les lignes de démonstration ont laissé la place à un rendu
+piloté par `/api/*`, les données distantes passant par `textContent` (aucun `innerHTML`).
+Quatre écrans sont câblés (Téléchargements, File d'attente, Journal, Historique) plus les
+Réglages ; Site Grabber et Vérification ne sont pas dans la navigation tant que l'API ne
+les expose pas (`D-084`).
+
 ## 6. Vérifications exécutées
 
 Audit automatisé, `axe-core` + `jsdom`, jeu de règles WCAG 2.0/2.1/2.2 A et AA + bonnes pratiques :

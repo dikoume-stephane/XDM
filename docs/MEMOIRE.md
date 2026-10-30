@@ -11,7 +11,7 @@
   (`D-079`), code de sortie d'une aspiration (`D-080`), conformité de vérification (`D-081`),
   `--aide`/`--version` sur les trois CLI (`D-082`), compte de cookies annoncé (`D-083`),
   **guide de test** (`docs/GUIDE-TEST.md`) et **banc d'essai** (`tools/banc-essai.mjs`) —
-  **286 tests**, **271 exports**, **92 exigences, 91 vertes** (A, B, D clos ; C à 14/15).
+  **313 tests**, **35 modules**, **92 exigences, 91 vertes** (A, B, D clos ; C à 14/15).
   Précédent (v17) : lot `WP-49`, authentification unifiée des médias
   (`--entete`/`--cookies`/`--proxy`, un seul transport, enveloppe partagée `withHeaders`) `D-075`,
   magasin de cookies du moteur (`xdm --cookies`) `D-076`, refus d'un positionnel de trop dans

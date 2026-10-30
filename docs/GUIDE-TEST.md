@@ -203,6 +203,30 @@ une valeur absurde est acceptée sans un mot, c'est un défaut, pas une soupless
 
 ---
 
+### A.7 L'interface locale (5 min)
+
+```bash
+npm run ui                        # puis ouvrir http://127.0.0.1:8100/
+node tools/banc-essai.mjs --port 8099 --taille 5M &   # un fichier de 5 Mio à télécharger
+```
+
+1. Coller `http://127.0.0.1:8099/fichier.bin` dans le champ, **Ajouter à la file**.
+2. Cliquer **Démarrer la file** : la progression avance, puis la ligne passe dans
+   **Historique** avec le **code 0** et le fichier apparaît dans `./telechargements`.
+3. Refaire la même chose avec la **même** URL : le second fichier s'appelle
+   `fichier-2.bin` — aucun écrasement silencieux.
+4. Coller une URL `file:///etc/passwd` : l'ajout est **refusé** avec un message, aucune
+   requête réseau n'est émise.
+5. Arrêter `xdm-ui` (Ctrl-C) pendant un transfert, puis relancer : la tâche reprend au
+   dernier octet confirmé (fichier `.part`), pas de zéro.
+
+Ce qu'il faut voir et qui n'est **pas** là, volontairement : aucun bouton « pause » sur un
+transfert en cours (le moteur n'a pas d'interruption coopérative, `D-084`), et aucun écran
+**Site Grabber** ni **Vérification** (non câblés, `WP-52`) — un bouton mort serait pire
+qu'une absence.
+
+---
+
 ## Piste B — la cible IDM, en VM (débloque la phase P5)
 
 ### B.1 Cadre

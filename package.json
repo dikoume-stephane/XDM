@@ -27,6 +27,7 @@
     "audit:strict": "node tools/audit-conformance.mjs --strict",
     "gate": "node tools/gate-g3.mjs",
     "dl": "node bin/xdm.js",
+    "ui": "node bin/xdm-ui.js",
     "grabber:idm": "python3 tools/idman_grabber.py",
     "grab": "node bin/xdm-grab.js",
     "media": "node bin/xdm-media.js"

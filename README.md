@@ -11,7 +11,7 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 286 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 313 tests, sans dépendance (node --test)
 npm run audit                      # traçabilité : chaque exigence verte a un test qui existe
 npm run gate                       # porte G3 : site local + coupure réseau, comparaison disque/serveur
 npm run gate -- --pages 200 --max 200M   # profil de la porte : 200 pages, jusqu'à 200 Mo
@@ -28,6 +28,9 @@ node bin/xdm-grab.js <url> [dir] --sitemap --sous-domaines   # plans de site + s
 node bin/xdm-grab.js --aide                  # options complètes (code 0), --version aussi
 node bin/xdm-grab.js <url> [dir] --verifier  # auditer une aspiration (file ↔ disque, code 1 si écart)
 node bin/xdm-grab.js <url> [dir] --taille-max 200M --espace-min 1G
+npm run ui                         # interface locale : http://127.0.0.1:8100/ (xdm-ui)
+node bin/xdm-ui.js --port 8100 --dossier ~/Téléchargements --actifs 3   # mêmes options, en clair
+node bin/xdm-ui.js --hote 0.0.0.0  # exposition réseau : annoncée au démarrage, jamais par défaut
 node bin/xdm-grab.js <url> [dir] --entete 'Authorization: Bearer x' --progression
 node bin/xdm-grab.js <url> [dir] --incremental   # If-Modified-Since : un 304 laisse le fichier intact
 node bin/xdm-grab.js <url> [dir] --reecrire --rapport r.md   # liens locaux + rapport d'aspiration
@@ -152,13 +155,21 @@ tools/                     collecte de preuves, triage, extractions
   17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
 - ✅ WP-20 → WP-27 terminés : moteur de morceaux, boucle de connexions, aspiration de site
   et CLI (`bin/xdm.js`, `bin/xdm-grab.js`), transports (proxys, FTP, PAC), médias (HLS,
-  DASH) ; **286 tests**, domaines A, B et D clos, domaine C à **14/15** (1 hors périmètre),
+  DASH) ; **313 tests**, domaines A, B et D clos, domaine C à **14/15** (1 hors périmètre),
   soit **91 exigences vertes sur 92** ; porte G3 franchie (200 pages, 205 Mio, coupure
   réseau absorbée).
 - ✅ WP-43/WP-44 : en-têtes personnalisés (`--entete`, validation unique partagée par les
   deux CLI, envoyés à la sonde **et** à chaque plage) et aspiration incrémentale
   (`--incremental`, `304` = fichier intact ; `--tentatives-total`, `--progression`) —
   `D-069`, `D-070`.
+- ✅ WP-51 : **interface locale** — `xdm-ui` sert une page qui pilote le moteur par trois
+  couches (`src/manager.js` état/file/journal/historique, `src/ui-server.js` HTTP + SSE,
+  `bin/xdm-ui.js` CLI). Écoute sur la boucle locale par défaut, aucune injection HTML
+  (les données distantes passent par `textContent`), aucune pause mensongère : seules les
+  tâches **en attente** sont retirables, la limite est écrite dans l'écran. Écrans
+  câblés : Téléchargements, File d'attente, Journal, Historique, Réglages — Site Grabber
+  et Vérification restent hors navigation tant qu'ils ne sont pas branchés. `D-084`,
+  **[maquette validée](docs/maquettes/interface-xdm-v2.html)**.
 - ✅ WP-50 : les CLI disent leurs bornes, leurs codes et leur aide — refus de
   `--connexions` hors 1–128 et de `--morceau` hors 1–10 Mio (avec avertissement au-delà de
   500 morceaux), code de sortie 1 dès qu'une tâche échoue, `--verifier` qui distingue

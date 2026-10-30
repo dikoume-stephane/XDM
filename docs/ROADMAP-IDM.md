@@ -179,6 +179,8 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | WP-47 | ✅ **Clos** (`D-073`) — `xdm --sortie json` : un objet sur stdout, le reste sur stderr (`EX-A-22`) |
 | WP-48 | ✅ **Clos** (`D-074`) — `--proxy` appliqué au HTTP, rapport de vérification (`EX-A-23`, `EX-B-37`) |
 | WP-49 | ✅ **Clos** (`D-075`→`D-078`) — authentification unifiée des médias (`EX-D-11`), `xdm --cookies` (`EX-A-24`), refus d'un positionnel de trop (`EX-C-15`), `absent` dans le JSON de vérification (`EX-B-38`) ; **281 tests**, **88 exigences / 87 vertes** |
+| WP-51 | ✅ **Clos** (`D-084`) — **socle de l'interface** : `src/manager.js` (file, journal, historique, compteurs, codes de sortie 0/1), `src/ui-server.js` (HTTP + SSE, écoute locale par défaut, 403 hors racine, corps borné à 64 Kio), `bin/xdm-ui.js` (`--port`, `--hote`, `--dossier`, `--connexions`, `--actifs`) ; **313 tests**, dont un bout en bout avec le vrai moteur (256 Kio comparés octet pour octet) et un essai réel de 2 × 5 Mio |
+| WP-52 | 🔜 **Suivant** — câbler les écrans **Site Grabber** et **Vérification** sur `src/crawler.js`, `src/grab-runner.js`, `src/verify.js` ; réglages persistants ; fiche de spécification de l'interface (`EX-E-*`) pour sortir du seul traçage par décision |
 | WP-50 | ✅ **Clos** (`D-079`→`D-083`) — bornes numériques refusées (`EX-A-25`), code de sortie d'une aspiration (`EX-B-39`), conformité de vérification (`EX-B-40`), compte de cookies (`EX-B-41`), `--aide`/`--version` des trois CLI (`EX-B-28`) ; **286 tests**, **92 exigences / 91 vertes**, plus le **guide de test** et son banc d'essai |
 
 ---
@@ -214,6 +216,7 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | **M3.13 — Robustesse et audit** | reprise après arrêt brutal, `--taille-max`, espace disque, `--verifier`, rapport HTML | D-067, D-068 | ✅ domaine B **32/32**, 257 tests |
 | **M3.14 — En-têtes partout, rien de retéléchargé** | validation d'en-tête **unique** (`parseHeaderOption`) partagée par les deux CLI, `--entete` dans `xdm.js`, en-têtes sur la sonde **et** chaque plage ; `--incremental` (`If-Modified-Since`, `304` = fichier intact), `reopenDone`, `--tentatives-total`, `--progression` par paliers, `--verifier --sortie json` | D-069, D-070 | ✅ domaine B **36/36**, 265 tests |
 | **M3.15 — L'outil ne ment plus sur ses options** | reprise de fichier par défaut + `--sans-reprise` + carte d'une autre URL refusée, nom par `Content-Disposition`, `--sortie json`, `--proxy` réellement appliqué, rapport de vérification | D-071→D-074 | ✅ domaine A **23/23**, B **37/37**, 274 tests |
+| **M3.18 — L'interface parle au moteur** | gestionnaire d'état (file, journal, historique), serveur local + SSE, CLI `xdm-ui`, écoute locale par défaut, limites affichées au lieu d'être cachées | D-084 | ✅ 4 écrans câblés sur 7, 313 tests, essai réel 2 × 5 Mio |
 | **M3.17 — Les CLI disent leurs bornes, leurs codes et leur aide** | bornes de `--connexions`/`--morceau` refusées (et découpage signalé), code de sortie 1 sur échec, `--verifier` qui distingue `FAILED` de `PENDING`, `--aide`/`--version` sur les trois CLI, compte de cookies juste | D-079→D-083 | ✅ A **25/25**, B **41/41**, 286 tests |
 | **M3.16 — L'authentification ne s'arrête plus au milieu d'un flux** | un seul transport authentifié pour `xdm-media` (en-têtes, cookies, proxy) : playlist, init et **chaque** segment ; `xdm --cookies` ; refus d'un positionnel de trop ; `absent` dans le JSON de vérification | D-075→D-078 | ✅ domaine A **24/24**, B **38/38**, C **14/15**, D **11/11**, 281 tests |
 | **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |
@@ -274,7 +277,7 @@ code, c'est une **preuve d'exécution de la cible** — impossible dans cet envi
 | **P4** Résilience + revue | `429`/`503`, coupures, `416`, boucles ; revue clean-room publiée | `D-055`, `D-056`, `revue-clean-room.md` |
 | **P5** Dynamique | **non commencée** — aucune VM Windows dans cet environnement | `A-09` |
 
-Chiffres au 2026-10-29 : **286 tests verts** (44 fichiers), **271 exports**, **92 exigences
+Chiffres au 2026-10-30 : **313 tests verts** (47 fichiers), **35 modules** `src/`, **92 exigences
 (91 vertes, 1 hors périmètre)**, **83 décisions**, **0 écart de traçabilité**, **30 documents
 `.md` sans lien cassé**, porte G3 à 200 pages / 205,0 Mio ; **24 lots sur 28** clos, les **quatre** restants
 (`WP-30`, `WP-40`→`WP-42`) exigent une VM Windows + un IDM licite — c'est exactement l'objet de

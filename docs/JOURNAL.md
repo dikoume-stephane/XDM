@@ -2116,6 +2116,39 @@ playlist).
 
 ---
 
+### D-084 — L'interface parle au gestionnaire, jamais au moteur, et n'affiche pas ce qu'elle ne fait pas
+**Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `src/manager.js`, `src/ui-server.js`, `bin/xdm-ui.js`, `WP-51`
+
+**Contexte.** La maquette validée promettait sept écrans. Le moteur sait télécharger, aspirer un
+site et vérifier une copie locale ; il ne savait rien de l'**état** de ces travaux : la CLI rend
+un objet unique à la fin, puis se termine. Une interface a besoin du contraire — un état qui
+survit à un écran, une file qui montre ce qui attend, un historique qui garde les verdicts.
+
+**Décision.** Quatre choix, chacun vérifiable dans le code et les tests :
+
+1. **Trois couches, pas deux.** `src/manager.js` possède l'état (file, journal, historique,
+   compteurs), `src/ui-server.js` le traduit en HTTP et en SSE, `bin/xdm-ui.js` ouvre le
+   serveur. L'interface ne touche ni au moteur ni au disque. Le jour où Electron remplace le
+   navigateur, seule la dernière couche change.
+2. **Écoute locale par défaut** (`127.0.0.1`). Une interface qui lance des téléchargements
+   arbitraires n'a rien à faire sur un réseau partagé ; `--hote 0.0.0.0` existe pour les
+   environnements d'aperçu et affiche un avertissement explicite.
+3. **Pas de bouton « pause » menteur.** `connection-loop` n'a pas d'interruption coopérative :
+   on peut retirer une tâche **en attente**, pas arrêter un transfert en cours. L'interface ne
+   propose donc que ce qui existe, et l'écran File d'attente écrit la limite en toutes lettres.
+   La reprise après arrêt du processus reste acquise (fichier `.part`).
+4. **On n'affiche pas les écrans non câblés.** Site Grabber et Vérification sont dans la
+   maquette, pas dans cette API : ils ne sont pas dans la navigation. Un bouton mort est un
+   mensonge plus coûteux qu'un écran absent.
+
+**Mesures.** 27 tests dédiés (`test/manager.test.js`, `test/ui-server.test.js`,
+`test/ui-cli.test.js`), dont un **bout en bout** avec le vrai moteur : serveur de test, 256 Kio,
+fichier écrit et comparé octet pour octet, historique à `codeSortie 0`. Traçabilité : les
+modules citent cette décision (`npm run audit` reste sans écart) plutôt qu'une exigence
+inexistante — la fiche de spécification de l'interface reste à écrire (`WP-52`).
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation

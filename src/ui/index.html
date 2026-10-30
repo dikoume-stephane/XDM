@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>XDM — interface</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<a class="evitement" href="#contenu-principal">Aller au contenu principal</a>
+
+<!-- Sprite d'icônes : SVG inline, jamais d'emoji -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M8 5h11M8 12h11M8 19h11M4 5h.01M4 12h.01M4 19h.01"/></symbol>
+    <symbol id="i-horloge" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-journal" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-reglage" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 11a2 2 0 1 1 0 4 1.7 1.7 0 0 0-1.6 1Z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-croix" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5-12-7.5Z"/></symbol>
+    <symbol id="i-alerte" viewBox="0 0 24 24"><path d="M10.3 4.3 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-dossier" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></symbol>
+    <symbol id="i-lune" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></symbol>
+    <symbol id="i-soleil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+    <symbol id="i-points" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+  </defs>
+</svg>
+
+<div class="entete-page" role="region" aria-label="Application XDM">
+  <div class="titre-bloc">
+    <h1>XDM <span class="etiquette primaire" id="version">interface</span></h1>
+    <p>Gestionnaire de téléchargements — interface locale servie par <code style="font-family:var(--mono);font-size:.8125rem">xdm-ui</code>. Les données affichées viennent du moteur, pas d'un jeu de démonstration.</p>
+  </div>
+  <div class="actions-page">
+    <span class="etiquette" id="dossier-affiche">dossier inconnu</span>
+    <button class="btn" type="button" id="bascule-theme" aria-pressed="false">
+      <svg class="ico ico-sm" aria-hidden="true"><use href="#i-lune"/></svg>
+      <span>Thème sombre</span>
+    </button>
+  </div>
+</div>
+
+<div class="scene" style="grid-template-columns:minmax(0,1fr)">
+
+  <div class="fenetre">
+
+    <header class="barre-titre">
+      <span class="logo" aria-hidden="true">X</span>
+      <span><strong>XDM</strong></span>
+      <span class="sep" aria-hidden="true">·</span>
+      <span id="titre-fenetre">Téléchargements</span>
+      <div class="outils">
+        <span class="etat actif" id="etat-connexion"><span class="sr-only">État du serveur :</span> connexion…</span>
+      </div>
+    </header>
+
+    <div class="corps">
+
+      <nav class="nav" aria-label="Navigation principale">
+        <div class="nav-groupe">Téléchargements</div>
+        <button class="nav-lien" type="button" data-ecran="telechargements" aria-current="page">
+          <svg class="ico" aria-hidden="true"><use href="#i-download"/></svg>
+          <span>Téléchargements</span>
+          <span class="nav-compte" id="compte-encours" aria-label="0 en cours">0</span>
+        </button>
+        <button class="nav-lien" type="button" data-ecran="file">
+          <svg class="ico" aria-hidden="true"><use href="#i-file"/></svg>
+          <span>File d'attente</span>
+          <span class="nav-compte" id="compte-attente" aria-label="0 en attente">0</span>
+        </button>
+
+        <div class="nav-groupe">Suivi</div>
+        <button class="nav-lien" type="button" data-ecran="journal">
+          <svg class="ico" aria-hidden="true"><use href="#i-journal"/></svg>
+          <span>Journal</span>
+        </button>
+        <button class="nav-lien" type="button" data-ecran="historique">
+          <svg class="ico" aria-hidden="true"><use href="#i-horloge"/></svg>
+          <span>Historique</span>
+          <span class="nav-compte" id="compte-historique" aria-label="0 terminé">0</span>
+        </button>
+
+        <div class="nav-groupe">Système</div>
+        <button class="nav-lien" type="button" data-ecran="reglages">
+          <svg class="ico" aria-hidden="true"><use href="#i-reglage"/></svg>
+          <span>Réglages</span>
+        </button>
+
+        <div class="nav-pied" id="nav-pied">
+          <span>en attente de l'état…</span>
+        </div>
+      </nav>
+
+      <main class="contenu" id="contenu-principal" tabindex="-1">
+        <p class="sr-only" role="status" aria-live="polite" id="annonce"></p>
+        <p class="bandeau danger" id="erreur" role="alert" hidden style="margin:var(--e-3) var(--e-5) 0"></p>
+
+        <!-- =================== Téléchargements =================== -->
+        <section class="ecran actif" id="ecran-telechargements" aria-labelledby="t-tel">
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-tel">Téléchargements</h2>
+              <p id="resume-tel">Aucun transfert pour l'instant.</p>
+            </div>
+            <div class="actions">
+              <button class="btn" type="button" id="btn-demarrer">
+                <svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg>
+                Démarrer la file
+              </button>
+            </div>
+          </div>
+
+          <form class="barre-outils" id="form-url" novalidate>
+            <div class="champ" style="flex:1 1 320px;max-width:560px">
+              <label for="url">Ajouter une URL à télécharger</label>
+              <input id="url" type="text" inputmode="url" placeholder="https://exemple.fr/fichier.bin" spellcheck="false" autocomplete="off" required>
+            </div>
+            <button class="btn principal" type="submit">
+              <svg class="ico ico-sm" aria-hidden="true"><use href="#i-plus"/></svg>
+              Ajouter à la file
+            </button>
+          </form>
+
+          <div class="defilement">
+            <div class="enveloppe-table">
+              <table>
+                <caption class="sr-only">Transferts en cours et en attente</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Nom</th>
+                    <th scope="col">État</th>
+                    <th scope="col" style="min-width:190px">Progression</th>
+                    <th scope="col" class="droite">Taille</th>
+                    <th scope="col" class="droite">Débit</th>
+                    <th scope="col" style="width:56px"><span class="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody id="liste-taches"></tbody>
+              </table>
+            </div>
+
+            <div class="vide" id="vide-taches">
+              <span class="rond" aria-hidden="true"><svg class="ico ico-lg" aria-hidden="true"><use href="#i-download"/></svg></span>
+              <h3>Aucun transfert</h3>
+              <p>Collez une URL ci-dessus puis cliquez sur « Ajouter à la file ». Rien ne part tant que vous n'avez pas lancé la file.</p>
+              <div class="actions">
+                <button class="btn" type="button" id="btn-focus-url">Saisir une URL</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================== File d'attente =================== -->
+        <section class="ecran" id="ecran-file" aria-labelledby="t-file" hidden>
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-file">File d'attente</h2>
+              <p id="resume-file">Aucune tâche en attente.</p>
+            </div>
+            <div class="actions">
+              <button class="btn principal" type="button" id="btn-demarrer-file">
+                <svg class="ico ico-sm" aria-hidden="true"><use href="#i-play"/></svg>
+                Démarrer maintenant
+              </button>
+            </div>
+          </div>
+
+          <div class="defilement">
+            <div class="enveloppe-table">
+              <table>
+                <caption class="sr-only">Tâches en attente, dans l'ordre de passage</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" class="droite" style="width:64px">Ordre</th>
+                    <th scope="col">Tâche</th>
+                    <th scope="col" class="droite">Taille</th>
+                    <th scope="col" style="width:120px"><span class="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody id="file-corps"></tbody>
+              </table>
+            </div>
+
+            <div class="vide" id="vide-file">
+              <span class="rond" aria-hidden="true"><svg class="ico ico-lg" aria-hidden="true"><use href="#i-check"/></svg></span>
+              <h3>La file est vide</h3>
+              <p>Tout ce qui a été ajouté a été lancé. Une tâche quitte la file dès qu'elle démarre ; son résultat part ensuite dans l'historique.</p>
+              <div class="actions">
+                <button class="btn" type="button" data-aller="historique">Ouvrir l'historique</button>
+                <button class="btn discret" type="button" data-aller="telechargements">Ajouter une URL</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="zone" style="border-top:1px solid var(--c-bord)">
+            <p class="aide" style="font-size:.8125rem;color:var(--c-texte-2)">
+              <strong>Limite connue :</strong> le moteur n'a pas encore d'interruption coopérative, donc une tâche
+              <em>en cours</em> ne peut pas être mise en pause depuis l'interface (décision <code style="font-family:var(--mono)">D-084</code>).
+              Seules les tâches <em>en attente</em> peuvent être retirées. Un téléchargement interrompu par l'arrêt du processus reprend
+              au lancement suivant grâce au fichier <code style="font-family:var(--mono)">.part</code>.
+            </p>
+          </div>
+        </section>
+
+        <!-- =================== Journal =================== -->
+        <section class="ecran" id="ecran-journal" aria-labelledby="t-journal" hidden>
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-journal">Journal</h2>
+              <p>Événements du gestionnaire, du plus récent au plus ancien. Rien n'est envoyé ailleurs.</p>
+            </div>
+            <div class="actions">
+              <button class="btn discret" type="button" id="btn-copier-journal">Copier</button>
+            </div>
+          </div>
+
+          <div class="flux" id="journal-flux"></div>
+
+          <div class="vide" id="vide-journal">
+            <span class="rond" aria-hidden="true"><svg class="ico ico-lg" aria-hidden="true"><use href="#i-journal"/></svg></span>
+            <h3>Journal vide</h3>
+            <p>Le journal se remplit dès qu'une URL est ajoutée ou qu'un transfert démarre.</p>
+          </div>
+        </section>
+
+        <!-- =================== Historique =================== -->
+        <section class="ecran" id="ecran-historique" aria-labelledby="t-hist" hidden>
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-hist">Historique</h2>
+              <p id="resume-hist">Aucun transfert terminé pour l'instant.</p>
+            </div>
+            <div class="actions">
+              <button class="btn" type="button" id="btn-csv">
+                <svg class="ico ico-sm" aria-hidden="true"><use href="#i-dossier"/></svg> Exporter en CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="defilement">
+            <div class="enveloppe-table">
+              <table>
+                <caption class="sr-only">Transferts terminés ou en échec</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Nom</th>
+                    <th scope="col" class="droite">Taille</th>
+                    <th scope="col" class="droite">Durée</th>
+                    <th scope="col">Résultat</th>
+                    <th scope="col" class="droite">Code</th>
+                  </tr>
+                </thead>
+                <tbody id="hist-corps"></tbody>
+              </table>
+            </div>
+
+            <div class="vide" id="vide-historique">
+              <span class="rond" aria-hidden="true"><svg class="ico ico-lg" aria-hidden="true"><use href="#i-horloge"/></svg></span>
+              <h3>Aucun transfert terminé</h3>
+              <p>Les transferts terminés ou en échec apparaissent ici avec leur code de sortie, identique à celui de la CLI.</p>
+              <div class="actions">
+                <button class="btn" type="button" data-aller="telechargements">Ajouter une URL</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================== Réglages =================== -->
+        <section class="ecran" id="ecran-reglages" aria-labelledby="t-reg" hidden>
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-reg">Réglages</h2>
+              <p>Réglages de session : ils sont fixés au lancement de <code style="font-family:var(--mono);font-size:.8125rem">xdm-ui</code>.</p>
+            </div>
+          </div>
+
+          <div class="defilement">
+            <div class="zone" style="display:grid;gap:var(--e-4)">
+              <div class="carte">
+                <h3>Session</h3>
+                <dl class="liste-def">
+                  <dt>Dossier de destination</dt><dd id="reg-dossier">—</dd>
+                  <dt>Connexions par transfert</dt><dd id="reg-connexions">—</dd>
+                  <dt>Transferts simultanés</dt><dd id="reg-actifs">—</dd>
+                  <dt>Version</dt><dd id="reg-version">—</dd>
+                </dl>
+                <p class="aide" style="margin-top:var(--e-2)">
+                  Pour changer ces valeurs : <code style="font-family:var(--mono)">xdm-ui --dossier DIR --connexions 8 --actifs 3</code>.
+                </p>
+              </div>
+
+              <div class="carte">
+                <h3>Apparence</h3>
+                <div class="champ" style="max-width:360px">
+                  <span class="etiquette-champ" id="lbl-theme">Thème</span>
+                  <div class="groupe-segmente" role="group" aria-labelledby="lbl-theme">
+                    <button type="button" data-theme="clair" aria-pressed="false">Clair</button>
+                    <button type="button" data-theme="sombre" aria-pressed="false">Sombre</button>
+                    <button type="button" data-theme="systeme" aria-pressed="true">Système</button>
+                  </div>
+                  <span class="aide">« Système » suit <code style="font-family:var(--mono)">prefers-color-scheme</code>.</span>
+                </div>
+              </div>
+
+              <div class="carte">
+                <h3>Encore à câbler</h3>
+                <p class="aide" style="font-size:.8125rem;color:var(--c-texte-2)">
+                  Les écrans <strong>Site Grabber</strong> et <strong>Vérification</strong> de la maquette validée ne sont pas
+                  encore branchés : les modules existent (<code style="font-family:var(--mono)">src/crawler.js</code>,
+                  <code style="font-family:var(--mono)">src/grab-runner.js</code>, <code style="font-family:var(--mono)">src/verify.js</code>)
+                  mais ne sont pas exposés par cette API. Ils ne sont donc pas affichés ici plutôt que de montrer des boutons morts.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <div class="barre-etat" role="region" aria-label="Barre d'état de l'application">
+      <span class="temoin" id="temoin"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg> connexion…</span>
+      <span id="etat-debit">0 o/s</span>
+      <span id="etat-compteurs">0 en cours · 0 en attente</span>
+      <span class="pousse" id="etat-derniere">aucun événement</span>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>
