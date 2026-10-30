@@ -250,6 +250,25 @@
               <label for="max-pages">Pages max</label>
               <input id="max-pages" type="number" value="100" min="1" max="100000">
             </div>
+            <div class="champ" style="width:140px">
+              <label for="paralleles">Simultanées</label>
+              <select id="paralleles">
+                <option value="1" selected>1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+            <div class="champ" style="flex:1 1 200px;max-width:300px">
+              <label for="inclure">Inclure <span class="sous">motifs, séparés par des virgules</span></label>
+              <input id="inclure" type="text" placeholder="*.pdf, *.zip" spellcheck="false" autocomplete="off">
+            </div>
+            <div class="champ" style="flex:1 1 200px;max-width:300px">
+              <label for="exclure">Exclure <span class="sous">motifs, séparés par des virgules</span></label>
+              <input id="exclure" type="text" placeholder="*.exe, /prive/*" spellcheck="false" autocomplete="off">
+            </div>
+            <label class="case" for="sous-domaines"><input id="sous-domaines" type="checkbox"> <span>Suivre les sous-domaines</span></label>
+            <label class="case" for="reecrire"><input id="reecrire" type="checkbox"> <span>Réécrire les liens pour une lecture locale</span></label>
             <button class="btn principal" type="submit">
               <svg class="ico ico-sm" aria-hidden="true"><use href="#i-globe"/></svg>
               Lancer l'aspiration

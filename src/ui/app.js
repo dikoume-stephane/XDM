@@ -319,6 +319,15 @@ function rendreAspirations() {
       } catch {
         /* une URL invalide ne peut pas arriver ici : le serveur la refuse avant */
       }
+      // Les filtres appliqués sont écrits sous l'adresse : sans cela, « profondeur 2 » et
+      // « 3 fichiers » ne disent pas pourquoi trois, ni ce qui a été écarté (`WP-54`).
+      const filtres = [
+        ...(aspiration.inclure ?? []).map((motif) => `+${motif}`),
+        ...(aspiration.exclure ?? []).map((motif) => `−${motif}`),
+        ...(aspiration.sousDomaines ? ['sous-domaines'] : []),
+        ...(aspiration.paralleles > 1 ? [`${aspiration.paralleles} simultanées`] : []),
+        ...(aspiration.reecrits ? [`${aspiration.reecrits} liens réécrits`] : []),
+      ].join(' · ');
       const verifier = el('button', {
         classe: 'btn-ico',
         type: 'button',
@@ -330,7 +339,11 @@ function rendreAspirations() {
         el('td', {}, [
           el('div', { classe: 'cellule-nom' }, [
             el('span', { classe: 'type', 'aria-hidden': 'true', texte: 'WEB' }),
-            el('span', { classe: 'txt' }, [el('b', { texte: hote }), el('span', { texte: aspiration.url })]),
+            el('span', { classe: 'txt' }, [
+              el('b', { texte: hote }),
+              el('span', { texte: aspiration.url }),
+              ...(filtres ? [el('span', { classe: 'sous', texte: filtres })] : []),
+            ]),
           ]),
         ]),
         el('td', {}, [pastilleAspiration(aspiration)]),
@@ -743,10 +756,18 @@ function cabler() {
       $('#url-aspiration').focus();
       return;
     }
+    // Les motifs sont découpés ici : l'API reçoit des listes, pas une chaîne à re-découper.
+    const motifs = (champ) =>
+      $(champ).value.split(',').map((motif) => motif.trim()).filter((motif) => motif !== '');
     lancerAspiration({
       url,
       profondeur: Number($('#profondeur').value),
       maxPages: Number($('#max-pages').value),
+      paralleles: Number($('#paralleles').value),
+      inclure: motifs('#inclure'),
+      exclure: motifs('#exclure'),
+      sousDomaines: $('#sous-domaines').checked,
+      reecrire: $('#reecrire').checked,
     });
   });
 

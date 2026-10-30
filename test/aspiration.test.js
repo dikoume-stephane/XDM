@@ -7,6 +7,7 @@ import { join } from 'node:path';
 
 import { AspirationError, executerAspiration, nomDossier } from '../src/aspiration.js';
 import { PROJECT_SUFFIX } from '../src/project.js';
+import { verifierDossier } from '../src/verification.js';
 
 /** Site témoin minimal : deux pages, deux fichiers, une branche interdite. */
 async function site() {
@@ -118,4 +119,88 @@ test('WP-52 : le nom de dossier est sûr, même pour un hôte hostile', () => {
   assert.equal(nomDossier('https://a_b.fr/x', 0), 'a-b.fr-19700101-000000');
   assert.equal(nomDossier('https://exemple.fr:8080/x', 0), 'exemple.fr-19700101-000000');
   assert.equal(nomDossier('pas une url', 0), 'site-19700101-000000');
+});
+
+test('T-E-12 : les motifs saisis filtrent réellement, et le projet les enregistre', async () => {
+  const temoin = await site();
+  const racine = await mkdtemp(join(tmpdir(), 'xdm-asp-'));
+  try {
+    // Exclusion : les fichiers `.bin` ne sont plus retenus.
+    const sansBin = await executerAspiration({
+      url: temoin.url('/index.html'),
+      racine,
+      exclure: ['*.bin'],
+    });
+    assert.equal(sansBin.retenus, 2, `retenus : ${sansBin.retenus} (index + a.html)`);
+    assert.deepEqual(sansBin.exclure, ['*.bin']);
+
+    // Inclusion : seuls les `.bin` le sont — l'inclusion prime sur le parcours de pages.
+    const avecInclusion = await executerAspiration({
+      url: temoin.url('/index.html'),
+      racine,
+      inclure: ['*.bin'],
+      profondeur: 2,
+    });
+    assert.equal(avecInclusion.retenus, 2, `retenus : ${avecInclusion.retenus} (f.bin + g.bin)`);
+    const projet = JSON.parse(
+      await readFile(join(avecInclusion.dossier, `${avecInclusion.nom}${PROJECT_SUFFIX}`), 'utf8'),
+    );
+    assert.deepEqual(projet.filters.include.map((f) => f.motif), ['*.bin']);
+    assert.deepEqual(projet.filters.exclude, [], 'le gabarit média n’est pas appliqué');
+
+    // Un motif vide est refusé : il ne filtre rien tout en donnant l'illusion du contraire.
+    await assert.rejects(
+      executerAspiration({ url: temoin.url('/'), racine, exclure: ['  '] }),
+      (error) => error.code === 'MOTIF_INVALIDE',
+    );
+    await assert.rejects(
+      executerAspiration({ url: temoin.url('/'), racine, paralleles: 99 }),
+      (error) => error.code === 'PARALLELES_INVALIDE',
+    );
+  } finally {
+    await temoin.fermer();
+    await rm(racine, { recursive: true, force: true });
+  }
+});
+
+test('T-E-13 : les liens des pages locales sont réécrits quand on le demande', async () => {
+  const temoin = await site();
+  const racine = await mkdtemp(join(tmpdir(), 'xdm-asp-'));
+  try {
+    const resultat = await executerAspiration({
+      url: temoin.url('/index.html'),
+      racine,
+      reecrire: true,
+    });
+    assert.ok(resultat.reecrits > 0, `liens réécrits : ${resultat.reecrits}`);
+    // La page de départ est le marqueur `empty.html` (`D-061`) : la page liée, elle, est
+    // téléchargée puis réécrite — `/g.bin` devient `g.bin`.
+    const page = await readFile(join(resultat.dossier, 'a.html'), 'utf8');
+    assert.match(page, /href="g\.bin"/, 'le lien absolu devient un lien local');
+    assert.doesNotMatch(page, /href="\/g\.bin"/);
+  } finally {
+    await temoin.fermer();
+    await rm(racine, { recursive: true, force: true });
+  }
+});
+
+test('T-E-16 : une page réécrite reste conforme à la vérification', async () => {
+  const temoin = await site();
+  const racine = await mkdtemp(join(tmpdir(), 'xdm-asp-'));
+  try {
+    const resultat = await executerAspiration({
+      url: temoin.url('/index.html'),
+      racine,
+      reecrire: true,
+    });
+    assert.ok(resultat.reecrits > 0);
+    // La file décrit la taille **réelle** du fichier réécrit : sans cet alignement, la
+    // vérification annoncerait « tronqué » un fichier simplement modifié (défaut réel).
+    const rapport = await verifierDossier({ dossier: resultat.dossier });
+    assert.equal(rapport.codeSortie, 0, `anomalies : ${JSON.stringify(rapport.entrees.filter((e) => e.state !== 'OK'))}`);
+    assert.equal(rapport.conformes, true);
+  } finally {
+    await temoin.fermer();
+    await rm(racine, { recursive: true, force: true });
+  }
 });

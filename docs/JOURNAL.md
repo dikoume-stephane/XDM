@@ -2186,6 +2186,42 @@ par une décision.
 
 ---
 
+### D-087 — Le Site Grabber de l'interface vaut la CLI, ou il n'existe pas
+**Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `src/aspiration.js`, `src/manager.js`, `src/ui-server.js`, `EX-E-07`
+
+**Contexte.** `WP-52` avait câblé l'écran Site Grabber au minimum : une URL, une profondeur, un
+plafond de pages. La CLI `xdm-grab` savait filtrer (`--inclure`/`--exclure`), suivre les
+sous-domaines, explorer en parallèle et réécrire les liens. Deux outils portant le même nom et
+ne faisant pas la même chose : l'écran devient un piège pour qui l'essaie en premier.
+
+**Options.** (a) Laisser l'écran pauvre et renvoyer à la CLI — l'interface n'est alors qu'une
+vitrine. (b) Réécrire l'écran comme un formulaire de la CLI — illisible. (c) Porter les options
+utiles dans le module d'aspiration, avec la **même validation** que la CLI.
+
+**Décision.** **(c)**, avec quatre points de rigueur.
+
+1. **Un motif vide est refusé, pas ignoré.** `exclure: ['  ']` ne filtre rien tout en donnant
+   l'illusion d'une exclusion : `MOTIF_INVALIDE`, que ce soit en CLI ou par l'API.
+2. **Le gabarit « médias seulement » n'est pas appliqué.** Un projet IDM neuf exclut `*.html`,
+   `*.css`, `*.jpg`… — c'est le mode « ne récupérer que les fichiers ». Une aspiration de site
+   veut le contraire. L'aspiration repart donc d'un projet **sans filtre** et n'inscrit que les
+   motifs saisis ; sans cette correction, ajouter les filtres aurait supprimé toutes les pages.
+3. **Ce qui a filtré est écrit et affiché.** Les motifs partent dans le projet
+   (`<nom>.xdmspider.json`) et sont rendus sous l'adresse, avec le nombre de liens réécrits.
+4. **La réécriture est un confort, pas une condition.** Une page illisible ou en lecture seule
+   n'échoue pas l'aspiration : elle est simplement absente du total.
+
+5. **La réécriture met la file à jour.** Un lien absolu devenu relatif change la longueur du
+   fichier ; `queue.json` gardait la taille du téléchargement, et la vérification annonçait
+   « tronqué » une page simplement réécrite. Défaut trouvé en essai réel (53 octets au lieu de
+   54), corrigé par l'alignement des `totalSize` sur la taille écrite.
+
+**Mesures.** 5 tests (`T-E-12` filtres et projet, `T-E-13` réécriture, `T-E-14` validation par
+l'API, `T-E-15` dossier de destination absent, `T-E-16` vérification d'une aspiration réécrite),
+`EX-E-07` verte, domaine E à **7 exigences / 7 vertes**, matrice v1.19.
+
+---
+
 ### D-086 — Electron en périphérie : la coquille reçoit Electron, elle ne l'importe pas
 **Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `src/desktop-shell.js`, `desktop/`, `EX-E-04`→`EX-E-06`
 
@@ -2206,7 +2242,7 @@ bénéfice nul ici. (c) Electron **confiné en périphérie**, injecté dans un 
    passent une doublure : ils s'exécutent partout, y compris dans un conteneur sans écran.
 2. **Electron est une dépendance de distribution, pas du socle.** `desktop/package.json` porte
    `electron` en `devDependencies` et son propre `main` ; `package.json` à la racine n'ajoute
-   qu'un script (`npm run desktop`, `npm run desktop:install`). Les 338 tests continuent de
+   qu'un script (`npm run desktop`, `npm run desktop:install`). Les 343 tests continuent de
    tourner **sans** Electron installé.
 3. **La fenêtre est une fenêtre, pas un navigateur.** `contextIsolation: true`, `sandbox: true`,
    `nodeIntegration: false` ; un lien externe part au navigateur du système ; toute navigation

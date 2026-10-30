@@ -28,7 +28,7 @@
 import { mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import { executerAspiration } from './aspiration.js';
+import { executerAspiration, normaliserMotifs, PARALLELES_MAX } from './aspiration.js';
 import { download } from './connection-loop.js';
 import { humanBytes } from './report.js';
 import { fileNameFromUrl } from './promote.js';
@@ -484,6 +484,12 @@ export function createManager({
     fin: aspiration.fin,
     codeSortie: aspiration.codeSortie,
     erreur: aspiration.erreur,
+    inclure: aspiration.inclure,
+    exclure: aspiration.exclure,
+    sousDomaines: aspiration.sousDomaines,
+    paralleles: aspiration.paralleles,
+    reecrire: aspiration.reecrire,
+    reecrits: aspiration.reecrits,
   });
 
   /**
@@ -492,13 +498,42 @@ export function createManager({
    *
    * @param {{url: string, profondeur?: number, maxPages?: number}} demande
    */
-  function aspirer({ url, profondeur = 2, maxPages = 100 } = {}) {
+  function aspirer({
+    url,
+    profondeur = 2,
+    maxPages = 100,
+    inclure = [],
+    exclure = [],
+    sousDomaines = false,
+    paralleles = 1,
+    reecrire = false,
+  } = {}) {
     const analysee = analyserUrl(url);
     if (!Number.isInteger(profondeur) || profondeur < 1 || profondeur > 5) {
       throw new ManagerError('profondeur : entier de 1 à 5', 'PROFONDEUR_INVALIDE', { profondeur });
     }
     if (!Number.isInteger(maxPages) || maxPages < 1 || maxPages > 100_000) {
       throw new ManagerError('pages maximum : entier de 1 à 100 000', 'PAGES_INVALIDE', { maxPages });
+    }
+    // Validation **ici**, avant de rendre la main : une requête mal formée doit être un
+    // `400` immédiat, pas une aspiration qui échoue une seconde plus tard dans le journal.
+    let motifsInclus;
+    let motifsExclus;
+    try {
+      motifsInclus = normaliserMotifs(inclure, 'inclure');
+      motifsExclus = normaliserMotifs(exclure, 'exclure');
+    } catch (error) {
+      throw new ManagerError(error.message, error.code ?? 'MOTIF_INVALIDE', error.details ?? {});
+    }
+    if (!Number.isInteger(paralleles) || paralleles < 1 || paralleles > PARALLELES_MAX) {
+      throw new ManagerError(
+        `explorations simultanées : entier de 1 à ${PARALLELES_MAX}`,
+        'PARALLELES_INVALIDE',
+        { paralleles },
+      );
+    }
+    if (typeof sousDomaines !== 'boolean' || typeof reecrire !== 'boolean') {
+      throw new ManagerError('sous-domaines et réécriture : booléens attendus', 'OPTION_INVALIDE');
     }
     const aspiration = {
       id: `A-${(compteurAspiration += 1)}`,
@@ -511,6 +546,12 @@ export function createManager({
       taches: 0,
       termines: 0,
       echecs: 0,
+      inclure: motifsInclus,
+      exclure: motifsExclus,
+      sousDomaines,
+      paralleles,
+      reecrire,
+      reecrits: 0,
       debut: maintenant(),
       fin: null,
       codeSortie: null,
@@ -525,6 +566,11 @@ export function createManager({
       racine: join(dossier, 'aspirations'),
       profondeur,
       maxPages,
+      inclure: motifsInclus,
+      exclure: motifsExclus,
+      sousDomaines,
+      paralleles,
+      reecrire,
       maintenant,
       onEtape: (etape) => {
         if (typeof etape.pages === 'number') aspiration.pages = etape.pages;
@@ -546,9 +592,10 @@ export function createManager({
         aspiration.termines = resultat.termines;
         aspiration.echecs = resultat.echecs;
         aspiration.codeSortie = resultat.codeSortie;
+        aspiration.reecrits = resultat.reecrits ?? 0;
         journaliser(
           resultat.codeSortie === 0 ? 'succes' : 'attention',
-          `aspiration ${resultat.codeSortie === 0 ? 'terminée' : 'partielle'} : ${resultat.termines}/${resultat.taches} fichier(s), ${resultat.pages} page(s)`,
+          `aspiration ${resultat.codeSortie === 0 ? 'terminée' : 'partielle'} : ${resultat.termines}/${resultat.taches} fichier(s), ${resultat.pages} page(s)${resultat.reecrits ? `, ${resultat.reecrits} lien(s) réécrit(s)` : ''}`,
           { aspiration: aspiration.id },
         );
         publier({ type: 'aspiration', aspiration: vueAspiration(aspiration) });

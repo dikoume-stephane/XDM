@@ -171,3 +171,39 @@ test('WP-52 : une aspiration se lance par l’API et se suit jusqu’au bout', a
     await temoin.fermer();
   }
 });
+
+test('T-E-14 : les options du Site Grabber sont validées avant l’aspiration', async () => {
+  await avecServeur(async ({ base }) => {
+    // Un motif vide ne filtre rien : il est refusé, pas ignoré.
+    const motif = await json(base, '/api/aspirations', {
+      method: 'POST',
+      corps: { url: 'http://127.0.0.1:9/', exclure: ['   '] },
+    });
+    assert.equal(motif.status, 400);
+    assert.equal((await motif.json()).erreur.code, 'MOTIF_INVALIDE');
+
+    const paralleles = await json(base, '/api/aspirations', {
+      method: 'POST',
+      corps: { url: 'http://127.0.0.1:9/', paralleles: 99 },
+    });
+    assert.equal(paralleles.status, 400);
+    assert.equal((await paralleles.json()).erreur.code, 'PARALLELES_INVALIDE');
+
+    const option = await json(base, '/api/aspirations', {
+      method: 'POST',
+      corps: { url: 'http://127.0.0.1:9/', reecrire: 'oui' },
+    });
+    assert.equal(option.status, 400);
+    assert.equal((await option.json()).erreur.code, 'OPTION_INVALIDE');
+
+    // Une aspiration valide est acceptée, avec ses options relues dans l'état.
+    const valide = await json(base, '/api/aspirations', {
+      method: 'POST',
+      corps: { url: 'http://127.0.0.1:9/', profondeur: 1, maxPages: 5, inclure: ['*.pdf'], paralleles: 2 },
+    });
+    assert.equal(valide.status, 202);
+    const { aspiration } = await valide.json();
+    assert.deepEqual(aspiration.inclure, ['*.pdf']);
+    assert.equal(aspiration.paralleles, 2);
+  });
+});

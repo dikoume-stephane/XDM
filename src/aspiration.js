@@ -18,21 +18,25 @@
  * @module aspiration
  */
 
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { crawl } from './crawler.js';
 import { executeGrab } from './grab-runner.js';
 import { prepareGrab } from './grabber.js';
 import { fetchText } from './http-client.js';
-import { createProject, projectPath } from './project.js';
-import { createQueue } from './task-queue.js';
+import { addFilter, createProject, projectPath, splitMotif } from './project.js';
+import { rewriteDocument, siteMapFromEntries } from './rewrite.js';
+import { createQueue, loadQueue, saveQueue } from './task-queue.js';
 
 /** Profondeur par défaut, comme la CLI (`D-039`). */
 export const PROFONDEUR_DEFAUT = 2;
 
 /** Plafond de pages par défaut : au-delà, une aspiration n'est plus une vérification. */
 export const PAGES_DEFAUT = 100;
+
+/** Explorations simultanées autorisées (`WP-54`) : au-delà, on martèle le serveur d'autrui. */
+export const PARALLELES_MAX = 8;
 
 /**
  * Erreur d'aspiration, porteuse d'un code stable.
@@ -49,6 +53,121 @@ export class AspirationError extends Error {
     this.code = code;
     this.details = details;
   }
+}
+
+/**
+ * Clé de comparaison de chemins, indépendante du séparateur de la plateforme.
+ *
+ * @param {string} chemin
+ * @returns {string}
+ */
+function cleChemin(chemin) {
+  return String(chemin).replace(/\\/g, '/');
+}
+
+/**
+ * Valide une liste de motifs de filtre.
+ *
+ * Un motif vide est refusé plutôt qu'ignoré : `--exclure ""` qui ne filtre rien donne
+ * l'illusion d'une exclusion.
+ *
+ * @param {unknown} valeur
+ * @param {string} nom
+ * @returns {string[]}
+ */
+export function normaliserMotifs(valeur, nom) {
+  if (valeur === undefined || valeur === null) return [];
+  if (!Array.isArray(valeur)) {
+    throw new AspirationError(`${nom} : tableau de motifs attendu`, 'MOTIFS_INVALIDES', { champ: nom });
+  }
+  return valeur.map((motif) => {
+    if (typeof motif !== 'string' || motif.trim() === '') {
+      throw new AspirationError(`${nom} : motif vide refusé`, 'MOTIF_INVALIDE', { champ: nom });
+    }
+    return motif.trim();
+  });
+}
+
+/**
+ * Filtres actifs d'un projet, sous la forme attendue par `crawl`.
+ *
+ * @param {{filters: {include: object[], exclude: object[]}}} projet
+ * @returns {{include: string[], exclude: string[]}}
+ */
+export function filtresDuProjet(projet) {
+  const motifs = (liste) =>
+    (projet.filters[liste] ?? [])
+      .filter((filtre) => filtre.actif !== false)
+      .flatMap((filtre) => splitMotif(filtre.motif));
+  return { include: motifs('include'), exclude: motifs('exclude') };
+}
+
+/**
+ * Réécrit les liens des pages HTML et CSS téléchargées pour qu'elles s'ouvrent en local.
+ *
+ * Une erreur de lecture n'interrompt pas l'aspiration : la réécriture est un confort de
+ * consultation, pas une condition de succès — un fichier absent est déjà compté par la file.
+ *
+ * @param {{rootDir: string, entries: Array<{url: string, localPath: string}>}} options
+ * @returns {Promise<{reecrits: number, tailles: Map<string, number>}>}
+ */
+export async function reecrireLiens({ rootDir, entries }) {
+  const siteMap = siteMapFromEntries(entries ?? []);
+  let reecrits = 0;
+  /** Taille réelle des fichiers modifiés : la file doit suivre, sinon la vérification
+   *  signalerait « tronqué » un fichier simplement réécrit (constaté en essai réel). */
+  const tailles = new Map();
+  for (const entree of entries ?? []) {
+    if (!/\.(html?|css)$/i.test(entree.localPath)) continue;
+    const fichier = join(rootDir, entree.localPath);
+    let source;
+    try {
+      source = await readFile(fichier, 'utf8');
+    } catch {
+      continue;
+    }
+    const resultat = rewriteDocument(source, {
+      pageUrl: entree.url,
+      pageLocalPath: entree.localPath,
+      siteMap,
+    });
+    if (resultat.rewritten > 0) {
+      try {
+        await writeFile(fichier, resultat.text, 'utf8');
+        reecrits += resultat.rewritten;
+        // La file enregistre le **chemin absolu** de la cible : la clé suit, sinon
+        // l'alignement ne trouve aucune tâche (défaut vu au premier essai).
+        tailles.set(cleChemin(join(rootDir, entree.localPath)), Buffer.byteLength(resultat.text, 'utf8'));
+      } catch {
+        /* fichier en lecture seule : on continue, le total dira ce qui a été fait */
+      }
+    }
+  }
+  return { reecrits, tailles };
+}
+
+/**
+ * Aligne la taille attendue des tâches sur la taille réelle des fichiers réécrits.
+ *
+ * La réécriture change la longueur d'une page (un lien absolu devient relatif). Sans cette
+ * mise à jour, `queue.json` décrit un fichier qui n'existe plus tel quel et la vérification
+ * annonce « tronqué » — c'est exactement le défaut trouvé en essai réel après `WP-54`.
+ *
+ * @param {{rootDir: string, tailles: Map<string, number>}} options
+ * @returns {Promise<number>} nombre de tâches mises à jour
+ */
+export async function alignerTailles({ rootDir, tailles }) {
+  if (!tailles || tailles.size === 0) return 0;
+  const file = await loadQueue(rootDir);
+  let modifiees = 0;
+  const tasks = file.tasks.map((tache) => {
+    const taille = tailles.get(cleChemin(tache.target));
+    if (taille === undefined || tache.totalSize === taille) return tache;
+    modifiees += 1;
+    return { ...tache, totalSize: taille, updatedAt: Date.now() };
+  });
+  if (modifiees > 0) await saveQueue(rootDir, { ...file, tasks });
+  return modifiees;
 }
 
 /**
@@ -84,6 +203,11 @@ export function nomDossier(url, horodatage = Date.now()) {
  *   profondeur?: number,
  *   maxPages?: number,
  *   delai?: number|null,
+ *   inclure?: string[],
+ *   exclure?: string[],
+ *   sousDomaines?: boolean,
+ *   paralleles?: number,
+ *   reecrire?: boolean,
  *   maintenant?: () => number,
  *   fetchPage?: (url: string, init?: object) => Promise<object>,
  *   onEtape?: (etape: {phase: string, pages?: number, retenus?: number, tache?: object}) => void,
@@ -96,6 +220,11 @@ export async function executerAspiration({
   profondeur = PROFONDEUR_DEFAUT,
   maxPages = PAGES_DEFAUT,
   delai = null,
+  inclure = [],
+  exclure = [],
+  sousDomaines = false,
+  paralleles = 1,
+  reecrire = false,
   maintenant = Date.now,
   fetchPage = (adresse, init = {}) => fetchText(adresse, { headers: init.headers ?? {} }),
   onEtape = () => {},
@@ -119,13 +248,34 @@ export async function executerAspiration({
   if (!Number.isInteger(maxPages) || maxPages < 1 || maxPages > 100_000) {
     throw new AspirationError('pages maximum : entier de 1 à 100 000', 'PAGES_INVALIDE', { maxPages });
   }
+  const motifsInclus = normaliserMotifs(inclure, 'inclure');
+  const motifsExclus = normaliserMotifs(exclure, 'exclure');
+  if (!Number.isInteger(paralleles) || paralleles < 1 || paralleles > PARALLELES_MAX) {
+    throw new AspirationError(
+      `explorations simultanées : entier de 1 à ${PARALLELES_MAX}`,
+      'PARALLELES_INVALIDE',
+      { paralleles },
+    );
+  }
+  if (typeof sousDomaines !== 'boolean' || typeof reecrire !== 'boolean') {
+    throw new AspirationError('sous-domaines et réécriture : booléens attendus', 'OPTION_INVALIDE');
+  }
 
   const horodatage = maintenant();
   const dossier = nomDossier(analysee.href, horodatage);
   const rootDir = join(racine, dossier);
   await mkdir(rootDir, { recursive: true });
 
-  const project = createProject({ name: dossier, rootUrl: analysee.href, depth: profondeur });
+  let project = createProject({ name: dossier, rootUrl: analysee.href, depth: profondeur });
+  // Le gabarit de projet arrive avec un filtre d'exclusion par défaut qui vise les médias
+  // (`*.html`, `*.css`…), hérité du mode « ne récupérer que les fichiers » d'IDM. Une
+  // aspiration de site veut le contraire : on repart d'un projet **sans filtre** et on
+  // n'inscrit que les motifs saisis. Ce que la file dit est ce qui a filtré.
+  project = { ...project, filters: { include: [], exclude: [] } };
+  // Les motifs sont enregistrés dans le projet **avant** le parcours : ce que l'interface
+  // affiche dans l'écran Site Grabber est ce qui a réellement filtré.
+  for (const motif of motifsInclus) project = addFilter(project, 'include', motif);
+  for (const motif of motifsExclus) project = addFilter(project, 'exclude', motif);
 
   onEtape({ phase: 'parcours', pages: 0, retenus: 0 });
   const trouve = await crawl(analysee.href, {
@@ -133,6 +283,9 @@ export async function executerAspiration({
     depth: profondeur,
     maxPages,
     robots: true,
+    filters: filtresDuProjet(project),
+    subdomains: sousDomaines,
+    parallelisme: paralleles,
     ...(delai !== null ? { delai } : {}),
     onPage: (page) => {
       if (page && page.retained) onEtape({ phase: 'parcours', pages: page.fetched ?? 0, retenus: page.retained });
@@ -173,6 +326,13 @@ export async function executerAspiration({
       onEvent(evenement);
     },
   });
+  let reecrits = 0;
+  if (reecrire) {
+    onEtape({ phase: 'reecriture', pages: trouve.fetched, retenus: trouve.retained.length });
+    const reecriture = await reecrireLiens({ rootDir, entries: plan.entries });
+    reecrits = reecriture.reecrits;
+    await alignerTailles({ rootDir, tailles: reecriture.tailles });
+  }
   onEtape({ phase: 'fini', pages: trouve.fetched, retenus: trouve.retained.length });
 
   return {
@@ -187,6 +347,13 @@ export async function executerAspiration({
     // Une aspiration est terminée quand toutes ses tâches sont terminées : un échec
     // partiel se voit dans le code de sortie, pas dans un silence.
     codeSortie: resultat.failures.length === 0 && termines === total ? 0 : 1,
+    // Filtres effectivement appliqués et liens réécrits : l'écran peut le dire, au lieu de
+    // laisser croire que « profondeur 2 » décrit tout ce qui a été fait.
+    inclure: motifsInclus,
+    exclure: motifsExclus,
+    sousDomaines,
+    paralleles,
+    reecrits,
     echecsDetail: resultat.failures.slice(0, 20).map((echec) => ({
       url: echec.url,
       message: echec.error ?? null,

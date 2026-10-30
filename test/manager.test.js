@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -248,5 +248,26 @@ test('WP-51 : un échec réseau réel est consigné sans faire tomber le gestion
     assert.equal(manager.compteurs().enCours, 0);
   } finally {
     await rm(dossier, { recursive: true, force: true });
+  }
+});
+
+test('T-E-15 : un dossier de destination absent est créé, et une seule exécution démarre', async () => {
+  const temoin = await banc(Buffer.alloc(64 * 1024, 4));
+  const racine = await mkdtemp(join(tmpdir(), 'xdm-mgr-'));
+  // Dossier **inexistant** : c'est le cas d'un premier lancement.
+  const dossier = join(racine, 'dl', 'profond');
+  try {
+    const gestionnaire = createManager({ dossier, connexions: 2, maxActifs: 2 });
+    gestionnaire.ajouter({ url: temoin.url('/a.bin'), nom: 'a.bin' });
+    gestionnaire.ajouter({ url: temoin.url('/b.bin'), nom: 'b.bin' });
+    await gestionnaire.demarrer();
+    const etat = gestionnaire.etat();
+    assert.equal(etat.compteurs.historique, 2, 'les deux tâches sont terminées une fois chacune');
+    assert.equal(etat.compteurs.enCours, 0);
+    const contenu = await readdir(dossier);
+    assert.deepEqual(contenu.sort(), ['a.bin', 'b.bin']);
+  } finally {
+    await temoin.fermer();
+    await rm(racine, { recursive: true, force: true });
   }
 });

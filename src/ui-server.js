@@ -246,6 +246,13 @@ export function createUiServer({
             url: corps.url,
             ...(corps.profondeur !== undefined ? { profondeur: corps.profondeur } : {}),
             ...(corps.maxPages !== undefined ? { maxPages: corps.maxPages } : {}),
+            // Parité avec `xdm-grab` (`WP-54`) : filtres, sous-domaines, explorations
+            // simultanées et réécriture des liens passent par la même validation.
+            ...(corps.inclure !== undefined ? { inclure: corps.inclure } : {}),
+            ...(corps.exclure !== undefined ? { exclure: corps.exclure } : {}),
+            ...(corps.sousDomaines !== undefined ? { sousDomaines: corps.sousDomaines } : {}),
+            ...(corps.paralleles !== undefined ? { paralleles: corps.paralleles } : {}),
+            ...(corps.reecrire !== undefined ? { reecrire: corps.reecrire } : {}),
           });
           return json(res, 202, { aspiration });
         }

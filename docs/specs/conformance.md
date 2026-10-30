@@ -1,6 +1,6 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.18 — **Dernière revue** : 2026-10-30
+> **Statut** : ✅ v1.19 — **Dernière revue** : 2026-10-30
 > **Vérification** : `node tools/audit-conformance.mjs --strict` (6 contrôles) — la matrice
 > est auditée, pas seulement rédigée : voir `revue-clean-room.md`.
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
@@ -8,7 +8,7 @@
 > exigence absente de ce fichier.
 > **Sources** : `docs/specs/A-moteur-de-telechargement.md` (v0.9),
 > `docs/specs/B-grabber.md` (v0.11), annexes 12 à 16 ; fiches C et D dans l'annexe 15 ;
-> domaine E (interface) : décisions `D-084` à `D-086`, sans fiche de spécification dédiée.
+> domaine E (interface) : décisions `D-084` à `D-087`, sans fiche de spécification dédiée.
 > **Rappel** : « preuve » ne veut pas dire « comportement validé ». Une exigence
 > **Hypothèse** n'a pas de preuve et ne peut pas être marquée conforme.
 
@@ -184,16 +184,17 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 **Couverture : 11 / 11** — `src/hls.js`, `src/media.js` et `bin/xdm-media.js` (`D-046`)
 pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**.
 
-## 3 quater. Domaine E — interface (`WP-51`→`WP-53`)
+## 3 quater. Domaine E — interface (`WP-51`→`WP-54`)
 
 | Exigence | Niveau | Preuve (annexe / offset) | Test | État |
 |---|---|---|---|---|
 | `EX-E-01` **interface locale pilotée par un gestionnaire** : `xdm-ui` sert une page qui parle à `src/manager.js`, qui parle au moteur — l'interface ne touche ni au disque ni aux sockets ; l'écoute est sur la boucle locale par défaut, `--hote 0.0.0.0` est un choix explicite annoncé au démarrage | **Décision** (`D-084`) | `D-084` ; `src/manager.js`, `src/ui-server.js`, `bin/xdm-ui.js` | `T-E-01`, `T-E-02` | **vert** |
-| `EX-E-02` **l'état affiché vient du moteur** : un ajout part en file, la file appelle `connection-loop`, le résultat porte le code de sortie de la CLI (`0` succès, `1` échec) et rejoint l'historique ; la progression arrive par **SSE** et non par sondage ; aucune donnée distante n'est insérée en HTML | **Décision** (`D-084`) | `D-084` ; `src/manager.js`, `src/ui/app.js` | `T-E-03`, `T-E-04` | **vert** |
+| `EX-E-02` **l'état affiché vient du moteur** : un ajout part en file, la file appelle `connection-loop`, le résultat porte le code de sortie de la CLI (`0` succès, `1` échec) et rejoint l'historique ; la progression arrive par **SSE** et non par sondage ; aucune donnée distante n'est insérée en HTML | **Décision** (`D-084`) | `D-084` ; `src/manager.js`, `src/ui/app.js` | `T-E-03`, `T-E-04`, `T-E-15` | **vert** |
 | `EX-E-03` **réglages persistants et vérification** : les réglages (dossier, connexions, actifs, thème) sont validés puis écrits dans un JSON relu au démarrage ; `robots` ne se désactive ni par fichier ni par API (`D-004`) ; la vérification refuse un dossier absent ou sans `queue.json` et rend le code `0`/`1` de la CLI ; une aspiration s'exécute dans son propre dossier et reste vérifiable | **Décision** (`D-085`) | `D-085` ; `src/reglages.js`, `src/verification.js`, `src/aspiration.js` | `T-E-05`→`T-E-08` | **vert** |
 | `EX-E-04` **coquille Electron sans accès Node dans la page** : la fenêtre applique `contextIsolation`, `sandbox`, `nodeIntegration: false` ; un lien externe part au navigateur du système et n'ouvre jamais de fenêtre XDM ; toute navigation hors de l'origine locale est refusée et les `webview` sont interdites | **Décision** (`D-086`) | `D-086` ; `src/desktop-shell.js`, `desktop/main.js` | `T-E-09` | **vert** |
 | `EX-E-05` **menu natif de l'application** : Fichier (ouvrir le dossier de téléchargements, ouvrir l'interface dans le navigateur, quitter), Affichage (recharger, outils de développement, zoom, plein écran), Aide (à propos avec la version) ; sous macOS, le menu applicatif précède et « fermer » ne quitte pas | **Décision** (`D-086`) | `D-086` ; `src/desktop-shell.js` | `T-E-10` | **vert** |
 | `EX-E-06` **cycle de vie du serveur local** : la coquille démarre l'interface sur `127.0.0.1` avec un port **éphémère**, une seule instance détient la file (`requestSingleInstanceLock`), et le serveur s'éteint avec la fenêtre ; sous Windows et Linux, fermer la dernière fenêtre quitte l'application | **Décision** (`D-086`) | `D-086` ; `src/desktop-shell.js`, `desktop/main.js` | `T-E-11` | **vert** |
+| `EX-E-07` **l'écran Site Grabber vaut la CLI** : motifs `inclure`/`exclure` (motif vide refusé), suivi des sous-domaines, explorations simultanées bornées, réécriture des liens des pages et feuilles de style téléchargées ; ce qui a filtré est écrit dans le projet et affiché à côté de l'aspiration, et le gabarit « médias seulement » d'IDM n'est **pas** appliqué à une aspiration de site ; la taille attendue des pages réécrites est alignée dans `queue.json` pour que la vérification reste verte | **Décision** (`D-087`) | `D-087` ; `src/aspiration.js`, `src/manager.js`, `src/ui/app.js` | `T-E-12`, `T-E-13`, `T-E-14`, `T-E-16` | **vert** |
 
 ## 4. Ce que cette matrice révèle
 
