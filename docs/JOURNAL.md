@@ -2186,6 +2186,41 @@ par une décision.
 
 ---
 
+### D-092 — La fiche E décrit XDM, pas IDM
+**Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `docs/specs/E-interface.md`, `WP-60`
+
+**Contexte.** Les exigences d'interface (`EX-E-01`→`EX-E-11`) vivaient uniquement dans la
+matrice de conformité. Les domaines A, B, C et D ont chacun une fiche : périmètre, modèle de
+données, machine à états, interfaces, cas d'erreur, écarts. Le domaine E n'en avait pas, donc
+les routes HTTP, les transitions d'une tâche et les règles de suspension n'étaient écrites
+nulle part en un seul endroit.
+
+**Options.** (a) Laisser la matrice servir de fiche — elle décrit *quoi* vérifier, pas *comment*
+le système se comporte. (b) Copier les décisions `D-084`→`D-091` dans un document — un doublon
+qui divergera au premier changement. (c) Écrire une fiche de spécification au même format que
+A/B/C/D, avec renvois vers les décisions au lieu de les recopier.
+
+**Décision.** **(c)**, avec une règle qui n'existe pas dans les autres fiches : **aucune
+exigence de la fiche E n'est de niveau `Observé`**. Toutes sont `Décision`. L'interface d'IDM
+n'a pas été observée (aucune capture, aucun libellé, aucune ressource de l'éditeur lue), et la
+fiche le dit en tête plutôt que de le laisser croire. Corollaire : « conforme » y signifie
+« conforme à la décision », jamais « conforme à la cible ».
+
+La fiche ajoute ce que la matrice ne pouvait pas porter :
+
+1. **une machine à états d'une tâche** (`attente`/`en_cours`/`suspendu`/`termine`/`echec`) avec,
+   pour chaque état, ce qui est retirable, suspendable, reprenable ;
+2. **le tableau complet des routes HTTP** et leurs codes (`405`, `404`, `413`, `401`, `409`) ;
+3. **le contrat de la fenêtre Electron** (isolation, navigation verrouillée, menu, cycle de vie) ;
+4. **une section « ce que cette fiche ne prétend pas »** : l'interface d'IDM reste inconnue, la
+   fenêtre n'a pas été ouverte ici, aucun lecteur d'écran réel n'a parcouru les écrans.
+
+**Mesures.** La matrice renvoie désormais à la fiche (`§3 quater`), `103` exigences restent
+vertes à `102`, et la roadmap ne contient plus aucun chantier faisable dans la sandbox : il ne
+reste que l'installeur signé, qui exige un certificat et une machine Windows.
+
+---
+
 ### D-091 — La police s'embarque, la charge se borne
 **Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `src/ui/style.css`, `src/ui/polices/`, `src/manager.js`, `EX-E-11`
 

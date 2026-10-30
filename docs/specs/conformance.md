@@ -1,6 +1,6 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.23 — **Dernière revue** : 2026-10-30
+> **Statut** : ✅ v1.24 — **Dernière revue** : 2026-10-30
 > **Vérification** : `node tools/audit-conformance.mjs --strict` (6 contrôles) — la matrice
 > est auditée, pas seulement rédigée : voir `revue-clean-room.md`.
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
@@ -8,7 +8,7 @@
 > exigence absente de ce fichier.
 > **Sources** : `docs/specs/A-moteur-de-telechargement.md` (v0.9),
 > `docs/specs/B-grabber.md` (v0.11), annexes 12 à 16 ; fiches C et D dans l'annexe 15 ;
-> domaine E (interface) : décisions `D-084` à `D-091`, sans fiche de spécification dédiée.
+> domaine E (interface) : `docs/specs/E-interface.md` (v1.1) et décisions `D-084` à `D-092`.
 > **Rappel** : « preuve » ne veut pas dire « comportement validé ». Une exigence
 > **Hypothèse** n'a pas de preuve et ne peut pas être marquée conforme.
 
@@ -184,7 +184,10 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 **Couverture : 11 / 11** — `src/hls.js`, `src/media.js` et `bin/xdm-media.js` (`D-046`)
 pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**.
 
-## 3 quater. Domaine E — interface (`WP-51`→`WP-59`)
+## 3 quater. Domaine E — interface (`WP-51`→`WP-60`)
+
+> **Fiche détaillée** : `docs/specs/E-interface.md` (`WP-60`) — périmètre, modèle de données,
+> machine à états d'une tâche, routes HTTP, fenêtre Electron, cas d'erreur et écarts assumés.
 
 | Exigence | Niveau | Preuve (annexe / offset) | Test | État |
 |---|---|---|---|---|

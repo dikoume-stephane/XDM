@@ -18,7 +18,7 @@ test('T-32 : la matrice réelle ne présente aucun écart de traçabilité', () 
   assert.deepEqual(byDomain['3. Domaine B — grabber'], [41, 41]);
   assert.deepEqual(byDomain['3 bis. Domaine C — transports (`WP-07`)'], [14, 15]);
   assert.deepEqual(byDomain['3 ter. Domaine D — médias (`WP-07`)'], [11, 11]);
-  assert.deepEqual(byDomain['3 quater. Domaine E — interface (`WP-51`→`WP-59`)'], [11, 11]);
+  assert.deepEqual(byDomain['3 quater. Domaine E — interface (`WP-51`→`WP-60`)'], [11, 11]);
 });
 
 test('T-32 : chaque module cite au moins une exigence, une décision ou une annexe', () => {

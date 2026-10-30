@@ -188,6 +188,7 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | WP-57 | ✅ **Clos** — **guide Windows** (`docs/GUIDE-WINDOWS.md`) : mode opératoire des quatre lots bloqués (`WP-30`, `WP-40`→`WP-42`), site témoin à construire, site de test local, filtres Process Monitor, hook Frida WinINet, grille `mesures.csv`, format de restitution ; outil `tools/comparer-aspirations.mjs` fourni |
 | WP-58 | ✅ **Clos** (`D-090`) — **suspension et reprise** : `AbortSignal` traversant `src/connection-loop.js` (sonde, plages, lecture, transport), `suspendre`/`reprendre` dans `src/manager.js` et l'API, fichier partiel conservé, reprise exacte ; progression annoncée pendant un flux mono-connexion ; **356 tests**, `EX-E-10` |
 | WP-59 | ✅ **Clos** (`D-091`) — **police embarquée et charge bornée** : Plus Jakarta Sans en WOFF2 (sous-ensemble latin, 24 Kio, OFL 1.1) servi en `font/woff2`, page sans ressource distante, journal borné, 300 tâches servies en ~10 ms ; **361 tests**, `EX-E-11` |
+| WP-60 | ✅ **Clos** — **fiche de spécification dédiée du domaine E** (`docs/specs/E-interface.md`) : périmètre, 11 exigences, modèle de données (tâche, aspiration, réglages, SSE), machine à états d'une tâche, routes HTTP et fenêtre Electron, cas d'erreur, écarts assumés, ce que la fiche ne prétend pas ; la matrice renvoie désormais à une fiche comme pour A/B/C/D |
 | WP-50 | ✅ **Clos** (`D-079`→`D-083`) — bornes numériques refusées (`EX-A-25`), code de sortie d'une aspiration (`EX-B-39`), conformité de vérification (`EX-B-40`), compte de cookies (`EX-B-41`), `--aide`/`--version` des trois CLI (`EX-B-28`) ; **286 tests**, **92 exigences / 91 vertes**, plus le **guide de test** et son banc d'essai |
 
 ---
@@ -282,13 +283,13 @@ code, c'est une **preuve d'exécution de la cible** — impossible dans cet envi
 | **P4** Outil honnête | reprise par défaut + `--sans-reprise` + carte étrangère refusée, nom par `Content-Disposition`, `--sortie json`, `--proxy` appliqué, rapport de vérification | `D-071`→`D-074`, `EX-A-20`→`EX-A-23`, `EX-B-37` |
 | **P4** Authentification de bout en bout | transport média unique (en-têtes, cookies, proxy), `xdm --cookies`, positionnels refusés, JSON de vérification complet | `D-075`→`D-078`, `EX-D-11`, `EX-A-24`, `EX-C-15`, `EX-B-38` |
 | **P4** CLI vérifiables | bornes numériques, codes de sortie, conformité de vérification, aide des trois CLI, compte de cookies ; **guide de test** pour un tiers + banc d'essai local | `D-079`→`D-083`, `EX-A-25`, `EX-B-39`→`EX-B-41`, `docs/GUIDE-TEST.md` |
-| **P4** Application de bureau | coquille Electron (`src/desktop-shell.js`, `desktop/`), menu natif, navigation verrouillée, port éphémère, instance unique | `D-086`, `EX-E-04`→`EX-E-06`, `test/desktop.test.js` |
+| **P4** Application de bureau | coquille Electron (`src/desktop-shell.js`, `desktop/`), menu natif, navigation verrouillée, port éphémère, instance unique — fenêtre réelle à ouvrir sur une machine à écran | `D-086`, `EX-E-04`→`EX-E-06`, `test/desktop.test.js` |
 | **P4** Résilience + revue | `429`/`503`, coupures, `416`, boucles ; revue clean-room publiée | `D-055`, `D-056`, `revue-clean-room.md` |
 | **P5** Dynamique | **non commencée** — aucune VM Windows dans cet environnement | `A-09` |
 
-Chiffres au 2026-10-30 : **361 tests verts** (53 fichiers), **43 modules** (`src/` + `bin/`), **103 exigences
-(102 vertes, 1 hors périmètre)**, **91 décisions**, **0 écart de traçabilité**, **32 documents
-`.md` sans lien cassé**, porte G3 à 200 pages / 205,0 Mio ; **32 lots sur 36** clos, les **quatre** restants
+Chiffres au 2026-10-30 : **361 tests verts** (56 fichiers), **44 modules** (`src/` + `bin/`), **103 exigences
+(102 vertes, 1 hors périmètre)**, **92 décisions**, **0 écart de traçabilité**, **33 documents
+`.md` sans lien cassé**, porte G3 à 200 pages / 205,0 Mio ; **38 lots, 34 clos, 4 ouverts**, les **quatre** restants
 (`WP-30`, `WP-40`→`WP-42`) exigent une VM Windows + un IDM licite — c'est exactement l'objet de
 la **piste B du guide de test** (`docs/GUIDE-TEST.md`) et du **guide Windows** (`docs/GUIDE-WINDOWS.md`), qui contient le mode opératoire complet.
 
@@ -302,19 +303,21 @@ la **piste B du guide de test** (`docs/GUIDE-TEST.md`) et du **guide Windows** (
 | 4 | `A-02`/`WP-03` — décompilation | ⛔ **bloqué** : ni JVM ni CDN GitHub depuis ce sandbox (`D-019`) | `GHIDRA_INSTALL_DIR` hors sandbox |
 | 5 | `Q-B-02`/`Q-B-03`/`Q-B-04`/`Q-B-05` — `robots.txt`, défaut `nLevels`, rôle d'`empty.html`, parallélisme du crawl | 🟡 **sans effet** : tranchées par décision XDM (`D-059`, `D-061`), marquées comme telles | VM (même protocole) |
 | 6 | `Q-B-06` — `Crawl-delay` : la cible le lit-elle, et l'applique-t-elle ? | 🟡 **sans effet** : XDM l'applique comme un conseil borné (`D-060`) | capture réseau d'une aspiration lente (annexe 16) |
+| 7 | `WP-53` — ouverture **réelle** de la fenêtre Electron | ⛔ **non vérifiable ici** : aucun affichage dans la sandbox | `npm run desktop` sur une machine Windows (`docs/GUIDE-WINDOWS.md` §2) |
+| 8 | `WP-59`/`WP-60` — accessibilité au lecteur d'écran, rendu des fontes à l'écran | ⛔ **non vérifiable ici** : ni NVDA ni navigateur graphique | même étape (`docs/GUIDE-WINDOWS.md` §2) |
 
 ### 7.3 Ce qui reste faisable ici (et ne l'est pas encore)
 
 | # | Chantier | Pourquoi ce n'est pas fait | Effort |
 |---|---|---|---|
-| 1 | **Installeur signé et icône `.ico`** | exige un certificat de signature et une machine de distribution : `docs/GUIDE-WINDOWS.md` §8 | hors dépôt |
-| 2 | **Fiche de spécification dédiée du domaine E** | les 9 exigences d'interface vivent dans la matrice, pas dans une fiche `E-*.md` comme A/B/C/D | 0,5 lot |
+| 1 | **Installeur signé et icône `.ico`** | exige un certificat de signature, un compte de distribution et une machine Windows : `docs/GUIDE-WINDOWS.md` §8 donne le mode opératoire complet | hors dépôt |
 
-Aucune de ces cinq lignes ne bloque **le produit** : elles bloquent la **fidélité prouvée**.
-C'est la distinction que le projet tient depuis `D-041`, et elle est écrite noir sur blanc dans
-chaque fiche concernée.
+La fiche `E-*.md` a été écrite (`WP-60`) et la police embarquée livrée (`WP-59`) : il ne reste
+plus **aucun** chantier faisable dans cette sandbox. La ligne restante ne bloque pas **le
+produit** : elle bloque sa **distribution signée**. C'est la distinction que le projet tient
+depuis `D-041`, et elle est écrite noir sur blanc dans chaque fiche concernée.
 
-### 7.3 Si la VM devient disponible (ordre d'exécution)
+### 7.4 Si la VM devient disponible (ordre d'exécution)
 
 1. **Annexe 16, phases 1–3** — installer, capturer le trafic d'une aspiration témoin, relever
    l'ordre exact des requêtes et les temporisations ; lever `Q-C-01`→`Q-C-05`.
