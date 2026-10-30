@@ -33,6 +33,8 @@ import { extname, join, normalize as normalise, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createManager, ManagerError } from './manager.js';
+import { ecrireReglages, lireReglages, ReglagesError, validerReglages } from './reglages.js';
+import { VerificationError } from './verification.js';
 import { VERSION } from './version.js';
 
 /** Racine des fichiers de l'interface. */
@@ -149,7 +151,15 @@ async function servirFichier(res, racine, chemin) {
  *   maxActifs?: number,
  * }} [options]
  */
-export function createUiServer({ manager, racine = UI_DIR, dossier, connexions, maxActifs } = {}) {
+export function createUiServer({
+  manager,
+  racine = UI_DIR,
+  dossier,
+  connexions,
+  maxActifs,
+  reglages = null,
+  ecrire = ecrireReglages,
+} = {}) {
   const gestionnaire =
     manager ??
     createManager({
@@ -157,6 +167,9 @@ export function createUiServer({ manager, racine = UI_DIR, dossier, connexions, 
       ...(connexions ? { connexions } : {}),
       ...(maxActifs ? { maxActifs } : {}),
     });
+
+  /** Réglages persistants de cette instance (null si l'appelant n'en fournit pas). */
+  let courant = reglages ?? null;
 
   /** Connexions SSE ouvertes, fermées à l'arrêt du serveur. */
   const flux = new Set();
@@ -198,6 +211,52 @@ export function createUiServer({ manager, racine = UI_DIR, dossier, connexions, 
         // On ne bloque pas la réponse : l'interface suit l'avancement par SSE.
         gestionnaire.demarrer().catch(() => {});
         return json(res, 202, { demarre: true });
+      }
+
+      if (chemin === '/api/reglages') {
+        if (methode === 'GET') {
+          return json(res, 200, {
+            reglages: courant ?? { dossier: gestionnaire.etat().dossier, connexions: gestionnaire.etat().connexions, maxActifs: gestionnaire.etat().maxActifs },
+          });
+        }
+        if (methode === 'PATCH' || methode === 'PUT') {
+          const corps = await lireJson(req);
+          const fusion = { ...(courant ?? {}), ...corps };
+          const valides = validerReglages(fusion);
+          if (courant && courant.chemin) {
+            courant = await ecrire(courant.chemin, valides);
+          } else {
+            courant = { ...valides };
+          }
+          gestionnaire.configurer({
+            dossier: valides.dossier,
+            connexions: valides.connexions,
+            maxActifs: valides.maxActifs,
+          });
+          return json(res, 200, { reglages: courant });
+        }
+        return json(res, 405, { erreur: { code: 'METHODE_REFUSEE' } });
+      }
+
+      if (chemin === '/api/aspirations') {
+        if (methode === 'GET') return json(res, 200, { aspirations: gestionnaire.aspirations() });
+        if (methode === 'POST') {
+          const corps = await lireJson(req);
+          const aspiration = gestionnaire.aspirer({
+            url: corps.url,
+            ...(corps.profondeur !== undefined ? { profondeur: corps.profondeur } : {}),
+            ...(corps.maxPages !== undefined ? { maxPages: corps.maxPages } : {}),
+          });
+          return json(res, 202, { aspiration });
+        }
+        return json(res, 405, { erreur: { code: 'METHODE_REFUSEE' } });
+      }
+
+      if (chemin === '/api/verifications') {
+        if (methode !== 'POST') return json(res, 405, { erreur: { code: 'METHODE_REFUSEE' } });
+        const corps = await lireJson(req);
+        const rapport = await gestionnaire.verifier(corps.dossier !== undefined ? { dossier: corps.dossier } : {});
+        return json(res, 200, { rapport });
       }
 
       if (chemin === '/api/journal') {
@@ -248,6 +307,13 @@ export function createUiServer({ manager, racine = UI_DIR, dossier, connexions, 
       }
       return await servirFichier(res, resolve(racine), chemin === '/' ? '/index.html' : chemin);
     } catch (error) {
+      if (error instanceof ReglagesError) {
+        return json(res, 400, { erreur: { code: error.code, message: error.message, ...error.details } });
+      }
+      if (error instanceof VerificationError) {
+        const statut = error.code === 'DOSSIER_ABSENT' || error.code === 'FILE_ABSENTE' ? 404 : error.code === 'FILE_ILLISIBLE' ? 409 : 400;
+        return json(res, statut, { erreur: { code: error.code, message: error.message, ...error.details } });
+      }
       if (error instanceof ManagerError) {
         const statut =
           error.code === 'TACHE_INCONNUE' || error.code === 'HORS_RACINE'

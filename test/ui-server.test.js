@@ -16,7 +16,7 @@ async function avecServeur(callback, { telecharger = async () => ({ size: 10 }) 
   }
 }
 
-test('WP-51 : l’interface statique est servie avec les bons types', async () => {
+test('T-E-01 : l’interface statique est servie avec les bons types', async () => {
   await avecServeur(async ({ base }) => {
     const page = await fetch(`${base}/`);
     assert.equal(page.status, 200);
@@ -227,7 +227,7 @@ test('WP-51 : le flux SSE envoie l’instantané puis les événements', async (
   });
 });
 
-test('WP-51 : l’écoute par défaut reste sur la boucle locale', async () => {
+test('T-E-02 : l’écoute par défaut reste sur la boucle locale', async () => {
   const instance = await startUiServer({ port: 0 });
   try {
     assert.equal(instance.hote, '127.0.0.1');

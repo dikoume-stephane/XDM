@@ -29,6 +29,8 @@
     <symbol id="i-dossier" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></symbol>
     <symbol id="i-lune" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></symbol>
     <symbol id="i-soleil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3Z"/></symbol>
+    <symbol id="i-bouclier" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.5 3 7.6 7 9 4-1.4 7-4.5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></symbol>
     <symbol id="i-points" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
   </defs>
 </svg>
@@ -74,6 +76,18 @@
           <svg class="ico" aria-hidden="true"><use href="#i-file"/></svg>
           <span>File d'attente</span>
           <span class="nav-compte" id="compte-attente" aria-label="0 en attente">0</span>
+        </button>
+
+        <div class="nav-groupe" id="groupe-site">Site Grabber</div>
+        <button class="nav-lien" type="button" data-ecran="grabber" aria-describedby="groupe-site">
+          <svg class="ico" aria-hidden="true"><use href="#i-globe"/></svg>
+          <span>Site Grabber</span>
+          <span class="nav-compte" id="compte-aspirations" aria-label="0 aspiration">0</span>
+        </button>
+        <button class="nav-lien" type="button" data-ecran="verification">
+          <svg class="ico" aria-hidden="true"><use href="#i-bouclier"/></svg>
+          <span>Vérification</span>
+          <span class="nav-compte" id="compte-anomalies" aria-label="aucune vérification">—</span>
         </button>
 
         <div class="nav-groupe">Suivi</div>
@@ -209,6 +223,135 @@
           </div>
         </section>
 
+
+        <!-- =================== Site Grabber =================== -->
+        <section class="ecran" id="ecran-grabber" aria-labelledby="t-grab" hidden>
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-grab">Site Grabber</h2>
+              <p>Copie locale d'un site dans le périmètre déclaré. <code style="font-family:var(--mono);font-size:.75rem">robots.txt</code> est toujours respecté.</p>
+            </div>
+          </div>
+
+          <form class="barre-outils" id="form-aspiration" novalidate>
+            <div class="champ" style="flex:1 1 280px;max-width:460px">
+              <label for="url-aspiration">Adresse de départ</label>
+              <input id="url-aspiration" type="text" inputmode="url" placeholder="https://exemple.fr/" spellcheck="false" autocomplete="off" required>
+            </div>
+            <div class="champ" style="width:150px">
+              <label for="profondeur">Profondeur</label>
+              <select id="profondeur">
+                <option value="1">1 niveau</option>
+                <option value="2" selected>2 niveaux</option>
+                <option value="3">3 niveaux</option>
+              </select>
+            </div>
+            <div class="champ" style="width:130px">
+              <label for="max-pages">Pages max</label>
+              <input id="max-pages" type="number" value="100" min="1" max="100000">
+            </div>
+            <button class="btn principal" type="submit">
+              <svg class="ico ico-sm" aria-hidden="true"><use href="#i-globe"/></svg>
+              Lancer l'aspiration
+            </button>
+          </form>
+
+          <div class="defilement">
+            <div class="enveloppe-table">
+              <table>
+                <caption class="sr-only">Aspirations de cette session</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Site</th>
+                    <th scope="col">État</th>
+                    <th scope="col" class="droite">Pages</th>
+                    <th scope="col" class="droite">Fichiers</th>
+                    <th scope="col" class="droite">Code</th>
+                    <th scope="col">Dossier</th>
+                  </tr>
+                </thead>
+                <tbody id="aspirations-corps"></tbody>
+              </table>
+            </div>
+
+            <div class="vide" id="vide-aspirations">
+              <span class="rond" aria-hidden="true"><svg class="ico ico-lg" aria-hidden="true"><use href="#i-globe"/></svg></span>
+              <h3>Aucune aspiration</h3>
+              <p>Une aspiration parcourt un site, en retient les fichiers puis les télécharge dans un dossier propre à cette aspiration. Rien n'est suivi hors du domaine de départ.</p>
+              <div class="actions">
+                <button class="btn" type="button" id="btn-focus-aspiration">Saisir une adresse</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="zone" style="border-top:1px solid var(--c-bord)">
+            <p class="aide" style="font-size:.8125rem;color:var(--c-texte-2)">
+              Chaque aspiration écrit sa file et son projet dans son propre dossier. Elle peut ensuite être
+              contrôlée depuis l'écran <strong>Vérification</strong>. Le respect de <code style="font-family:var(--mono)">robots.txt</code>
+              n'est pas réglable : décision <code style="font-family:var(--mono)">D-004</code>.
+            </p>
+          </div>
+        </section>
+
+        <!-- =================== Vérification =================== -->
+        <section class="ecran" id="ecran-verification" aria-labelledby="t-verif" hidden>
+          <div class="entete-ecran">
+            <div class="bloc">
+              <h2 id="t-verif">Vérification</h2>
+              <p>Comparaison de la file (<code style="font-family:var(--mono);font-size:.75rem">queue.json</code>) au disque : fichiers annoncés terminés, tailles annoncées, fichiers hors file.</p>
+            </div>
+          </div>
+
+          <form class="barre-outils" id="form-verification" novalidate>
+            <div class="champ" style="flex:1 1 320px;max-width:560px">
+              <label for="dossier-verif">Dossier à vérifier</label>
+              <input id="dossier-verif" type="text" spellcheck="false" autocomplete="off" required>
+            </div>
+            <button class="btn principal" type="submit">
+              <svg class="ico ico-sm" aria-hidden="true"><use href="#i-bouclier"/></svg>
+              Vérifier
+            </button>
+          </form>
+
+          <div id="verif-resultat" hidden>
+            <div class="zone zone-serrée" style="border-bottom:1px solid var(--c-bord)">
+              <div class="bandeau" id="verif-bandeau" role="status">
+                <svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>
+                <span id="verif-verdict"></span>
+                <span class="pousse code-sortie" id="verif-code"></span>
+              </div>
+              <div class="compteurs" style="margin-top:var(--e-3)">
+                <div class="compteur"><span class="libelle">Vérifiés</span><span class="valeur" id="verif-verifies">0</span></div>
+                <div class="compteur succes"><span class="libelle">Conformes</span><span class="valeur" id="verif-conformes">0</span></div>
+                <div class="compteur danger"><span class="libelle">Anomalies</span><span class="valeur" id="verif-anomalies">0</span></div>
+                <div class="compteur"><span class="libelle">En attente</span><span class="valeur" id="verif-absents">0</span></div>
+              </div>
+            </div>
+
+            <div class="enveloppe-table">
+              <table>
+                <caption class="sr-only">Résultats de la vérification</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Fichier</th>
+                    <th scope="col">Anomalie</th>
+                    <th scope="col" class="droite">Attendu</th>
+                    <th scope="col" class="droite">Observé</th>
+                    <th scope="col">Détail</th>
+                  </tr>
+                </thead>
+                <tbody id="verif-corps"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="vide" id="vide-verification">
+            <span class="rond" aria-hidden="true"><svg class="ico ico-lg" aria-hidden="true"><use href="#i-bouclier"/></svg></span>
+            <h3>Aucune vérification lancée</h3>
+            <p>Choisissez un dossier de téléchargement ou le dossier d'une aspiration. Un dossier sans <code style="font-family:var(--mono)">queue.json</code> est refusé : il n'y a rien à comparer.</p>
+          </div>
+        </section>
+
         <!-- =================== Journal =================== -->
         <section class="ecran" id="ecran-journal" aria-labelledby="t-journal" hidden>
           <div class="entete-ecran">
@@ -310,15 +453,32 @@
                 </div>
               </div>
 
-              <div class="carte">
-                <h3>Encore à câbler</h3>
-                <p class="aide" style="font-size:.8125rem;color:var(--c-texte-2)">
-                  Les écrans <strong>Site Grabber</strong> et <strong>Vérification</strong> de la maquette validée ne sont pas
-                  encore branchés : les modules existent (<code style="font-family:var(--mono)">src/crawler.js</code>,
-                  <code style="font-family:var(--mono)">src/grab-runner.js</code>, <code style="font-family:var(--mono)">src/verify.js</code>)
-                  mais ne sont pas exposés par cette API. Ils ne sont donc pas affichés ici plutôt que de montrer des boutons morts.
-                </p>
-              </div>
+              <form class="carte formulaire" id="form-reglages" novalidate>
+                <h3>Réglages enregistrés</h3>
+                <div class="ligne-form">
+                  <div class="champ">
+                    <label for="reg-dossier-champ">Dossier de destination</label>
+                    <input id="reg-dossier-champ" type="text" spellcheck="false">
+                    <span class="aide">Les nouveaux transferts y sont écrits ; ceux en cours ne sont pas déplacés.</span>
+                  </div>
+                  <div class="champ">
+                    <label for="reg-connexions-champ">Connexions par transfert</label>
+                    <input id="reg-connexions-champ" type="number" min="1" max="128">
+                  </div>
+                  <div class="champ">
+                    <label for="reg-actifs-champ">Transferts simultanés</label>
+                    <input id="reg-actifs-champ" type="number" min="1" max="32">
+                  </div>
+                </div>
+                <label class="case"><input type="checkbox" checked disabled> <span>Respecter <code style="font-family:var(--mono)">robots.txt</code> <span class="sous">Réglage verrouillé par la décision D-004 : ni l'interface ni le fichier ne peuvent le désactiver.</span></span></label>
+                <div style="display:flex;gap:var(--e-2);align-items:center;flex-wrap:wrap">
+                  <button class="btn principal" type="submit">
+                    <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
+                    Enregistrer les réglages
+                  </button>
+                  <span class="aide" id="reg-chemin"></span>
+                </div>
+              </form>
             </div>
           </div>
         </section>

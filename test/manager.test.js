@@ -109,7 +109,7 @@ test('WP-51 : la file respecte maxActifs et l’ordre d’arrivée', async () =>
   assert.equal(manager.compteurs().historique, 3);
 });
 
-test('WP-51 : progression diffusée par paliers, pas à chaque octet', async () => {
+test('T-E-04 : progression diffusée par paliers, pas à chaque octet', async () => {
   let horloge = 0;
   const manager = createManager({
     dossier: 'dl',
@@ -189,7 +189,7 @@ test('WP-51 : abonner rend une fonction de désabonnement effective', () => {
   assert.equal(recus, avant);
 });
 
-test('WP-51 : bout en bout avec le vrai moteur — fichier écrit, historique à jour', async () => {
+test('T-E-03 : bout en bout avec le vrai moteur — fichier écrit, historique à jour', async () => {
   const contenu = Buffer.alloc(256 * 1024);
   for (let i = 0; i < contenu.length; i += 1) contenu[i] = i % 251;
   const site = await banc(contenu);

@@ -220,10 +220,18 @@ node tools/banc-essai.mjs --port 8099 --taille 5M &   # un fichier de 5 Mio à t
 5. Arrêter `xdm-ui` (Ctrl-C) pendant un transfert, puis relancer : la tâche reprend au
    dernier octet confirmé (fichier `.part`), pas de zéro.
 
+6. **Site Grabber** : coller `http://127.0.0.1:8099/` (le banc d'essai sert un site),
+   profondeur 2, lancer. L'aspiration écrit son propre dossier ; la page `robots.txt` du banc
+   interdit `/prive` et cette branche n'est pas aspirée. Le bouton de la ligne ouvre
+   **Vérification** sur ce dossier : compteurs, anomalies, code 0/1.
+7. **Réglages** : changer le dossier ou le nombre de connexions, enregistrer, relancer
+   `xdm-ui` : les valeurs reviennent du fichier `~/.config/xdm/reglages.json`. Tenter
+   `robots: false` par l'API (`curl -X PATCH … -d '{"robots":false}'`) rend **400** :
+   le verrou n'est pas décoratif.
+
 Ce qu'il faut voir et qui n'est **pas** là, volontairement : aucun bouton « pause » sur un
-transfert en cours (le moteur n'a pas d'interruption coopérative, `D-084`), et aucun écran
-**Site Grabber** ni **Vérification** (non câblés, `WP-52`) — un bouton mort serait pire
-qu'une absence.
+transfert en cours (le moteur n'a pas d'interruption coopérative, `D-084`) — un bouton mort
+serait pire qu'une absence.
 
 ---
 

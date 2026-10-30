@@ -1,13 +1,14 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.16 — **Dernière revue** : 2026-10-29
+> **Statut** : ✅ v1.17 — **Dernière revue** : 2026-10-30
 > **Vérification** : `node tools/audit-conformance.mjs --strict` (6 contrôles) — la matrice
 > est auditée, pas seulement rédigée : voir `revue-clean-room.md`.
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
 > fonde et le **test** qui la vérifiera. Aucune ligne d'implémentation ne référence une
 > exigence absente de ce fichier.
 > **Sources** : `docs/specs/A-moteur-de-telechargement.md` (v0.9),
-> `docs/specs/B-grabber.md` (v0.11), annexes 12 à 16 ; fiches C et D dans l'annexe 15.
+> `docs/specs/B-grabber.md` (v0.11), annexes 12 à 16 ; fiches C et D dans l'annexe 15 ;
+> domaine E (interface) : décisions `D-084`/`D-085`, sans fiche de spécification dédiée.
 > **Rappel** : « preuve » ne veut pas dire « comportement validé ». Une exigence
 > **Hypothèse** n'a pas de preuve et ne peut pas être marquée conforme.
 
@@ -183,6 +184,14 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 **Couverture : 11 / 11** — `src/hls.js`, `src/media.js` et `bin/xdm-media.js` (`D-046`)
 pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**.
 
+## 3 quater. Domaine E — interface (`WP-51`/`WP-52`)
+
+| Exigence | Niveau | Preuve (annexe / offset) | Test | État |
+|---|---|---|---|---|
+| `EX-E-01` **interface locale pilotée par un gestionnaire** : `xdm-ui` sert une page qui parle à `src/manager.js`, qui parle au moteur — l'interface ne touche ni au disque ni aux sockets ; l'écoute est sur la boucle locale par défaut, `--hote 0.0.0.0` est un choix explicite annoncé au démarrage | **Décision** (`D-084`) | `D-084` ; `src/manager.js`, `src/ui-server.js`, `bin/xdm-ui.js` | `T-E-01`, `T-E-02` | **vert** |
+| `EX-E-02` **l'état affiché vient du moteur** : un ajout part en file, la file appelle `connection-loop`, le résultat porte le code de sortie de la CLI (`0` succès, `1` échec) et rejoint l'historique ; la progression arrive par **SSE** et non par sondage ; aucune donnée distante n'est insérée en HTML | **Décision** (`D-084`) | `D-084` ; `src/manager.js`, `src/ui/app.js` | `T-E-03`, `T-E-04` | **vert** |
+| `EX-E-03` **réglages persistants et vérification** : les réglages (dossier, connexions, actifs, thème) sont validés puis écrits dans un JSON relu au démarrage ; `robots` ne se désactive ni par fichier ni par API (`D-004`) ; la vérification refuse un dossier absent ou sans `queue.json` et rend le code `0`/`1` de la CLI ; une aspiration s'exécute dans son propre dossier et reste vérifiable | **Décision** (`D-085`) | `D-085` ; `src/reglages.js`, `src/verification.js`, `src/aspiration.js` | `T-E-05`→`T-E-08` | **vert** |
+
 ## 4. Ce que cette matrice révèle
 
 1. **Le domaine A est spécifiable et testable immédiatement** : 23 exigences, aucune
@@ -222,6 +231,7 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 
 | Date | Changement |
 |---|---|
+| 2026-10-30 | v1.17 : `D-084`/`D-085` — **domaine E** (interface) : interface locale pilotée par un gestionnaire (`EX-E-01`), état issu du moteur et progression par SSE (`EX-E-02`), réglages persistants + vérification + aspiration dans leur propre dossier (`EX-E-03`) ; A **25/25**, B **41/41**, C **14/15**, D **11/11**, E **3/3**, 334 tests, total **94 vertes / 95** |
 | 2026-10-29 | v1.16 : `D-079`→`D-083` — bornes numériques refusées (`EX-A-25`), code de sortie d'une aspiration (`EX-B-39`), conformité de vérification (`EX-B-40`), compte de cookies annoncé (`EX-B-41`), `--aide`/`--version` sur les trois CLI (`EX-B-28` étendue) ; A **25/25**, B **41/41**, C **14/15**, D **11/11**, 286 tests, total **91 vertes / 92** |
 | 2026-10-29 | v1.15 : `D-075`→`D-078` — authentification unifiée des médias (`EX-D-11`), magasin de cookies du moteur (`EX-A-24`), refus d'un positionnel de trop (`EX-C-15`), `absent` dans le JSON de vérification (`EX-B-38`) ; A **24/24**, B **38/38**, C **14/15**, D **11/11**, 281 tests, total **87 vertes / 88** |
 | 2026-10-29 | v1.14 : `D-071`→`D-074` — reprise par défaut et `--sans-reprise` (`EX-A-20`), nom par `Content-Disposition` (`EX-A-21`), `--sortie json` (`EX-A-22`), `--proxy` appliqué (`EX-A-23`), rapport de vérification (`EX-B-37`) ; A **23/23**, B **37/37**, 274 tests, total **83 vertes / 84** |

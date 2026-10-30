@@ -20,6 +20,7 @@
 
 import { resolve } from 'node:path';
 
+import { cheminParDefaut, lireReglages } from '../src/reglages.js';
 import { startUiServer } from '../src/ui-server.js';
 import { VERSION } from '../src/version.js';
 
@@ -29,6 +30,7 @@ export const USAGE = `usage : xdm-ui [--port N] [--hote ADRESSE] [--dossier DIR]
   --dossier     dossier de destination des fichiers (défaut ./telechargements)
   --connexions  connexions parallèles par téléchargement (défaut 4)
   --actifs      téléchargements simultanés (défaut 2)
+  --reglages    fichier de réglages JSON (défaut ~/.config/xdm/reglages.json)
   --aide, -h    afficher cette aide et sortir (code 0)
   --version, -V afficher la version et sortir (code 0)
 `;
@@ -41,7 +43,10 @@ export const DEFAUTS = Object.freeze({ port: 8100, hote: '127.0.0.1', dossier: '
  * @param {string[]} argv
  */
 export function parseArgs(argv) {
-  const options = { ...DEFAUTS, aide: false, version: false };
+  const options = { ...DEFAUTS, aide: false, version: false, explicites: [] };
+  // Les options réellement passées sont mémorisées : sans cela, une valeur par défaut
+  // écraserait silencieusement le fichier de réglages de l'utilisateur.
+  const explicites = new Set();
   const entiers = new Map([
     ['--port', 'port'],
     ['--connexions', 'connexions'],
@@ -50,6 +55,7 @@ export function parseArgs(argv) {
   const textes = new Map([
     ['--hote', 'hote'],
     ['--dossier', 'dossier'],
+    ['--reglages', 'reglages'],
   ]);
   for (let i = 0; i < argv.length; i += 1) {
     const argument = argv[i];
@@ -73,6 +79,7 @@ export function parseArgs(argv) {
         throw new RangeError(`${argument} doit être >= 1`);
       }
       options[entiers.get(argument)] = nombre;
+      explicites.add(entiers.get(argument));
       i += 1;
       continue;
     }
@@ -82,11 +89,13 @@ export function parseArgs(argv) {
         throw new TypeError(`${argument} attend une valeur`);
       }
       options[textes.get(argument)] = valeur;
+      explicites.add(textes.get(argument));
       i += 1;
       continue;
     }
     throw new TypeError(`option inconnue : ${argument}`);
   }
+  options.explicites = [...explicites];
   return options;
 }
 
@@ -96,7 +105,11 @@ export function parseArgs(argv) {
  * @param {string[]} argv
  * @param {{log?: (ligne: string) => void, demarrer?: typeof startUiServer}} [contexte]
  */
-export async function main(argv, { log = (ligne) => console.log(ligne), demarrer = startUiServer } = {}) {
+export async function main(argv, {
+  log = (ligne) => console.log(ligne),
+  demarrer = startUiServer,
+  lire = lireReglages,
+} = {}) {
   const options = parseArgs(argv);
   if (options.aide) {
     log(USAGE.trimEnd());
@@ -106,15 +119,32 @@ export async function main(argv, { log = (ligne) => console.log(ligne), demarrer
     log(`xdm-ui ${VERSION}`);
     return null;
   }
+  // Priorité : option de ligne de commande > fichier de réglages > valeur par défaut.
+  const chemin = options.reglages ?? cheminParDefaut();
+  let enregistres = null;
+  try {
+    enregistres = await lire(chemin);
+  } catch (error) {
+    // Un fichier de réglages cassé ne doit pas empêcher de démarrer **si** l'appelant a
+    // tout précisé en ligne de commande ; sinon, l'erreur est la seule réponse honnête.
+    if (options.explicites.length === 0) throw error;
+  }
+  const explicite = (cle) => options.explicites.includes(cle);
+  const dossier = resolve(explicite('dossier') ? options.dossier : enregistres?.dossier ?? options.dossier);
+  const connexions = explicite('connexions') ? options.connexions : enregistres?.connexions ?? options.connexions;
+  const actifs = explicite('actifs') ? options.actifs : enregistres?.maxActifs ?? options.actifs;
+
   const serveur = await demarrer({
     port: options.port,
     hote: options.hote,
-    dossier: resolve(options.dossier),
-    connexions: options.connexions,
-    maxActifs: options.actifs,
+    dossier,
+    connexions,
+    maxActifs: actifs,
+    reglages: enregistres,
   });
   log(`interface : ${serveur.url}`);
-  log(`dossier   : ${resolve(options.dossier)}`);
+  log(`dossier   : ${dossier}`);
+  if (enregistres) log(`reglages  : ${enregistres.chemin ?? chemin}${enregistres.existe ? '' : ' (absent, valeurs par défaut)'}`);
   if (options.hote === '0.0.0.0') {
     log('attention : écoute sur 0.0.0.0 — toute machine du réseau peut piloter cette interface');
   }

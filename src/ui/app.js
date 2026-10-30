@@ -93,6 +93,9 @@ const etat = {
   connexions: 4,
   maxActifs: 2,
   taches: [],
+  aspirations: [],
+  verification: null,
+  reglages: null,
   journal: [],
   historique: [],
   flux: null,
@@ -134,11 +137,14 @@ async function chargerTout() {
     etat.connexions = instantane.connexions;
     etat.maxActifs = instantane.maxActifs;
     etat.taches = instantane.taches ?? [];
+    etat.aspirations = instantane.aspirations ?? [];
     etat.historique = instantane.historique ?? [];
     const journal = await api('/api/journal');
     etat.journal = (journal.entrees ?? []).slice().reverse();
     const historique = await api('/api/historique');
     etat.historique = historique.entrees ?? etat.historique;
+    const reglages = await api('/api/reglages');
+    etat.reglages = reglages.reglages ?? null;
     rendreTout();
     afficherErreur(null);
   } catch (erreur) {
@@ -157,6 +163,8 @@ function rendreTout() {
   rendreCompteurs();
   rendreTaches();
   rendreFile();
+  rendreAspirations();
+  rendreVerification();
   rendreJournal();
   rendreHistorique();
   rendreReglages();
@@ -171,6 +179,13 @@ function rendreCompteurs() {
   $('#compte-encours').setAttribute('aria-label', `${enCours} en cours`);
   $('#compte-attente').textContent = String(enAttente);
   $('#compte-attente').setAttribute('aria-label', `${enAttente} en attente`);
+  const aspirationsEnCours = etat.aspirations.filter((a) => a.etat === 'en_cours').length;
+  $('#compte-aspirations').textContent = String(aspirationsEnCours);
+  $('#compte-aspirations').setAttribute('aria-label', `${aspirationsEnCours} aspiration(s) en cours`);
+  const anomalies = etat.verification ? etat.verification.anomalies : null;
+  $('#compte-anomalies').textContent = anomalies === null ? '—' : String(anomalies);
+  $('#compte-anomalies').setAttribute('aria-label', anomalies === null ? 'aucune vérification' : `${anomalies} anomalie(s)`);
+  $('#compte-anomalies').className = `nav-compte${anomalies > 0 ? ' alerte' : ''}`;
   $('#compte-historique').textContent = String(etat.historique.length);
   $('#compte-historique').setAttribute('aria-label', `${etat.historique.length} terminé(s)`);
 
@@ -282,6 +297,112 @@ function rendreFile() {
   $('#vide-file').hidden = attente.length > 0;
 }
 
+
+/** Pastille d'aspiration : même vocabulaire que les transferts. */
+function pastilleAspiration(aspiration) {
+  const modeles = {
+    en_cours: ['download', 'actif', `En cours (${aspiration.phase ?? 'parcours'})`],
+    termine: [aspiration.codeSortie === 0 ? 'check' : 'alerte', aspiration.codeSortie === 0 ? 'termine' : 'pause', aspiration.codeSortie === 0 ? 'Terminée' : 'Partielle'],
+    echec: ['alerte', 'echec', 'Échec'],
+  };
+  const [nom, classe, libelle] = modeles[aspiration.etat] ?? ['info', 'attente', aspiration.etat];
+  return el('span', { classe: `etat ${classe}` }, [icone(nom), libelle]);
+}
+
+function rendreAspirations() {
+  const corps = $('#aspirations-corps');
+  corps.replaceChildren(
+    ...etat.aspirations.map((aspiration) => {
+      let hote = aspiration.url;
+      try {
+        hote = new URL(aspiration.url).hostname;
+      } catch {
+        /* une URL invalide ne peut pas arriver ici : le serveur la refuse avant */
+      }
+      const verifier = el('button', {
+        classe: 'btn-ico',
+        type: 'button',
+        'aria-label': `Vérifier le dossier de l'aspiration ${hote}`,
+        'data-verifier-dossier': aspiration.dossier ?? '',
+        ...(aspiration.dossier ? {} : { disabled: true }),
+      }, [icone('bouclier', 'ico ico-sm')]);
+      return el('tr', {}, [
+        el('td', {}, [
+          el('div', { classe: 'cellule-nom' }, [
+            el('span', { classe: 'type', 'aria-hidden': 'true', texte: 'WEB' }),
+            el('span', { classe: 'txt' }, [el('b', { texte: hote }), el('span', { texte: aspiration.url })]),
+          ]),
+        ]),
+        el('td', {}, [pastilleAspiration(aspiration)]),
+        el('td', { classe: 'droite num', texte: String(aspiration.pages ?? 0) }),
+        el('td', { classe: 'droite num', texte: `${aspiration.termines ?? 0}/${aspiration.taches ?? 0}` }),
+        el('td', { classe: 'droite num', texte: aspiration.codeSortie === null ? '—' : String(aspiration.codeSortie) }),
+        el('td', {}, [
+          el('div', { style: 'display:flex;gap:var(--e-1);align-items:center;min-width:0' }, [
+            el('span', { classe: 'num', style: 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px', texte: aspiration.dossier ?? '—' }),
+            verifier,
+          ]),
+        ]),
+      ]);
+    }),
+  );
+  $('#vide-aspirations').hidden = etat.aspirations.length > 0;
+}
+
+function rendreVerification() {
+  const rapport = etat.verification;
+  const resultat = $('#verif-resultat');
+  const vide = $('#vide-verification');
+  if (!rapport) {
+    resultat.hidden = true;
+    vide.hidden = false;
+    return;
+  }
+  resultat.hidden = false;
+  vide.hidden = true;
+  const bandeau = $('#verif-bandeau');
+  const conforme = rapport.codeSortie === 0 && rapport.anomalies === 0;
+  bandeau.className = `bandeau ${conforme ? 'succes' : 'danger'}`;
+  bandeau.replaceChildren(
+    icone(conforme ? 'check' : 'alerte'),
+    el('span', { id: 'verif-verdict', texte: conforme
+      ? `Aucune anomalie bloquante sur ${rapport.total} fichier(s) vérifié(s).`
+      : `${rapport.anomalies} anomalie(s) bloquante(s) sur ${rapport.total} fichier(s) vérifié(s).` }),
+    el('span', { classe: 'pousse code-sortie', id: 'verif-code', texte: `code ${rapport.codeSortie}` }),
+  );
+  $('#verif-verifies').textContent = String(rapport.compteurs.verifies);
+  $('#verif-conformes').textContent = String(rapport.compteurs.conformes);
+  $('#verif-anomalies').textContent = String(rapport.anomalies);
+  $('#verif-absents').textContent = String(rapport.compteurs.absents);
+
+  $('#verif-corps').replaceChildren(
+    ...rapport.entrees
+      .filter((entree) => entree.state !== 'ABSENT')
+      .map((entree) => {
+        const classe = entree.state === 'MANQUANT' || entree.state === 'TRONQUÉ' ? 'manquant'
+          : entree.state === 'PARTIEL' ? 'tronque'
+            : 'hors';
+        return el('tr', {}, [
+          el('td', { classe: 'num', texte: entree.target }),
+          el('td', {}, [el('span', { classe: `code-anomalie ${classe}`, texte: entree.libelle })]),
+          el('td', { classe: 'droite num', texte: octets(entree.size) }),
+          el('td', { classe: 'droite num', texte: entree.error ? '—' : octets(entree.size) }),
+          el('td', { texte: entree.error ?? '' }),
+        ]);
+      }),
+  );
+  if (rapport.entrees.filter((e) => e.state !== 'ABSENT').length === 0) {
+    $('#verif-corps').append(
+      el('tr', {}, [
+        el('td', { colspan: '5', style: 'text-align:center;color:var(--c-texte-2)' }, [
+          'Aucune anomalie : tous les fichiers annoncés terminés sont présents et de la bonne taille. ',
+          el('span', { classe: 'sr-only', texte: 'Rien à corriger.' }),
+        ]),
+      ]),
+    );
+  }
+}
+
 function rendreJournal() {
   const flux = $('#journal-flux');
   flux.replaceChildren(
@@ -328,6 +449,22 @@ function rendreReglages() {
   $('#reg-actifs').textContent = String(etat.maxActifs);
   $('#reg-version').textContent = etat.version ?? '—';
   $('#version').textContent = etat.version ? `v${etat.version}` : 'interface';
+
+  // Les champs ne sont réécrits que s'ils ne sont pas en cours d'édition : sinon un
+  // événement du flux effacerait la saisie au milieu d'un mot.
+  const remplir = (selecteur, valeur) => {
+    const champ = $(selecteur);
+    if (champ && document.activeElement !== champ) champ.value = valeur;
+  };
+  remplir('#reg-dossier-champ', etat.reglages?.dossier ?? etat.dossier);
+  remplir('#reg-connexions-champ', String(etat.reglages?.connexions ?? etat.connexions));
+  remplir('#reg-actifs-champ', String(etat.reglages?.maxActifs ?? etat.maxActifs));
+  remplir('#dossier-verif', etat.reglages?.dossier ?? etat.dossier);
+  const chemin = $('#reg-chemin');
+  if (chemin) {
+    const fichier = etat.reglages?.chemin;
+    chemin.textContent = fichier ? `fichier : ${fichier}` : 'réglages de session (aucun fichier)';
+  }
 }
 
 // ------------------------------------------------------------------ navigation
@@ -434,6 +571,19 @@ function brancherFlux() {
     source.addEventListener(type, surTache(type));
   }
 
+  source.addEventListener('aspiration', (message) => {
+    const evenement = JSON.parse(message.data);
+    const aspiration = evenement.aspiration;
+    const index = etat.aspirations.findIndex((a) => a.id === aspiration.id);
+    if (index >= 0) etat.aspirations[index] = aspiration;
+    else etat.aspirations.unshift(aspiration);
+    if (aspiration.etat !== 'en_cours') {
+      annoncer(`Aspiration ${aspiration.etat === 'termine' ? 'terminée' : 'en échec'} : ${aspiration.url}.`);
+    }
+    rendreAspirations();
+    rendreCompteurs();
+  });
+
   source.addEventListener('journal', (message) => {
     const evenement = JSON.parse(message.data);
     etat.journal.unshift(evenement.entree);
@@ -476,6 +626,46 @@ async function demarrerFile() {
 async function retirerTache(id) {
   try {
     await api(`/api/taches/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  } catch (erreur) {
+    afficherErreur(erreur.message);
+  }
+}
+
+async function lancerAspiration(donnees) {
+  afficherErreur(null);
+  try {
+    await api('/api/aspirations', { method: 'POST', corps: donnees });
+    annoncer('Aspiration lancée.');
+    $('#url-aspiration').value = '';
+  } catch (erreur) {
+    afficherErreur(erreur.message);
+  }
+}
+
+async function verifierDossier(dossier) {
+  afficherErreur(null);
+  const champ = $('#dossier-verif');
+  if (champ) champ.value = dossier;
+  try {
+    const reponse = await api('/api/verifications', { method: 'POST', corps: { dossier } });
+    etat.verification = reponse.rapport;
+    rendreVerification();
+    rendreCompteurs();
+    annoncer(etat.verification.anomalies === 0
+      ? `Vérification terminée : aucune anomalie sur ${etat.verification.total} fichier(s).`
+      : `Vérification terminée : ${etat.verification.anomalies} anomalie(s).`);
+  } catch (erreur) {
+    afficherErreur(erreur.message);
+  }
+}
+
+async function enregistrerReglages(donnees) {
+  afficherErreur(null);
+  try {
+    const reponse = await api('/api/reglages', { method: 'PATCH', corps: donnees });
+    etat.reglages = reponse.reglages;
+    await chargerTout();
+    annoncer('Réglages enregistrés.');
   } catch (erreur) {
     afficherErreur(erreur.message);
   }
@@ -544,6 +734,56 @@ function cabler() {
   });
 
   $('#btn-csv').addEventListener('click', exporterCsv);
+
+  $('#form-aspiration').addEventListener('submit', (evenement) => {
+    evenement.preventDefault();
+    const url = $('#url-aspiration').value.trim();
+    if (url === '') {
+      afficherErreur('Adresse de départ requise.');
+      $('#url-aspiration').focus();
+      return;
+    }
+    lancerAspiration({
+      url,
+      profondeur: Number($('#profondeur').value),
+      maxPages: Number($('#max-pages').value),
+    });
+  });
+
+  $('#form-verification').addEventListener('submit', (evenement) => {
+    evenement.preventDefault();
+    const dossier = $('#dossier-verif').value.trim();
+    if (dossier === '') {
+      afficherErreur('Dossier requis.');
+      $('#dossier-verif').focus();
+      return;
+    }
+    verifierDossier(dossier);
+  });
+
+  $('#form-reglages').addEventListener('submit', (evenement) => {
+    evenement.preventDefault();
+    enregistrerReglages({
+      dossier: $('#reg-dossier-champ').value.trim(),
+      connexions: Number($('#reg-connexions-champ').value),
+      maxActifs: Number($('#reg-actifs-champ').value),
+    });
+  });
+
+  document.addEventListener('click', (evenement) => {
+    const cible = evenement.target.closest('[data-verifier-dossier]');
+    if (!cible || cible.disabled) return;
+    afficherEcran('verification');
+    verifierDossier(cible.dataset.verifierDossier);
+  });
+
+  const focusAspiration = $('#btn-focus-aspiration');
+  if (focusAspiration) {
+    focusAspiration.addEventListener('click', () => {
+      afficherEcran('grabber');
+      $('#url-aspiration').focus();
+    });
+  }
 
   $('#bascule-theme').addEventListener('click', () => {
     appliquerTheme(document.documentElement.getAttribute('data-theme') === 'sombre' ? 'clair' : 'sombre');

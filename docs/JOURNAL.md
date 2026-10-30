@@ -2149,6 +2149,43 @@ inexistante — la fiche de spécification de l'interface reste à écrire (`WP-
 
 ---
 
+### D-085 — Les réglages persistent, et l'aspiration a son propre dossier
+**Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `src/reglages.js`, `src/aspiration.js`, `src/verification.js`, `EX-E-03`
+
+**Contexte.** L'interface du lot `WP-51` perdait tout à l'arrêt : dossier, nombre de connexions,
+transferts simultanés. Elle ne savait pas non plus aspirer un site ni vérifier une copie locale,
+alors que les modules existaient depuis les lots `WP-23`→`WP-25`. Trois problèmes distincts,
+une même cause : personne ne possédait ces réglages ni ces travaux.
+
+**Décision.**
+
+1. **Un fichier de réglages validé, pas un sac de valeurs.** `~/.config/xdm/reglages.json`
+   (surchargeable par `--reglages`) est relu au démarrage, complété par les défauts, et validé
+   champ par champ. Une valeur hors bornes est **refusée** avec le nom du champ : `--actifs 0`
+   corrigé en silence en `1` ferait croire à une limite respectée. Un fichier absent n'est pas
+   une erreur ; un fichier cassé en est une, sauf si l'appelant a tout précisé en ligne de
+   commande.
+2. **`robots` n'est pas un réglage.** Il se lit, il ne se désactive pas — ni dans le fichier
+   (`ROBOTS_VERROUILLE`), ni par l'API (`D-004`). Le champ existe pour être affiché verrouillé,
+   pas pour être coché.
+3. **Une aspiration = un dossier.** `<dossier>/aspirations/<hôte>-<horodatage>` contient le
+   projet `.xdmspider.json`, la `queue.json` et les fichiers. Deux aspirations dans le même
+   dossier écraseraient la même file, et la vérification d'un téléchargement simple lirait une
+   file d'aspiration.
+4. **La vérification refuse au lieu de rassurer.** Dossier absent (`DOSSIER_ABSENT`), dossier
+   sans `queue.json` (`FILE_ABSENTE`), file illisible (`FILE_ILLISIBLE`) : trois refus
+   distincts, jamais un rapport vide présenté comme conforme.
+
+**Mesures.** 21 tests ajoutés (`test/reglages.test.js`, `test/verification.test.js`,
+`test/aspiration.test.js`, `test/ui-api.test.js`) : persistance relue sur disque, refus de
+`robots: false`, dossier créé au démarrage (défaut trouvé en essai réel), aspiration d'un site
+témoin avec `robots.txt` respecté, vérification d'un dossier conforme puis tronqué, et
+l'enchaînement complet « aspiration → vérification du dossier produit » par l'API.
+Domaine **E** ajouté à la matrice (`EX-E-01`→`03`) : l'interface n'est plus seulement tracée
+par une décision.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
