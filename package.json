@@ -28,9 +28,11 @@
     "gate": "node tools/gate-g3.mjs",
     "dl": "node bin/xdm.js",
     "ui": "node bin/xdm-ui.js",
+    "desktop": "npm --prefix desktop start",
     "grabber:idm": "python3 tools/idman_grabber.py",
     "grab": "node bin/xdm-grab.js",
-    "media": "node bin/xdm-media.js"
+    "media": "node bin/xdm-media.js",
+    "desktop:install": "npm --prefix desktop install --no-audit --no-fund"
   },
   "devDependencies": {
     "rea-agents": "6.8.0"

@@ -1,0 +1,15 @@
+{
+  "name": "xdm-desktop",
+  "productName": "XDM",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Coquille de bureau de XDM (Electron) — l'application elle-même reste dans ../src",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^45.0.0"
+  }
+}

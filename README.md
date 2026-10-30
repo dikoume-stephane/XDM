@@ -11,7 +11,8 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 334 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 338 tests, sans dépendance (node --test)
+npm run desktop                    # application de bureau (Electron ; voir npm run desktop:install)
 npm run audit                      # traçabilité : chaque exigence verte a un test qui existe
 npm run gate                       # porte G3 : site local + coupure réseau, comparaison disque/serveur
 npm run gate -- --pages 200 --max 200M   # profil de la porte : 200 pages, jusqu'à 200 Mo
@@ -155,13 +156,20 @@ tools/                     collecte de preuves, triage, extractions
   17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
 - ✅ WP-20 → WP-27 terminés : moteur de morceaux, boucle de connexions, aspiration de site
   et CLI (`bin/xdm.js`, `bin/xdm-grab.js`), transports (proxys, FTP, PAC), médias (HLS,
-  DASH) ; **334 tests**, domaines A, B et D clos, domaine C à **14/15** (1 hors périmètre),
+  DASH) ; **338 tests**, domaines A, B, D et E clos, domaine C à **14/15** (1 hors périmètre),
   soit **94 exigences vertes sur 95** ; porte G3 franchie (200 pages, 205 Mio, coupure
   réseau absorbée).
 - ✅ WP-43/WP-44 : en-têtes personnalisés (`--entete`, validation unique partagée par les
   deux CLI, envoyés à la sonde **et** à chaque plage) et aspiration incrémentale
   (`--incremental`, `304` = fichier intact ; `--tentatives-total`, `--progression`) —
   `D-069`, `D-070`.
+- ✅ WP-53 : **application de bureau** — coquille Electron en périphérie
+  (`src/desktop-shell.js`, `desktop/`) : fenêtre sans accès Node (`contextIsolation`,
+  `sandbox`, `nodeIntegration: false`), menu natif Fichier/Affichage/Aide, serveur local
+  sur port éphémère lié à la vie de la fenêtre, instance unique, liens externes renvoyés
+  au navigateur du système. Electron reste hors du socle (`desktop/package.json`,
+  `D-086`) : les 338 tests tournent sans lui. Ouverture réelle de la fenêtre à vérifier
+  sur une machine à écran (`docs/GUIDE-WINDOWS.md`).
 - ✅ WP-52 : **Site Grabber, Vérification et réglages persistants** — l'aspiration s'exécute
   dans son propre dossier (`src/aspiration.js`), reste vérifiable (`src/verification.js`),
   et les réglages (dossier, connexions, actifs, thème) sont validés puis relus au démarrage

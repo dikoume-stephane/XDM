@@ -7,12 +7,17 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-30 **v19** — lots `WP-51`/`WP-52` : **interface locale**
+- **Dernière revue** : 2026-10-30 **v20** — lot `WP-53` : **coquille de bureau Electron**
+  en périphérie du socle (`src/desktop-shell.js`, `desktop/main.js`, `desktop/package.json`,
+  `D-086`) — fenêtre sans accès Node, menu natif, port éphémère, instance unique ;
+  **338 tests**, **43 modules** (39 `src/` + 4 `bin/`), **98 exigences, 97 vertes**,
+  **86 décisions**.
+  Précédent (v19) : lots `WP-51`/`WP-52` : **interface locale**
   (`src/manager.js`, `src/ui-server.js`, `bin/xdm-ui.js`, `D-084`), **réglages persistants**
   validés et relus au démarrage (`src/reglages.js`, `D-085`), **vérification** d'un dossier
   et **aspiration** de site pilotées par l'API (`src/verification.js`, `src/aspiration.js`),
   fiche **domaine E** (`EX-E-01`→`03`) — **334 tests**, **42 modules** (38 `src/` + 4 `bin/`),
-  **95 exigences, 94 vertes** (A, B, D et E clos ; C à 14/15), **85 décisions**.
+  **95 exigences, 94 vertes** (A, B et D clos ; C à 14/15), **85 décisions**.
   Précédent (v18) : lot `WP-50`, bornes numériques (`D-079`), code de sortie d'une aspiration
   (`D-080`), conformité de vérification (`D-081`), aide/version des trois CLI (`D-082`),
   compte de cookies (`D-083`), guide de test et banc d'essai — 286 tests, 92 exigences,

@@ -181,6 +181,7 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | WP-49 | ✅ **Clos** (`D-075`→`D-078`) — authentification unifiée des médias (`EX-D-11`), `xdm --cookies` (`EX-A-24`), refus d'un positionnel de trop (`EX-C-15`), `absent` dans le JSON de vérification (`EX-B-38`) ; **281 tests**, **88 exigences / 87 vertes** |
 | WP-51 | ✅ **Clos** (`D-084`) — **socle de l'interface** : `src/manager.js` (file, journal, historique, compteurs, codes de sortie 0/1), `src/ui-server.js` (HTTP + SSE, écoute locale par défaut, 403 hors racine, corps borné à 64 Kio), `bin/xdm-ui.js` (`--port`, `--hote`, `--dossier`, `--connexions`, `--actifs`) ; **334 tests**, dont un bout en bout avec le vrai moteur (256 Kio comparés octet pour octet) et un essai réel de 2 × 5 Mio |
 | WP-52 | ✅ **Clos** (`D-085`) — **Site Grabber** (`src/aspiration.js` : parcours → plan → file → téléchargement, un dossier par aspiration), **Vérification** (`src/verification.js` : `queue.json` ↔ disque, code `0`/`1`, refus explicites), **réglages persistants** (`src/reglages.js` : validation stricte, écriture atomique, `robots` verrouillé), fiche **domaine E** `EX-E-01`→`03` ; **334 tests**, **95 exigences / 94 vertes**, 7 écrans câblés |
+| WP-53 | ✅ **Clos** (`D-086`) — **coquille de bureau Electron** : `src/desktop-shell.js` (fenêtre `contextIsolation`/`sandbox`/sans Node, menu natif Fichier-Affichage-Aide adapté à la plateforme, serveur local sur port éphémère, arrêt avec la fenêtre, liens externes renvoyés au navigateur du système), `desktop/main.js` (colle Electron : verrou d'instance unique), `desktop/package.json` (Electron en `devDependencies`, hors du socle) ; **338 tests**, `EX-E-04`→`06` ; ⚠️ **non vérifié ici** : ouverture réelle de la fenêtre (aucun affichage) → `docs/GUIDE-WINDOWS.md` |
 | WP-50 | ✅ **Clos** (`D-079`→`D-083`) — bornes numériques refusées (`EX-A-25`), code de sortie d'une aspiration (`EX-B-39`), conformité de vérification (`EX-B-40`), compte de cookies (`EX-B-41`), `--aide`/`--version` des trois CLI (`EX-B-28`) ; **286 tests**, **92 exigences / 91 vertes**, plus le **guide de test** et son banc d'essai |
 
 ---
@@ -217,6 +218,7 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | **M3.14 — En-têtes partout, rien de retéléchargé** | validation d'en-tête **unique** (`parseHeaderOption`) partagée par les deux CLI, `--entete` dans `xdm.js`, en-têtes sur la sonde **et** chaque plage ; `--incremental` (`If-Modified-Since`, `304` = fichier intact), `reopenDone`, `--tentatives-total`, `--progression` par paliers, `--verifier --sortie json` | D-069, D-070 | ✅ domaine B **36/36**, 265 tests |
 | **M3.15 — L'outil ne ment plus sur ses options** | reprise de fichier par défaut + `--sans-reprise` + carte d'une autre URL refusée, nom par `Content-Disposition`, `--sortie json`, `--proxy` réellement appliqué, rapport de vérification | D-071→D-074 | ✅ domaine A **23/23**, B **37/37**, 274 tests |
 | **M3.18 — L'interface parle au moteur** | gestionnaire d'état (file, journal, historique), serveur local + SSE, CLI `xdm-ui`, écoute locale par défaut, limites affichées au lieu d'être cachées | D-084, D-085 | ✅ 7 écrans câblés, 334 tests, essai réel 2 × 5 Mio |
+| **M3.19 — XDM est une application de bureau** | coquille Electron en périphérie : fenêtre sans accès Node, menu natif, serveur local éphémère lié à la vie de la fenêtre, instance unique | D-086 | ✅ 4 tests, `EX-E-04`→`06` ; ouverture de fenêtre à vérifier sur une machine à écran |
 | **M3.17 — Les CLI disent leurs bornes, leurs codes et leur aide** | bornes de `--connexions`/`--morceau` refusées (et découpage signalé), code de sortie 1 sur échec, `--verifier` qui distingue `FAILED` de `PENDING`, `--aide`/`--version` sur les trois CLI, compte de cookies juste | D-079→D-083 | ✅ A **25/25**, B **41/41**, 286 tests |
 | **M3.16 — L'authentification ne s'arrête plus au milieu d'un flux** | un seul transport authentifié pour `xdm-media` (en-têtes, cookies, proxy) : playlist, init et **chaque** segment ; `xdm --cookies` ; refus d'un positionnel de trop ; `absent` dans le JSON de vérification | D-075→D-078 | ✅ domaine A **24/24**, B **38/38**, C **14/15**, D **11/11**, 281 tests |
 | **M3.5 — Socle** | Moteur complet : données, projet, file, HTTP, boucle, reprise, promotion, CLI — 79 cas verts | D-034, D-038, D-039, D-040 | ✅ `npm test` |
@@ -274,14 +276,15 @@ code, c'est une **preuve d'exécution de la cible** — impossible dans cet envi
 | **P4** Outil honnête | reprise par défaut + `--sans-reprise` + carte étrangère refusée, nom par `Content-Disposition`, `--sortie json`, `--proxy` appliqué, rapport de vérification | `D-071`→`D-074`, `EX-A-20`→`EX-A-23`, `EX-B-37` |
 | **P4** Authentification de bout en bout | transport média unique (en-têtes, cookies, proxy), `xdm --cookies`, positionnels refusés, JSON de vérification complet | `D-075`→`D-078`, `EX-D-11`, `EX-A-24`, `EX-C-15`, `EX-B-38` |
 | **P4** CLI vérifiables | bornes numériques, codes de sortie, conformité de vérification, aide des trois CLI, compte de cookies ; **guide de test** pour un tiers + banc d'essai local | `D-079`→`D-083`, `EX-A-25`, `EX-B-39`→`EX-B-41`, `docs/GUIDE-TEST.md` |
+| **P4** Application de bureau | coquille Electron (`src/desktop-shell.js`, `desktop/`), menu natif, navigation verrouillée, port éphémère, instance unique | `D-086`, `EX-E-04`→`EX-E-06`, `test/desktop.test.js` |
 | **P4** Résilience + revue | `429`/`503`, coupures, `416`, boucles ; revue clean-room publiée | `D-055`, `D-056`, `revue-clean-room.md` |
 | **P5** Dynamique | **non commencée** — aucune VM Windows dans cet environnement | `A-09` |
 
-Chiffres au 2026-10-30 : **334 tests verts** (51 fichiers), **42 modules** (`src/` + `bin/`), **95 exigences
-(94 vertes, 1 hors périmètre)**, **85 décisions**, **0 écart de traçabilité**, **30 documents
-`.md` sans lien cassé**, porte G3 à 200 pages / 205,0 Mio ; **24 lots sur 28** clos, les **quatre** restants
+Chiffres au 2026-10-30 : **338 tests verts** (52 fichiers), **43 modules** (`src/` + `bin/`), **98 exigences
+(97 vertes, 1 hors périmètre)**, **86 décisions**, **0 écart de traçabilité**, **32 documents
+`.md` sans lien cassé**, porte G3 à 200 pages / 205,0 Mio ; **27 lots sur 31** clos, les **quatre** restants
 (`WP-30`, `WP-40`→`WP-42`) exigent une VM Windows + un IDM licite — c'est exactement l'objet de
-la **piste B du guide de test** (`docs/GUIDE-TEST.md`).
+la **piste B du guide de test** (`docs/GUIDE-TEST.md`) et du **guide Windows** (`docs/GUIDE-WINDOWS.md`).
 
 ### 7.2 Ce qui reste, et pourquoi c'est bloqué
 

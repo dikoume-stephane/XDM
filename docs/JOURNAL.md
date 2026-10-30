@@ -2186,6 +2186,47 @@ par une décision.
 
 ---
 
+### D-086 — Electron en périphérie : la coquille reçoit Electron, elle ne l'importe pas
+**Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `src/desktop-shell.js`, `desktop/`, `EX-E-04`→`EX-E-06`
+
+**Contexte.** La forme retenue est une **application de bureau** (choix utilisateur, `D-084`),
+mais les lots `WP-51`/`WP-52` n'avaient livré qu'une page servie par un serveur local : rien ne
+la transformait en fenêtre de système. Trois contraintes se contredisaient : `D-034` impose un
+socle **sans dépendance** ; Electron pèse une centaine de mégaoctets et n'a **pas d'affichage**
+dans cet environnement ; et un module qui importe Electron ne se teste plus sans binaire.
+
+**Options.** (a) Renoncer à Electron et rester une page navigateur — contraire au choix de
+l'utilisateur. (b) Tauri (Rust) — chaîne de compilation absente, et une deuxième stack pour un
+bénéfice nul ici. (c) Electron **confiné en périphérie**, injecté dans un module testable.
+
+**Décision.** **(c)**, avec quatre règles.
+
+1. **La logique n'importe pas Electron.** `src/desktop-shell.js` reçoit le module
+   (`demarrerCoquille({ electron })`), comme `bin/xdm-ui.js` reçoit son démarreur. Ses tests
+   passent une doublure : ils s'exécutent partout, y compris dans un conteneur sans écran.
+2. **Electron est une dépendance de distribution, pas du socle.** `desktop/package.json` porte
+   `electron` en `devDependencies` et son propre `main` ; `package.json` à la racine n'ajoute
+   qu'un script (`npm run desktop`, `npm run desktop:install`). Les 338 tests continuent de
+   tourner **sans** Electron installé.
+3. **La fenêtre est une fenêtre, pas un navigateur.** `contextIsolation: true`, `sandbox: true`,
+   `nodeIntegration: false` ; un lien externe part au navigateur du système ; toute navigation
+   hors de l'origine locale est refusée ; les `webview` sont interdites.
+4. **Le serveur suit l'application.** Écoute sur `127.0.0.1`, port **éphémère** (`0`) : deux
+   instances ne se disputent pas 8100, et l'interface n'est jamais jointe depuis le réseau.
+   `requestSingleInstanceLock` évite que deux fenêtres partagent une seule file d'attente.
+
+**Ce que cette décision ne prouve pas.** Aucune fenêtre n'a été ouverte ici : l'environnement
+n'a ni écran ni binaire Electron. Ce qui est **vérifié** : les réglages de sécurité passés à
+`BrowserWindow`, le refus des navigations externes, la structure du menu par plateforme, le
+démarrage réel du serveur local sur un port éphémère et son arrêt. Ce qui relève de l'essai
+manuel sur une machine à écran : **démarrage de la fenêtre, menu visible, ouverture du dossier**
+— inscrit dans `docs/GUIDE-WINDOWS.md`.
+
+**Mesures.** 4 tests (`test/desktop.test.js`, `T-E-09`→`T-E-11`), domaine E porté à
+**6 exigences / 6 vertes**, matrice v1.18 à **98 exigences / 97 vertes**.
+
+---
+
 ## Décisions en attente
 
 ### D-017 — Choix du langage/stack de réimplémentation
