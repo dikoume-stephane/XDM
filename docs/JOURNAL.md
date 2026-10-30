@@ -2186,6 +2186,37 @@ par une décision.
 
 ---
 
+### D-091 — La police s'embarque, la charge se borne
+**Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `src/ui/style.css`, `src/ui/polices/`, `src/manager.js`, `EX-E-11`
+
+**Contexte.** Le design system retenu (`SKILL-ui-ux-pro-max`, `D-084`) demande Plus Jakarta
+Sans ; l'interface se rabattait sur la pile système, faute de pouvoir joindre un CDN. Par
+ailleurs, deux files non bornées auraient fini par coûter cher : le journal (une entrée par
+événement) et l'historique.
+
+**Options.** (a) Laisser la pile système — le design system n'est alors respecté qu'à moitié.
+(b) Charger la police depuis Google Fonts — dépendance réseau, page cassée hors ligne, et une
+requête vers un tiers dans une application locale. (c) Embarquer le sous-ensemble latin en
+WOFF2, servi par le même serveur que la page.
+
+**Décision.** **(c)**, plus deux bornes.
+
+1. **Deux graisses, sous-ensemble latin.** 400 et 700, 24 Kio au total, `font-display: swap`
+   pour que le texte s'affiche avant la fonte. La licence SIL OFL 1.1 accompagne les fichiers
+   (`src/ui/polices/OFL.txt`).
+2. **Aucune ressource distante.** Un test le vérifie sur le HTML réel : ni `<script src="http…">`,
+   ni `<link href="http…">`, ni image distante, et chaque référence locale existe sur disque.
+3. **Le journal est borné** (`maxJournal`, 500 par défaut) et **l'historique** l'était déjà
+   (200). Le test mesure : 120 événements ⇒ 50 entrées conservées avec `maxJournal: 50`.
+4. **La charge est mesurée, pas supposée.** Une file de 300 tâches doit être servie par
+   `GET /api/etat` en moins de 300 ms ; le test échoue sinon, dans cet environnement.
+
+**Mesures.** 5 tests (`T-E-23`) : fontes présentes et servies en `font/woff2` (en-tête vérifié),
+300 tâches servies en **~10 ms**, journal borné, 20 abonnés SSE arrosés par un seul événement,
+page sans dépendance réseau. Domaine E à **11 exigences / 11 vertes**.
+
+---
+
 ### D-090 — Suspendre n'est pas échouer
 **Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `src/connection-loop.js`, `src/manager.js`, `src/ui-server.js`, `src/ui/app.js`, `EX-E-10`
 

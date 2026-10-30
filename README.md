@@ -11,7 +11,7 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 356 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 361 tests, sans dépendance (node --test)
 npm run desktop                    # application de bureau (Electron ; voir npm run desktop:install)
 npm run audit                      # traçabilité : chaque exigence verte a un test qui existe
 npm run gate                       # porte G3 : site local + coupure réseau, comparaison disque/serveur
@@ -157,8 +157,8 @@ tools/                     collecte de preuves, triage, extractions
   17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
 - ✅ WP-20 → WP-27 terminés : moteur de morceaux, boucle de connexions, aspiration de site
   et CLI (`bin/xdm.js`, `bin/xdm-grab.js`), transports (proxys, FTP, PAC), médias (HLS,
-  DASH) ; **356 tests**, domaines A, B, D et E clos, domaine C à **14/15** (1 hors périmètre),
-  soit **101 exigences vertes sur 102** ; porte G3 franchie (200 pages, 205 Mio, coupure
+  DASH) ; **361 tests**, domaines A, B, D et E clos, domaine C à **14/15** (1 hors périmètre),
+  soit **102 exigences vertes sur 103** ; porte G3 franchie (200 pages, 205 Mio, coupure
   réseau absorbée).
 - ✅ WP-43/WP-44 : en-têtes personnalisés (`--entete`, validation unique partagée par les
   deux CLI, envoyés à la sonde **et** à chaque plage) et aspiration incrémentale
@@ -169,8 +169,11 @@ tools/                     collecte de preuves, triage, extractions
   `sandbox`, `nodeIntegration: false`), menu natif Fichier/Affichage/Aide, serveur local
   sur port éphémère lié à la vie de la fenêtre, instance unique, liens externes renvoyés
   au navigateur du système. Electron reste hors du socle (`desktop/package.json`,
-  `D-086`) : les 356 tests tournent sans lui. Ouverture réelle de la fenêtre à vérifier
+  `D-086`) : les 361 tests tournent sans lui. Ouverture réelle de la fenêtre à vérifier
   sur une machine à écran (`docs/GUIDE-WINDOWS.md`).
+- ✅ WP-59 : **police embarquée et charge bornée** — Plus Jakarta Sans en WOFF2 servi par le
+  serveur local (24 Kio, SIL OFL 1.1), aucune ressource distante dans la page, journal borné
+  à 500 entrées, file de 300 tâches servie en ~10 ms (`D-091`, `EX-E-11`).
 - ✅ WP-58 : **suspendre n'est pas échouer** — `AbortSignal` traversant le moteur (`probe`,
   plages, lecture), suspendre/reprendre dans le gestionnaire et l'API
   (`POST /api/taches/:id/suspendre|reprendre`), fichier partiel conservé et reprise au bon

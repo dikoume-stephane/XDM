@@ -1,6 +1,6 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.22 — **Dernière revue** : 2026-10-30
+> **Statut** : ✅ v1.23 — **Dernière revue** : 2026-10-30
 > **Vérification** : `node tools/audit-conformance.mjs --strict` (6 contrôles) — la matrice
 > est auditée, pas seulement rédigée : voir `revue-clean-room.md`.
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
@@ -8,7 +8,7 @@
 > exigence absente de ce fichier.
 > **Sources** : `docs/specs/A-moteur-de-telechargement.md` (v0.9),
 > `docs/specs/B-grabber.md` (v0.11), annexes 12 à 16 ; fiches C et D dans l'annexe 15 ;
-> domaine E (interface) : décisions `D-084` à `D-090`, sans fiche de spécification dédiée.
+> domaine E (interface) : décisions `D-084` à `D-091`, sans fiche de spécification dédiée.
 > **Rappel** : « preuve » ne veut pas dire « comportement validé ». Une exigence
 > **Hypothèse** n'a pas de preuve et ne peut pas être marquée conforme.
 
@@ -184,7 +184,7 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 **Couverture : 11 / 11** — `src/hls.js`, `src/media.js` et `bin/xdm-media.js` (`D-046`)
 pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**.
 
-## 3 quater. Domaine E — interface (`WP-51`→`WP-58`)
+## 3 quater. Domaine E — interface (`WP-51`→`WP-59`)
 
 | Exigence | Niveau | Preuve (annexe / offset) | Test | État |
 |---|---|---|---|---|
@@ -198,6 +198,7 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 | `EX-E-08` **l'interface exposée ne s'ouvre pas sans jeton** : hors de la boucle locale, `xdm-ui` tire un jeton de 192 bits, l'affiche une fois et l'exige pour l'API comme pour la page ; comparaison à temps constant ; le jeton se présente par `Authorization: Bearer`, `x-jeton` ou `?jeton=`, ce dernier échange le secret contre un cookie `HttpOnly` `SameSite=Strict` pour que `EventSource` continue de fonctionner ; sans jeton configuré (boucle locale), le comportement de `D-084` est conservé | **Décision** (`D-088`) | `D-088` ; `src/acces.js`, `src/ui-server.js`, `bin/xdm-ui.js` | `T-E-17`, `T-E-18`, `T-E-19` | **vert** |
 | `EX-E-09` **le paquet de bureau est nommé et pesé** : `node tools/empaqueter.mjs` prépare une arborescence de distribution (`src/`, `bin/`, `desktop/`, `package.json`, `README.md`) avec un `manifeste.json` (chemin, taille, SHA-256 de chaque fichier) ; `cible/`, `test/`, `analysis/`, `tools/`, `docs/`, `dl/` et les dossiers de téléchargement n'y entrent **jamais**, et la sortie ne peut pas contenir le dépôt | **Décision** (`D-089`) | `D-089` ; `tools/empaqueter.mjs` | `T-E-20` | **vert** |
 | `EX-E-10` **un transfert se suspend et reprend sans mentir** : le moteur accepte un `AbortSignal` (sonde, plages, lecture), une suspension ne s'écrit **pas** comme un échec, le fichier partiel est conservé et la reprise repart des octets déjà reçus ; suspendre est possible en attente comme en cours, reprendre seulement une tâche suspendue (`ETAT_INVALIDE` sinon), et la progression d'une connexion unique est annoncée pendant le transfert au lieu d'attendre la fin | **Décision** (`D-090`) | `D-090` ; `src/connection-loop.js`, `src/manager.js`, `src/ui/app.js` | `T-E-21`, `T-E-22` | **vert** |
+| `EX-E-11` **l'interface ne dépend d'aucun réseau, et reste bornée** : la police Plus Jakarta Sans est embarquée en WOFF2 (sous-ensemble latin, 24 Kio, SIL OFL 1.1) et servie par le serveur local ; la page ne référence aucune ressource distante ; le journal est borné à `maxJournal` (500 par défaut) et l'historique à 200 ; une file de 300 tâches est servie en moins de 300 ms | **Décision** (`D-091`) | `D-091` ; `src/ui/style.css`, `src/ui/polices/`, `src/manager.js` | `T-E-23` | **vert** |
 
 ## 4. Ce que cette matrice révèle
 

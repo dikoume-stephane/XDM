@@ -17,6 +17,25 @@
    *                 seule, prefers-reduced-motion, cibles ≥ 24 px
    * ================================================================== */
 
+  /* ---------- Police embarquée (SIL OFL 1.1, voir polices/OFL.txt) ----------
+     Servie par le même serveur que la page : aucune requête vers un CDN, donc aucune
+     dépendance réseau et rien qui casse hors ligne. Sous-ensemble latin : 24 Kio pour
+     deux graisses, ce qui reste négligeable à côté des 27 Kio de cette feuille. */
+  @font-face {
+    font-family: "Plus Jakarta Sans";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("/polices/plus-jakarta-sans-latin-400-normal.woff2") format("woff2");
+  }
+  @font-face {
+    font-family: "Plus Jakarta Sans";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("/polices/plus-jakarta-sans-latin-700-normal.woff2") format("woff2");
+  }
+
   /* ---------- Jetons : couleurs sémantiques (thème clair) ---------- */
   :root {
     color-scheme: light;

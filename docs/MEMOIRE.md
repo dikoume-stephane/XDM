@@ -7,13 +7,16 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-30 **v24** — lot `WP-58` : **suspension et reprise**
+- **Dernière revue** : 2026-10-30 **v25** — lot `WP-59` : **police embarquée** (WOFF2, OFL)
+  et **charge bornée** (journal, historique, file de 300 tâches, SSE) — `D-091`, `EX-E-11` —
+  **361 tests**, **103 exigences, 102 vertes**, **91 décisions**.
+  Précédent (v24) : lot `WP-58` : **suspension et reprise**
   (`AbortSignal` dans `src/connection-loop.js`, `suspendre`/`reprendre` dans `src/manager.js`
   et l'API, `D-090`, `EX-E-10`) — **356 tests**, **102 exigences, 101 vertes**, **90 décisions**.
   Précédent (v23) : lots `WP-56`/`WP-57` : **paquet de bureau**
   (`tools/empaqueter.mjs`, `D-089`, `EX-E-09`) et **guide Windows** (`docs/GUIDE-WINDOWS.md`,
-  mode opératoire des quatre lots bloqués + `tools/comparer-aspirations.mjs`) — **356 tests**,
-  **102 exigences, 101 vertes**, **90 décisions**.
+  mode opératoire des quatre lots bloqués + `tools/comparer-aspirations.mjs`) — **361 tests**,
+  **103 exigences, 102 vertes**, **91 décisions**.
   Précédent (v22) : lot `WP-55` : **jeton d'accès** à l'interface
   exposée (`src/acces.js`, `D-088`, `EX-E-08`) — **348 tests**, **100 exigences, 99 vertes**,
   **88 décisions**.

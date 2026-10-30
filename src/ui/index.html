@@ -216,10 +216,9 @@
 
           <div class="zone" style="border-top:1px solid var(--c-bord)">
             <p class="aide" style="font-size:.8125rem;color:var(--c-texte-2)">
-              <strong>Limite connue :</strong> le moteur n'a pas encore d'interruption coopérative, donc une tâche
-              <em>en cours</em> ne peut pas être mise en pause depuis l'interface (décision <code style="font-family:var(--mono)">D-084</code>).
-              Seules les tâches <em>en attente</em> peuvent être retirées. Un téléchargement interrompu par l'arrêt du processus reprend
-              au lancement suivant grâce au fichier <code style="font-family:var(--mono)">.part</code>.
+              Une tâche <em>en cours</em> peut être <strong>suspendue</strong> : ses requêtes sont annulées, les octets déjà reçus
+              restent sur disque et la reprise repart de là (décision <code style="font-family:var(--mono)">D-090</code>).
+              Une tâche suspendue peut être reprise ou retirée ; une tâche terminée ne peut plus être suspendue.
             </p>
           </div>
         </section>
