@@ -7,7 +7,12 @@
 - **Projet** : clonage du Site Grabber (« çonage ») d'Internet Download Manager dans XDM.
 - **Cible** : `cible/IDMan.exe` — IDM 6.42.22.3, PE32 i386, 6 017 024 octets,
   SHA-256 `5f78da5a63604a3fefba6577ef6b2af976ec4d2fc4d0f219a72099a0da2f11c9`.
-- **Dernière revue** : 2026-10-30 **v26** — lot `WP-60` : **fiche `E-interface.md`** (périmètre,
+- **Dernière revue** : 2026-11-02 **v27** — lot `WP-61` : **le jeton d'accès est un porteur
+  explicite** (`x-jeton`, `?jeton=` pour SSE), la **coquille est publique** et l'API reste
+  fermée, plus de boucle `303 → cookie refusé en iframe`, boîte de jeton dans la page, repli
+  par sondage si le flux meurt — `D-093`, `D-094`, `EX-E-08`, `T-E-24` — **368 tests**,
+  **103 exigences, 102 vertes**, **94 décisions**.
+  Précédent (v26) : lot `WP-60` : **fiche `E-interface.md`** (périmètre,
   11 exigences, modèle de données, machine à états d'une tâche, routes, cas d'erreur, écarts,
   « ce que la fiche ne prétend pas »). Le domaine E a désormais sa fiche comme A/B/C/D.
   Précédent (v25) : lot `WP-59` : **police embarquée** (WOFF2, OFL)

@@ -2,7 +2,8 @@
 
 > **Domaine** : E (interface) · **Lot** : `WP-60` · **Statut** : ✅ `clos` (les 11 exigences sont
 > **vertes** : coquille Electron, serveur local, réglages, jeton, paquet, suspension, police
-> embarquée) · **Dernière revue** : 2026-10-30
+> embarquée) · **Dernière revue** : 2026-11-02 (v1.2 : le jeton devient un porteur explicite,
+> coquille publique, boîte de jeton dans la page, repli par sondage — `D-093`, `D-094`, `T-E-24`)
 > **Preuves** : décisions `D-084`→`D-091` ; `src/manager.js`, `src/ui-server.js`,
 > `src/desktop-shell.js`, `src/acces.js`, `src/reglages.js`, `src/aspiration.js`,
 > `src/verification.js` ; maquette validée `docs/maquettes/interface-xdm-v2.html`.
@@ -55,7 +56,7 @@ machine au réseau par accident ni afficher un chiffre que le moteur ne peut pas
 | `EX-E-05` | Menu natif adapté à la plateforme | **Décision** | `D-086` | `T-E-10` |
 | `EX-E-06` | Serveur local éphémère lié à la vie de la fenêtre, instance unique | **Décision** | `D-086` | `T-E-11` |
 | `EX-E-07` | Site Grabber à parité avec la CLI ; gabarit « médias seulement » non appliqué | **Décision** | `D-087` | `T-E-12`, `T-E-13`, `T-E-14`, `T-E-16` |
-| `EX-E-08` | Jeton exigé hors boucle locale, comparaison à temps constant, cookie `HttpOnly` | **Décision** | `D-088` | `T-E-17`, `T-E-18`, `T-E-19` |
+| `EX-E-08` | Jeton exigé hors boucle locale pour **toute l'API** ; porté explicitement (`x-jeton`, `?jeton=`), coquille publique sans donnée, boîte de jeton dans la page, repli par sondage | **Décision** | `D-088`, `D-093`, `D-094` | `T-E-17`, `T-E-18`, `T-E-19`, `T-E-24` |
 | `EX-E-09` | Paquet nommé, pesé, sans la cible ni les tests | **Décision** | `D-089` | `T-E-20` |
 | `EX-E-10` | Suspendre n'est pas échouer ; reprise au bon octet ; progression vivante | **Décision** | `D-090` | `T-E-21`, `T-E-22` |
 | `EX-E-11` | Aucune ressource distante ; journal et historique bornés ; charge mesurée | **Décision** | `D-091` | `T-E-23` |
@@ -127,7 +128,7 @@ termine|echec --(suspendre)--> refusé             [ETAT_INVALIDE, 400]
 
 | Méthode | Route | Rôle | Codes |
 |---|---|---|---|
-| `GET` | `/` et fichiers statiques | interface (`index.html`, `app.js`, `style.css`, `/polices/*.woff2`) | `200`, `403` hors racine, `401` si jeton |
+| `GET` | `/`, `/index.html`, `/app.js`, `/jeton.js`, `/style.css`, `/polices/*.woff2` | **coquille publique** : aucune donnée, servie même sans jeton (`D-093`) | `200`, `403` hors racine |
 | `GET` | `/api/etat` | instantané complet (compteurs, tâches, aspirations, historique) | `200` |
 | `POST` | `/api/taches` | ajouter une URL à la file | `201`, `400` |
 | `DELETE` | `/api/taches/:id` | retirer une tâche `attente` ou `suspendue` | `200`, `404`, `409` |
@@ -167,7 +168,10 @@ fonte distante, pas de télémétrie (`EX-E-11`).
 | Dossier à vérifier absent / sans `queue.json` | refus, jamais un rapport vide « conforme » | `DOSSIER_ABSENT`, `FILE_ABSENTE`, `T-E-07` |
 | Motif de filtre vide | refusé, pas ignoré | `MOTIF_INVALIDE`, `T-E-12` |
 | Port déjà pris | erreur au démarrage, pas de bascule silencieuse | `EADDRINUSE`, `T-E-02` |
-| Jeton absent ou faux | page de connexion, API `401` + `WWW-Authenticate` | `T-E-18` |
+| Jeton absent ou faux | coquille servie, API `401` + `WWW-Authenticate`, **boîte de jeton** dans la page | `T-E-18` |
+| Jeton dans l'URL | servi directement (`200`), cookie proposé, URL nettoyée par `replaceState` | `T-E-24` |
+| Stockage de navigateur refusé | jeton gardé en mémoire vive, interface fonctionnelle | `T-E-24` |
+| Flux SSE indisponible | `onerror` ×3 ou absence d'`EventSource` ⇒ sondage toutes les 3 s | `D-094` |
 | Suspension en cours de transfert | état `suspendu`, `.part` conservé, reprise exacte | `T-E-21`, `T-E-22` |
 | Webview / navigation externe | refusée | `T-E-09` |
 | Page réécrite plus courte | `queue.json` réaligné sur la taille écrite | `T-E-16` |

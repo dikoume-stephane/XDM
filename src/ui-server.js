@@ -98,6 +98,27 @@ async function lireJson(req) {
 }
 
 /**
+ * Chemins de la **coquille** : la page, sa feuille, ses deux scripts, ses fontes.
+ *
+ * Ils sont servis **sans jeton**, et c'est un choix (décision `D-093`) : ces fichiers ne
+ * contiennent aucune donnée — ni file, ni journal, ni réglages. Sans jeton valide, la page
+ * s'ouvre et affiche « jeton requis » ; elle ne peut rien lire d'autre. Exiger le jeton ici
+ * obligeait à passer un cookie, que le navigateur ne renvoie jamais dans une iframe tierce.
+ *
+ * La liste est **fermée** : tout le reste (y compris `/api/*`) exige le jeton.
+ *
+ * @param {string} chemin
+ * @returns {boolean}
+ */
+export function estCoquille(chemin) {
+  if (COQUILLE.has(chemin)) return true;
+  return chemin.startsWith('/polices/') && /^\/polices\/[a-z0-9.-]+\.woff2$/.test(chemin);
+}
+
+/** Fichiers publics de la coquille, nommés un par un. */
+const COQUILLE = new Set(['/', '/index.html', '/style.css', '/app.js', '/jeton.js']);
+
+/**
  * Sert un fichier de l'interface, en refusant toute sortie de `UI_DIR`.
  * @param {import('node:http').ServerResponse} res
  * @param {string} racine
@@ -142,49 +163,6 @@ async function servirFichier(res, racine, chemin) {
 }
 
 /**
- * Page de connexion minimale, servie à la place de l'interface quand le jeton manque.
- *
- * Elle ne dit pas si le jeton fourni était faux : le dire n'aiderait qu'à le deviner.
- *
- * @param {import('node:http').ServerResponse} res
- * @param {string} chemin
- */
-function pageConnexion(res, chemin) {
-  const suite = chemin === '/' ? '/' : chemin;
-  const corps = `<!doctype html>
-<html lang="fr">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>XDM — accès protégé</title>
-<style>
-:root{color-scheme:light dark}
-body{margin:0;min-height:100vh;display:grid;place-items:center;font:16px/1.5 system-ui,sans-serif;background:#F0FDFA;color:#134E4A}
-main{max-width:32rem;padding:2rem;background:#fff;border:1px solid #99F6E4;border-radius:12px}
-h1{font-size:1.25rem;margin:0 0 .5rem}
-p{color:#3F5F5B;margin:.25rem 0 1.25rem}
-label{display:block;font-weight:600;font-size:.8125rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem}
-input{width:100%;box-sizing:border-box;padding:.625rem .75rem;border:1px solid #99F6E4;border-radius:8px;font:inherit}
-button{margin-top:1rem;width:100%;padding:.7rem;border:0;border-radius:8px;background:#0D9488;color:#04211F;font:inherit;font-weight:600;cursor:pointer}
-code{background:#E8F1F4;padding:.1rem .3rem;border-radius:4px;font-size:.875em}
-</style></head>
-<body><main>
-<h1 id="titre">XDM — accès protégé</h1>
-<p>Cette interface écoute au-delà de la boucle locale : un jeton est requis. Il a été affiché au démarrage de <code>xdm-ui</code>.</p>
-<form method="get" action="${suite}">
-  <label for="jeton">Jeton d’accès</label>
-  <input id="jeton" name="jeton" type="password" autocomplete="off" required>
-  <button type="submit">Ouvrir l’interface</button>
-</form>
-</main></body></html>`;
-  res.writeHead(401, {
-    'content-type': 'text/html; charset=utf-8',
-    'content-length': Buffer.byteLength(corps),
-    'cache-control': 'no-store',
-    'www-authenticate': 'Bearer',
-  });
-  res.end(corps);
-}
-
-/**
  * Crée le serveur de l'interface.
  *
  * @param {{
@@ -197,6 +175,19 @@ code{background:#E8F1F4;padding:.1rem .3rem;border-radius:4px;font-size:.875em}
  *   jetonEnQuery?: boolean,
  * }} [options]
  */
+/**
+ * La requête arrive-t-elle en HTTPS (directement ou via un proxy) ?
+ * Sert uniquement à décider du drapeau `Secure` du cookie.
+ *
+ * @param {import('node:http').IncomingMessage} req
+ * @returns {boolean}
+ */
+function estHttps(req) {
+  const protocole = req.headers['x-forwarded-proto'];
+  if (typeof protocole === 'string') return protocole.split(',')[0].trim() === 'https';
+  return Boolean(req.socket?.encrypted);
+}
+
 export function createUiServer({
   manager,
   racine = UI_DIR,
@@ -229,31 +220,31 @@ export function createUiServer({
     const methode = req.method ?? 'GET';
 
     // ---------- Accès ----------
-    // Le jeton protège **tout** : les données et la page (la coquille d'interface sait déjà
-    // tout ce que le serveur sait faire). Les fichiers `style.css`/`app.js` restent servis
-    // sans jeton : ils ne contiennent aucune donnée et la page de connexion en a besoin.
+    // Le jeton protège **les données et les actions** — c'est-à-dire `/api/*`. La coquille
+    // (page, feuille, scripts, fontes) est publique : elle ne contient aucune donnée, et
+    // l'exiger obligerait à un cookie que le navigateur refuse en iframe tierce (`D-093`).
     if (jeton) {
-      // Une arrivée par `?jeton=` est un premier contact : on échange le secret contre un
-      // cookie, puis on redirige pour que le jeton ne reste ni dans l'historique du
-      // navigateur ni dans les journaux du proxy. Ce cas est traité **avant** la
-      // validation, sinon la requête serait servie avec le jeton encore dans l'URL.
+      // Le jeton peut arriver par `?jeton=`. Il est alors **aussi** posé en cookie — c'est un
+      // confort pour un onglet ordinaire, jamais une condition : dans une iframe tierce, le
+      // cookie `SameSite=Strict` n'est pas renvoyé. Aucune redirection n'est faite, la page
+      // garde le jeton en mémoire pour ses appels (`D-093`).
       const parametre = url.searchParams.get('jeton');
       if (parametre !== null && jetonValide(parametre, jeton)) {
-        res.writeHead(303, { location: chemin, 'set-cookie': cookieDeJeton(jeton) });
-        res.end();
-        return undefined;
+        res.setHeader('set-cookie', cookieDeJeton(jeton, { securise: estHttps(req) }));
       }
+    }
+
+    if (jeton && !estCoquille(chemin)) {
       const fourni = extraireJeton({ headers: req.headers, url });
       if (!jetonValide(fourni, jeton)) {
-        if (chemin.startsWith('/api/')) {
-          res.writeHead(401, {
-            'content-type': 'application/json; charset=utf-8',
-            'www-authenticate': 'Bearer',
-            'cache-control': 'no-store',
-          });
-          return res.end(JSON.stringify({ erreur: { code: 'JETON_REQUIS', message: 'jeton d’accès requis' } }));
-        }
-        return pageConnexion(res, chemin);
+        // Toujours du JSON : une route inconnue protégée ne doit pas révéler qu'elle existe,
+        // et l'interface n'attend plus de page HTML de connexion (elle en a une, `D-093`).
+        res.writeHead(401, {
+          'content-type': 'application/json; charset=utf-8',
+          'www-authenticate': 'Bearer',
+          'cache-control': 'no-store',
+        });
+        return res.end(JSON.stringify({ erreur: { code: 'JETON_REQUIS', message: 'jeton d’accès requis' } }));
       }
     }
 

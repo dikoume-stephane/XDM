@@ -11,6 +11,27 @@
 
 <a class="evitement" href="#contenu-principal">Aller au contenu principal</a>
 
+<!-- Boîte du jeton d'accès : s'ouvre seulement si le serveur répond 401.
+     Une boîte dans la page, et non une page de connexion servie : dans une iframe
+     d'aperçu le cookie de session n'est jamais renvoyé, le jeton doit rester ici
+     (décision D-093). -->
+<dialog id="boite-jeton" class="boite-jeton" aria-labelledby="titre-jeton" aria-describedby="aide-jeton">
+  <form id="form-jeton" novalidate>
+    <h2 id="titre-jeton">Jeton d’accès requis</h2>
+    <p id="aide-jeton" class="aide">Cette interface écoute au-delà de la boucle locale : elle
+      demande le jeton affiché au démarrage de <code>xdm-ui</code>. Il reste dans cet onglet et
+      n’est envoyé qu’à ce serveur.</p>
+    <label for="champ-jeton">Jeton d’accès</label>
+    <input id="champ-jeton" name="jeton" type="password" autocomplete="off" spellcheck="false"
+           required aria-describedby="erreur-jeton">
+    <p id="erreur-jeton" class="erreur-jeton" role="alert" hidden></p>
+    <div class="actions-jeton">
+      <button type="submit" class="btn principal">Ouvrir l’interface</button>
+      <button type="button" class="btn" id="oublier-jeton">Effacer le jeton mémorisé</button>
+    </div>
+  </form>
+</dialog>
+
 <!-- Sprite d'icônes : SVG inline, jamais d'emoji -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>

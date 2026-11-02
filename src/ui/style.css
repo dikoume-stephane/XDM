@@ -333,6 +333,39 @@
   .zone + .zone { border-top: 1px solid var(--c-bord); }
   .zone-serrée { padding: var(--e-3) var(--e-4); }
 
+  /* ---------- Boîte du jeton d'accès (D-093) ----------
+     Une vraie `dialog` modale : le focus est piégé par le navigateur, Échap ferme, et
+     l'arrière-plan est inerte. Aucune ombre (Flat Design) : un voile + une bordure. */
+
+  .boite-jeton {
+    width: min(30rem, calc(100vw - 2 * var(--e-4)));
+    padding: var(--e-5);
+    border: 1px solid var(--c-bord-controle); border-radius: var(--r-3);
+    background: var(--c-surface); color: var(--c-texte);
+    font-family: var(--police);
+  }
+  .boite-jeton::backdrop { background: rgb(4 33 31 / .55); }
+  .boite-jeton h2 { margin: 0 0 var(--e-2); font-size: 1.125rem; line-height: 1.3; }
+  .boite-jeton .aide { margin: 0 0 var(--e-4); font-size: .875rem; color: var(--c-texte-2); line-height: 1.5; }
+  .boite-jeton .aide code {
+    font-family: var(--mono); font-size: .8125rem;
+    background: var(--c-surface-3); padding: .1rem .3rem; border-radius: var(--r-1);
+  }
+  .boite-jeton label { display: block; margin-bottom: var(--e-1); font-size: .8125rem; font-weight: 600; color: var(--c-texte-2); }
+  .boite-jeton input {
+    width: 100%; box-sizing: border-box; min-height: 38px;
+    padding: var(--e-2) var(--e-3);
+    border: 1px solid var(--c-bord-controle); border-radius: var(--r-2);
+    background: var(--c-surface); color: var(--c-texte);
+    font: inherit; font-size: .875rem;
+  }
+  .boite-jeton input[aria-invalid="true"] { border-color: var(--c-danger); }
+  .boite-jeton .erreur-jeton {
+    margin: var(--e-2) 0 0; font-size: .8125rem; font-weight: 600; color: var(--c-danger);
+  }
+  .boite-jeton .actions-jeton { display: flex; gap: var(--e-2); flex-wrap: wrap; margin-top: var(--e-4); }
+  .boite-jeton .actions-jeton .principal { flex: 1 1 12rem; }
+
   /* ---------- Boutons ---------- */
 
   .btn {

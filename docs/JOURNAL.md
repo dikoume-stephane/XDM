@@ -2186,6 +2186,75 @@ par une décision.
 
 ---
 
+### D-093 — Le jeton reste dans la page, pas dans un cookie
+**Statut** : appliquée · **Date** : 2026-11-02 · **Portée** : `src/ui-server.js`, `src/ui/jeton.js`, `src/ui/app.js`, `src/ui/index.html`, `EX-E-08`
+
+**Symptôme observé.** Dans l'aperçu (une iframe servie par un domaine qui n'est pas celui du
+serveur), saisir le jeton ne produisait **rien** : la page de connexion se réaffichait à
+l'infini. Reproduit en trois requêtes :
+
+```text
+GET /?jeton=BON   -> 303 location: / ; set-cookie: xdm_jeton=…; SameSite=Strict
+GET /             -> 401  (le cookie n'est pas renvoyé : requête inter-origines en iframe)
+```
+
+**Cause.** `D-088` avait choisi le cookie comme **moyen d'authentification** alors qu'il n'était
+qu'un **confort**. Un cookie `SameSite=Strict` n'est jamais joint à une requête inter-origines :
+toute la conception tombait dans une iframe. S'y ajoutait une page de connexion `GET` servie à
+la place de l'interface, qui ne pouvait rien faire de mieux que de renvoyer vers elle-même.
+
+**Décision.** Le jeton devient un **porteur explicite**, jamais un état de navigateur.
+
+1. **La coquille est publique**, la donnée ne l'est pas. `/`, `/index.html`, `/style.css`,
+   `/app.js`, `/jeton.js` et `/polices/*.woff2` sont servis sans jeton : ils ne contiennent
+   aucune donnée. **Tout le reste** — `/api/*`, y compris les actions — exige le jeton. La
+   liste est fermée (`estCoquille`), donc une route ajoutée demain est protégée par défaut.
+2. **Aucune redirection.** `?jeton=valide` est servi directement (`200`) ; le cookie est posé
+   en plus, pour les onglets ordinaires, jamais exigé.
+3. **Le jeton part avec chaque appel** : en-tête `x-jeton` pour `fetch`, paramètre `?jeton=`
+   pour `EventSource` (qui ne sait pas poser d'en-tête). Le module `src/ui/jeton.js` fait ce
+   travail sans DOM, donc il est testé dans Node (`T-E-24`).
+4. **La page demande le jeton elle-même.** Un 401 ouvre une boîte `<dialog>` (piège de focus
+   natif, Échap, `role="alert"` sur l'erreur), qui vérifie le jeton par un vrai appel à
+   `/api/etat` — la page ne décide jamais qu'un jeton est bon. La page de connexion servie par
+   le serveur est supprimée.
+5. **Le jeton ne traîne pas** : `history.replaceState` retire `?jeton=` de la barre d'adresse,
+   et le stockage de session (`sessionStorage`) n'est qu'un confort — s'il est refusé (iframe
+   verrouillée, mode privé), le jeton vit en mémoire vive et tout continue de fonctionner.
+
+**Ce qui n'a pas changé, et ne devait pas.** Le jeton reste obligatoire hors boucle locale
+(`D-088`), la comparaison reste à temps constant, et `T-E-18` vérifie maintenant route par
+route que **rien de l'API** ne s'ouvre sans jeton : `/api/etat`, `/api/journal`,
+`/api/historique`, `/api/reglages`, `/api/evenements`, `/api/taches` en lecture comme en
+écriture, `/api/demarrer`.
+
+**Mesures.** 5 tests unitaires (`T-E-24`, `test/jeton-ui.test.js`) + 2 tests serveur réécrits ;
+**368 tests verts** ; en conditions réelles derrière le proxy : `/` → `200`, `/?jeton=` → `200`
+(sans `303`), `/api/etat` sans jeton → `401`, avec `x-jeton` → `200`, SSE avec `?jeton=` → flux
+ouvert.
+
+---
+
+### D-094 — Un flux muet ne doit pas figer l'écran
+**Statut** : appliquée · **Date** : 2026-11-02 · **Portée** : `src/ui/app.js`, `EX-E-08`
+
+**Contexte.** L'interface n'affichait la progression que par `EventSource`. Un proxy qui
+bufférise le flux, un environnement sans `EventSource` (test, navigateur ancien) ou trois
+échecs consécutifs laissaient donc l'écran **figé sur des données périmées** — sans message.
+Un écran immobile qui prétend montrer l'état courant est plus trompeur qu'une erreur.
+
+**Décision.** Un **repli par sondage** : si `EventSource` n'existe pas, ou si trois erreurs
+consécutives ferment la source, `chargerTout()` est rejoué toutes les 3 secondes et le témoin
+affiche « flux indisponible, sondage actif ». Dès qu'un événement du flux arrive, le sondage
+s'arrête. Le chemin normal reste le flux : le sondage est un filet, pas un remplacement.
+
+**Mesure.** Le scénario est reproductible : le test de fumée exécute `app.js` dans jsdom avec
+`EventSource` retiré ; avant correctif, `brancherFlux` levait `TypeError: EventSource is not a
+constructor` et l'interface ne rendait rien ; après, elle affiche `serveur connecté (sondage)`
+et la version du serveur.
+
+---
+
 ### D-092 — La fiche E décrit XDM, pas IDM
 **Statut** : appliquée · **Date** : 2026-10-30 · **Portée** : `docs/specs/E-interface.md`, `WP-60`
 

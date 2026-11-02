@@ -11,7 +11,7 @@ CLI + serveur MCP qui produit des bundles *Evidence* (constats, couverture, limi
 ## Démarrage
 
 ```bash
-npm test                           # socle XDM : 361 tests, sans dépendance (node --test)
+npm test                           # socle XDM : 368 tests, sans dépendance (node --test)
 npm run desktop                    # application de bureau (Electron ; voir npm run desktop:install)
 npm run audit                      # traçabilité : chaque exigence verte a un test qui existe
 npm run gate                       # porte G3 : site local + coupure réseau, comparaison disque/serveur
@@ -157,7 +157,7 @@ tools/                     collecte de preuves, triage, extractions
   17..27 nommés d'après les libellés d'interface, `MNSP` = combinaison d'URL WinINet.
 - ✅ WP-20 → WP-27 terminés : moteur de morceaux, boucle de connexions, aspiration de site
   et CLI (`bin/xdm.js`, `bin/xdm-grab.js`), transports (proxys, FTP, PAC), médias (HLS,
-  DASH) ; **361 tests**, domaines A, B, D et E clos, domaine C à **14/15** (1 hors périmètre),
+  DASH) ; **368 tests**, domaines A, B, D et E clos, domaine C à **14/15** (1 hors périmètre),
   soit **102 exigences vertes sur 103** ; porte G3 franchie (200 pages, 205 Mio, coupure
   réseau absorbée).
 - ✅ WP-43/WP-44 : en-têtes personnalisés (`--entete`, validation unique partagée par les
@@ -169,8 +169,15 @@ tools/                     collecte de preuves, triage, extractions
   `sandbox`, `nodeIntegration: false`), menu natif Fichier/Affichage/Aide, serveur local
   sur port éphémère lié à la vie de la fenêtre, instance unique, liens externes renvoyés
   au navigateur du système. Electron reste hors du socle (`desktop/package.json`,
-  `D-086`) : les 361 tests tournent sans lui. Ouverture réelle de la fenêtre à vérifier
+  `D-086`) : les 368 tests tournent sans lui. Ouverture réelle de la fenêtre à vérifier
   sur une machine à écran (`docs/GUIDE-WINDOWS.md`).
+- ✅ WP-61 : **le jeton ne bloque plus l'accès** — la coquille (page, feuille, scripts,
+  fontes) est servie sans jeton parce qu'elle ne contient aucune donnée, tandis que toute
+  l'API et toutes les actions restent fermées ; le jeton est porté explicitement par chaque
+  appel (`x-jeton`, `?jeton=` pour le flux SSE) au lieu de dépendre d'un cookie
+  `SameSite=Strict` que le navigateur refuse en iframe tierce ; un 401 ouvre une boîte de
+  jeton dans la page, et un flux indisponible bascule en sondage plutôt que de figer
+  l'écran (`D-093`, `D-094`, `T-E-24`).
 - ✅ WP-59 : **police embarquée et charge bornée** — Plus Jakarta Sans en WOFF2 servi par le
   serveur local (24 Kio, SIL OFL 1.1), aucune ressource distante dans la page, journal borné
   à 500 entrées, file de 300 tâches servie en ~10 ms (`D-091`, `EX-E-11`).

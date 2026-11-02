@@ -189,6 +189,7 @@ révélé que le `Retry-After` de la sonde était jeté — 6,3 s → 0,23 s). R
 | WP-58 | ✅ **Clos** (`D-090`) — **suspension et reprise** : `AbortSignal` traversant `src/connection-loop.js` (sonde, plages, lecture, transport), `suspendre`/`reprendre` dans `src/manager.js` et l'API, fichier partiel conservé, reprise exacte ; progression annoncée pendant un flux mono-connexion ; **356 tests**, `EX-E-10` |
 | WP-59 | ✅ **Clos** (`D-091`) — **police embarquée et charge bornée** : Plus Jakarta Sans en WOFF2 (sous-ensemble latin, 24 Kio, OFL 1.1) servi en `font/woff2`, page sans ressource distante, journal borné, 300 tâches servies en ~10 ms ; **361 tests**, `EX-E-11` |
 | WP-60 | ✅ **Clos** — **fiche de spécification dédiée du domaine E** (`docs/specs/E-interface.md`) : périmètre, 11 exigences, modèle de données (tâche, aspiration, réglages, SSE), machine à états d'une tâche, routes HTTP et fenêtre Electron, cas d'erreur, écarts assumés, ce que la fiche ne prétend pas ; la matrice renvoie désormais à une fiche comme pour A/B/C/D |
+| WP-61 | ✅ **Clos** (`D-093`, `D-094`) — **le jeton qui ne bloquait plus** : coquille publique (données et actions toujours fermées), plus de `303 → cookie SameSite=Strict` refusé en iframe, jeton porteur explicite (`x-jeton`, `?jeton=` pour SSE), boîte de jeton dans la page, repli par sondage quand le flux meurt ; **368 tests**, `T-E-24` |
 | WP-50 | ✅ **Clos** (`D-079`→`D-083`) — bornes numériques refusées (`EX-A-25`), code de sortie d'une aspiration (`EX-B-39`), conformité de vérification (`EX-B-40`), compte de cookies (`EX-B-41`), `--aide`/`--version` des trois CLI (`EX-B-28`) ; **286 tests**, **92 exigences / 91 vertes**, plus le **guide de test** et son banc d'essai |
 
 ---
@@ -287,9 +288,9 @@ code, c'est une **preuve d'exécution de la cible** — impossible dans cet envi
 | **P4** Résilience + revue | `429`/`503`, coupures, `416`, boucles ; revue clean-room publiée | `D-055`, `D-056`, `revue-clean-room.md` |
 | **P5** Dynamique | **non commencée** — aucune VM Windows dans cet environnement | `A-09` |
 
-Chiffres au 2026-10-30 : **361 tests verts** (56 fichiers), **44 modules** (`src/` + `bin/`), **103 exigences
-(102 vertes, 1 hors périmètre)**, **92 décisions**, **0 écart de traçabilité**, **33 documents
-`.md` sans lien cassé**, porte G3 à 200 pages / 205,0 Mio ; **38 lots, 34 clos, 4 ouverts**, les **quatre** restants
+Chiffres au 2026-11-02 : **368 tests verts** (57 fichiers), **44 modules** (`src/` + `bin/`), **103 exigences
+(102 vertes, 1 hors périmètre)**, **94 décisions**, **0 écart de traçabilité**, **33 documents
+`.md` sans lien cassé**, porte G3 à 200 pages / 205,0 Mio ; **39 lots, 35 clos, 4 ouverts**, les **quatre** restants
 (`WP-30`, `WP-40`→`WP-42`) exigent une VM Windows + un IDM licite — c'est exactement l'objet de
 la **piste B du guide de test** (`docs/GUIDE-TEST.md`) et du **guide Windows** (`docs/GUIDE-WINDOWS.md`), qui contient le mode opératoire complet.
 

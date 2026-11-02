@@ -57,7 +57,7 @@ test('T-E-17 : le jeton se lit par en-tête, par paramètre ou par cookie', () =
   assert.ok(AccesError);
 });
 
-test('T-E-18 : sans jeton valide, ni les données ni l’interface ne s’ouvrent', async () => {
+test('T-E-18 : sans jeton valide, les données et les actions restent fermées', async () => {
   const jeton = genererJeton();
   await avecServeurProtege(jeton, async ({ base }) => {
     // API : 401 explicite, avec l'en-tête qui dit comment s'authentifier.
@@ -66,29 +66,84 @@ test('T-E-18 : sans jeton valide, ni les données ni l’interface ne s’ouvren
     assert.equal(api.headers.get('www-authenticate'), 'Bearer');
     assert.equal((await api.json()).erreur.code, 'JETON_REQUIS');
 
-    // Page : une page de connexion, pas l'interface.
-    const page = await fetch(base);
-    assert.equal(page.status, 401);
-    const html = await page.text();
-    assert.match(html, /accès protégé/);
-    assert.doesNotMatch(html, /File d’attente/, 'l’interface elle-même n’est pas servie');
+    // Toute l'API est fermée, y compris les routes d'action et les flux.
+    for (const chemin of ['/api/journal', '/api/historique', '/api/reglages', '/api/evenements', '/api/taches']) {
+      assert.equal((await fetch(`${base}${chemin}`)).status, 401, `${chemin} exige le jeton`);
+    }
+    const action = await fetch(`${base}/api/demarrer`, { method: 'POST' });
+    assert.equal(action.status, 401, 'aucune action sans jeton');
+    const ajout = await fetch(`${base}/api/taches`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ url: 'https://exemple.test/x.bin' }),
+    });
+    assert.equal(ajout.status, 401, 'aucun ajout à la file sans jeton');
 
     // Un mauvais jeton est traité comme une absence.
     assert.equal((await fetch(`${base}/api/etat`, { headers: { authorization: 'Bearer faux' } })).status, 401);
 
-    // Le bon jeton ouvre l'API…
+    // Le bon jeton ouvre l'API, par en-tête `Authorization`…
     const bon = await fetch(`${base}/api/etat`, { headers: { authorization: `Bearer ${jeton}` } });
     assert.equal(bon.status, 200);
     assert.equal((await bon.json()).version !== undefined, true);
 
-    // …et le premier passage par `?jeton=` échange le secret contre un cookie.
-    const echange = await fetch(`${base}/?jeton=${encodeURIComponent(jeton)}`, { redirect: 'manual' });
-    assert.equal(echange.status, 303);
-    const setCookie = echange.headers.get('set-cookie');
-    assert.match(setCookie, /HttpOnly/);
-    const valeur = /xdm_jeton=([^;]+)/.exec(setCookie)[1];
-    const avecCookie = await fetch(`${base}/api/etat`, { headers: { cookie: `${COOKIE_JETON}=${valeur}` } });
+    // …par en-tête `x-jeton` (c'est ce que pose la page)…
+    const parEntete = await fetch(`${base}/api/etat`, { headers: { 'x-jeton': jeton } });
+    assert.equal(parEntete.status, 200);
+
+    // …ou par `?jeton=`, ce qui permet à `EventSource` de s'authentifier.
+    const parUrl = await fetch(`${base}/api/etat?jeton=${encodeURIComponent(jeton)}`);
+    assert.equal(parUrl.status, 200);
+
+    // Le cookie reste un confort : s'il est présent, il vaut jeton.
+    const avecCookie = await fetch(`${base}/api/etat`, {
+      headers: { cookie: `${COOKIE_JETON}=${encodeURIComponent(jeton)}` },
+    });
     assert.equal(avecCookie.status, 200);
+  });
+});
+
+test('T-E-18 : la coquille est publique, la page ne boucle plus sur la connexion', async () => {
+  const jeton = genererJeton();
+  await avecServeurProtege(jeton, async ({ base }) => {
+    // La page, sa feuille, ses scripts et ses fontes n'exigent pas de jeton : ils ne
+    // contiennent aucune donnée, et le cookie n'est pas renvoyé dans une iframe tierce.
+    for (const chemin of ['/', '/index.html', '/style.css', '/app.js', '/jeton.js']) {
+      assert.equal((await fetch(`${base}${chemin}`)).status, 200, `${chemin} est public`);
+    }
+    assert.equal(
+      (await fetch(`${base}/polices/plus-jakarta-sans-latin-400-normal.woff2`)).status,
+      200,
+      'les fontes embarquées sont publiques',
+    );
+
+    // La page contient la boîte de jeton, pas une page de connexion servie par le serveur.
+    const html = await (await fetch(base)).text();
+    assert.match(html, /boite-jeton/);
+    assert.match(html, /jeton d’accès requis/i);
+    assert.doesNotMatch(html, /<form method="get"/, 'plus de formulaire GET plein écran');
+
+    // La liste publique est fermée : tout le reste exige le jeton.
+    assert.equal((await fetch(`${base}/polices/../../package.json`)).status, 401);
+    assert.equal((await fetch(`${base}/package.json`)).status, 401);
+    assert.equal((await fetch(`${base}/index.html?x=1`)).status, 200, 'la requête reste publique');
+
+    // `?jeton=` sur la page : 200 direct, **sans redirection** — c'est ce qui cassait
+    // l'aperçu (303 → cookie refusé en iframe → page de connexion → boucle).
+    const avecJeton = await fetch(`${base}/?jeton=${encodeURIComponent(jeton)}`, { redirect: 'manual' });
+    assert.equal(avecJeton.status, 200, 'plus de 303');
+    assert.match(avecJeton.headers.get('set-cookie') ?? '', /HttpOnly/, 'le cookie reste proposé');
+  });
+});
+
+test('T-E-18 : un jeton faux ne donne rien, même sur la page publique', async () => {
+  const jeton = genererJeton();
+  await avecServeurProtege(jeton, async ({ base }) => {
+    const faux = await fetch(`${base}/?jeton=faux-faux-faux`, { redirect: 'manual' });
+    assert.equal(faux.status, 200, 'la coquille est servie…');
+    assert.equal(faux.headers.get('set-cookie'), null, '…mais aucun cookie n’est posé');
+    // …et la page ne peut rien lire : c'est là que la boîte de jeton s'ouvre.
+    assert.equal((await fetch(`${base}/api/etat?jeton=faux-faux-faux`)).status, 401);
   });
 });
 

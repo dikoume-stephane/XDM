@@ -10,7 +10,48 @@
  *     `/api/etat` ne sert qu'au premier rendu et aux actions ponctuelles.
  */
 
+import {
+  avecJeton,
+  entetesJeton,
+  estPlausible,
+  jetonDeLaPage,
+  jetonDeUrl,
+  memoriserJeton,
+  oublierJeton,
+  sansJetonDansUrl,
+  stockageDisponible,
+} from '/jeton.js';
+
 const $ = (selecteur) => document.querySelector(selecteur);
+
+/**
+ * Jeton d'accès — décision `D-093`.
+ *
+ * L'interface ne dépend **pas** d'un cookie : dans une iframe d'aperçu, la requête est
+ * inter-origines et le cookie `SameSite=Strict` n'est jamais renvoyé. Le jeton est donc lu
+ * dans l'URL (ou ressaisi), gardé en mémoire, et envoyé explicitement à chaque appel :
+ * en-tête `x-jeton` pour `fetch`, paramètre `?jeton=` pour `EventSource` (qui ne sait pas
+ * poser d'en-tête). Le stockage de session n'est qu'un confort ; s'il est refusé, le jeton
+ * vit en mémoire vive le temps de l'onglet.
+ */
+const acces = { jeton: null, stockage: null };
+
+/** Prépare l'accès : lit l'URL, mémorise, et nettoie la barre d'adresse. */
+function preparerAcces() {
+  acces.stockage = stockageDisponible(window);
+  const depuisUrl = jetonDeUrl(location.search);
+  acces.jeton = jetonDeLaPage(location.search, acces.stockage);
+  if (depuisUrl) {
+    memoriserJeton(acces.stockage, depuisUrl);
+    // Le jeton ne doit pas rester dans l'historique ni dans une capture d'écran d'URL.
+    try {
+      history.replaceState(null, '', sansJetonDansUrl(location.search, location.pathname));
+    } catch {
+      // Un `replaceState` refusé ne casse rien : le jeton est déjà en mémoire.
+    }
+  }
+  return acces.jeton;
+}
 
 /** Crée un élément, avec attributs et enfants textuels. */
 function el(tag, attributs = {}, enfants = []) {
@@ -89,6 +130,7 @@ function pastille(etat) {
 // ------------------------------------------------------------------ état local
 
 const etat = {
+  sonde: null,
   version: null,
   dossier: './telechargements',
   connexions: 4,
@@ -118,14 +160,20 @@ function afficherErreur(message) {
 
 async function api(chemin, options = {}) {
   const reponse = await fetch(chemin, {
-    headers: options.corps ? { 'content-type': 'application/json' } : undefined,
     ...options,
+    headers: entetesJeton(acces.jeton, options.corps ? { 'content-type': 'application/json' } : {}),
     body: options.corps ? JSON.stringify(options.corps) : undefined,
   });
   const charge = await reponse.json().catch(() => ({}));
   if (!reponse.ok) {
     const erreur = charge && charge.erreur ? charge.erreur : { message: `HTTP ${reponse.status}` };
-    throw new Error(erreur.message ?? `HTTP ${reponse.status}`);
+    const echec = new Error(erreur.message ?? `HTTP ${reponse.status}`);
+    echec.code = erreur.code ?? null;
+    echec.statut = reponse.status;
+    // 401 : le jeton manque ou a été refusé. On ne montre pas une erreur technique, on
+    // demande le jeton — c'est le seul cas où l'interface a besoin de l'utilisateur.
+    if (reponse.status === 401) echec.code = 'JETON_REQUIS';
+    throw echec;
   }
   return charge;
 }
@@ -148,9 +196,27 @@ async function chargerTout() {
     etat.reglages = reglages.reglages ?? null;
     rendreTout();
     afficherErreur(null);
-  } catch (erreur) {
-    afficherErreur(`Impossible de joindre le serveur : ${erreur.message}`);
+    // L'état est arrivé : le témoin doit le dire, que la mise à jour vienne du flux ou
+    // du sondage de repli. Un témoin qui annonce « jeton requis » après une lecture
+    // réussie serait un mensonge d'affichage.
     const temoin = $('#temoin');
+    if (temoin) {
+      temoin.replaceChildren(icone('check', 'ico'), etat.sonde ? ' serveur connecté (sondage)' : ' serveur connecté');
+      temoin.className = 'temoin';
+    }
+    if ($('#etat-connexion') && !etat.flux) $('#etat-connexion').textContent = 'sondage';
+  } catch (erreur) {
+    const temoin = $('#temoin');
+    if (erreur.code === 'JETON_REQUIS') {
+      afficherErreur(null);
+      if (temoin) {
+        temoin.textContent = 'jeton requis';
+        temoin.className = 'temoin';
+      }
+      demanderJeton();
+      return;
+    }
+    afficherErreur(`Impossible de joindre le serveur : ${erreur.message}`);
     if (temoin) {
       temoin.textContent = 'serveur injoignable';
       temoin.className = 'temoin';
@@ -159,6 +225,100 @@ async function chargerTout() {
 }
 
 // ------------------------------------------------------------------ rendu
+
+// ------------------------------------------------------------------ jeton d'accès
+
+/**
+ * Ouvre la boîte de demande de jeton (une seule fois à la fois).
+ *
+ * Elle remplace la page de connexion que le serveur servait autrefois : dans une iframe
+ * d'aperçu, une page de connexion plein écran ne peut pas fonctionner, faute de cookie
+ * renvoyé. Ici, le jeton reste dans la page et part avec chaque appel (`D-093`).
+ */
+function demanderJeton() {
+  const boite = $('#boite-jeton');
+  if (!boite) return;
+  const erreur = $('#erreur-jeton');
+  if (erreur) {
+    erreur.hidden = true;
+    erreur.textContent = '';
+  }
+  if (boite.open) return;
+  if (typeof boite.showModal === 'function') boite.showModal();
+  else boite.setAttribute('open', '');
+  $('#champ-jeton')?.focus();
+}
+
+/** Signale une erreur dans la boîte, sans la refermer. */
+function erreurJeton(message) {
+  const erreur = $('#erreur-jeton');
+  if (!erreur) return;
+  erreur.textContent = message;
+  erreur.hidden = !message;
+  const champ = $('#champ-jeton');
+  if (champ) {
+    champ.setAttribute('aria-invalid', message ? 'true' : 'false');
+    champ.focus();
+  }
+}
+
+/**
+ * Vérifie un jeton saisi, puis l'adopte.
+ *
+ * La vérification est un vrai appel à `/api/etat` : on ne décide pas côté page qu'un jeton
+ * est bon, le serveur seul le sait (comparaison à temps constant).
+ *
+ * @param {string} valeur
+ * @returns {Promise<boolean>}
+ */
+async function adopterJeton(valeur) {
+  if (!estPlausible(valeur)) {
+    erreurJeton('Le jeton semble incomplet (8 caractères au minimum, sans espace).');
+    return false;
+  }
+  let reponse;
+  try {
+    reponse = await fetch('/api/etat', { headers: entetesJeton(valeur) });
+  } catch {
+    erreurJeton('Serveur injoignable : vérifiez que xdm-ui tourne encore.');
+    return false;
+  }
+  if (reponse.status === 401) {
+    erreurJeton('Jeton refusé. Utilisez celui affiché au démarrage de xdm-ui.');
+    return false;
+  }
+  if (!reponse.ok) {
+    erreurJeton(`Le serveur a répondu ${reponse.status}.`);
+    return false;
+  }
+  acces.jeton = valeur;
+  memoriserJeton(acces.stockage, valeur);
+  const boite = $('#boite-jeton');
+  if (typeof boite?.close === 'function') boite.close();
+  else boite?.removeAttribute('open');
+  erreurJeton(null);
+  await chargerTout();
+  brancherFlux();
+  return true;
+}
+
+/** Branche le formulaire de jeton (une seule fois). */
+function cablerJeton() {
+  const formulaire = $('#form-jeton');
+  if (!formulaire) return;
+  formulaire.addEventListener('submit', (evenement) => {
+    evenement.preventDefault();
+    const champ = $('#champ-jeton');
+    void adopterJeton((champ?.value ?? '').trim());
+  });
+  $('#oublier-jeton')?.addEventListener('click', () => {
+    oublierJeton(acces.stockage);
+    acces.jeton = null;
+    if (etat.flux) etat.flux.close();
+    etat.flux = null;
+    demanderJeton();
+  });
+}
 
 function rendreTout() {
   rendreCompteurs();
@@ -547,10 +707,55 @@ function themeCourant() {
 
 // ------------------------------------------------------------------ flux temps réel
 
+/**
+ * Repli quand le flux temps réel est indisponible : sondage régulier de l'état.
+ *
+ * Deux cas le déclenchent — un environnement sans `EventSource`, et un proxy qui bufférise
+ * le flux (`onerror` répété, source fermée). Sans ce repli, l'interface resterait figée en
+ * affichant des données périmées : le pire des mensonges (`D-094`).
+ */
+function demarrerSondage() {
+  if (etat.sonde) return;
+  $('#etat-connexion') && ($('#etat-connexion').textContent = 'sondage');
+  etat.sonde = setInterval(() => {
+    chargerTout();
+  }, 3000);
+}
+
+/** Arrête le sondage de repli. */
+function arreterSondage() {
+  if (!etat.sonde) return;
+  clearInterval(etat.sonde);
+  etat.sonde = null;
+}
+
 function brancherFlux() {
   if (etat.flux) etat.flux.close();
-  const source = new EventSource('/api/evenements');
+  etat.flux = null;
+  if (typeof EventSource !== 'function') {
+    demarrerSondage();
+    return;
+  }
+  const source = new EventSource(avecJeton('/api/evenements', acces.jeton));
   etat.flux = source;
+  let echecs = 0;
+  source.addEventListener('error', () => {
+    echecs += 1;
+    const temoin = $('#temoin');
+    if (echecs >= 3) {
+      // Trois échecs : le flux ne passera pas. On ferme et on sonde — mieux vaut des
+      // données rafraîchies toutes les 3 s qu'un écran qui ne bouge plus.
+      source.close();
+      etat.flux = null;
+      if (temoin) {
+        temoin.textContent = 'flux indisponible, sondage actif';
+        temoin.className = 'temoin';
+      }
+      demarrerSondage();
+    } else if (temoin) {
+      temoin.textContent = 'reconnexion…';
+    }
+  });
 
   source.addEventListener('etat', (message) => {
     const instantane = JSON.parse(message.data);
@@ -560,6 +765,7 @@ function brancherFlux() {
     etat.maxActifs = instantane.maxActifs ?? etat.maxActifs;
     etat.taches = instantane.taches ?? etat.taches;
     rendreTout();
+    arreterSondage();
     const temoin = $('#temoin');
     temoin.replaceChildren(icone('check', 'ico'), ' serveur connecté');
     temoin.className = 'temoin';
@@ -859,6 +1065,8 @@ function cabler() {
   });
 }
 
+preparerAcces();
 appliquerTheme(themeCourant());
 cabler();
+cablerJeton();
 chargerTout().then(brancherFlux);

@@ -1,6 +1,6 @@
 # Matrice de conformité (WP-12, v0.1)
 
-> **Statut** : ✅ v1.24 — **Dernière revue** : 2026-10-30
+> **Statut** : ✅ v1.25 — **Dernière revue** : 2026-11-02
 > **Vérification** : `node tools/audit-conformance.mjs --strict` (6 contrôles) — la matrice
 > est auditée, pas seulement rédigée : voir `revue-clean-room.md`.
 > **Rôle** : relier, pour chaque exigence de spécification, la **preuve** statique qui la
@@ -8,7 +8,7 @@
 > exigence absente de ce fichier.
 > **Sources** : `docs/specs/A-moteur-de-telechargement.md` (v0.9),
 > `docs/specs/B-grabber.md` (v0.11), annexes 12 à 16 ; fiches C et D dans l'annexe 15 ;
-> domaine E (interface) : `docs/specs/E-interface.md` (v1.1) et décisions `D-084` à `D-092`.
+> domaine E (interface) : `docs/specs/E-interface.md` (v1.2) et décisions `D-084` à `D-094`.
 > **Rappel** : « preuve » ne veut pas dire « comportement validé ». Une exigence
 > **Hypothèse** n'a pas de preuve et ne peut pas être marquée conforme.
 
@@ -184,7 +184,7 @@ l'arborescence sont des **choix XDM** implémentés et testés (`src/crawler.js`
 **Couverture : 11 / 11** — `src/hls.js`, `src/media.js` et `bin/xdm-media.js` (`D-046`)
 pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**.
 
-## 3 quater. Domaine E — interface (`WP-51`→`WP-60`)
+## 3 quater. Domaine E — interface (`WP-51`→`WP-61`)
 
 > **Fiche détaillée** : `docs/specs/E-interface.md` (`WP-60`) — périmètre, modèle de données,
 > machine à états d'une tâche, routes HTTP, fenêtre Electron, cas d'erreur et écarts assumés.
@@ -198,7 +198,7 @@ pour HLS, `src/sidx.js` et `src/dash.js` pour DASH (`D-048`). Domaine D **clos**
 | `EX-E-05` **menu natif de l'application** : Fichier (ouvrir le dossier de téléchargements, ouvrir l'interface dans le navigateur, quitter), Affichage (recharger, outils de développement, zoom, plein écran), Aide (à propos avec la version) ; sous macOS, le menu applicatif précède et « fermer » ne quitte pas | **Décision** (`D-086`) | `D-086` ; `src/desktop-shell.js` | `T-E-10` | **vert** |
 | `EX-E-06` **cycle de vie du serveur local** : la coquille démarre l'interface sur `127.0.0.1` avec un port **éphémère**, une seule instance détient la file (`requestSingleInstanceLock`), et le serveur s'éteint avec la fenêtre ; sous Windows et Linux, fermer la dernière fenêtre quitte l'application | **Décision** (`D-086`) | `D-086` ; `src/desktop-shell.js`, `desktop/main.js` | `T-E-11` | **vert** |
 | `EX-E-07` **l'écran Site Grabber vaut la CLI** : motifs `inclure`/`exclure` (motif vide refusé), suivi des sous-domaines, explorations simultanées bornées, réécriture des liens des pages et feuilles de style téléchargées ; ce qui a filtré est écrit dans le projet et affiché à côté de l'aspiration, et le gabarit « médias seulement » d'IDM n'est **pas** appliqué à une aspiration de site ; la taille attendue des pages réécrites est alignée dans `queue.json` pour que la vérification reste verte | **Décision** (`D-087`) | `D-087` ; `src/aspiration.js`, `src/manager.js`, `src/ui/app.js` | `T-E-12`, `T-E-13`, `T-E-14`, `T-E-16` | **vert** |
-| `EX-E-08` **l'interface exposée ne s'ouvre pas sans jeton** : hors de la boucle locale, `xdm-ui` tire un jeton de 192 bits, l'affiche une fois et l'exige pour l'API comme pour la page ; comparaison à temps constant ; le jeton se présente par `Authorization: Bearer`, `x-jeton` ou `?jeton=`, ce dernier échange le secret contre un cookie `HttpOnly` `SameSite=Strict` pour que `EventSource` continue de fonctionner ; sans jeton configuré (boucle locale), le comportement de `D-084` est conservé | **Décision** (`D-088`) | `D-088` ; `src/acces.js`, `src/ui-server.js`, `bin/xdm-ui.js` | `T-E-17`, `T-E-18`, `T-E-19` | **vert** |
+| `EX-E-08` **l'interface exposée ne s'ouvre pas sans jeton** : hors de la boucle locale, `xdm-ui` tire un jeton de 192 bits, l'affiche une fois et l'exige pour **toute l'API et toutes les actions** ; trois présentations (`Authorization: Bearer`, `x-jeton`, `?jeton=` pour `EventSource`), comparaison à temps constant, cookie `HttpOnly; SameSite=Strict` **proposé mais jamais nécessaire** ; la **coquille** (page, `style.css`, `app.js`, `jeton.js`, fontes) est publique car sans donnée, et un 401 ouvre une **boîte de jeton dans la page** au lieu d'une page de connexion servie — ce qui supprime la boucle 303 → cookie refusé en iframe tierce → page de connexion (`D-093`) ; si le flux SSE est indisponible, l'interface sonde l'état toutes les 3 s au lieu de se figer (`D-094`) | **Décision** (`D-088`, `D-093`, `D-094`) | `D-088`, `D-093`, `D-094` ; `src/acces.js`, `src/ui-server.js`, `src/ui/jeton.js`, `src/ui/app.js` | `T-E-17`, `T-E-18`, `T-E-24` | **vert** |
 | `EX-E-09` **le paquet de bureau est nommé et pesé** : `node tools/empaqueter.mjs` prépare une arborescence de distribution (`src/`, `bin/`, `desktop/`, `package.json`, `README.md`) avec un `manifeste.json` (chemin, taille, SHA-256 de chaque fichier) ; `cible/`, `test/`, `analysis/`, `tools/`, `docs/`, `dl/` et les dossiers de téléchargement n'y entrent **jamais**, et la sortie ne peut pas contenir le dépôt | **Décision** (`D-089`) | `D-089` ; `tools/empaqueter.mjs` | `T-E-20` | **vert** |
 | `EX-E-10` **un transfert se suspend et reprend sans mentir** : le moteur accepte un `AbortSignal` (sonde, plages, lecture), une suspension ne s'écrit **pas** comme un échec, le fichier partiel est conservé et la reprise repart des octets déjà reçus ; suspendre est possible en attente comme en cours, reprendre seulement une tâche suspendue (`ETAT_INVALIDE` sinon), et la progression d'une connexion unique est annoncée pendant le transfert au lieu d'attendre la fin | **Décision** (`D-090`) | `D-090` ; `src/connection-loop.js`, `src/manager.js`, `src/ui/app.js` | `T-E-21`, `T-E-22` | **vert** |
 | `EX-E-11` **l'interface ne dépend d'aucun réseau, et reste bornée** : la police Plus Jakarta Sans est embarquée en WOFF2 (sous-ensemble latin, 24 Kio, SIL OFL 1.1) et servie par le serveur local ; la page ne référence aucune ressource distante ; le journal est borné à `maxJournal` (500 par défaut) et l'historique à 200 ; une file de 300 tâches est servie en moins de 300 ms | **Décision** (`D-091`) | `D-091` ; `src/ui/style.css`, `src/ui/polices/`, `src/manager.js` | `T-E-23` | **vert** |
